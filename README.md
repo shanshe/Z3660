@@ -10,5 +10,5 @@
 <br>
 <br>3. If you use a Z-turn FPGA, then you can add 128 MB of CPU RAM (more RAM, RTG, AHI, USB, SCSI are planned in the future) and you can use 060 up to 100 MHz.
 <br>
-<br>This main branch has everything you need to build a Z3660 with Z-turn FPGA.
-<br>If you want to build Z3660 without Z-turn FPGA, please go to wo_FPGA branch. The board is the same, but the CPLD firmware and BOM are obviously different.
+<br>This wo_FPGA branch has everything you need to build a Z3660 without Z-turn FPGA.
+<br>If you want to build Z3660 with Z-turn FPGA, please go to main branch. The board is the same, but the CPLD firmware and BOM are obviously different.
