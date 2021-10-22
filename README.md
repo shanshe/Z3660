@@ -13,5 +13,7 @@
 <br>This wo_FPGA branch has everything you need to build a Z3660 without Z-turn FPGA.
 <br>If you want to build Z3660 with Z-turn FPGA, please go to main branch. The board is the same, but the CPLD firmware and BOM are obviously different.
 <br>
+<br>Schematics v0.1 lists some necessary fixes. It will be updated very soon, and all that known issues will be fixed.
+<br>Gerber v0.1 files also will be updated with all this fixes, please don't build them. They are here for my own reference.
 <br><h1 style="color:red;font-size:40px;">WARNING WIP WARNING</h1> 
 This project is starting now, so please, take it easy and don't hype up so much...
