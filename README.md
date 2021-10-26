@@ -18,5 +18,5 @@
 <br><h1 style="color:red;font-size:40px;">WARNING WIP WARNING</h1> 
 This project is starting now, so please, take it easy and don't hype up so much...
 <br><h1 style="color:black;font-size:20px;">v0.1 BOARD FIXES</h1> 
-<br>Fix #1. You will have to make a small brige between _TA and a not used pull-up resistor.
+<br>Fix #1. You will have to make a small brige between _TA pin and R8 by using a not used pin.
 <br><p style="text-align:center;"><img src="./Fixes_images/Fix_1.jpg" alt="Fix_1.jpg" style="width:400px;"></p>
