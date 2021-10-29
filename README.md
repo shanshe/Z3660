@@ -15,8 +15,9 @@
 <br>
 <br>Schematics v0.1 lists some necessary fixes. It will be updated very soon, and all that known issues will be fixed.
 <br>Gerber v0.1 files also will be updated with all this fixes, please don't build them. They are here for my own reference.
+<br><p style="text-align:center;"><img src="./Images/Z3660_top.jpg" alt="Z3660_top.jpg" style="width:800px;"><br>v0.1 Z3660 without FPGA</br></p>
 <br><h1 style="color:red;font-size:40px;">WARNING WIP WARNING</h1> 
 This project is starting now, so please, take it easy and don't hype up so much...
 <br><h1 style="color:black;font-size:20px;">v0.1 BOARD FIXES</h1> 
 <br>Fix #1. You will have to make a small brige between _TA pin and R8 by using a not used pin.
-<br><p style="text-align:center;"><img src="./Fixes_images/Fix_1.jpg" alt="Fix_1.jpg" style="width:400px;"></p>
+<br><p style="text-align:center;"><img src="./Images/Fix_1.jpg" alt="Fix_1.jpg" style="width:400px;"></p>
