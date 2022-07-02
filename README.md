@@ -20,3 +20,4 @@
 <br><p style="text-align:center;"><img src="./Images/Z3660_top_v02.jpg" alt="Z3660_top_v02.jpg" style="width:800px;"><br>v0.2 Z3660 without FPGA</br></p>
 <br>
 <br><p style="text-align:center;"><img src="./Images/Z3660_ZTURN_top_v02.jpg" alt="Z3660_ZTURN_top_v02.jpg" style="width:800px;"><br>v0.2 Z3660 with FPGA</br></p>
+In this version you can see that I have used a 3V3 DCDC converter, instead of old linear regulator on VR1. Board has both footprint in one. Please be careful with its connection.
