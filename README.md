@@ -15,3 +15,4 @@
 <br>
 <br>Current version is Schematics v0.2. It has all fixes needed by v01, and now it is verified to work without any issues, so you can build it.
 <br><p style="text-align:center;"><img src="./Images/Z3660_top_v02.jpg" alt="Z3660_top_v02.jpg" style="width:800px;"><br>v0.2 Z3660 without FPGA</br></p>
+Please note that this image is not exactly what it is needed to be solder: you will need to add an Oscillator on X1, you have to use 0 ohms on R8A1, R25A1, R100A1 instead of R8B1, R25B1, R100B1, and finally choose 0 ohms on R13A1 for 5V Oscillator (recommended), or R13B1 for 3V3 Oscillator.
