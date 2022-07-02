@@ -21,3 +21,5 @@
 <br>
 <br><p style="text-align:center;"><img src="./Images/Z3660_ZTURN_top_v02.jpg" alt="Z3660_ZTURN_top_v02.jpg" style="width:800px;"><br>v0.2 Z3660 with FPGA</br></p>
 In this version you can see that I have used a 3V3 DCDC converter, instead of old linear regulator on VR1. Board has both footprints in one. Please be careful with its connection.
+<br>Note on RTG status: for now RTG is in an experimental state. It only shows 1920x1080@60Hz and hasn't any acceleration function (it is basically a frame buffer and all operations are done by 060 CPU).
+<br>It is based on ZZ9000 RTG card (https://source.mnt.re).
