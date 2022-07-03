@@ -502,6 +502,70 @@ proc create_hier_cell_video { parentCell nameHier } {
   connect_bd_net -net xlconcat_0_dout [get_bd_pins dout] [get_bd_pins xlconcat_0/dout]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins axis_subset_converter_0/aresetn] [get_bd_pins xlconstant_0/dout]
 
+  # Perform GUI Layout
+  regenerate_bd_layout -hierarchy [get_bd_cells /video] -layout_string {
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 6.8.11  2018-08-07 bk=1.4403 VDI=40 GEI=35 GUI=JA:9.0 non-TLS
+#  -string -flagsOSRD
+preplace port s_axi_aclk -pg 1 -y 250 -defaultsOSRD
+preplace port hdmi_de -pg 1 -y 660 -defaultsOSRD
+preplace port S_AXI_LITE -pg 1 -y 430 -defaultsOSRD
+preplace port ctrl -pg 1 -y 220 -defaultsOSRD
+preplace port s_axis_aclk -pg 1 -y 460 -defaultsOSRD
+preplace port hdmi_clk -pg 1 -y 780 -defaultsOSRD
+preplace port s_axi_aresetn -pg 1 -y 360 -defaultsOSRD
+preplace port hdmi_hs -pg 1 -y 720 -defaultsOSRD
+preplace port vid_clk -pg 1 -y 600 -defaultsOSRD
+preplace port ext_reset_in -pg 1 -y 80 -defaultsOSRD
+preplace port hdmi_vs -pg 1 -y 750 -defaultsOSRD
+preplace port M00_AXI -pg 1 -y 490 -defaultsOSRD
+preplace portBus hdmi_data -pg 1 -y 690 -defaultsOSRD
+preplace portBus dout -pg 1 -y 180 -defaultsOSRD
+preplace portBus hdmi_intn -pg 1 -y 670 -defaultsOSRD
+preplace inst v_axi4s_vid_out_0 -pg 1 -lvl 4 -y 600 -defaultsOSRD
+preplace inst axi_vdma_0 -pg 1 -lvl 1 -y 470 -defaultsOSRD
+preplace inst v_tc_0 -pg 1 -lvl 3 -y 300 -defaultsOSRD
+preplace inst xlconstant_0 -pg 1 -lvl 1 -y 300 -defaultsOSRD
+preplace inst hdmi_interface_0 -pg 1 -lvl 5 -y 720 -defaultsOSRD
+preplace inst util_vector_logic_0 -pg 1 -lvl 2 -y 670 -defaultsOSRD
+preplace inst xlconcat_0 -pg 1 -lvl 5 -y 180 -defaultsOSRD
+preplace inst rst_ps7_0_200M_1 -pg 1 -lvl 1 -y 100 -defaultsOSRD
+preplace inst axis_subset_converter_0 -pg 1 -lvl 2 -y 520 -defaultsOSRD
+preplace inst axi_interconnect_1 -pg 1 -lvl 5 -y 490 -defaultsOSRD
+preplace netloc Conn1 1 0 3 N 220 N 220 N
+preplace netloc v_axi4s_vid_out_0_vid_data 1 4 1 1320
+preplace netloc hdmi_interface_0_hdmi_data 1 5 1 1670
+preplace netloc axis_subset_converter_0_M_AXIS 1 2 2 NJ 520 N
+preplace netloc Conn2 1 0 1 N
+preplace netloc vid_clk_0_1 1 0 5 NJ 600 NJ 600 720J 600 970J 760 NJ
+preplace netloc Conn3 1 5 1 NJ
+preplace netloc s_axi_aclk_0_1 1 0 3 40 240 400 280 N
+preplace netloc v_axi4s_vid_out_0_vid_hsync 1 4 1 1310
+preplace netloc axi_vdma_0_M_AXIS_MM2S 1 1 1 390
+preplace netloc v_tc_0_irq 1 3 2 NJ 300 1340
+preplace netloc util_vector_logic_0_Res 1 2 3 710 160 NJ 160 N
+preplace netloc hdmi_intn_1 1 0 2 N 670 N
+preplace netloc s_axis_aclk_1 1 0 5 30 570 410 610 N 610 990 440 1340
+preplace netloc rst_ps7_0_200M_1_peripheral_aresetn 1 1 4 NJ 140 NJ 140 NJ 140 1350
+preplace netloc ext_reset_in_0_1 1 0 1 N
+preplace netloc v_axi4s_vid_out_0_vid_active_video 1 4 1 1330
+preplace netloc xlconstant_0_dout 1 1 1 400
+preplace netloc v_axi4s_vid_out_0_vtg_ce 1 2 3 730 120 NJ 120 1290
+preplace netloc xlconcat_0_dout 1 5 1 N
+preplace netloc S00_AXI_1 1 1 4 N 440 N 440 970 430 N
+preplace netloc axi_vdma_0_mm2s_introut 1 1 4 380 130 N 130 NJ 130 1370
+preplace netloc s_axi_aresetn_0_1 1 0 3 20 360 N 360 N
+preplace netloc hdmi_interface_0_hdmi_de 1 5 1 1670
+preplace netloc hdmi_interface_0_hdmi_clk 1 5 1 1670
+preplace netloc hdmi_interface_0_hdmi_vs 1 5 1 1670
+preplace netloc hdmi_interface_0_hdmi_hs 1 5 1 N
+preplace netloc v_tc_0_vtiming_out 1 3 1 980
+preplace netloc v_axi4s_vid_out_0_vid_vsync 1 4 1 1300
+preplace netloc s_axis_aresetn_1 1 1 4 400 150 N 150 N 150 1360
+levelinfo -pg 1 0 210 560 850 1140 1520 1690 -top 0 -bot 820
+"
+}
+
   # Restore current instance
   current_bd_instance $oldCurInst
 }
@@ -1639,6 +1703,97 @@ proc create_hier_cell_video { parentCell nameHier } {
   create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces z3660_0/m00_axi] [get_bd_addr_segs processing_system7_0/S_AXI_ACP/ACP_M_AXI_GP0] SEG_processing_system7_0_ACP_M_AXI_GP0
   create_bd_addr_seg -range 0x40000000 -offset 0x00000000 [get_bd_addr_spaces video/axi_vdma_0/Data_MM2S] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
 
+  # Perform GUI Layout
+  regenerate_bd_layout -layout_string {
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 6.8.11  2018-08-07 bk=1.4403 VDI=40 GEI=35 GUI=JA:9.0 non-TLS
+#  -string -flagsOSRD
+preplace port DDR -pg 1 -y 150 -defaultsOSRD
+preplace port hdmi_de -pg 1 -y 360 -defaultsOSRD
+preplace port CPUCLK_clk -pg 1 -y 860 -defaultsOSRD
+preplace port nTS -pg 1 -y 810 -defaultsOSRD
+preplace port BCLK_clk -pg 1 -y 570 -defaultsOSRD
+preplace port BP -pg 1 -y 330 -defaultsOSRD
+preplace port hdmi_clk -pg 1 -y 480 -defaultsOSRD
+preplace port nCLKEN_clk -pg 1 -y 540 -defaultsOSRD
+preplace port nTBI -pg 1 -y 240 -defaultsOSRD
+preplace port IIC_0 -pg 1 -y 210 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 180 -defaultsOSRD
+preplace port hdmi_hs -pg 1 -y 420 -defaultsOSRD
+preplace port CLK90_clk -pg 1 -y 830 -defaultsOSRD
+preplace port PCLK_clk -pg 1 -y 510 -defaultsOSRD
+preplace port hdmi_vs -pg 1 -y 450 -defaultsOSRD
+preplace port NU_1 -pg 1 -y 270 -defaultsOSRD
+preplace port nTA -pg 1 -y 300 -defaultsOSRD
+preplace port nTCI -pg 1 -y 780 -defaultsOSRD
+preplace port nTEA -pg 1 -y 750 -defaultsOSRD
+preplace port R_W040 -pg 1 -y 720 -defaultsOSRD
+preplace portBus A060 -pg 1 -y 690 -defaultsOSRD
+preplace portBus hdmi_data -pg 1 -y 390 -defaultsOSRD
+preplace portBus SIZ40 -pg 1 -y 840 -defaultsOSRD
+preplace portBus hdmi_intn -pg 1 -y 460 -defaultsOSRD
+preplace portBus D040 -pg 1 -y 120 -defaultsOSRD
+preplace inst axi_dwidth_converter_0 -pg 1 -lvl 1 -y 1090 -defaultsOSRD
+preplace inst axi_gpio_0 -pg 1 -lvl 3 -y 1020 -defaultsOSRD
+preplace inst proc_sys_reset_0 -pg 1 -lvl 1 -y 560 -defaultsOSRD
+preplace inst z3660_0 -pg 1 -lvl 1 -y 820 -defaultsOSRD
+preplace inst rst_ps7_0_200M -pg 1 -lvl 2 -y 360 -defaultsOSRD
+preplace inst axi_interconnect_0 -pg 1 -lvl 2 -y 710 -defaultsOSRD
+preplace inst video -pg 1 -lvl 3 -y 380 -defaultsOSRD -resize 186 200
+preplace inst clk_wiz_0 -pg 1 -lvl 3 -y 670 -defaultsOSRD
+preplace inst clk_wiz_1 -pg 1 -lvl 3 -y 840 -defaultsOSRD
+preplace inst clk_wiz_2 -pg 1 -lvl 3 -y 540 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 1 -y 270 -defaultsOSRD
+preplace netloc processing_system7_0_DDR 1 1 3 590J 150 NJ 150 NJ
+preplace netloc video_hdmi_hs 1 3 1 1500
+preplace netloc clk_wiz_0_clk_out7 1 0 4 50 60 N 60 N 60 1460
+preplace netloc z3660_0_BP 1 1 3 690J 230 NJ 230 1570J
+preplace netloc video_dout 1 0 4 90 30 NJ 30 NJ 30 1450
+preplace netloc z3660_0_NU_1 1 1 3 640 240 NJ 240 1580J
+preplace netloc A060_1 1 0 1 20J
+preplace netloc axi_interconnect_0_M02_AXI 1 2 1 1080
+preplace netloc hdmi_intn_1 1 0 3 NJ 460 610J 470 1100
+preplace netloc ARESETN_1 1 1 2 700 480 1050
+preplace netloc clk_wiz_1_CPUCLK_clk 1 3 1 N
+preplace netloc clk_wiz_0_nCLKEN_clk 1 0 4 40 20 N 20 N 20 1550
+preplace netloc rst_ps7_0_200M_peripheral_aresetn 1 1 2 710J 510 1130
+preplace netloc clk_wiz_2_clk_out1 1 2 2 1150J 260 1440
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 3 120 450 700J 460 1110
+preplace netloc processing_system7_0_IIC_0 1 1 3 690 210 NJ 210 NJ
+preplace netloc clk_wiz_1_BCLK_clk 1 0 4 70 50 N 50 N 50 1530
+preplace netloc SIZ40_1 1 0 1 NJ
+preplace netloc z3660_0_m00_axi 1 0 2 120 1010 560
+preplace netloc nTS_1 1 0 1 20J
+preplace netloc axi_interconnect_0_M04_AXI 1 2 1 1090
+preplace netloc video_hdmi_de 1 3 1 1540
+preplace netloc axi_gpio_0_gpio_io_o 1 0 4 30J 10 NJ 10 NJ 10 1470
+preplace netloc clk_wiz_0_PCLK_clk 1 0 4 60 40 N 40 N 40 1520
+preplace netloc nTCI_1 1 0 1 20J
+preplace netloc S00_AXI_1 1 1 1 630
+preplace netloc video_M00_AXI 1 0 4 110 90 NJ 90 NJ 90 1430
+preplace netloc processing_system7_0_FIXED_IO 1 1 3 NJ 180 NJ 180 NJ
+preplace netloc z3660_0_nTBI 1 1 3 660 220 NJ 220 1590J
+preplace netloc axi_interconnect_0_M00_AXI 1 2 1 1150
+preplace netloc video_hdmi_data 1 3 1 1510
+preplace netloc proc_sys_reset_0_peripheral_reset 1 0 2 80J 70 570
+preplace netloc axi_interconnect_0_M01_AXI 1 2 1 1070
+preplace netloc axi_dwidth_converter_0_M_AXI 1 0 2 120 100 580
+preplace netloc video_hdmi_clk 1 3 1 1480
+preplace netloc video_hdmi_vs 1 3 1 1490
+preplace netloc processing_system7_0_FCLK_CLK0 1 1 2 620 500 1110
+preplace netloc clk_wiz_1_CLK90_clk 1 3 1 1570
+preplace netloc Net1 1 1 3 600 120 NJ 120 NJ
+preplace netloc R_W040_1 1 0 1 NJ
+preplace netloc nTEA_1 1 0 1 20J
+preplace netloc Net 1 0 2 110 1000 570
+preplace netloc z3660_0_nTA 1 1 3 680 250 NJ 250 1560J
+preplace netloc processing_system7_0_FCLK_CLK1 1 0 3 100J 80 650J 490 1120
+preplace netloc axi_interconnect_0_M03_AXI 1 2 1 1060
+preplace netloc z3660_0_GPIO_OUT 1 1 3 650 1120 NJ 1120 1430
+preplace netloc processing_system7_0_FCLK_CLK2 1 0 3 120 440 670 260 1140
+levelinfo -pg 1 0 340 880 1290 1610 -top 0 -bot 1170
+"
+}
 
   # Restore current instance
   current_bd_instance $oldCurInst
