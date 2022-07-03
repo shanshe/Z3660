@@ -187,9 +187,9 @@ set_property -name "file_type" -value "XDC" -objects $file_obj
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
-set_property -name "target_constrs_file" -value "$proj_dir/${_xil_proj_name_}.srcs/constrs_1/imports/z3660/gpio_axi.xdc" -objects $obj
+set_property -name "target_constrs_file" -value "${origin_dir}/z3660/gpio_axi.xdc" -objects $obj
 set_property -name "target_part" -value "xc7z020clg400-1" -objects $obj
-set_property -name "target_ucf" -value "$proj_dir/${_xil_proj_name_}.srcs/constrs_1/imports/z3660/gpio_axi.xdc" -objects $obj
+set_property -name "target_ucf" -value "${origin_dir}/z3660/gpio_axi.xdc" -objects $obj
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
