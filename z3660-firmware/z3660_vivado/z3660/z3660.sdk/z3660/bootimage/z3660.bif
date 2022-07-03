@@ -1,0 +1,7 @@
+//arch = zynq; split = false; format = BIN
+the_ROM_image:
+{
+	[bootloader]C:\Users\shanshe\OneDrive\Escritorio\z3660\z3660.sdk\z3660_FSBL\Debug\z3660_FSBL.elf
+	C:\Users\shanshe\OneDrive\Escritorio\z3660\z3660.sdk\design_1_wrapper_hw_platform_0\design_1_wrapper.bit
+	C:\Users\shanshe\OneDrive\Escritorio\z3660\z3660.sdk\z3660\Release\z3660.elf
+}
