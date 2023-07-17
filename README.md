@@ -26,7 +26,7 @@ In this version you can see that I have used a 3V3 DCDC converter, instead of ol
 <br>
 <br>Note on RTG status: RTG is full working now. It has all features that ZZ9000 has, but due limitations of Z-turn, output video is limited to 16 bit. For now, Zorro III Manufacturer ID is the same ZZ9000 ID (MNT 28014 or 0x6D6E), but it will be replaced by a new Manufacturer ID (it is already requested to Hyperion).
 <br>All RTG, AHI and MHI are based on ZZ9000 RTG (https://source.mnt.re/explore).
-It has the same filters than AX module, but done in software by one ARM.
+It has the same band-pass filters as the AX module, but made in software by one of the ARMs.
 <br>
 <br><b>And finally, a checkmate move...</b>
 <br>
