@@ -31,37 +31,23 @@
 ******************************************************************************/
 
 #include <stdio.h>
-#include "platform.h"
-#include "xil_printf.h"
-#include "xgpiops.h"
-#include "xgpio.h"
-#include "xparameters.h"
-#include "xil_io.h"
-#include "xscugic.h"
-
-#include "sleep.h"
-#include "xil_cache.h"
-#include "xil_cache_l.h"
-#include "xil_exception.h"
-#include "xclk_wiz.h"
-#include "xadcps.h"
-#include "xtime_l.h"
-#include "xuartps.h"
-
-#include "ff.h"
-
-#include "xaxivdma.h"
-#include "sii9022_init/sii9022_init.h"
-#include "xil_types.h"
-#include "vga_modes.h"
-
-#include "xvtc.h"
-#include "sleep.h"
-#include "xil_printf.h"
-
-#include "rtg/gfx.h"
 #include "main.h"
+#include "sleep.h"
+#include "xil_misc_psreset_api.h"
+#include "config_file.h"
 
+#ifdef CPU_EMULATOR
+#include "cpu_emulator.h"
+#endif
+extern SHARED *shared;
+void z3660_printf(const TCHAR *format, __VALIST args)
+{
+	while(shared->uart_semaphore!=0);
+	shared->uart_semaphore=1;
+	vprintf(format, args);
+	shared->uart_semaphore=0;
+}
+void init_shared(void);
 #define DEBUG(...)
 //#define DEBUG printf
 
@@ -69,54 +55,41 @@
 
 XGpioPs GpioPs;
 XGpioPs_Config *GpioPsConfigPtr;
-#define LED2          0 // MIO  0
-#define CPLD_RAM_EN   9 // MIO  9
-#define n040RSTI     10 // MIO 10
-//#define CPLD_RAM_EN  14 // MIO 14 used by CAN RX !!!!
-#define CPLD_RESET   15 // MIO 15
-#define LED1         11 // MIO 11 (Z3660's green led)
-#define USER_SW1     50 // MIO 50
-XGpio Gpio;
-XGpio_Config *GpioConfigPtr;
-#define FPGA_RAM_EN              (1L<< 0)  // AXI GPIO  0
-#define FPGA_RAM_BURST_READ_EN   (1L<< 1)  // AXI GPIO  1
-#define FPGA_RAM_BURST_WRITE_EN  (1L<< 2)  // AXI GPIO  2
-#define FPGA_TSCONDITION1        (1L<< 4)  // AXI GPIO  6..4
-#define FPGA_ENCONDITION_BCLK    (3L<< 8)  // AXI GPIO  9..8
-#define FPGA_ENABLE_256MB        (1L<<10)  // AXI GPIO 12
-#define FPGA_RESET               (1L<<31)  // AXI GPIO 31
+//XGpio Gpio;
+//XGpio_Config *GpioConfigPtr;
 
 
-#define ENABLE_TSCONDITION1 do{	XGpio_DiscreteSet(&Gpio, 1, FPGA_TSCONDITION1);\
+#define ENABLE_TSCONDITION1 do{	DiscreteSet(REG0, FPGA_TSCONDITION1);\
 						}while(0)
-#define ENABLE_RAM_FPGA do{	XGpioPs_WritePin(&GpioPs, CPLD_RAM_EN, 1);\
-							XGpio_DiscreteSet(&Gpio, 1, FPGA_RAM_EN);\
+#define ENABLE_CPU_RAM_FPGA do{	DiscreteSet(REG0, FPGA_RAM_EN);\
 						}while(0)
-#define DISABLE_RAM_FPGA do{XGpioPs_WritePin(&GpioPs, CPLD_RAM_EN, 0);\
-							XGpio_DiscreteClear(&Gpio, 1, FPGA_RAM_EN);\
+#define DISABLE_CPU_RAM_FPGA do{ DiscreteClear(REG0, FPGA_RAM_EN);\
 						}while(0)
-#define ENABLE_BURST_READ_RAM_FPGA do{XGpio_DiscreteSet(&Gpio, 1, FPGA_RAM_BURST_READ_EN);\
+#define ENABLE_BURST_READ_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_READ_EN);\
 						}while(0)
-#define DISABLE_BURST_READ_RAM_FPGA do{XGpio_DiscreteClear(&Gpio, 1, FPGA_RAM_BURST_READ_EN);\
+#define DISABLE_BURST_READ_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_READ_EN);\
 						}while(0)
 
-#define ENABLE_BURST_WRITE_RAM_FPGA do{XGpio_DiscreteSet(&Gpio, 1, FPGA_RAM_BURST_WRITE_EN);\
+#define ENABLE_BURST_WRITE_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_WRITE_EN);\
 						}while(0)
-#define DISABLE_BURST_WRITE_RAM_FPGA do{XGpio_DiscreteClear(&Gpio, 1, FPGA_RAM_BURST_WRITE_EN);\
-						}while(0)
-
-#define ENABLE_256MB_RAM_FPGA do{XGpio_DiscreteSet(&Gpio, 1, FPGA_ENABLE_256MB);\
+#define DISABLE_BURST_WRITE_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_WRITE_EN);\
 						}while(0)
 
-// kick32_A4000.rom
-// kick314_A4000_R2s.rom
-static FIL fil;		/* File object */
-static FATFS fatfs;
+#define ENABLE_256MB_AUTOCONFIG do{DiscreteSet(REG0, FPGA_256MB_AUTOCONFIG_EN);\
+						}while(0)
 
-//u8 DestinationAddress[10*1024*1024] __attribute__ ((aligned(32)));
-//u8 SourceAddress[10*1024*1024] __attribute__ ((aligned(32)));
+#define ENABLE_RTG_AUTOCONFIG do{DiscreteSet(REG0, FPGA_RTG_AUTOCONFIG_EN);\
+						}while(0)
 
-#define TEST 7
+#define DISABLE_256MB_AUTOCONFIG do{DiscreteClear(REG0, FPGA_256MB_AUTOCONFIG_EN);\
+						}while(0)
+
+#define DISABLE_RTG_AUTOCONFIG do{DiscreteClear(REG0, FPGA_RTG_AUTOCONFIG_EN);\
+						}while(0)
+
+//uint8_t DestinationAddress[10*1024*1024] __attribute__ ((aligned(32)));
+//uint8_t SourceAddress[10*1024*1024] __attribute__ ((aligned(32)));
+
 /*
 //
 // To test logical drive 0, FileName should be "0:/<File name>" or
@@ -129,9 +102,9 @@ int FfsSdPolledExample(void)
 	FRESULT Res;
 	UINT NumBytesRead;
 	UINT NumBytesWritten;
-	u32 BuffCnt;
+	uint32_t BuffCnt;
 //	BYTE work[FF_MAX_SS];
-	u32 FileSize = (8*1024*1024);
+	uint32_t FileSize = (8*1024*1024);
 
 
 	// To test logical drive 0, Path should be "0:/"
@@ -236,7 +209,7 @@ int FfsSdPolledExample(void)
 void CreateHdf(void)
 {
 	TCHAR *Path = "0:/";
-	u32 BufferSize = (10*1024*1024);
+	uint32_t BufferSize = (10*1024*1024);
 
 	//
 	// Register volume work area, initialize device
@@ -262,9 +235,16 @@ void PrepareHdf(void)
 	set_hard_drive_image_file_amiga(0,Filename);
 }
 */
-static XClk_Wiz clkwiz0,clkwiz1;
-static XClk_Wiz_Config conf0,conf1;
-void print_clkinfo(char * str,u32 base,u32 address)
+ZZ_VIDEO_STATE vs;
+XAxiVdma vdma;
+XClk_Wiz clkwiz0,clkwiz1;
+XClk_Wiz clkwiz;
+XClk_Wiz_Config conf0,conf1;
+XClk_Wiz_Config conf;
+XAxiVdma_DmaSetup ReadCfg;
+XAxiVdma_Config *Config=NULL;
+
+void print_clkinfo(char * str,uint32_t base,uint32_t address)
 {
 	int temp=XClk_Wiz_ReadReg(base, 0x200);
 	float divider=((temp>>8)&0xff)*200/(temp&0xff);
@@ -277,195 +257,109 @@ void print_clkinfo(char * str,u32 base,u32 address)
 	printf("%s %06.2f MHz, PHASE %06.2f degrees, DC %06.2f%c\n\r",str,clk,clk_phase,clk_dc,'%');
 
 }
-void configure_clk(int clk, int busclk, int verbose)
+int cpu_freq=100;
+void configure_clk(int clk, int busclk, int verbose, int nbr)
 {
+	int clken=1;
+	int bclk_mul=1;
+	int bclk;
+	int clk_remainder;
+	int bclk_remainder;
 	XClk_Wiz_CfgInitialize(&clkwiz0, &conf0, XPAR_CLK_WIZ_0_BASEADDR);
 	XClk_Wiz_CfgInitialize(&clkwiz1, &conf1, XPAR_CLK_WIZ_1_BASEADDR);
 
-/*	if(busclk==0) // means, that clk frequency is variable
-	{
-		int divider;
-		if(clk<=0)
-			clk=50;
-		divider=1000/clk; // (40*200)/8/clk;
+	if(clk>100)
+		clk=100;
+	else if(clk<50)
+		clk=50;
 
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(u32)( divider));    //   Ah=10 -> 100 MHz PCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(u32)(   355*1000)); //                    FASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(u32)( 0x0000C350)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(u32)(   350*1000)); //                    FASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(u32)( 0x0000C350)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x22C,(u32)( 0x00000028)); //  28h=40 ->  25 MHz CPUCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x230,(u32)(   170*1000)); //                FASE 180
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x234,(u32)( 0x0000C350)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x238,(u32)( 0x00000028)); //  28h=40 ->  25 MHz CLK90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x23C,(u32)(   260*1000)); //                FASE 270
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x240,(u32)( 0x0000C350)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x244,(u32)(  divider*2)); //  28h=40 ->  25 MHz nCLKEN
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x248,(u32)(  42.5*1000)); //                    FASE 45
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x24C,(u32)(    75*1000)); //                    DC 75%
+	clk&=~1;
+// unstable frequencies: mapped to stable ones
+	if(clk==92) clk=88;
+	if(clk==72) clk=76;
 
-	}
-	else*/
-	if((clk!=100)&&(clk!=50))
-	{
-		u32 clkbout_mult=clk/2; // it should be 8 bit integer, but it seems to be less than 64
-		u32 divider=10;
-		u32 divider2=30;
+	cpu_freq=clk;
+	*((uint32_t *)(0x18020000+REG_ZZ_CPU_FREQ))= swap32(cpu_freq);
 
-		if(clk&1)
-			clkbout_mult=clkbout_mult|(500<<8);
+	clk_remainder=clk%2;
+	clk=clk&~1;
 
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, (clkbout_mult<<8)|(divider));
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(u32)(          5)); //   5h= 5 -> 200 MHz AXI
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(u32)(         10)); //   Ah=10 -> 100 MHz PCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(u32)(    10*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(u32)(   divider2)); //  1Eh=30 ->  50 MHz CLKEN
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(u32)(    33*1000)); //                    PHASE 90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(u32)(    66*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
+	if(clk<60)
+		bclk_mul=2;
+	bclk=(clk*bclk_mul)/4;
+	bclk_remainder=(clk*bclk_mul)%4;
 
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, (clkbout_mult<<8)|(divider));
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(u32)( 0x0000001E)); //  28h=40 ->  25 MHz BCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(u32)(    20*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(u32)(   divider2)); //  28h=40 ->  25 MHz BCLK2
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(u32)(   divider2)); //   Ah=10 -> 100 MHz CLK90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(u32)(   290*1000)); //                    PHASE 180
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(u32)(   divider2)); //  14h=20 ->  50 MHz CPUCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(u32)(   200*1000)); //                    PHASE 270
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
-	}
-	else if((clk==100)&&(busclk==50))
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, ((clk_remainder*500)<<16)+(clk<<7) + 10); // 64h=100 100*100 / 10 -> 1000MHz VCO
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(uint32_t)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(uint32_t)(     0*1000)); //                    PHASE 0
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(uint32_t)( 0x0000000A)); //   Ah=10 -> 100 MHz PCLK
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(uint32_t)(    30*1000)); //                    PHASE 30
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(uint32_t)( 0x00000014)); //  14h=20 ->  50 MHz CLKEN
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(uint32_t)(    60*1000)); //                    PHASE 60
+	if(clken)
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(uint32_t)(50*1000)); //                    DC 50%
+	else
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(uint32_t)( 0*1000)); //                    DC 0%
+
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, ((bclk_remainder*250)<<16)+((bclk*4)<<7)+10); // 64h=100 100*100 / 10 -> 1000MHz VCO
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(uint32_t)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(uint32_t)(    40*1000)); //                        PHASE 40
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(uint32_t)(         80)); //  28h=40 ->  25 MHz BCLK2
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(uint32_t)(     0*1000)); //                    PHASE 0
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(uint32_t)( 0x00000028/bclk_mul)); //   Ah=10 -> 100 MHz CLK90
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(uint32_t)(   290*1000)); //                    PHASE 290
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(uint32_t)(    50*1000)); //                    DC 50%
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(uint32_t)( 0x00000028/bclk_mul)); //  14h=20 ->  50 MHz CPUCLK
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(uint32_t)(   200*1000)); //                    PHASE 200
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(uint32_t)(    50*1000)); //                    DC 50%
+
+	if(nbr)
+		NBR_ARM(0);
+	usleep(100000);
+
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
+
+	usleep(100000);
+	if(nbr)
+		NBR_ARM(1);
+
+/*
+	if((clk==100)&&(busclk==50))
 	{
 		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(u32)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(u32)( 0x0000000A)); //   Ah=10 -> 100 MHz PCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(u32)(    30*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(u32)( 0x00000014)); //  14h=20 ->  50 MHz CLKEN
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(u32)(    60*1000)); //                    PHASE 90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(uint32_t)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(uint32_t)(     0*1000)); //                    PHASE 0
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(uint32_t)( 0x0000000A)); //   Ah=10 -> 100 MHz PCLK
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(uint32_t)(    30*1000)); //                    PHASE 30
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(uint32_t)( 0x00000014)); //  14h=20 ->  50 MHz CLKEN
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(uint32_t)(    60*1000)); //                    PHASE 60
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(uint32_t)(    50*1000)); //                    DC 50%
 		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
 		int offset=10;
 		int frec_bclk=25;
 		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, frec_bclk*2*256+10); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(u32)(   (30+offset)*frec_bclk/25*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK2
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(u32)( 0x00000028)); //   Ah=10 -> 100 MHz CLK90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(u32)(   (270+10+offset)*frec_bclk/25*1000)); //                    PHASE 180
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(u32)( 0x00000028)); //  14h=20 ->  50 MHz CPUCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(u32)(   (180+10+offset)*frec_bclk/25*1000)); //                    PHASE 270
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(u32)(    50*1000)); //                    DC 50%
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(uint32_t)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(uint32_t)(   (30+offset)*frec_bclk/25*1000)); //                        PHASE 40
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(uint32_t)( 80)); //  28h=40 ->  25 MHz BCLK2
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(uint32_t)(     0*1000)); //                    PHASE 0
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(uint32_t)( 0x00000028)); //   Ah=10 -> 100 MHz CLK90
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(uint32_t)(   (270+10+offset)*frec_bclk/25*1000)); //                    PHASE 290
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(uint32_t)(    50*1000)); //                    DC 50%
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(uint32_t)( 0x00000028)); //  14h=20 ->  50 MHz CPUCLK
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(uint32_t)(   (180+10+offset)*frec_bclk/25*1000)); //                    PHASE 200
+		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(uint32_t)(    50*1000)); //                    DC 50%
 		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
 	}
-	else if((clk==100)&&(busclk==25))
-	{
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(u32)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(u32)( 0x0000000A)); //   Ah=10 -> 100 MHz PCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(u32)(    30*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(u32)( 0x00000028)); //  28h=40 ->  25 MHz CLKEN
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(u32)(    40*1000)); //                    PHASE 90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
-
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(u32)(    50*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK2
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(u32)( 0x00000028)); //   Ah=10 -> 100 MHz CLK90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(u32)(   280*1000)); //                    PHASE 180
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(u32)( 0x00000028)); //  14h=20 ->  50 MHz CPUCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(u32)(   190*1000)); //                    PHASE 270
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
-
-		XGpio_DiscreteSet(&Gpio, 1, FPGA_ENCONDITION_BCLK);
-	}
-	else if((clk==50)&&(busclk==50))
-	{
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(u32)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(u32)( 0x00000014)); //  14h=20 ->  50 MHz PCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(u32)(    30*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(u32)( 0x00000028)); //  28h=40 ->  25 MHz CLKEN
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(u32)(    40*1000)); //                    PHASE 90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
-
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(u32)(    50*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK2
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(u32)( 0x00000028)); //   Ah=10 -> 100 MHz CLK90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(u32)(   280*1000)); //                    PHASE 180
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(u32)( 0x00000028)); //  14h=20 ->  50 MHz CPUCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(u32)(   190*1000)); //                    PHASE 270
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
-
-		XGpio_DiscreteSet(&Gpio, 1, FPGA_ENCONDITION_BCLK);
-	}
-	else //if((clk==50)&&(busclk==25))
-	{
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(u32)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(u32)( 0x00000014)); //  14h=20 ->  50 MHz PCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(u32)(    30*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(u32)( 0x00000028)); //  28h=40 ->  25 MHz CLKEN
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(u32)(    50*1000)); //                    PHASE 90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(u32)(    75*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
-
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(u32)(    50*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(u32)( 0x00000028)); //  28h=40 ->  25 MHz BCLK2
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(u32)(     0*1000)); //                    PHASE 0
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(u32)( 0x00000028)); //   Ah=10 -> 100 MHz CLK90
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(u32)(   280*1000)); //                    PHASE 180
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(u32)( 0x00000028)); //  14h=20 ->  50 MHz CPUCLK
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(u32)(   190*1000)); //                    PHASE 270
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(u32)(    50*1000)); //                    DC 50%
-		XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
-
-		XGpio_DiscreteSet(&Gpio, 1, FPGA_ENCONDITION_BCLK);
-	}
+*/
 	if(verbose)
 	{
 		print_clkinfo("AXICLK",XPAR_CLK_WIZ_0_BASEADDR,0x208);
@@ -483,14 +377,10 @@ void configure_clk(int clk, int busclk, int verbose)
 //	printf("Clk config ... %lx %lx %lx\n\r",a,b,c);
 }
 
-void configure_gpio()
+void configure_gpio(void)
 {
 	GpioPsConfigPtr = XGpioPs_LookupConfig(XPAR_XGPIOPS_0_DEVICE_ID);
 	XGpioPs_CfgInitialize(&GpioPs, GpioPsConfigPtr, GpioPsConfigPtr->BaseAddr);
-
-	XGpioPs_SetDirectionPin(&GpioPs, CPLD_RESET, 1);
-	XGpioPs_SetOutputEnablePin(&GpioPs, CPLD_RESET, 1);
-	XGpioPs_WritePin(&GpioPs, CPLD_RESET, 0);
 
 	XGpioPs_SetDirectionPin(&GpioPs, n040RSTI, 0);
 	XGpioPs_SetOutputEnablePin(&GpioPs, n040RSTI, 0);
@@ -498,88 +388,201 @@ void configure_gpio()
 	XGpioPs_SetDirectionPin(&GpioPs, USER_SW1, 0);
 	XGpioPs_SetOutputEnablePin(&GpioPs, USER_SW1, 0);
 
-
-
-	XGpioPs_SetDirectionPin(&GpioPs, CPLD_RAM_EN, 1);
-	XGpioPs_SetOutputEnablePin(&GpioPs, CPLD_RAM_EN, 1);
-	XGpioPs_WritePin(&GpioPs, CPLD_RAM_EN, 0);
-
 	XGpioPs_SetDirectionPin(&GpioPs, LED1, 1);
 	XGpioPs_SetOutputEnablePin(&GpioPs, LED1, 1);
 	XGpioPs_WritePin(&GpioPs, LED1, 0);
 
-	XGpioPs_SetDirectionPin(&GpioPs, LED2, 1);
-	XGpioPs_SetOutputEnablePin(&GpioPs, LED2, 1);
-	XGpioPs_WritePin(&GpioPs, LED2, 0);
+	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_13, 1);
+	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_13, 1);
+	XGpioPs_WritePin(&GpioPs, PS_MIO_13, 1);
+	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_8, 1);
+	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_8, 1);
+	XGpioPs_WritePin(&GpioPs, PS_MIO_8, 1);
 
-	GpioConfigPtr = XGpio_LookupConfig(XPAR_AXI_GPIO_0_DEVICE_ID);
-	XGpio_CfgInitialize(&Gpio, GpioConfigPtr, GpioConfigPtr->BaseAddress);
+	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_0, 0);
+	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_0, 0);
+	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_9, 0);
+	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_9, 0);
+	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_12, 0);
+	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_12, 0);
+	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_15, 0);
+	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_15, 0);
+
+	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO51_501, 1);
+	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO51_501, 1);
+	XGpioPs_WritePin(&GpioPs, PS_MIO51_501, 0);
+	usleep(10000);
+	XGpioPs_WritePin(&GpioPs, PS_MIO51_501, 1);
+
+//	GpioConfigPtr = XGpio_LookupConfig(XPAR_AXI_GPIO_0_DEVICE_ID);
+//	XGpio_CfgInitialize(&Gpio, GpioConfigPtr, GpioConfigPtr->BaseAddress);
 
 
-	XGpio_DiscreteClear(&Gpio, 1, FPGA_RAM_EN);
-	XGpio_DiscreteClear(&Gpio, 1, FPGA_RAM_BURST_READ_EN);
-	XGpio_DiscreteClear(&Gpio, 1, FPGA_RAM_BURST_WRITE_EN);
-	XGpio_DiscreteSet(&Gpio, 1, FPGA_RESET);
+	DiscreteClear(REG0, FPGA_RAM_EN);
+	DiscreteClear(REG0, FPGA_RAM_BURST_READ_EN);
+	DiscreteClear(REG0, FPGA_RAM_BURST_WRITE_EN);
+	DiscreteSet(REG0, FPGA_RESET);
 	usleep(500);
-	XGpio_DiscreteClear(&Gpio, 1, FPGA_RESET);
+	DiscreteClear(REG0, FPGA_RESET);
 	printf("Configured GPIO...\n\r");
 }
-void fpga_ram_enable(int enable_ram)
+void fpga_feature_enable(int en_ram,int en_rtg,int en_z3ram)
 {
-	if(enable_ram)
+	if(en_ram)
 	{
-		ENABLE_RAM_FPGA;
-		ENABLE_BURST_READ_RAM_FPGA;
-		ENABLE_BURST_WRITE_RAM_FPGA;
-		printf("FPGA RAM ENABLED\n\r");
+		ENABLE_CPU_RAM_FPGA;
+		ENABLE_BURST_READ_FPGA;
+		ENABLE_BURST_WRITE_FPGA;
+		printf("FPGA CPU RAM ENABLED\n\r");
 	}
 	else
 	{
-		DISABLE_RAM_FPGA;
-		DISABLE_BURST_READ_RAM_FPGA;
-		DISABLE_BURST_WRITE_RAM_FPGA;
-		printf("FPGA RAM DISABLED\n\r");
+		DISABLE_CPU_RAM_FPGA;
+		DISABLE_BURST_READ_FPGA;
+		DISABLE_BURST_WRITE_FPGA;
+		printf("FPGA CPU RAM DISABLED\n\r");
+	}
+	if(en_rtg)
+	{
+		ENABLE_RTG_AUTOCONFIG;
+		printf("FPGA RTG ENABLED\n\r");
+	}
+	else
+	{
+		DISABLE_RTG_AUTOCONFIG;
+		printf("FPGA RTG DISABLED\n\r");
+	}
+	if(en_z3ram)
+	{
+		ENABLE_256MB_AUTOCONFIG;
+		printf("FPGA Z3 RAM ENABLED\n\r");
+	}
+	else
+	{
+		DISABLE_256MB_AUTOCONFIG;
+		printf("FPGA Z3 RAM DISABLED\n\r");
 	}
 }
 char Filename[]="Z3660.bin";
-extern u32 *frameBuf;//[1920*1080*2];
-void DemoPrintTest(u8 *frame, u32 width, u32 height, u32 stride, int pattern);
-void update_z3660_screen(void)
+//extern uint32_t *frameBuf;
+extern ZZ_VIDEO_STATE* video_state;
+int state68k=M68K_RUNNING;
+#define ARM_NO_BUS_MASTER 0
+#define ARM_REQUEST_BUS_MASTER 1
+#define ARM_BUS_MASTER 2
+#define ARM_RELINQUISH_BUS_MASTER 3
+int stateARM=ARM_NO_BUS_MASTER;
+int arm_command=0;
+int arm_request_bus_master=0;
+#include "xil_mmu.h"
+void reset_run(void);
+void reset_init(void);
+
+#define AMR1_STARTADDR 0xFFFFFFF0
+#define ARM1_BASEADDR 0x30000000
+
+int enables=0;
+uint32_t data=0;
+void arm_write_amiga(uint32_t address, uint32_t data, uint32_t size)
 {
-	/*
-	int8_t r,g,b;
-	for(int i=720;i<1080;i++)
-	{
-
-		for(int j=0;j<1920;j++)
-		{
-			b=frameBuf[1][1920*4*i+4*j+1];
-			g=frameBuf[1][1920*4*i+4*j+2];
-			r=frameBuf[1][1920*4*i+4*j+3];
-
-			framebuffer[1920*4*i+4*j+1]=r;
-			framebuffer[1920*4*i+4*j+2]=g;
-			framebuffer[1920*4*i+4*j+3]=b;
-
-		}
-	}
-	Xil_DCacheFlushRange((unsigned int) frameBuf, DEMO_MAX_FRAME);
-*/
+//	write_reg(0x08,address);         // address
+//	write_reg(0x0C,data);    // data
+	write_reg64_s01(0x08,(((uint64_t)data)<<32)|address);    // data
+	write_reg_s01(0x10,0x11|WRITE_|size); // command
+	while(read_reg_s01(0x14)==0) // read ack
+	{}
+	write_reg_s01(0x10,0x01); // confirm ack
 }
+uint32_t arm_read_amiga(uint32_t address, uint32_t size)
+{
+	write_reg_s01(0x08,address);        // address
+	write_reg_s01(0x10,0x11|READ_|size); // command
+	while(read_reg_s01(0x14)==0) // read ack
+	{}
+	write_reg_s01(0x10,0x01); // confirm ack
+	data=read_reg_s01(0x1C); // read data
+	return(data);
+}
+uint32_t amiga_address=0,amiga_data=0,amiga_size=WORD_;
+void flash_colors(void)
+{
+//#define FLASH_COLORS
+#ifdef FLASH_COLORS
+	NBR_ARM(0);
+	CPLD_RESET_ARM(1);
+//	XGpioPs_WritePin(&GpioPs, nBR_ARM, 0);
+//	XGpioPs_WritePin(&GpioPs, CPLD_RESET, 1);
+
+	usleep(100);
+	{
+		NBR_ARM(0);
+//		XGpioPs_WritePin(&GpioPs, nBR_ARM, 0);
+		int a,c;
+		for(c=0;c<20;c++)
+			for(a=2047;a>=1024;a--)
+				arm_write_amiga(0xDFF180,a<<4,WORD_);
+		arm_write_amiga(0xDFF180,0,WORD_);
+		write_reg(0x10,0x0); // Bus Hi-Z
+		NBR_ARM(1);
+//		XGpioPs_WritePin(&GpioPs, nBR_ARM, 1);
+	}
+#endif
+
+}
+
+unsigned int READ_NBG_ARM(void)
+{
+/*	uint32_t read=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
+	mux.nbg_arm=(read>>8)&1;*/
+	return(XGpioPs_ReadPin(&GpioPs, PS_MIO_15));
+}
+unsigned int pin_nbg_arm=1;
+void DataAbortHandler(void *data)
+{
+	// Do nothing??? :)
+}
+extern CONFIG config;
+
 int main()
 {
 	init_platform();
+    Xil_ICacheEnable();
+#ifdef L1_CACHE_ENABLED
+    Xil_L1DCacheEnable();
+#else
+    Xil_L1DCacheDisable();
+#endif
+#ifdef L2_CACHE_ENABLED
+    Xil_L2CacheEnable();
+#else
+    Xil_L2CacheDisable();
+#endif
+    //	Xil_DisableMMU();
+    Xil_SetTlbAttributes(0xFFFF0000UL,0x14DE2);//STRONG_ORDERED|SHAREABLE);//NORM_WT_CACHE);//0x14de2);//NORM_NONCACHE);
+	for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, fb is at 0x200000)
+		Xil_SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//NORM_NONCACHE);
+	for(int i=0x182;i<0x200;i++) // RTG RAM
+		Xil_SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//NORM_WT_CACHE);// NORM_WB_CACHE);//0x14de2);
+	for(int i=0x800;i<0x802;i++)
+		Xil_SetTlbAttributes(i*0x100000UL,DEVICE_MEMORY);
+	for(int i=0xE00;i<0xE03;i++) //
+		Xil_SetTlbAttributes(i*0x100000UL,STRONG_ORDERED);//NORM_NONCACHE);
+
+	for(int i=0;i<0x1200;i++)
+		*(uint8_t*)(0x18000000+0x06000000+i)=0; // clean audio buffer
 
 	configure_gpio();
 
-	configure_clk(100,50,0);
+	configure_clk(100,50,0,0);
 
 	XGpioPs_WritePin(&GpioPs, LED1, 1);
-	XGpio_DiscreteSet(&Gpio, 1, FPGA_RESET);
-	XGpioPs_WritePin(&GpioPs, CPLD_RESET, 0);
-	XGpioPs_WritePin(&GpioPs, LED2, 0);
+	DiscreteSet(REG0, FPGA_RESET);
+	CPLD_RESET_ARM(0);
+	NBR_ARM(0);
+	pin_nbg_arm=READ_NBG_ARM();
+	DiscreteClear(REG0,FPGA_INT6); // set int6 to 0 (active high)
 
-	printf("\033[2J");
+//	printf("\033[2J");
 	printf("Z3660 starting...\n\r\n\r");
 	printf(" ________   ______   ______   ______   ______ \n\r");
 	printf("|___    /  |____  | |  ____| |  ____| |  __  | a.k.a. PishaStorm\n\r");
@@ -594,123 +597,249 @@ int main()
 //	configure_clk(100,25);
 //	configure_clk(100,50);
 
-	int cpu_speed=3;
+//	int cpu_speed=3;
 
-	int config=3;         // CPU initial state: 0 50/25, 1 50/50, 2 100/25, 3 100/50, 4 ...
+	int clk_config=3;         // CPU initial state: 0 50/25, 1 50/50, 2 100/25, 3 100/50, 4 ...
 	int enable_ram=1;     // RAM initial state
+	int enable_rtg=1;     // RTG initial state
+	int enable_z3ram=1;   // Z3 RAM initial state
 
+	fpga_feature_enable(enable_ram,enable_rtg,enable_z3ram);
 
-	fpga_ram_enable(enable_ram);
-//	ENABLE_TSCONDITION1; si intentas acelerar no arranca o se congela en algún momento...
+	init_shared();
 
+	read_config_file();
+
+	if(config.boot_mode==MUSASHI || config.boot_mode==UAE || config.boot_mode==UAEJIT)
+	{
+		//the autoconfig and CPU RAM are emulated in cpu_emulator(), so we don't need hardware autoconfig
+		DISABLE_CPU_RAM_FPGA;
+		DISABLE_BURST_READ_FPGA;
+		DISABLE_BURST_WRITE_FPGA;
+		DISABLE_256MB_AUTOCONFIG;
+		DISABLE_RTG_AUTOCONFIG;
+	}
+	else
+	{
 	//remove me
-//	DISABLE_BURST_READ_RAM_FPGA;
-//	DISABLE_BURST_WRITE_RAM_FPGA;
-
-	if(((*(volatile u32 *)Gpio.BaseAddress)&2)==0)
+//	DISABLE_CPU_RAM_FPGA;
+//	DISABLE_BURST_READ_FPGA;
+//	DISABLE_BURST_WRITE_FPGA;
+//	DISABLE_256MB_AUTOCONFIG;
+//	DISABLE_RTG_AUTOCONFIG;
+	}
+/*
+	if((read_reg_s01(REG0)&2)==0)
 		printf("Read Bursts DISABLED\n\r");
 	else
 		printf("Read Bursts ENABLED\n\r");
-	if(((*(volatile u32 *)Gpio.BaseAddress)&4)==0)
+	if((read_reg_s01(REG0)&4)==0)
 		printf("Write Bursts DISABLED\n\r");
 	else
 		printf("Write Bursts ENABLED\n\r");
+*/
 	int verbose=1;
-	switch(config)
+	int nbr=0;
+	switch(clk_config)
 	{
 		case 0:
-			cpu_speed=0;
-			configure_clk(50,25,verbose);
-			XGpioPs_WritePin(&GpioPs, LED2, 1);
+//			cpu_speed=0;
+			configure_clk(50,25,verbose,nbr);
 			break;
 		case 1:
-			cpu_speed=1;
-			configure_clk(50,50,verbose);
-			XGpioPs_WritePin(&GpioPs, LED2, 0);
+//			cpu_speed=1;
+			configure_clk(50,50,verbose,nbr);
 			break;
 		case 2:
-			cpu_speed=2;
-			configure_clk(100,25,verbose);
-			XGpioPs_WritePin(&GpioPs, LED2, 1);
+//			cpu_speed=2;
+			configure_clk(100,25,verbose,nbr);
 			break;
 		case 3:
-			cpu_speed=3;
-			configure_clk(100,50,verbose);
-			XGpioPs_WritePin(&GpioPs, LED2, 0);
+//			cpu_speed=3;
+			configure_clk(100,50,verbose,nbr);
 			break;
 	}
 
+	video_state=video_init();
+
 //    PrepareHdf();
 //    InitGayle();
-
+//#define READ_BOOT_IMAGE
+#ifdef READ_BOOT_IMAGE
+	static FIL fil;		/* File object */
+	static FATFS fatfs;
 	TCHAR *Path = "0:/";
 	f_mount(&fatfs, Path, 1); // 1 mount immediately
 	f_open(&fil,Filename, FA_OPEN_ALWAYS | FA_READ);
 	f_lseek(&fil, 4);
 	UINT NumBytesRead;
-	f_read(&fil, (void*)((u32)frameBuf), 1920*1080*4,&NumBytesRead);
-	f_close(&fil);
-	int8_t r,g,b;
-	u32* framebuffer=(u32*)((u32)frameBuf);
-	for(int i=0;i<1080;i++)
+	printf("Reading %s file:\r\n[----------]\r\n\033[F",Filename);
+	for(uint32_t i=0,j=0,k=1;i<1920*1080*4;i+=10*1080*4,j++)
 	{
-		for(int j=0;j<1920;j++)
+		if(j==19)
 		{
-			SWAP32(framebuffer[1920*i+j]);
+			j=0;
+			printf("%.*s\r\n\033[F",(int)++k,"[==========]");
 		}
+		f_read(&fil, (void*)((uint32_t)video_state->framebuffer+i), 10*1080*4,&NumBytesRead);
 	}
-	Xil_DCacheFlushRange((unsigned int) framebuffer, 1920*1080*4);
-
+	f_close(&fil);
+	printf("\r\nFile read OK\r\n");
+	reset_video(NO_RESET_FRAMEBUFFER);
+#else
+	video_reset();
+#endif
 	XGpioPs_WritePin(&GpioPs, LED1, 1);
-	XGpio_DiscreteSet(&Gpio, 1, FPGA_RESET);
-	XGpioPs_WritePin(&GpioPs, CPLD_RESET, 0);
+	DiscreteSet(REG0, FPGA_RESET);
+	CPLD_RESET_ARM(0);
 	usleep(2500);
 
 	XGpioPs_WritePin(&GpioPs, LED1, 0);
-	XGpio_DiscreteClear(&Gpio, 1, FPGA_RESET);
+	DiscreteClear(REG0, FPGA_RESET);
 
-//	struct zz_video_mode *vmode = &preset_video_modes[mode];
-//	pixelclock_init_2(mode);
-//	hdmi_ctrl_init();
-//	init_vdma(1920,1080, 1, 1, (u32)framebuffer);
-
-//	IntcInitFunction(INTC_DEVICE_ID);
-
-	reset_video(NO_RESET_FRAMEBUFFER);
-
-#define M68K_RUNNING 0
-#define M68K_RESET   1
-	int state=M68K_RUNNING;
 	int ret=0;
-	int timer_counter_update_screen=0;
-	int timer_counter_update_led=0;
-	rtg_init();
-	XGpioPs_WritePin(&GpioPs, CPLD_RESET, 1);
+//	int timer_counter_update_led=0;
+
+	// Zturn Patch for Ateros phy
+	Xil_Out32(0xE000A000 + 0x244,0x00080000);
+	Xil_Out32(0xE000A000 + 0x248,0x00080000);
+	Xil_Out32(0xE000A000 +   0xC,0xFFF70008);
+//	sleep(1);
+
+	xadc_init();
+
+	ethernet_init();
+
+#define INT_IPL_ON_THIS_CORE 0
+	fpga_interrupt_connect(isr_video,isr_audio_tx,INT_IPL_ON_THIS_CORE);
+
+//	XGpioPs_WritePin(&GpioPs, nBR_ARM, 0);
+
+	flash_colors();
+
+    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_DATA_ABORT_INT, DataAbortHandler,0);
+//    *((volatile uint32_t*)0xF8F01834)&=~0x00000001; // FIXME: disable interrupt for core 0
+
+	NBR_ARM(0);
+	CPLD_RESET_ARM(0);
+	usleep(100);
+	CPLD_RESET_ARM(1);
+
+	Xil_ExceptionEnable();
+	if(config.boot_mode==MUSASHI || config.boot_mode==UAE || config.boot_mode==UAEJIT)
+	{
+	    // Esto hay que repetirlo más adelante...
+	    *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
+	    state68k=-1; // don't use cache flush when using emulator
+	    cpu_emulator(); // infinite loop inside
+	}
+
+	NBR_ARM(1);
+	CPLD_RESET_ARM(0);
+	usleep(100);
+	CPLD_RESET_ARM(1);
 
 	while(1)
 	{
-		switch(state)
+		switch(stateARM)
+		{
+		case ARM_NO_BUS_MASTER:
+			if(arm_request_bus_master)
+			{
+				NBR_ARM(0);
+				stateARM=ARM_REQUEST_BUS_MASTER;
+			}
+			break;
+		case ARM_REQUEST_BUS_MASTER:
+		    if(READ_NBG_ARM()==0)
+			{
+				printf("Bus Request from ARM OK\n");
+				stateARM=ARM_BUS_MASTER;
+			}
+			break;
+		case ARM_BUS_MASTER:
+			{
+				switch(arm_command)
+				{
+					case 1:
+						arm_command=2;
+//						enables=arm_read_amiga(0xDFF01C,WORD);
+//						arm_write_amiga(0xDFF09A,0x7FFF,WORD);
+//						arm_write_amiga(0xDFF09C,0x7FFF,WORD);
+//						arm_write_amiga(0xDFF096,0x7FFF,WORD);
+
+//						arm_write_amiga(0xDFF100,0x0200,WORD);
+//						arm_write_amiga(0xDFF110,0x0000,WORD);
+//						arm_write_amiga(0xDFF180,0x0000,WORD);
+						break;
+					case 2:
+						{
+							static int a=256,b=256;
+							a--;
+							a&=0xFF;
+							if(a==0)
+							{
+								b--;
+								b&=0xFF;
+								if(b==0)
+									arm_command=3;
+							}
+							arm_write_amiga(0xDFF180,a,WORD_);
+						}
+						break;
+					case 3:
+//						arm_write_amiga(0xDFF09A,0x8000|enables,WORD);
+						write_reg_s00(0x10,0x0); // Bus Hi-Z
+						arm_command=0;
+						break;
+					case 4:
+						arm_write_amiga(amiga_address,amiga_data,amiga_size);
+						write_reg_s00(0x10,0x0); // Bus Hi-Z
+						arm_command=0;
+						break;
+					case 5:
+						amiga_data=arm_read_amiga(amiga_address,amiga_size);
+						write_reg_s00(0x10,0x0); // Bus Hi-Z
+						arm_command=0;
+						break;
+					case 0:
+					default:
+						break;
+				}
+			}
+			if(arm_request_bus_master==0)
+			{
+				NBR_ARM(1);
+				stateARM=ARM_RELINQUISH_BUS_MASTER;
+			}
+			break;
+		case ARM_RELINQUISH_BUS_MASTER:
+		    if(READ_NBG_ARM()==1)
+			{
+				printf("Bus Relinquish from ARM OK\n");
+				stateARM=ARM_NO_BUS_MASTER;
+			}
+			break;
+		}
+		switch(state68k)
 		{
 		case M68K_RUNNING:
-			loop2();
 			rtg_loop();
-			if(timer_counter_update_screen<=10000000)
-			{
-				timer_counter_update_screen++;
-			}
-			if(timer_counter_update_screen==10000000)
-			{
-				update_z3660_screen();
-			}
 			if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
 			{
 				printf("Reset active (DOWN)...\n\r");
-				state=M68K_RESET;
+				state68k=M68K_RESET;
+				reset_init();
+//				Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
+//				Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
+//				uint32_t RegVal = Xil_In32(A9_CPU_RST_CTRL);
+//				XPS_SYS_CTRL_BASEADDR + A9_CPU_RST_CTRL_OFFSET
 			}
 			else
 			{
+/*
 				int delay;
-		//		XGpio_DiscreteClear(&Gpio, 1, FPGA_RESET);
+		//		DiscreteClear(REG0, FPGA_RESET);
 				delay=(5-cpu_speed)*(5-cpu_speed)*20000;
 				if(timer_counter_update_led<=2*delay)
 				{
@@ -725,29 +854,37 @@ int main()
 					timer_counter_update_led=0;
 					XGpioPs_WritePin(&GpioPs, LED1, 1);
 				}
+*/
+/*
+				static int toggle=0;
+				toggle^=1;
+				XGpioPs_WritePin(&GpioPs, LED1, toggle);
+*/
+//#define USER_SWITCH1
+#ifdef USER_SWITCH1
 				if(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
 				{
-					config++;
-					config&=3;
-					switch(config)
+					clk_config++;
+					clk_config&=3;
+					switch(clk_config)
 					{
 						case 0:
-							cpu_speed=0;
+//							cpu_speed=0;
 							configure_clk(50,25,verbose);
 							XGpioPs_WritePin(&GpioPs, LED2, 1);
 							break;
 						case 1:
-							cpu_speed=1;
+//							cpu_speed=1;
 							configure_clk(50,50,verbose);
 							XGpioPs_WritePin(&GpioPs, LED2, 0);
 							break;
 						case 2:
-							cpu_speed=2;
+//							cpu_speed=2;
 							configure_clk(100,25,verbose);
 							XGpioPs_WritePin(&GpioPs, LED2, 1);
 							break;
 						case 3:
-							cpu_speed=3;
+//							cpu_speed=3;
 							configure_clk(100,50,verbose);
 							XGpioPs_WritePin(&GpioPs, LED2, 0);
 							break;
@@ -755,32 +892,25 @@ int main()
 					while(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
 					{}
 				}
+#endif
 			}
 			break;
 		case M68K_RESET:
-			loop2();
-			if(timer_counter_update_screen<=10000000)
-			{
-				timer_counter_update_screen++;
-			}
-			if(timer_counter_update_screen==10000000)
-			{
-				update_z3660_screen();
-			}
+			reset_run();
 			ret=XGpioPs_ReadPin(&GpioPs, n040RSTI);
 			if(ret!=0)
 			{
-				state=M68K_RUNNING;
-//				XGpio_DiscreteSet(&Gpio, 1, FPGA_RESET);
-				XGpioPs_WritePin(&GpioPs, CPLD_RESET, 0);
-				XGpio_DiscreteSet(&Gpio, 1, FPGA_RESET);
+				state68k=M68K_RUNNING;
+//				DiscreteSet(REG0, FPGA_RESET);
+				CPLD_RESET_ARM(0);
+				DiscreteSet(REG0, FPGA_RESET);
 				int reset_counter=10;
 				while(reset_counter>0)
 				{
 					usleep(25000);
 					reset_counter--;
 				}
-				XGpio_DiscreteClear(&Gpio, 1, FPGA_RESET);
+				DiscreteClear(REG0, FPGA_RESET);
 				reset_counter=10;
 				while(reset_counter>0)
 				{
@@ -788,14 +918,18 @@ int main()
 					reset_counter--;
 				}
 				// Initialize something here... ???
-				XGpioPs_WritePin(&GpioPs, CPLD_RESET, 1);
+				flash_colors();
+				CPLD_RESET_ARM(0);
+				usleep(100);
+				CPLD_RESET_ARM(1);
 				printf("Reset inactive (UP)...\n\r");
-				reset_video(RESET_FRAMEBUFFER);
+				video_reset();
+				audio_reset();
 			}
 			break;
 		}
 
 	}
 	cleanup_platform();
-	return 0;
+	return(0);
 }

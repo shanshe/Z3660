@@ -32,8 +32,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity TERM is
     Port (
            BCLK : in  STD_LOGIC;
+           nBGACK : in STD_LOGIC;
            nPLSTERM : in  STD_LOGIC;
-           nRAVEC : buffer  STD_LOGIC;
+           nRAVEC : out  STD_LOGIC;
            nRBERR : in  STD_LOGIC;
 --           nTEND : in  STD_LOGIC;
            nAS040 : in  STD_LOGIC;
@@ -42,7 +43,7 @@ entity TERM is
            nRDSACK1 : out  STD_LOGIC;
            nBERR : in  STD_LOGIC;
            nRDSACK0 : out  STD_LOGIC;
-			  nIACK: in STD_LOGIC;
+           nIACK: in STD_LOGIC;
            nETERM : out  STD_LOGIC;
            nRTERM : out  STD_LOGIC);
 end TERM;
@@ -52,7 +53,9 @@ signal nRAVEC_PRE,nPLSTERM_D,nDSACK0_D,nDSACK1_D: STD_LOGIC;
 signal nETERM_int: STD_LOGIC;
 signal nRDSACK0_int: STD_LOGIC;
 signal nRDSACK1_int: STD_LOGIC;
+signal nRAVEC_int: STD_LOGIC;
 begin
+nRAVEC <= nRAVEC_int;
 
 ---- simplified equations
 --nRAVEC_PRE <= nAVEC or nAS040;
@@ -65,17 +68,18 @@ begin
 ----nRDSACK0 <= nDSACK(0) and nDSACK0_D and nPLSTERM and nPLSTERM_D and nRAVEC;
 ----nRDSACK1 <= nDSACK(1) and nDSACK1_D and nPLSTERM and nPLSTERM_D;
 --nRDSACK0 <= nDSACK(0)
---			and nDSACK0_D
---			and nPLSTERM
---			and nPLSTERM_D;
-----			and nRAVEC;
+--         and nDSACK0_D
+--         and nPLSTERM
+--         and nPLSTERM_D;
+----         and nRAVEC;
 --nRDSACK1 <= nDSACK(1)
---			and nDSACK1_D
---			and nPLSTERM
---			and nPLSTERM_D;
-----			and nRAVEC;
+--         and nDSACK1_D
+--         and nPLSTERM
+--         and nPLSTERM_D;
+----         and nRAVEC;
 
 -- "original equations"
+
 nRAVEC_PRE <= not(
        ( not(nAS040) and not(nAVEC) ) );
 nRTERM <= not(
@@ -83,7 +87,7 @@ nRTERM <= not(
     or ( not(nDSACK1_D) ) );
 nETERM <= nETERM_int;
 nETERM_int <= not(
-       ( not(nRAVEC) and not(nAS040) and not(nAVEC) )
+       ( not(nRAVEC_int) and not(nAS040) and not(nAVEC) )
     or ( not(nRBERR) and not(nBERR) and not(nAS040) )
     or ( not(nDSACK0_D) and not(nDSACK(0)) and not(nAS040) )
     or ( not(nDSACK1_D) and not(nAS040) and not(nDSACK(1)) ) );
@@ -96,23 +100,23 @@ nRDSACK1 <= nRDSACK1_int;
 nRDSACK0_int <= not(
        ( not(nDSACK(0)) )
     or ( not(nPLSTERM) )
-    or ( not(nRAVEC) )
+    or ( not(nRAVEC_int) )
     or ( not(nDSACK0_D) )
     or ( not(nPLSTERM_D) ) 
-	 );
+    );
 nRDSACK1_int <= not(
        ( not(nDSACK(1)) )
     or ( not(nPLSTERM) )
     or ( not(nDSACK1_D) )
     or ( not(nPLSTERM_D) ) 
-	 );
+    );
 
 -- Original from A3640
 --nETERM <= nETERM_int;
 --nRAVEC_PRE <= not(
 --       ( not(nAS040) and not(nAVEC) ) );
 --nRTERM <= not(
---       ( not(nETERM_int) and not(nRAVEC) and not(nAS040) )
+--       ( not(nETERM_int) and not(nRAVEC_int) and not(nAS040) )
 --    or ( not(nETERM_int) and not(nRBERR) and not(nAS040) )
 --    or ( not(nDSACK1_D) and not(nETERM_int) and not(nAS040) )
 --    or ( not(nDSACK0_D) and not(nETERM_int) and not(nAS040) ) );
@@ -124,20 +128,27 @@ nRDSACK1_int <= not(
 --nRDSACK0 <= not(
 --       ( not(nDSACK0_D) )
 --    or ( not(nPLSTERM_D) )
---    or ( not(nRAVEC) ) );
+--    or ( not(nRAVEC_int) ) );
 --nRDSACK1 <= not(
 --       ( not(nDSACK1_D) )
 --    or ( not(nPLSTERM_D) ) );
 
-	process(BCLK)
-	begin
-		if(BCLK'event and  BCLK='1') then
-			nRAVEC <= nRAVEC_PRE;
-			nPLSTERM_D <= nPLSTERM;
-			nDSACK0_D <= nDSACK(0);
-			nDSACK1_D <= nDSACK(1);
-		end if;
-	end process;
+   process(BCLK)
+   begin
+      if(BCLK'event and  BCLK='1') then
+         if nBGACK='1' then
+            nRAVEC_int <= nRAVEC_PRE;
+            nPLSTERM_D <= nPLSTERM;
+            nDSACK0_D <= nDSACK(0);
+            nDSACK1_D <= nDSACK(1);
+         else
+            nRAVEC_int <= '1';
+            nPLSTERM_D <= '1';
+            nDSACK0_D <= '1';
+            nDSACK1_D <= '1';
+         end if;
+      end if;
+   end process;
 
 end Behavioral;
 

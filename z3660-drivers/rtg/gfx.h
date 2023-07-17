@@ -1,4 +1,11 @@
 /*
+ * Z3660 Graphics Card Driver based on MNT ZZ9000 rev 1.13
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * GNU General Public License v3.0 or later
+ */
+
+/*
  * MNT ZZ9000 Amiga Graphics Card Driver (ZZ9000.card)
  * Copyright (C) 2016-2019, Lukas F. Hartmann <lukas@mntre.com>
  *                          MNT Research GmbH, Berlin
@@ -14,6 +21,7 @@
 
 #include <proto/expansion.h>
 #include <exec/libraries.h>
+#include "boardinfo.h"
 
 #define CLOCK_HZ 100000000
 
@@ -28,63 +36,54 @@ struct MNTGFXBase {
   struct ExpansionBase* expansionBase;
 };
 
-int FindCard(__reg("a0") struct RTGBoard* b);
-int InitCard(__reg("a0") struct RTGBoard* b);
+int FindCard(__REGA0(struct BoardInfo *b));
+int InitCard(__REGA0(struct BoardInfo *b));
 
 /* rtg functions ------------------------ */
 
 void nop();
 
-void init_dac(__reg("a0") struct RTGBoard* b, __reg("d7") uint16 format);
-uint32 enable_display(__reg("a0") struct RTGBoard* b, __reg("d0") uint16 enabled);
-void pan(__reg("a0") struct RTGBoard* b,__reg("a1") uint8* mem,__reg("d0") uint16 w,__reg("d1") int16 x,__reg("d2") int16 y,__reg("d7") uint16 format);
-void pan_dma(__reg("a0") struct RTGBoard* b,__reg("a1") uint8* mem,__reg("d0") uint16 w,__reg("d1") int16 x,__reg("d2") int16 y,__reg("d7") uint16 format);
-void set_memory_mode(__reg("a0") struct RTGBoard* b,__reg("d7") uint16 format);
-void set_read_plane(__reg("a0") struct RTGBoard* b,__reg("d0") uint8 p);
-void set_write_mask(__reg("a0") struct RTGBoard* b,__reg("d0") uint8 m);
-void set_clear_mask(__reg("a0") struct RTGBoard* b,__reg("d0") uint8 m);
-void vsync_wait(__reg("a0") struct RTGBoard* b);
-int is_vsynced(__reg("a0") struct RTGBoard* b,__reg("d0") uint8 p);
-void set_clock(__reg("a0") struct RTGBoard* b);
-void set_palette(__reg("a0") struct RTGBoard* b,__reg("d0") uint16 idx,__reg("d1") uint16 len);
-void init_mode(__reg("a0") struct RTGBoard* b,__reg("a1") struct ModeInfo* m,__reg("d0") int16 border);
-uint32 is_bitmap_compatible(__reg("a0") struct RTGBoard* b,__reg("d7") uint16 format);
-uint16 get_pitch(__reg("a0") struct RTGBoard* b,__reg("d0") uint16 width,__reg("d7") uint16 format);
-uint32 map_address(__reg("a0") struct RTGBoard* b,__reg("a1") uint32 addr);
-uint32 get_pixelclock_index(__reg("a0") struct RTGBoard* b,__reg("a1") struct ModeInfo* mode,__reg("d0") int32 clock,__reg("d7") uint16 format);
-uint32 get_pixelclock_hz(__reg("a0") struct RTGBoard* b,__reg("a1") struct ModeInfo* mode,__reg("d0") int32 clock,__reg("d7") uint16 format);
-uint32 monitor_switch(__reg("a0") struct RTGBoard* b,__reg("d0") uint16 state);
-void rect_p2c(__reg("a0") struct RTGBoard* b,__reg("a1") struct BitMap* bm,__reg("a2") struct RenderInfo* r,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 dx,__reg("d3") uint16 dy,__reg("d4") uint16 w,__reg("d5") uint16 h,__reg("d6") uint8 minterm,__reg("d7") uint8 mask);
-void rect_p2c_dma(__reg("a0") struct RTGBoard* b,__reg("a1") struct BitMap* bm,__reg("a2") struct RenderInfo* r,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 dx,__reg("d3") uint16 dy,__reg("d4") uint16 w,__reg("d5") uint16 h,__reg("d6") uint8 minterm,__reg("d7") uint8 mask);
-void rect_p2d(__reg("a0") struct RTGBoard* b, __reg("a1") struct BitMap* bm, __reg("a2") struct RenderInfo* r, __reg("a3") struct ColorIndexMapping* cim, __reg("d0") uint16 x, __reg("d1") uint16 y, __reg("d2") uint16 dx, __reg("d3") uint16 dy, __reg("d4") uint16 w, __reg("d5") uint16 h, __reg("d6") uint8 minterm, __reg("d7") uint8 mask);
-void rect_p2d_dma(__reg("a0") struct RTGBoard* b, __reg("a1") struct BitMap* bm, __reg("a2") struct RenderInfo* r, __reg("a3") struct ColorIndexMapping* cim, __reg("d0") uint16 x, __reg("d1") uint16 y, __reg("d2") uint16 dx, __reg("d3") uint16 dy, __reg("d4") uint16 w, __reg("d5") uint16 h, __reg("d6") uint8 minterm, __reg("d7") uint8 mask);
-void rect_invert(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("d0") uint16 x, __reg("d1") uint16 y,__reg("d2") uint16 w,__reg("d3") uint16 h,__reg("d4") uint8 mask,__reg("d7") uint16 format);
-void rect_invert_dma(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("d0") uint16 x, __reg("d1") uint16 y,__reg("d2") uint16 w,__reg("d3") uint16 h,__reg("d4") uint8 mask,__reg("d7") uint16 format);
-void draw_line(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("a2") struct Line* l,__reg("d0") uint16 mask,__reg("d7") uint16 format);
-void draw_line_dma(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("a2") struct Line* l,__reg("d0") uint16 mask,__reg("d7") uint16 format);
-void rect_fill(__reg("a0") struct RTGBoard* b, __reg("a1") struct RenderInfo* r, __reg("d0") uint16 x, __reg("d1") uint16 y, __reg("d2") uint16 w, __reg("d3") uint16 h, __reg("d4") uint32 color, __reg("d5") uint8 mask);
-void rect_fill_dma(__reg("a0") struct RTGBoard* b, __reg("a1") struct RenderInfo* r, __reg("d0") uint16 x, __reg("d1") uint16 y, __reg("d2") uint16 w, __reg("d3") uint16 h, __reg("d4") uint32 color, __reg("d5") uint8 mask);
-void rect_copy(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 dx,__reg("d3") uint16 dy,__reg("d4") uint16 w,__reg("d5") uint16 h,__reg("d6") uint8 m,__reg("d7") uint16 format);
-void rect_copy_dma(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 dx,__reg("d3") uint16 dy,__reg("d4") uint16 w,__reg("d5") uint16 h,__reg("d6") uint8 m,__reg("d7") uint16 format);
-void rect_template(__reg("a0") struct RTGBoard* b, __reg("a1") struct RenderInfo* r, __reg("a2") struct Template* t,
-                   __reg("d0") uint16 x, __reg("d1") uint16 y, __reg("d2") uint16 w, __reg("d3") uint16 h,
-                   __reg("d4") uint32 mask, __reg("d7") uint32 format);
-void rect_template_dma(__reg("a0") struct RTGBoard* b, __reg("a1") struct RenderInfo* r, __reg("a2") struct Template* t,
-                   __reg("d0") uint16 x, __reg("d1") uint16 y, __reg("d2") uint16 w, __reg("d3") uint16 h,
-                   __reg("d4") uint32 mask, __reg("d7") uint32 format);
-void rect_pattern(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("a2") struct Pattern* pat,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 w,__reg("d3") uint16 h,__reg("d4") uint8 mask,__reg("d7") uint32 format);
-void rect_pattern_dma(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* r,__reg("a2") struct Pattern* pat,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 w,__reg("d3") uint16 h,__reg("d4") uint8 mask,__reg("d7") uint32 format);
-void rect_copy_nomask(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* sr,__reg("a2") struct RenderInfo* dr,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 dx,__reg("d3") uint16 dy,__reg("d4") uint16 w,__reg("d5") uint16 h,__reg("d6") uint8 opcode,__reg("d7") uint16 format);
-void rect_copy_nomask_dma(__reg("a0") struct RTGBoard* b,__reg("a1") struct RenderInfo* sr,__reg("a2") struct RenderInfo* dr,__reg("d0") uint16 x,__reg("d1") uint16 y,__reg("d2") uint16 dx,__reg("d3") uint16 dy,__reg("d4") uint16 w,__reg("d5") uint16 h,__reg("d6") uint8 opcode,__reg("d7") uint16 format);
-void blitter_wait(__reg("a0") struct RTGBoard* b);
+int FindCard(__REGA0(struct BoardInfo* b));
+int InitCard(__REGA0(struct BoardInfo* b));
 
-void sprite_setup(__reg("a0") struct RTGBoard* b,__reg("d0") uint8 enable);
-void sprite_xy(__reg("a0") struct RTGBoard* b, __reg("d0") int16 x, __reg("d1") int16 y, __reg("d7") uint16 format);
-void sprite_xy_dma(__reg("a0") struct RTGBoard* b, __reg("d0") int16 x, __reg("d1") int16 y, __reg("d7") uint16 format);
-void sprite_bitmap(__reg("a0") struct RTGBoard* b,__reg("d7") uint16 format);
-void sprite_bitmap_dma(__reg("a0") struct RTGBoard* b,__reg("d7") uint16 format);
-void sprite_colors(__reg("a0") struct RTGBoard* b,__reg("d0") uint8 idx,__reg("d1") uint8 red,__reg("d2") uint8 green,__reg("d3") uint8 blue, __reg("d7") uint16 format);
-void sprite_colors_dma(__reg("a0") struct RTGBoard* b,__reg("d0") uint8 idx,__reg("d1") uint8 red,__reg("d2") uint8 green,__reg("d3") uint8 blue, __reg("d7") uint16 format);
+void SetDAC (__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format));
+void SetGC (__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __REGD0(BOOL border));
+void SetColorArray (__REGA0(struct BoardInfo *b), __REGD0(UWORD start), __REGD1(UWORD num));
+void SetPanning (__REGA0(struct BoardInfo *b), __REGA1(UBYTE *addr), __REGD0(UWORD width), __REGD1(WORD x_offset), __REGD2(WORD y_offset), __REGD7(RGBFTYPE format));
+UWORD SetSwitch (__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled));
+UWORD SetDisplay (__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled));
+void WaitBlitter (__REGA0(struct BoardInfo *b));
 
-void set_split_pos(__reg("a0") struct RTGBoard* b, __reg("d0") int16 pos);
-void set_split_pos_dma(__reg("a0") struct RTGBoard* b, __reg("d0") int16 pos);
+UWORD CalculateBytesPerRow (__REGA0(struct BoardInfo *b), __REGD0(UWORD width), __REGD7(RGBFTYPE format));
+APTR CalculateMemory (__REGA0(struct BoardInfo *b), __REGA1(unsigned long addr), __REGD7(RGBFTYPE format));
+ULONG GetCompatibleFormats (__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format));
+
+LONG ResolvePixelClock (__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __REGD0(ULONG pixel_clock), __REGD7(RGBFTYPE format));
+ULONG GetPixelClock (__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __REGD0(ULONG index), __REGD7(RGBFTYPE format));
+void SetClock (__REGA0(struct BoardInfo *b));
+
+void SetMemoryMode (__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format));
+void SetWriteMask (__REGA0(struct BoardInfo *b), __REGD0(UBYTE mask));
+void SetClearMask (__REGA0(struct BoardInfo *b), __REGD0(UBYTE mask));
+void SetReadPlane (__REGA0(struct BoardInfo *b), __REGD0(UBYTE plane));
+
+void WaitVerticalSync (__REGA0(struct BoardInfo *b), __REGD0(BOOL toggle));
+BOOL GetVSyncState(__REGA0(struct BoardInfo *b), __REGD0(BOOL toggle));
+
+void FillRect (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD w), __REGD3(WORD h), __REGD4(ULONG color), __REGD5(UBYTE mask), __REGD7(RGBFTYPE format));
+void InvertRect (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD w), __REGD3(WORD h), __REGD4(UBYTE mask), __REGD7(RGBFTYPE format));
+void BlitRect (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD dx), __REGD3(WORD dy), __REGD4(WORD w), __REGD5(WORD h), __REGD6(UBYTE mask), __REGD7(RGBFTYPE format));
+void BlitRectNoMaskComplete (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *rs), __REGA2(struct RenderInfo *rt), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD dx), __REGD3(WORD dy), __REGD4(WORD w), __REGD5(WORD h), __REGD6(UBYTE minterm), __REGD7(RGBFTYPE format));
+void BlitTemplate (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGA2(struct Template *t), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD w), __REGD3(WORD h), __REGD4(UBYTE mask), __REGD7(RGBFTYPE format));
+void BlitPattern (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGA2(struct Pattern *p), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD w), __REGD3(WORD h), __REGD4(UBYTE mask), __REGD7(RGBFTYPE format));
+void DrawLine (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGA2(struct Line *l), __REGD0(UBYTE mask), __REGD7(RGBFTYPE format));
+
+void BlitPlanar2Chunky (__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm), __REGA2(struct RenderInfo *r), __REGD0(SHORT x), __REGD1(SHORT y), __REGD2(SHORT dx), __REGD3(SHORT dy), __REGD4(SHORT w), __REGD5(SHORT h), __REGD6(UBYTE minterm), __REGD7(UBYTE mask));
+void BlitPlanar2Direct (__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bmp), __REGA2(struct RenderInfo *r), __REGA3(struct ColorIndexMapping *clut), __REGD0(SHORT x), __REGD1(SHORT y), __REGD2(SHORT dx), __REGD3(SHORT dy), __REGD4(SHORT w), __REGD5(SHORT h), __REGD6(UBYTE minterm), __REGD7(UBYTE mask));
+
+void SetSprite (__REGA0(struct BoardInfo *b), __REGD0(BOOL what), __REGD7(RGBFTYPE format));
+void SetSpritePosition (__REGA0(struct BoardInfo *b), __REGD0(WORD x), __REGD1(WORD y), __REGD7(RGBFTYPE format));
+void SetSpriteImage (__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format));
+void SetSpriteColor (__REGA0(struct BoardInfo *b), __REGD0(UBYTE idx), __REGD1(UBYTE R), __REGD2(UBYTE G), __REGD3(UBYTE B), __REGD7(RGBFTYPE format));
+
+void SetSplitPosition (__REGA0(struct BoardInfo *b),__REGD0(SHORT pos));

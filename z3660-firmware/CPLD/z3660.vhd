@@ -31,59 +31,62 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity z3660 is
     Port ( nAVEC : in  STD_LOGIC;
-           nBB040 : in  STD_LOGIC;
+           nBB040 : inout  STD_LOGIC;
            R_W040 : in  STD_LOGIC;
-           TP7 : in  STD_LOGIC;
-           TP8 : out  STD_LOGIC;
-           TP9 : out  STD_LOGIC;
-           TP10 : out  STD_LOGIC;
-           TP11 : out  STD_LOGIC;
-           TP12 : out  STD_LOGIC;
-           TP13 : out  STD_LOGIC;
+           PS_MIO_8 : in  STD_LOGIC;
+           PS_MIO_0 : out  STD_LOGIC;
+           PS_MIO_9 : out  STD_LOGIC;
+           PS_MIO_12 : out  STD_LOGIC;
+           PS_MIO_13 : in  STD_LOGIC;
+           PS_MIO_15 : out  STD_LOGIC;
+           INT6 : in  STD_LOGIC;
+           nBTT : in  STD_LOGIC;
+           nBGR040 : in  STD_LOGIC;
+           nINT6 : out  STD_LOGIC;
+           R_W040_out : out  STD_LOGIC;
+           TP3 : in  STD_LOGIC;
+           n040RSTO : in  STD_LOGIC;
+           nSNOOP : out  STD_LOGIC;
+           LEBUS_DMA : out  STD_LOGIC;
+           TP7 : out  STD_LOGIC;
            RESET_OUT : out  STD_LOGIC;
-           TP16 : out  STD_LOGIC;
-           TP17 : in  STD_LOGIC;
            PCLK : in  STD_LOGIC;
-           nTS : in  STD_LOGIC;
+           nTS : out  STD_LOGIC;                             ---------------------------
            nHLT : in  STD_LOGIC;
            nEMUL : in  STD_LOGIC;
            nLOCK : in  STD_LOGIC;
            nLOCKE : in  STD_LOGIC;
-           nDSACK : in  STD_LOGIC_VECTOR (1 downto 0);
+           nDSACK : inout  STD_LOGIC_VECTOR (1 downto 0);      ---------------------------
            nBR : in  STD_LOGIC;
            nCPURST : in  STD_LOGIC;
            nCIIN : in  STD_LOGIC;
            nBR040 : in  STD_LOGIC;
-           nTA : buffer  STD_LOGIC;
+           nTA : inout  STD_LOGIC;                            ---------------------------
            nTEA : out  STD_LOGIC;
-           SIZ40 : in  STD_LOGIC_VECTOR (1 downto 0);
-           nSTERM : in  STD_LOGIC;
+           SIZ40 : inout  STD_LOGIC_VECTOR (1 downto 0);
+           nSTERM : inout  STD_LOGIC;
            V_DETECTOR : in  STD_LOGIC;
-           n040RSTI : buffer  STD_LOGIC;
-           TP18 : out  STD_LOGIC;
-           TP19 : out  STD_LOGIC;
-           TM : in  STD_LOGIC_VECTOR (2 downto 0);
-           TT : in  STD_LOGIC_VECTOR (1 downto 0);
-           MAPROM : in  STD_LOGIC;
+           n040RSTI : out  STD_LOGIC;
+           TM : inout  STD_LOGIC_VECTOR (2 downto 0);
+           TT : inout  STD_LOGIC_VECTOR (1 downto 0);
+           J1 : out  STD_LOGIC;
            n040CIOUT : in  STD_LOGIC;
-           TP20 : out  STD_LOGIC;
-           TP21 : out  STD_LOGIC;
            nIPL : in  STD_LOGIC_VECTOR (2 downto 0);
-           nDS040 : out  STD_LOGIC;
+           nDS040 : inout  STD_LOGIC;
            p040A : in  STD_LOGIC_VECTOR (31 downto 19);
-           p040A3 : in  STD_LOGIC;
-           p040A2 : in  STD_LOGIC;
-           p040A1 : in  STD_LOGIC;
-           p040A0 : in  STD_LOGIC;
+           p040A3 : inout  STD_LOGIC;
+           p040A2 : inout  STD_LOGIC;
+           p040A1 : inout  STD_LOGIC;
+           p040A0 : inout  STD_LOGIC;
            LEBUS : out  STD_LOGIC_VECTOR (7 downto 0);
            OEBUS : out  STD_LOGIC_VECTOR (7 downto 0);
-           TP14 : out  STD_LOGIC;
-
+           
            nCLKEN : in  STD_LOGIC; -- be careful, output from FPGA
            n060IPL : out  STD_LOGIC_VECTOR (2 downto 0);
-           MA : in  STD_LOGIC_VECTOR (26 downto 24); -- not really used anymore
-           NU_3 : out  STD_LOGIC;
-           nAS040 : out  STD_LOGIC;
+           DEBUG1 : in  STD_LOGIC;
+           DEBUG2 : in  STD_LOGIC;
+           DEBUG3 : in  STD_LOGIC;
+           nAS040 : inout  STD_LOGIC;
            nBERR : in  STD_LOGIC;
            n040EMUL : out  STD_LOGIC;
            nTCI : out  STD_LOGIC;
@@ -91,17 +94,16 @@ entity z3660 is
            nAVEC040 : out  STD_LOGIC;
            nBG040 : out  STD_LOGIC;
            CPUCLK : in  STD_LOGIC;
-           nR_W040 : out  STD_LOGIC;
-           NU_7 : in  STD_LOGIC; -- FPGA presence input
-           RESET_CPLD : in  STD_LOGIC;
+           nR_W040_out : out  STD_LOGIC;
+           FPGA_PRESENCE : in  STD_LOGIC;
            CLK90 : in  STD_LOGIC;
            FC : out  STD_LOGIC_VECTOR (2 downto 0);
-           A : buffer  STD_LOGIC_VECTOR (3 downto 0);
+           A : inout  STD_LOGIC_VECTOR (3 downto 0);
            nBGACK : in  STD_LOGIC;
            BCLK : in  STD_LOGIC;
-           SIZ : buffer  STD_LOGIC_VECTOR (1 downto 0);
-           NU_2 : in  STD_LOGIC; -- es TBI que viene que la FPGA
-           NU_1 : in  STD_LOGIC;
+           SIZ : inout  STD_LOGIC_VECTOR (1 downto 0);
+           nTBI_FPGA : in  STD_LOGIC;
+           nTS_FPGA : in  STD_LOGIC;
            nBG : out  STD_LOGIC;
            nBGACK040 : out  STD_LOGIC;
            nDMACOE : out  STD_LOGIC := '1'
@@ -146,14 +148,14 @@ architecture Behavioral of z3660 is
          nCYCPEND : in  STD_LOGIC;
          n040RSTI : in  STD_LOGIC;
          nLSTERM : in  STD_LOGIC;
-         SLV0 : buffer  STD_LOGIC;
-         SLV1 : buffer  STD_LOGIC;
-         SLV2 : buffer  STD_LOGIC;
-         SLV3 : buffer  STD_LOGIC;
-         MAS0 : buffer  STD_LOGIC;
-         MAS1 : buffer  STD_LOGIC;
-         MAS2 : buffer  STD_LOGIC;
-         MAS3 : buffer  STD_LOGIC;
+         SLV0 : out  STD_LOGIC;
+         SLV1 : out  STD_LOGIC;
+         SLV2 : out  STD_LOGIC;
+         SLV3 : out  STD_LOGIC;
+         MAS0 : out  STD_LOGIC;
+         MAS1 : out  STD_LOGIC;
+         MAS2 : out  STD_LOGIC;
+         MAS3 : out  STD_LOGIC;
 --         nDS040 : out  STD_LOGIC;
 --         nAS040 : out  STD_LOGIC;
          R_W040 : in  STD_LOGIC;
@@ -199,7 +201,9 @@ architecture Behavioral of z3660 is
          n040RSTI : in  STD_LOGIC;
          nBG040 : out  STD_LOGIC;
          nBG : out  STD_LOGIC;
-         nBGACK040 : out  STD_LOGIC
+         nBGACK040 : out  STD_LOGIC;
+         nBR_ARM : in STD_LOGIC;
+         nBG_ARM : out STD_LOGIC
          );
    END COMPONENT;
    COMPONENT START
@@ -235,8 +239,8 @@ architecture Behavioral of z3660 is
          MAS2 : in  STD_LOGIC;
          MAS3 : in  STD_LOGIC;
          FC : out  STD_LOGIC_VECTOR (2 downto 0);
-         SIZ : buffer  STD_LOGIC_VECTOR (1 downto 0);
-         A : buffer  STD_LOGIC_VECTOR (3 downto 0);
+         SIZ : out  STD_LOGIC_VECTOR (1 downto 0);
+         A : out  STD_LOGIC_VECTOR (3 downto 0);
          nIACK : out  STD_LOGIC;
          nBGACK040 : in  STD_LOGIC
          );
@@ -262,8 +266,9 @@ architecture Behavioral of z3660 is
    COMPONENT TERM
    PORT (
          BCLK : in  STD_LOGIC;
+         nBGACK : in STD_LOGIC;
          nPLSTERM : in  STD_LOGIC;
-         nRAVEC : buffer  STD_LOGIC;
+         nRAVEC : out  STD_LOGIC;
          nRBERR : in  STD_LOGIC;
 --         nTEND : in  STD_LOGIC;
          nAS040 : in  STD_LOGIC;
@@ -293,245 +298,448 @@ architecture Behavioral of z3660 is
    END COMPONENT;
 
 signal nIACK: STD_LOGIC;
-signal nTEA_int,nTA_int,nTA_int2: STD_LOGIC :='1';
+signal nTEA_int,nTA_int: STD_LOGIC :='1';
 signal nBGACK040_int,nBG_int:  STD_LOGIC :='1';
 --signal nT1A,nERST: STD_LOGIC :='0';
-signal nDS040_int,nAS040_int: STD_LOGIC :='0';
+signal nDS040_int,nAS040_int: STD_LOGIC :='1';
 --signal CPUCLK_int,CLK90_int: STD_LOGIC :='0';
 signal nPWRST,nLSTERM: STD_LOGIC;
 signal nPLSTERM: STD_LOGIC;
 signal nRAVEC,nRTERM,nETERM,nRBERR,nRHALT,nRDSACK0,nRDSACK1: STD_LOGIC;
 signal MAS0,MAS1,MAS2,MAS3: STD_LOGIC :='0';
-signal SLV0,SLV1,SLV2: STD_LOGIC :='0';
-signal SLV3: STD_LOGIC :='0';
+signal SLV0,SLV1,SLV2,SLV3: STD_LOGIC :='0';
 signal nCYCPEND: STD_LOGIC :='1';
 signal nTCI_int: STD_LOGIC :='1';
 signal nAVEC040_int: STD_LOGIC :='1';
 signal nSBR030,nSBGACK030,nBGACK_D,nBR_D: STD_LOGIC;
 signal nRCIIN: STD_LOGIC;
-signal nDMACOE_int: STD_LOGIC;
-signal OEBUS_int: STD_LOGIC_VECTOR (7 downto 0);
-signal LEBUS_int: STD_LOGIC_VECTOR (7 downto 0);
+signal nDMACOE_int: STD_LOGIC:='1';
+signal OEBUS_int: STD_LOGIC_VECTOR (7 downto 0):="11111111";
+signal LEBUS_int: STD_LOGIC_VECTOR (7 downto 0):="00000000";
 --signal n040IPL: STD_LOGIC_VECTOR (2 downto 0);
-signal nTS_030,nTS_030_s,nTS_030_s1,nTA_int3,nTA_int4,nTA_int5: STD_LOGIC:='1';
-signal nTS_030_d: STD_LOGIC_VECTOR(3 downto 0):="1111";
-signal nTS_state: STD_LOGIC_VECTOR(3 downto 0):="0000";
-signal BCLK_int: STD_LOGIC :='0';
+signal nTS_030,nTS_030_s,nTS_030_s1,nTA_int2,nTA_int3: STD_LOGIC:='1';
+signal BCLK_int,BCLK_d,BCLK_m: STD_LOGIC :='0';
 
-signal BCLK_int_d: STD_LOGIC_VECTOR(3 downto 0):="1111";
-signal nTA_d: STD_LOGIC_VECTOR(3 downto 0):="0000";
+signal nTA_d: STD_LOGIC_VECTOR(1 downto 0):="00";
+signal nTEA_d: STD_LOGIC_VECTOR(1 downto 0):="00";
 
---signal OEBUS_OUT: STD_LOGIC;
---signal nTS_RAM: STD_LOGIC :='1';
---signal nTEND:  STD_LOGIC;
+signal reset_extended: STD_LOGIC:='1';
+signal reset_counter: STD_LOGIC_VECTOR(8 downto 0):="000000000";
+signal nBG_ARM: STD_LOGIC:='1';
 
--- Master State Values
-CONSTANT  I: std_logic_vector(3 downto 0):= "0000";
-CONSTANT  A1: std_logic_vector(3 downto 0):= "0001";
-CONSTANT  B: std_logic_vector(3 downto 0):= "0101";
-CONSTANT  C: std_logic_vector(3 downto 0):= "1101";
-CONSTANT  D: std_logic_vector(3 downto 0):= "0100";
-CONSTANT  E: std_logic_vector(3 downto 0):= "1100";
-CONSTANT  F: std_logic_vector(3 downto 0):= "1001";
-CONSTANT  G: std_logic_vector(3 downto 0):= "1011";
-CONSTANT  H: std_logic_vector(3 downto 0):= "1111";
-CONSTANT  J: std_logic_vector(3 downto 0):= "1110";
-CONSTANT  K: std_logic_vector(3 downto 0):= "0011";
-CONSTANT  L: std_logic_vector(3 downto 0):= "0010";
-CONSTANT  M: std_logic_vector(3 downto 0):= "0111";
-CONSTANT  N: std_logic_vector(3 downto 0):= "0110";
-CONSTANT  Z: std_logic_vector(3 downto 0):= "1000";
-CONSTANT DC: std_logic_vector(3 downto 0):= "1010";
+signal nBR_ARM : STD_LOGIC:='1';
+signal RESET_CPLD : STD_LOGIC:='1';
 
--- Slave State Values
---CONSTANT   S3: std_logic_vector(2 downto 0):= "000";
---CONSTANT   S2: std_logic_vector(2 downto 0):= "001";
---CONSTANT   S0: std_logic_vector(2 downto 0):= "010";
---CONSTANT  S3W: std_logic_vector(2 downto 0):= "011";
---CONSTANT   S1: std_logic_vector(2 downto 0):= "100";
---CONSTANT   SB: std_logic_vector(2 downto 0):= "101";
---CONSTANT S3W2: std_logic_vector(2 downto 0):= "110";
---CONSTANT  SR0: std_logic_vector(2 downto 0):= "111";
+signal R_W040_out_int: STD_LOGIC;
+signal nR_W040_out_int: STD_LOGIC;
+signal RAM_select: std_logic;
+signal nTS_int: std_logic;
+signal nTA_out: std_logic;
+signal SIZ40_int: std_logic_vector(1 downto 0);
+signal p040A0_int: std_logic;
+signal p040A1_int: std_logic;
+signal p040A2_int: std_logic;
+signal p040A3_int: std_logic;
+signal nDMA_STERM,nDMA_DSACK: std_logic;
+signal DMA_select: std_logic;
+signal nBG040_int: std_logic;
+signal LEBUS_DMA_int: std_logic;
+signal n040RSTI_int: std_logic;
+signal A_int: std_logic_vector(3 downto 0);
+signal SIZ_int: std_logic_vector(1 downto 0);
+signal FC_int: std_logic_vector(2 downto 0);
 
---signal MAS_state: STD_LOGIC_VECTOR(3 downto 0);
---signal SLV_state: STD_LOGIC_VECTOR(2 downto 0);
---signal contador: STD_LOGIC_VECTOR(1 downto 0);
-signal FPGA_RAM_SELECTED: STD_LOGIC;
-signal FPGA_PRESENCE: STD_LOGIC;
+TYPE dma_fsm IS (
+            DMA_IDLE,
+            DMA_DELAY_TS,
+            DMA_START_TS,
+            DMA_START_TS1,
+            DMA_START_TS2,
+            DMA_WAIT_TA,
+            DMA_LATCH_BUS_AND_TERM,
+            DMA_TERM_WITH_DSACK,
+            DMA_TERM_WITH_DSACK2,
+            DMA_TERM_DELAY
+);
+signal DMA_state: dma_fsm := DMA_IDLE;
+attribute fsm_encoding : string;
+attribute fsm_encoding of DMA_state : signal is "compact";
+
+TYPE nts_fsm IS (
+            NTS_IDLE,
+            NTS_START,
+            NTS_STRETCH,
+            NTS_STRETCH2,
+            NTS_END
+);
+signal NTS_state: nts_fsm := NTS_IDLE;
+attribute fsm_encoding of NTS_state : signal is "compact";
 
 begin
---   MAS_state <= MAS3 & MAS2 & MAS1 & MAS0;
---   SLV_state <= SLV2 & SLV1 & SLV0;
-
---   TP8  <= '1' when (nRDSACK0='0' and nRDSACK1='0') else '0'; -- longport
---   TP9  <= '1' when (nRDSACK0='1' and nRDSACK1='0') else '0'; -- wordport
---   TP10 <= '1' when (nRDSACK0='0' and nRDSACK1='1') else '0'; -- byteport
---   TP11 <= '1' when SLV_state=S1 else '0';
---   TP12 <= '1' when SLV_state=SB else '0';
---   TP13 <= '1' when SLV_state=s3W2 else '0';
---   TP14 <= '1' when SLV_state=SR0 else '0';
---   TP15 <= SLV3;
---   TP16 <= '1' when MAS_state=J else '0';
---   TP18 <= '1' when MAS_state=L else '0';
---   TP19 <= '1' when MAS_state=M else '0';
---   TP20 <= '1' when MAS_state=N else '0';
---   TP21 <= '1' when MAS_state=Z else '0';
-
---   TP21 <= BCLK_int;--BCLK_int_d(3);--BCLK_int;
    
-   
-   nDMACOE <= nDMACOE_int;
-   OEBUS <= OEBUS_int;
-   LEBUS <= LEBUS_int;
+   nBG040 <= nBG040_int;
+   n040RSTI <= n040RSTI_int;
 
-   nDS040 <= nDS040_int when nBGACK040_int='0' else '1';
-   nAS040 <= nAS040_int when nBGACK040_int='0' else '1';
---   nTA_int2 <= nTA_int when nBGACK040_int='0' else '1';
-   nTA <= '0' when nTA_int3='0' else 'Z';
-   nTEA <= nTEA_int when nBGACK040_int='0' else '1';
-   nTCI <= nTCI_int;
-   nAVEC040 <= nAVEC040_int;
-   
-   nR_W040 <= not R_W040;
-   nBGACK040 <= nBGACK040_int; -- this signal is 244's buffer trisate
-   nBG <= nBG_int;
-   nSBGACK030 <= nBGACK_D or nBGACK;
-   nSBR030 <= nBR_D or nBR;
-
-   n040EMUL <= nEMUL or not(n040RSTI);
-
-   nLSTERM <= nAS040_int or nPLSTERM;
+   --nTA <= nTA_int3 when nBG_ARM='0' else nTA_int2;
+nTA <= '0' when nTA_out='0' else 'Z';
+--nTA <= nTA_out when nBG_ARM='0' else 'Z';
+--nTA <= '0' when nTA_out='0' and (nBG_ARM='0' or nBGACK040_int='0') else 'Z';
    process(PCLK)
    begin
-      if(PCLK'event and PCLK='1') then
-         nPLSTERM <= nSTERM; -- it is really the same signal
-      end if;
-   end process;
-   FPGA_RAM_SELECTED <= '1' when ((p040A(31)='0' and p040A(30)='0' and p040A(29)='0' and p040A(28)='0' and p040A(27)='1'))
---                              or ((p040A(31)='0' and p040A(30)='0' and p040A(29)='0' and p040A(28)='1' and p040A(27)='0'))
---                              or ((p040A(31)='0' and p040A(30)='0' and p040A(29)='0' and p040A(28)='0' and
---                                   p040A(27)='0' and p040A(26)='0' and p040A(25)='0' and p040A(24)='0' and
---                                   p040A(23)='1' and p040A(22)='1' and p040A(21)='1' and p040A(20)='1' and
---                                   p040A(19)='1' and R_W040='1'
---                               ))
-                                 else '0';
-
---TP7 <= NU_7; -- TP7 is connectedto NC_4 (connected to MIO9 CPLD_RAM_ENABLE)
-
---   nTS_030_s <= nTS;
---   nTBI <= '0';
-   nTS_030_s <= NU_1; -- All decoding is done now on FPGA (so autoconfig can work in FPGA side)
---   nTS_030_s <= '1' when --(nREMAP_RAM_OUT='0' and p040A(31)='0' and p040A(30)='0' and p040A(29)='0' and p040A(28)='0'
---                         --                    and p040A(27)='0' and p040A(26)='0' and p040A(25)='0' and p040A(24)='0'
---                         --                    and p040A(23)='1' and p040A(22)='1' and p040A(21)='1' and p040A(20)='1'
---                         --                    and p040A(19)='1' and R_W040='1') or
---                      FPGA_RAM_SELECTED='1'
---                      and TP7='1'
---                      else nTS;
-   nTBI <= not(NU_2); -- NU_2 viene de la FPGA y es realmente TBI
-
-   FPGA_PRESENCE <= NU_7; -- TODO: make it work... maybe it's a nonsense...
-
-   process(PCLK)
-   begin
-      if(PCLK'event and PCLK='1') then
-         nTS_030_d(3 downto 0) <= nTS_030_d(2 downto 0) & nTS_030_s;
-      end if;
       if(PCLK'event and PCLK='0') then
-         BCLK_int_d(3 downto 0) <= BCLK_int_d(2 downto 0) & BCLK;
-      end if;
-      if(PCLK'event and PCLK='1') then
-         if(n040RSTI='0') then
-            nTS_state<="0000";
-            nTS_030_s1 <= '1';
+         if(n040RSTI_int='0') then
+            nTA_out <= '1';
          else
-         case (nTS_state) is
-            when "0000" =>
-               nTS_030_s1 <= '1';
-               if (nTS_030_s='0') then
---               if (nTS_030_d(2 downto 1)="10") then --falling edge
-                  nTS_state <= "0001";
---               if (BCLK_int='0') then
---                  nTS_state <= "0010";
---               end if;
-                  nTS_030_s1 <= '0';
+            if(nBG_ARM='1') then
+               if(nBGACK='0') then
+                  nTA_out <= '1';
+               else
+                  if nTA_int3='0' then
+                     nTA_out <= '0';
+                  else
+                     nTA_out <= '1';
+                  end if;
                end if;
-            when "0001" =>
-               nTS_030_s1 <= '0';
-               if (BCLK_int='0') then
-                  nTS_state <= "0010";
+            else
+               if nTA_d(1 downto 0)="10" then
+                  nTA_out <= '0';
+               else
+                  nTA_out <= '1';
                end if;
-            when "0010" =>
-               nTS_030_s1 <= '0';
-               if (BCLK_int='1') then
-                  nTS_state <= "0011";
-                  nTS_030_s1 <= '1';
-               end if;
-            when others =>
-               nTS_state <= "0000";
-               nTS_030_s1 <= '1';
-         end case;
+            end if;
          end if;
       end if;
    end process;
-   nTS_030 <= '1' when nTS_030_s1='1' and nTS_030_s='1' else '0'; -- stretch nTS pulse
-   
---   nTS_030 <= '0' when (nTS_state="0001" or nTS_state="0010") else '1';
+   nTEA <= nTEA_int when nBGACK040_int='0' else '1';
+--   nTEA <= '0' when nTEA_d(2 downto 0)="110" else 'Z';
 
---   nTS_030<=nTS_030_s;
+   nAVEC040 <= nAVEC040_int;
+-- TT = "00" -> normal
+-- TM = "000" -> Data Cache Push Access
+-- TM = "001" -> User Data Access
+-- TM = "101" -> Supervisor Data Access
+--   TM(2 downto 0) <= "000" when nBG_ARM = '0' else "ZZZ";
+--   TT(1 downto 0) <=  "00" when nBG_ARM = '0' else  "ZZ";
 
---   process(PCLK) -- esto funciona perfectamente con PCLK a 50 MHz
---   begin
---      if(PCLK'event and PCLK='0') then
---
---         case (nTA_d) is
---            when "0000" =>
---               nTA_int2 <= '1';
---               if (nTA_int='0') then
---                  nTA_d <= "0001";
---                  nTA_int2 <= '0';
---               end if;
---            when others =>
---               nTA_int2 <= '0';
---               if (nTA_int='1') then
---                  nTA_d <= "0000";
---               end if;
---         end case;
---      end if;
---   end process;
---   nTA_int3<= '0' when nTA_int='0' and nTA_int2='1' else '1';
+   RAM_select <= --'1' when( p040A(31 downto 28) = "0100"  ) else -- 0x40000000 - 0x4FFFFFFF 256 Mbyte 
+                 -- Z3 RAM is supposed to be only at DaughterBoard ( and uses FCS, DSx, ... signals) so
+                 -- it can't be used by DMA
+                 -- CPU RAM can be accessed by DMA (AS, DS, etc signals)
+                 '1' when( p040A(31 downto 27) = "00001" ) else -- 0x08000000 - 0x0FFFFFFF 128 Mbyte
+--                 '1' when( p040A(31 downto 27) = "00010" ) else -- 0x10000000 - 0x17FFFFFF 128 Mbyte
+                 '0';
+
+   nR_W040_out_int <= not R_W040;
+    R_W040_out_int <=     R_W040;
+
+   DMA_select <= '1' when (nBGACK='0' and RAM_select='1') else '0';
+
+   nR_W040_out <=  R_W040_out_int when DMA_select='1' else nR_W040_out_int;
+   R_W040_out  <= nR_W040_out_int when DMA_select='1' else  R_W040_out_int;
+
+-- No DMA
+--   nR_W040_out <= nR_W040_out_int;
+--   R_W040_out  <=  R_W040_out_int;
+
+   nTS    <= nTS_int    when nBGACK='0' else 'Z';
+   SIZ40  <= SIZ40_int  when nBGACK='0' else "ZZ";
+   p040A0 <= p040A0_int when nBGACK='0' else 'Z';
+   p040A1 <= p040A1_int when nBGACK='0' else 'Z';
+   p040A2 <= p040A2_int when nBGACK='0' else 'Z';
+   p040A3 <= p040A3_int when nBGACK='0' else 'Z';
+
+   nTS_030_s <= '1' when nBGACK='0' else nTS_FPGA;
+   nTBI      <= '0' when nBGACK='0' else not(nTBI_FPGA);
+   nTCI      <= '0' when nBGACK='0' else nTCI_int;
+
+   A      <= A_int      when nBGACK040_int='0' else "ZZZZ";
+   SIZ    <= SIZ_int    when nBGACK040_int='0' else "ZZ";
+   FC     <= FC_int     when nBGACK040_int='0' else "ZZZ";
+   nDS040 <= nDS040_int when nBGACK040_int='0' else 'Z';
+   nAS040 <= nAS040_int when nBGACK040_int='0' else 'Z';
+
+   LEBUS <= "00000000" when DMA_select='1' else LEBUS_int; -- don't use LEBA pins (will use LEAB pins with LEBUS_DMA)
+   LEBUS_DMA <= LEBUS_DMA_int;
+   OEBUS <= "01101010" when DMA_select='1' else OEBUS_int; -- 32 bit transparent bus
+   nDMACOE <= '1' when DMA_select='1' else nDMACOE_int;
+
+   nSNOOP <= not DMA_select;
+
+   nBB040 <= '0' when DMA_select='1' else 'Z';
+
+   J1 <= '1' when( --p040A(31 downto 28) = "0100"  and
+   --nBGACK='0' and (nAS040='0' or nDS040='0') 
+   DMA_select='1' and nBGACK040_int/='0'
+   ) else '0';
+
+--   J1  <= nAS040;--nBG040_int;--nAS040;
+   TP7 <= nBGACK when RAM_select='1' else '1';
+
+   TM(2 downto 0) <= "001" when (DMA_select='1' --and nAS040='0'
+   ) or nBG_ARM = '0' else "ZZZ";
+   TT(1 downto 0) <= "00"  when (DMA_select='1' --and nAS040='0'
+   ) or nBG_ARM = '0' else "ZZ";
+
+-- finish DMA with STERM
+   nSTERM <= nDMA_STERM when (DMA_select='1') else 'Z';
+   nDSACK <= "ZZ";
+-- finish DMA with DSACK
+--   nSTERM <= 'Z';
+--   nDSACK <= (nDMA_DSACK & nDMA_DSACK) when DMA_select='1' else "ZZ";
 
    process(PCLK)
    begin
-      if(PCLK'event and PCLK='0') then
-         if(n040RSTI='0') then
-            nTA_d(3 downto 0) <= "1111";
+      if(PCLK'event and PCLK='1') then
+      -- DMA state machine
+         if(n040RSTI_int='0') then
+            DMA_state<=DMA_IDLE;
+            nTS_int <= '1';
+            SIZ40_int <="11";
+            p040A0_int <= '1';
+            p040A1_int <= '1';
+            p040A2_int <= '1';
+            p040A3_int <= '1';
+            LEBUS_DMA_int <= '0';
+            nDMA_STERM <= '1';
+            nDMA_DSACK <= '1';
          else
-            nTA_d(3 downto 0) <= nTA_d(2 downto 0) & nTA_int;
+            nTS_int <= '1';
+            SIZ40_int <="11";
+            p040A0_int <= '1';
+            p040A1_int <= '1';
+            p040A2_int <= '1';
+            p040A3_int <= '1';
+            LEBUS_DMA_int <= '0';
+            BCLK_m <= BCLK_int;
+            BCLK_d <= BCLK_m;
+            nDMA_STERM <= '1';
+            nDMA_DSACK <= '1';
+            case (DMA_state) is
+               when DMA_IDLE =>
+                  if(BCLK_d = '1' and BCLK_m = '0') and
+                   (DMA_select='1' and nAS040='0') then
+                     DMA_state<=DMA_DELAY_TS;
+                  end if;
+               when DMA_DELAY_TS =>
+                  if(BCLK_d = '1' and BCLK_m = '0') then
+                     DMA_state<=DMA_START_TS;
+                  end if;
+               when DMA_START_TS =>
+                  nTS_int <= '0';
+                  if (SIZ="11") then
+                     SIZ40_int <= "00";
+                  else
+                     SIZ40_int <= SIZ;
+                  end if;
+                  p040A0_int <= A(0);
+                  p040A1_int <= A(1);
+                  p040A2_int <= A(2);
+                  p040A3_int <= A(3);
+                  DMA_state<=DMA_START_TS1;
+               when DMA_START_TS1 =>
+                  nTS_int <= '0';
+                  if (SIZ="11") then
+                     SIZ40_int <= "00";
+                  else
+                     SIZ40_int <= SIZ;
+                  end if;
+                  p040A0_int <= A(0);
+                  p040A1_int <= A(1);
+                  p040A2_int <= A(2);
+                  p040A3_int <= A(3);
+                  DMA_state<=DMA_START_TS2;
+               when DMA_START_TS2 =>
+                  nTS_int <= '0';
+                  if (SIZ="11") then
+                     SIZ40_int <= "00";
+                  else
+                     SIZ40_int <= SIZ;
+                  end if;
+                  p040A0_int <= A(0);
+                  p040A1_int <= A(1);
+                  p040A2_int <= A(2);
+                  p040A3_int <= A(3);
+                  DMA_state<=DMA_WAIT_TA;
+               when DMA_WAIT_TA =>
+                  if (SIZ="11") then
+                     SIZ40_int <= "00";
+                  else
+                     SIZ40_int <= SIZ;
+                  end if;
+                  p040A0_int <= A(0);
+                  p040A1_int <= A(1);
+                  p040A2_int <= A(2);
+                  p040A3_int <= A(3);
+                  if(nTA='0') then
+                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
+                     LEBUS_DMA_int <= '1';
+                     nDMA_STERM <= '0';
+                  end if;                  
+               when DMA_LATCH_BUS_AND_TERM =>
+                  LEBUS_DMA_int <= '1';
+-- STERM
+                  nDMA_STERM <= '0';
+                  if(nAS040/='0') then
+                     DMA_state<=DMA_IDLE;
+                  end if;
+-- DSACK
+--                  nDMA_DSACK <= '0';
+--                  if(BCLK_d = '1' and BCLK_m = '0') then
+--                     DMA_state<=DMA_TERM_WITH_DSACK;
+--                  end if;
+               when DMA_TERM_WITH_DSACK =>
+                  LEBUS_DMA_int <= '1';
+                  nDMA_DSACK <= '0';
+                  if(BCLK_d = '1' and BCLK_m = '0') then
+                     DMA_state<=DMA_TERM_WITH_DSACK2;
+                  end if;
+               when DMA_TERM_WITH_DSACK2 =>
+                  LEBUS_DMA_int <= '1';
+                  nDMA_DSACK <= '0';
+                  if(nAS040/='0') then
+                     DMA_state<=DMA_IDLE;
+--                     DMA_state<=DMA_TERM_DELAY;
+                  end if;
+               when DMA_TERM_DELAY =>
+                  LEBUS_DMA_int <= '1';
+                  nDMA_DSACK <= '0';
+                  if(BCLK_d = '1' and BCLK_m = '0') then
+                     DMA_state<=DMA_IDLE;
+                  end if;
+               when others =>
+                  DMA_state<=DMA_IDLE;
+            end case;
+         end if;
+      end if;
+   end process;
+-- fin nuevo para DMA
+
+   nBGACK040  <= '0';--nBGACK040_int and nBGACK; -- this signal is 244's buffer trisate
+
+   nBG        <= nBG_int;
+   nSBGACK030 <= nBGACK_D or nBGACK;
+   nSBR030    <= nBR_D or nBR;
+
+   n040EMUL <= nEMUL or not(n040RSTI_int);
+   
+   nINT6 <= '0' when INT6 ='1' else 'Z';
+   
+   nLSTERM <= --nAS040_int or 
+              nPLSTERM;
+   process(PCLK)
+   begin
+      if(PCLK'event and PCLK='1') then
+         if nBGACK='1' then
+            nPLSTERM <= nSTERM; -- it is really the same signal
+         else
+            nPLSTERM <= '1';
+         end if;
+      end if;
+   end process;
+
+   PS_MIO_0  <= not nIPL(0);
+   PS_MIO_9  <= not nIPL(1);
+   PS_MIO_12 <= not nIPL(2);
+   
+   PS_MIO_15  <= nBG_ARM;
+   nBR_ARM    <= PS_MIO_8;
+   RESET_CPLD <= PS_MIO_13;
+
+   process(PCLK)
+   begin
+      if(PCLK'event and PCLK='1') then
+         if(n040RSTI_int='0') then
+            nTS_state <= NTS_IDLE;
+            nTS_030_s1 <= '1';
+         else
+            nTS_030_s1 <= '1';
+            case (nTS_state) is
+               when NTS_IDLE =>
+                  if (nTS_030_s='0') then
+                     nTS_state <= NTS_START;
+                     nTS_030_s1 <= '0';
+                  end if;
+               when NTS_START =>
+                  nTS_030_s1 <= '0';
+                  if (BCLK_int='0') then
+                     nTS_state <= NTS_STRETCH;
+                  end if;
+               when NTS_STRETCH =>
+                  nTS_030_s1 <= '0';
+                  if (BCLK_int='1') then
+                     nTS_state <= NTS_STRETCH2;
+                  end if;
+               when NTS_STRETCH2 =>
+                  nTS_030_s1 <= '0';
+                  if (BCLK_int='0') then
+                     nTS_state <= NTS_END;
+                  end if;
+               when NTS_END =>
+                  if (BCLK_int='1') then
+                     nTS_state <= NTS_IDLE;
+                  end if;
+               when others =>
+                  nTS_state <= NTS_IDLE;
+            end case;
+         end if;
+      end if;
+   end process;
+--   nTS_030 <= '1' when nTS_030_s1='1' and nTS_030_s='1' else '0'; -- stretch nTS pulse
+   
+--   nTS_030 <= '0' when (nTS_state="0001" or nTS_state="0010") else '1';
+
+   nTS_030 <= nTS_030_s1;
+
+   process(PCLK)
+   begin
+      if(PCLK'event and PCLK='1') then
+         if(n040RSTI_int='0') then
+            nTA_d(1 downto 0) <= "11";
+            nTEA_d(1 downto 0) <= "11";
+         else
+            nTA_d(1 downto 0)  <= nTA_d(0)  & nTA_int;
+            nTEA_d(1 downto 0) <= nTEA_d(0) & nTEA_int;
          end if;
       end if;
    end process;
    nTA_int3<='0' when nTA_d(1 downto 0)="10" else '1';
---   nTA_int3<='0' when nTA_d(1 downto 0)="10" or nTA_d(2 downto 0)="100" else '1';
    
 --   nTA_int3<=nTA_int; -- Esto funciona perfectamente con PCLK a 50 MHz
 
    BCLK_int<=BCLK;
---   BCLK_int<=BCLK_int_d(2);
    
    RESET_OUT <= RESET_CPLD; -- reset from FPGA side
-
+   process(BCLK_int)
+   begin
+      if(BCLK_int'event and BCLK_int='1') then
+         if (n040RSTO='0' or reset_counter/="000000000") then
+            if (reset_counter(8 downto 0)="100000000") then
+               reset_extended <= '1';
+               reset_counter(8 downto 0) <= "000000000";
+            else
+               reset_counter <= reset_counter + 1;
+               reset_extended <= '0';
+            end if;
+         else
+            reset_counter(8 downto 0) <= "000000000";
+         end if;
+      end if;
+   end process;
    process(BCLK_int)
    begin
       if(BCLK_int'event and BCLK_int='1') then
          nRBERR <= nBERR;
          nRHALT <= nHLT;
-         if(nCPURST='0' or RESET_CPLD='0') then
-            n040RSTI<='0';
+         if(nCPURST='0' or RESET_CPLD='0'
+         --or n040RSTO='0' -- this needs a board fix
+         or reset_extended='0'
+         --or nPWRST='0' -- it needs R2 to be soldered...
+         ) then
+            n040RSTI_int<='0';
          else
-            n040RSTI<='1';
+            n040RSTI_int<='1';
          end if;
---         n040RSTI <= nCPURST; -- reset output <= reset input
+--         n040RSTI_int <= nCPURST; -- reset output <= reset input
          nBR_D <= nBR;
          nBGACK_D <= nBGACK;
          nRCIIN <= nCIIN;
@@ -548,18 +756,18 @@ begin
 --   end process;
 
 
---   process(BCLK_int,n040RSTI)
+--   process(BCLK_int,n040RSTI_int)
 --   begin
---      if(n040RSTI='0') then
+--      if(n040RSTI_int='0') then
 --         n060IPL <= "111";
 ----         n060IPL <= "011"; -- extra data write hold
 --      elsif(BCLK_int'event and  BCLK_int='1') then
 --         n060IPL <= nIPL;
 --      end if;
 --   end process;
-   process(PCLK,n040RSTI)
+   process(PCLK,n040RSTI_int)
    begin
-      if(n040RSTI='0') then
+      if(n040RSTI_int='0') then
          n060IPL <= "111";
 --         n060IPL <= "011"; -- extra data write hold
       elsif(PCLK'event and  PCLK='1') then
@@ -601,7 +809,7 @@ begin
 --         nRHALT => nRHALT,
          nRAVEC => nRAVEC,
          nCYCPEND => nCYCPEND,
-         n040RSTI => n040RSTI,
+         n040RSTI => n040RSTI_int,
          nLSTERM => nLSTERM,
          SLV0 => SLV0,
          SLV1 => SLV1,
@@ -638,7 +846,7 @@ begin
          nAS040 => nAS040_int,
          nTEA => nTEA_int,
 --         nTBI => nTBI,
-         n040RSTI => n040RSTI,
+         n040RSTI => n040RSTI_int,
          nTA => nTA_int,
          nBGACK040 => nBGACK040_int
          );
@@ -653,10 +861,12 @@ begin
          nBR040 => nBR040,
          nLOCK => nLOCK,
          nLOCKE => nLOCKE,
-         n040RSTI => n040RSTI,
-         nBG040 => nBG040,
+         n040RSTI => n040RSTI_int,
+         nBG040 => nBG040_int,
          nBG => nBG_int,
-         nBGACK040 => nBGACK040_int
+         nBGACK040 => nBGACK040_int,
+         nBR_ARM => nBR_ARM,
+         nBG_ARM => nBG_ARM
          );
 --END BCTL
 
@@ -670,7 +880,7 @@ begin
          nRAVEC => nRAVEC,
          nBGACK040 => nBGACK040_int,
          nTS => nTS_030,
-         n040RSTI => n040RSTI,
+         n040RSTI => n040RSTI_int,
 --         nTEND => nTEND,
          nCYCPEND => nCYCPEND,
          nTCI => nTCI_int,
@@ -692,9 +902,9 @@ begin
          MAS1 => MAS1,
          MAS2 => MAS2,
          MAS3 => MAS3,
-         FC => FC,
-         SIZ => SIZ,
-         A => A,
+         FC => FC_int,
+         SIZ => SIZ_int,
+         A => A_int,
          nIACK => nIACK,
          nBGACK040 => nBGACK040_int
          );
@@ -721,6 +931,7 @@ begin
 --TERM
    term_unit: TERM PORT MAP (
          BCLK => BCLK_int,
+         nBGACK => nBGACK,
          nPLSTERM => nPLSTERM,
          nRAVEC => nRAVEC,
          nRBERR => nRBERR,
@@ -744,7 +955,7 @@ begin
 --         nPLSTERM => nPLSTERM,
          nPORESET => V_DETECTOR,
 --         nEMUL => nEMUL,
---         n040RSTI => n040RSTI,
+--         n040RSTI => n040RSTI_int,
 --         nLSTERM => nLSTERM,
          nPWRST => nPWRST
 --         n040EMUL => n040EMUL
@@ -752,4 +963,3 @@ begin
 --END RST
 
 end Behavioral;
-

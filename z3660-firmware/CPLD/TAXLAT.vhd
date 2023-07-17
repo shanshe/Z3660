@@ -50,7 +50,7 @@ entity TAXLAT is
 end TAXLAT;
 
 architecture Behavioral of TAXLAT is
-signal MAS_state: std_logic_vector(3 downto 0);
+--signal MAS_state: std_logic_vector(3 downto 0);
 signal address: std_logic_vector(1 downto 0);
 --SIZ40 values
 CONSTANT long: std_logic_vector(1 downto 0):= "00";
@@ -88,7 +88,7 @@ CONSTANT usr_cod : std_logic_vector(2 downto 0):= "010";
 CONSTANT cpu_spc : std_logic_vector(2 downto 0):= "111";
 
 begin
-MAS_state <= MAS3 & MAS2 & MAS1 & MAS0;
+--MAS_state <= MAS3 & MAS2 & MAS1 & MAS0;
 address <= p040A1 & p040A0;
 
 nIACK <= '0' when (address="11" and TT=intack) else '1';
@@ -96,80 +96,79 @@ nIACK <= '0' when (address="11" and TT=intack) else '1';
 --nIACK <= not(
 --        ( p040A0 and p040A1 and TT(0) and TT(1) ) );
 
---	process(nBGACK040,MAS_state,p040A0,p040A1,p040A2,p040A3,TM,SIZ40,TT)--,nIACK)
---	begin
---		if(nBGACK040='0') then
---			if ( MAS_state=I or MAS_state=Z or MAS_state=DC ) then
---				A(0) <= p040A0;
---			elsif( MAS_state=C or MAS_state=E or MAS_state=H or MAS_state=J or MAS_state=L or MAS_state=N )  then
---				A(0) <= '1';
---			else
---				A(0) <= '0';
---			end if;
-----			if(nIACK='0') then
---			if(( p040A0 and p040A1 and TT(0) and TT(1) )='1') then
---				A(3 downto 1) <= TM(2 downto 0);
---			else
---				if ( MAS_state=I or MAS_state=Z or MAS_state=DC ) then
---					A(1) <= p040A1;
---				elsif( MAS_state=B or MAS_state=D or MAS_state=E or MAS_state=G or MAS_state=J or MAS_state=M or MAS_state=N ) then
---					A(1) <= '1';
---				else
---					A(1) <= '0';
---				end if;
---				A(2) <= p040A2;
---				A(3) <= p040A3;
---			end if;
---			if ( MAS_state=I or MAS_state=Z or MAS_state=DC ) then
---				SIZ <= SIZ40;
---			elsif( MAS_state=B or MAS_state=D or MAS_state=F or MAS_state=G ) then
---				SIZ <= word;
---			elsif( MAS_state=C or MAS_state=E or MAS_state=H or MAS_state=J or MAS_state=K or MAS_state=L or MAS_state=M or MAS_state=N ) then
---				SIZ <= byte;
---			else
---				SIZ <= long;
---			end if;
---			if (TT=intack) then
---				FC <= cpu_spc;
---			elsif (TT=mov16) then
---				if(TM(2)='0') then
---					FC <= usr_dat;
---				else
---					FC <= sup_dat;
---				end if;
---			elsif (TT=alt) then
---				FC <= TM;
---			else --if (TT=norm) then
---				if(TM=usr_cod or TM=sup_cod) then
---					FC <= sup_cod;
---				else
---					FC <= sup_dat;
---				end if;
---			end if;
---		else
---			A <= "HHHH";
---			SIZ <= "HH";
---			FC <= "HHH";
---		end if;
---	end process;
+--   process(nBGACK040,MAS_state,p040A0,p040A1,p040A2,p040A3,TM,SIZ40,TT)--,nIACK)
+--   begin
+--      if(nBGACK040='0') then
+--         if ( MAS_state=I or MAS_state=Z or MAS_state=DC ) then
+--            A(0) <= p040A0;
+--         elsif( MAS_state=C or MAS_state=E or MAS_state=H or MAS_state=J or MAS_state=L or MAS_state=N )  then
+--            A(0) <= '1';
+--         else
+--            A(0) <= '0';
+--         end if;
+----         if(nIACK='0') then
+--         if(( p040A0 and p040A1 and TT(0) and TT(1) )='1') then
+--            A(3 downto 1) <= TM(2 downto 0);
+--         else
+--            if ( MAS_state=I or MAS_state=Z or MAS_state=DC ) then
+--               A(1) <= p040A1;
+--            elsif( MAS_state=B or MAS_state=D or MAS_state=E or MAS_state=G or MAS_state=J or MAS_state=M or MAS_state=N ) then
+--               A(1) <= '1';
+--            else
+--               A(1) <= '0';
+--            end if;
+--            A(2) <= p040A2;
+--            A(3) <= p040A3;
+--         end if;
+--         if ( MAS_state=I or MAS_state=Z or MAS_state=DC ) then
+--            SIZ <= SIZ40;
+--         elsif( MAS_state=B or MAS_state=D or MAS_state=F or MAS_state=G ) then
+--            SIZ <= word;
+--         elsif( MAS_state=C or MAS_state=E or MAS_state=H or MAS_state=J or MAS_state=K or MAS_state=L or MAS_state=M or MAS_state=N ) then
+--            SIZ <= byte;
+--         else
+--            SIZ <= long;
+--         end if;
+--         if (TT=intack) then
+--            FC <= cpu_spc;
+--         elsif (TT=mov16) then
+--            if(TM(2)='0') then
+--               FC <= usr_dat;
+--            else
+--               FC <= sup_dat;
+--            end if;
+--         elsif (TT=alt) then
+--            FC <= TM;
+--         else --if (TT=norm) then
+--            if(TM=usr_cod or TM=sup_cod) then
+--               FC <= sup_cod;
+--            else
+--               FC <= sup_dat;
+--            end if;
+--         end if;
+--      else
+--         A <= "HHHH";
+--         SIZ <= "HH";
+--         FC <= "HHH";
+--      end if;
+--   end process;
 
 -- original equations
---	process(nBGACK040,MAS0,MAS1,MAS2,MAS3,p040A0,p040A1,p040A2,p040A3,TM,SIZ40,TT)--,nIACK)
-	process(BCLK)
-	begin
-		if(BCLK'event and  BCLK='1') then
-		if(nBGACK040='0') then
+--   process(nBGACK040,MAS0,MAS1,MAS2,MAS3,p040A0,p040A1,p040A2,p040A3,TM,SIZ40,TT)--,nIACK)
+   process(BCLK)
+   begin
+      if(BCLK'event and  BCLK='1') then
 A(0) <= (
         ( p040A1 and not(MAS0) and not(MAS2) and not(MAS1) )     -- I Z
      or ( p040A1 and MAS3 and not(MAS0) and not(MAS2) and MAS1 ) -- DC
      or ( not(MAS3) and not(MAS0) and MAS1 ) -- L N
      or ( MAS3 and MAS2 ) );                 -- C E H J
---			if(nIACK='0') then
-			if(( p040A0 and p040A1 and TT(0) and TT(1) )='1') then
-				A(1) <= TM(0);
-				A(2) <= TM(1);
-				A(3) <= TM(2);
-			else
+--         if(nIACK='0') then
+         if(( p040A0 and p040A1 and TT(0) and TT(1) )='1') then
+            A(1) <= TM(0);
+            A(2) <= TM(1);
+            A(3) <= TM(2);
+         else
 A(1) <= (
         ( p040A0 and not(MAS0) and not(MAS2) and not(MAS1) )     -- I Z
      or ( p040A0 and MAS3 and not(MAS0) and not(MAS2) and MAS1 ) -- DC
@@ -178,7 +177,7 @@ A(1) <= (
      or ( MAS3 and MAS0 and not(MAS2) and MAS1 ) );  -- G
 A(2) <= p040A2;
 A(3) <= p040A3;
-			end if;
+         end if;
 SIZ(1) <= (
         ( SIZ40(0) and not(SIZ40(1)) and not(MAS3) and not(MAS0) and not(MAS2) and not(MAS1) )
      or ( SIZ40(0) and MAS3 and not(MAS0) and not(MAS2) )
@@ -207,13 +206,8 @@ FC(0) <= (
      or ( TT(0) and not(TT(1)) and TM(0) )
      or ( not(TT(0)) and not(TT(1)) and not(TM(1)) )
      or ( not(TT(0)) and not(TT(1)) and TM(1) and TM(0) ) );
-		else
-			A <= "HHHH";
-			SIZ <= "HH";
-			FC <= "HHH";
-		end if;
-		end if;
-	end process;
+      end if;
+   end process;
 
 end Behavioral;
 

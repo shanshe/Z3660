@@ -1,0 +1,10 @@
+#pragma libcall MHIBase MHIAllocDecoder 1e 0802
+#pragma libcall MHIBase MHIFreeDecoder 24 B01
+#pragma libcall MHIBase MHIQueueBuffer 2a 08B03
+#pragma libcall MHIBase MHIGetEmpty 30 B01
+#pragma libcall MHIBase MHIGetStatus 36 B01
+#pragma libcall MHIBase MHIPlay 3c B01
+#pragma libcall MHIBase MHIStop 42 B01
+#pragma libcall MHIBase MHIPause 48 B01
+#pragma libcall MHIBase MHIQuery 4e 101
+#pragma libcall MHIBase MHISetParam 54 10B03

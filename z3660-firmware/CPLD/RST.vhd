@@ -47,35 +47,35 @@ signal nT1A,nERST: STD_LOGIC;
 begin
 
 ---- simplified equations
---	process(BCLK)
---	begin
---		if(BCLK'event and  BCLK='1') then
---			nPWRST <= nT1A;
---			nT1A <= nERST;
---			nERST <= nPORESET;
---			nLSTERM <= nPLSTERM or nAS040;
---			n040EMUL <= nEMUL or n040RSTI;
---		end if;
---	end process;
+--   process(BCLK)
+--   begin
+--      if(BCLK'event and  BCLK='1') then
+--         nPWRST <= nT1A;
+--         nT1A <= nERST;
+--         nERST <= nPORESET;
+--         nLSTERM <= nPLSTERM or nAS040;
+--         n040EMUL <= nEMUL or n040RSTI;
+--      end if;
+--   end process;
 
 nPWRST <= nT1A;
 
-	process(BCLK)
-	begin
-		if(BCLK'event and  BCLK='1') then
---			n040EMUL <= nEMUL or not(n040RSTI);
---			nPWRST <= nT1A;
---			nLSTERM <= nAS040 or nPLSTERM;
-			nERST <= nPORESET;
-			nT1A <= nERST;
-		end if;
-	end process;
+   process(BCLK)
+   begin
+      if(BCLK'event and  BCLK='1') then
+--         n040EMUL <= nEMUL or not(n040RSTI);
+--         nPWRST <= nT1A;
+--         nLSTERM <= nAS040 or nPLSTERM;
+         nERST <= nPORESET;
+         nT1A <= nERST;
+      end if;
+   end process;
 
 
 -- "original equations"
---	process(BCLK)
---	begin
---		if(BCLK'event and  BCLK='1') then
+--   process(BCLK)
+--   begin
+--      if(BCLK'event and  BCLK='1') then
 ----register
 --n040EMUL <= not(
 --       ( not(nEMUL) and  n040RSTI ) );
@@ -91,8 +91,8 @@ nPWRST <= nT1A;
 ----register
 --nLSTERM <= not(
 --       ( not(nAS040) and not(nPLSTERM) ) );
---		end if;
---	end process;
+--      end if;
+--   end process;
 
 end Behavioral;
 

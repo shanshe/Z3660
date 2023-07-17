@@ -45,7 +45,7 @@ entity OEBUS_component is
            nRDSACK1 : in  STD_LOGIC;
            nDMACOE : out  STD_LOGIC;
            OEBUS : out  STD_LOGIC_VECTOR (7 downto 0)
-			  );
+           );
 end OEBUS_component;
 
 architecture Behavioral of OEBUS_component is
@@ -108,279 +108,279 @@ impure function long return std_logic is begin
 
 begin
 
---	n2SW <= SLV0 or (SLV1 and SLV2) or (not(SLV1) and not(SLV2)) or not(SLV0) or not(SLV1);
---	n2SW <= SLV3 or not(SLV0) or not(SLV1);
-	nS2W <= not(SLV0 and SLV1 and not(SLV3));
---	MAS_state <= MAS3 & MAS2 & MAS1 & MAS0;
---	SLV_state <= SLV3 & SLV2 & SLV1 & SLV0;
-	OEBUS <= OEBUS_int;
---	process(BCLK)
---	begin
---		if(BCLK'event and  BCLK='1') then
---			if(R_W040='1') then       -- read cycle
---				nDMACOE <= '1';
---				if ((byte or word or long) and SLV_state=S1) or (OEBUS_int(0)='0' and SLV_state=S2W) then
---					OEBUS_int(0) <= '0';
---				else
---					OEBUS_int(0) <= '1';
---				end if;
---				if ((byte                ) and SLV_state=S1) or (OEBUS_int(1)='0' and SLV_state=S2W) then
---					OEBUS_int(1) <= '0';
---				else
---					OEBUS_int(1) <= '1';
---				end if;
---				if ((word or long        ) and SLV_state=S1) or (OEBUS_int(2)='0' and SLV_state=S2W) then
---					OEBUS_int(2) <= '0';
---				else
---					OEBUS_int(2) <= '1';
---				end if;
---				if ((byte or word        ) and SLV_state=S1) or (OEBUS_int(3)='0' and SLV_state=S2W) then
---					OEBUS_int(3) <= '0';
---				else
---					OEBUS_int(3) <= '1';
---				end if;
---				if ((long                ) and SLV_state=S1) or (OEBUS_int(4)='0' and SLV_state=S2W) then
---					OEBUS_int(4) <= '0';
---				else
---					OEBUS_int(4) <= '1';
---				end if;
---				if ((byte                ) and SLV_state=S1) or (OEBUS_int(5)='0' and SLV_state=S2W) then
---					OEBUS_int(5) <= '0';
---				else
---					OEBUS_int(5) <= '1';
---				end if;
---				if ((word                ) and SLV_state=S1) or (OEBUS_int(6)='0' and SLV_state=S2W) then
---					OEBUS_int(6) <= '0';
---				else
---					OEBUS_int(6) <= '1';
---				end if;
---				if ((long                ) and SLV_state=S1) or (OEBUS_int(7)='0' and SLV_state=S2W) then
---					OEBUS_int(7) <= '0';
---				else
---					OEBUS_int(7) <= '1';
---				end if;
---			else                      -- write cycle
---				if(SLV_state=S1) then
---					OEBUS_int <= "11111111";
---					nDMACOE <= '1';
---				else
---				case (MAS_state) is
---					when I =>  OEBUS_int <= "11111111";
---					when A =>  OEBUS_int <= "01101010";
---					when B =>  OEBUS_int <= "00100111";
---					when C =>  OEBUS_int <= "00101101";
---					when D =>  OEBUS_int <= "00100111";
---					when E =>  OEBUS_int <= "00001111";
---					when F =>  OEBUS_int <= "01101010";
---					when G =>  OEBUS_int <= "00100111";
---					when H =>  OEBUS_int <= "01101001";
---					when J =>  OEBUS_int <= "00001111";
---					when K =>  OEBUS_int <= "01101010";
---					when L =>  OEBUS_int <= "11101001"; -- L -> DMA instead of OEBUS(7)
---					when M =>  OEBUS_int <= "01100011";
---					when N =>  OEBUS_int <= "00001111";
---					when Z  => OEBUS_int <= "11111111";
---					when DC => OEBUS_int <= "01101111"; -- Don't Care state -> active low OEBUS 4 and 7
---					when others =>
---					           OEBUS_int <= "11111111"; -- there are no "others" XD
---				end case;
---				
---				case (MAS_state) is
---					when L =>
---						nDMACOE <= '0';
---					when others =>
---						nDMACOE <= '1';
---				end case;
---				
---				end if;
---			end if;
---		end if;
---	end process;
+--   n2SW <= SLV0 or (SLV1 and SLV2) or (not(SLV1) and not(SLV2)) or not(SLV0) or not(SLV1);
+--   n2SW <= SLV3 or not(SLV0) or not(SLV1);
+   nS2W <= not(SLV0 and SLV1 and not(SLV3));
+--   MAS_state <= MAS3 & MAS2 & MAS1 & MAS0;
+--   SLV_state <= SLV3 & SLV2 & SLV1 & SLV0;
+   OEBUS <= OEBUS_int;
+--   process(BCLK)
+--   begin
+--      if(BCLK'event and  BCLK='1') then
+--         if(R_W040='1') then       -- read cycle
+--            nDMACOE <= '1';
+--            if ((byte or word or long) and SLV_state=S1) or (OEBUS_int(0)='0' and SLV_state=S2W) then
+--               OEBUS_int(0) <= '0';
+--            else
+--               OEBUS_int(0) <= '1';
+--            end if;
+--            if ((byte                ) and SLV_state=S1) or (OEBUS_int(1)='0' and SLV_state=S2W) then
+--               OEBUS_int(1) <= '0';
+--            else
+--               OEBUS_int(1) <= '1';
+--            end if;
+--            if ((word or long        ) and SLV_state=S1) or (OEBUS_int(2)='0' and SLV_state=S2W) then
+--               OEBUS_int(2) <= '0';
+--            else
+--               OEBUS_int(2) <= '1';
+--            end if;
+--            if ((byte or word        ) and SLV_state=S1) or (OEBUS_int(3)='0' and SLV_state=S2W) then
+--               OEBUS_int(3) <= '0';
+--            else
+--               OEBUS_int(3) <= '1';
+--            end if;
+--            if ((long                ) and SLV_state=S1) or (OEBUS_int(4)='0' and SLV_state=S2W) then
+--               OEBUS_int(4) <= '0';
+--            else
+--               OEBUS_int(4) <= '1';
+--            end if;
+--            if ((byte                ) and SLV_state=S1) or (OEBUS_int(5)='0' and SLV_state=S2W) then
+--               OEBUS_int(5) <= '0';
+--            else
+--               OEBUS_int(5) <= '1';
+--            end if;
+--            if ((word                ) and SLV_state=S1) or (OEBUS_int(6)='0' and SLV_state=S2W) then
+--               OEBUS_int(6) <= '0';
+--            else
+--               OEBUS_int(6) <= '1';
+--            end if;
+--            if ((long                ) and SLV_state=S1) or (OEBUS_int(7)='0' and SLV_state=S2W) then
+--               OEBUS_int(7) <= '0';
+--            else
+--               OEBUS_int(7) <= '1';
+--            end if;
+--         else                      -- write cycle
+--            if(SLV_state=S1) then
+--               OEBUS_int <= "11111111";
+--               nDMACOE <= '1';
+--            else
+--            case (MAS_state) is
+--               when I =>  OEBUS_int <= "11111111";
+--               when A =>  OEBUS_int <= "01101010";
+--               when B =>  OEBUS_int <= "00100111";
+--               when C =>  OEBUS_int <= "00101101";
+--               when D =>  OEBUS_int <= "00100111";
+--               when E =>  OEBUS_int <= "00001111";
+--               when F =>  OEBUS_int <= "01101010";
+--               when G =>  OEBUS_int <= "00100111";
+--               when H =>  OEBUS_int <= "01101001";
+--               when J =>  OEBUS_int <= "00001111";
+--               when K =>  OEBUS_int <= "01101010";
+--               when L =>  OEBUS_int <= "11101001"; -- L -> DMA instead of OEBUS(7)
+--               when M =>  OEBUS_int <= "01100011";
+--               when N =>  OEBUS_int <= "00001111";
+--               when Z  => OEBUS_int <= "11111111";
+--               when DC => OEBUS_int <= "01101111"; -- Don't Care state -> active low OEBUS 4 and 7
+--               when others =>
+--                          OEBUS_int <= "11111111"; -- there are no "others" XD
+--            end case;
+--            
+--            case (MAS_state) is
+--               when L =>
+--                  nDMACOE <= '0';
+--               when others =>
+--                  nDMACOE <= '1';
+--            end case;
+--            
+--            end if;
+--         end if;
+--      end if;
+--   end process;
 
---	process(BCLK)
---	begin
---		if(BCLK'event and  BCLK='1') then
---			if(R_W040='1') then       -- read cycle
---				nDMACOE <= '1';
---				OEBUS_int(0) <= not(byte or word or long);
---				OEBUS_int(1) <= not(byte);
---				OEBUS_int(2) <= not(word or long);
---				OEBUS_int(3) <= not(byte or word);
---				OEBUS_int(4) <= not(long);
---				OEBUS_int(5) <= not(byte);
---				OEBUS_int(6) <= not(word);
---				OEBUS_int(7) <= not(long);
---			else                      -- write cycle
---				case (MAS_state) is
---					when L =>
---						nDMACOE <= '0';
---					when others =>
---						nDMACOE <= '1';
---				end case;
---				case (MAS_state) is
---					when A | F | K =>
---						OEBUS_int(0) <= '0';
---					when others =>
---						OEBUS_int(0) <= '1';
---				end case;
---				case (MAS_state) is
---					when C | H | L =>
---						OEBUS_int(1) <= '0';
---					when others =>
---						OEBUS_int(1) <= '1';
---				end case;
---				case (MAS_state) is
---					when A | F | H | K | L | M =>
---						OEBUS_int(2) <= '0';
---					when others =>
---						OEBUS_int(2) <= '1';
---				end case;
---				case (MAS_state) is
---					when B | D | G | M =>
---						OEBUS_int(3) <= '0';
---					when others =>
---						OEBUS_int(3) <= '1';
---				end case;
---				case (MAS_state) is
---					when A | B | C | D | E | F | G | H | J | K | L | M | N | DC =>
---						OEBUS_int(4) <= '0';
---					when others =>
---						OEBUS_int(4) <= '1';
---				end case;
---				case (MAS_state) is
---					when E | J | N =>
---						OEBUS_int(5) <= '0';
---					when others =>
---						OEBUS_int(5) <= '1';
---				end case;
---				case (MAS_state) is
---					when B | C | D | E | G | J | N =>
---						OEBUS_int(6) <= '0';
---					when others =>
---						OEBUS_int(6) <= '1';
---				end case;
---				case (MAS_state) is
---					when A | B | C | D | E | F | G | H | J | K | M | N | DC =>
---						OEBUS_int(7) <= '0';
---					when others =>
---						OEBUS_int(7) <= '1';
---				end case;
---			end if;
+--   process(BCLK)
+--   begin
+--      if(BCLK'event and  BCLK='1') then
+--         if(R_W040='1') then       -- read cycle
+--            nDMACOE <= '1';
+--            OEBUS_int(0) <= not(byte or word or long);
+--            OEBUS_int(1) <= not(byte);
+--            OEBUS_int(2) <= not(word or long);
+--            OEBUS_int(3) <= not(byte or word);
+--            OEBUS_int(4) <= not(long);
+--            OEBUS_int(5) <= not(byte);
+--            OEBUS_int(6) <= not(word);
+--            OEBUS_int(7) <= not(long);
+--         else                      -- write cycle
+--            case (MAS_state) is
+--               when L =>
+--                  nDMACOE <= '0';
+--               when others =>
+--                  nDMACOE <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when A | F | K =>
+--                  OEBUS_int(0) <= '0';
+--               when others =>
+--                  OEBUS_int(0) <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when C | H | L =>
+--                  OEBUS_int(1) <= '0';
+--               when others =>
+--                  OEBUS_int(1) <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when A | F | H | K | L | M =>
+--                  OEBUS_int(2) <= '0';
+--               when others =>
+--                  OEBUS_int(2) <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when B | D | G | M =>
+--                  OEBUS_int(3) <= '0';
+--               when others =>
+--                  OEBUS_int(3) <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when A | B | C | D | E | F | G | H | J | K | L | M | N | DC =>
+--                  OEBUS_int(4) <= '0';
+--               when others =>
+--                  OEBUS_int(4) <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when E | J | N =>
+--                  OEBUS_int(5) <= '0';
+--               when others =>
+--                  OEBUS_int(5) <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when B | C | D | E | G | J | N =>
+--                  OEBUS_int(6) <= '0';
+--               when others =>
+--                  OEBUS_int(6) <= '1';
+--            end case;
+--            case (MAS_state) is
+--               when A | B | C | D | E | F | G | H | J | K | M | N | DC =>
+--                  OEBUS_int(7) <= '0';
+--               when others =>
+--                  OEBUS_int(7) <= '1';
+--            end case;
+--         end if;
 --
---		end if;
---	end process;
+--      end if;
+--   end process;
 --
 --
---	process(BCLK)
---	begin
---		if(BCLK'event and  BCLK='1') then
---			if(R_W040='1') then
---				nDMACOE <= '1';
---			else
---				case (MAS_state) is
---					when L =>
---						nDMACOE <= '0';
---					when others =>
---						nDMACOE <= '1';
---				end case;
---			end if;
+--   process(BCLK)
+--   begin
+--      if(BCLK'event and  BCLK='1') then
+--         if(R_W040='1') then
+--            nDMACOE <= '1';
+--         else
+--            case (MAS_state) is
+--               when L =>
+--                  nDMACOE <= '0';
+--               when others =>
+--                  nDMACOE <= '1';
+--            end case;
+--         end if;
 --
---			if(R_W040='1') then
---				OEBUS_int(0) <= not(byte or word or long)
---				and ( OEBUS_int(0) or nS2W );
---			else
---				case (MAS_state) is
---					when A | F | K =>
---						OEBUS_int(0) <= '0';
---					when others =>
---						OEBUS_int(0) <= '1';
---				end case;
---			end if;
---			if(R_W040='1') then
---				OEBUS_int(1) <= not(byte)
---				and ( OEBUS_int(1) or nS2W );
---			else
---				case (MAS_state) is
---					when C | H | L =>
---						OEBUS_int(1) <= '0';
---					when others =>
---						OEBUS_int(1) <= '1';
---				end case;
---			end if;
---			if(R_W040='1') then
---				OEBUS_int(2) <= not(word or long)
---				and ( OEBUS_int(2) or nS2W );
---			else
---				case (MAS_state) is
---					when A | F | H | K | L | M =>
---						OEBUS_int(2) <= '0';
---					when others =>
---						OEBUS_int(2) <= '1';
---				end case;
---			end if;
---			if(R_W040='1') then
---				OEBUS_int(3) <= not(byte or word)
---				and ( OEBUS_int(3) or nS2W );
---			else
---				case (MAS_state) is
---					when B | D | G | M =>
---						OEBUS_int(3) <= '0';
---					when others =>
---						OEBUS_int(3) <= '1';
---				end case;
---			end if;
---			if(R_W040='1') then
---				OEBUS_int(4) <= not(long)
---				and ( OEBUS_int(4) or nS2W );
---			else
---				case (MAS_state) is
---					when A | B | C | D | E | F | G | H | J | K | L | M | N | DC =>
---						OEBUS_int(4) <= '0';
---					when others =>
---						OEBUS_int(4) <= '1';
---				end case;
---			end if;
---			if(R_W040='1') then
---				OEBUS_int(5) <= not(byte)
---				and ( OEBUS_int(5) or nS2W );
---			else
---				case (MAS_state) is
---					when E | J | N =>
---						OEBUS_int(5) <= '0';
---					when others =>
---						OEBUS_int(5) <= '1';
---				end case;
---			end if;
---			if(R_W040='1') then
---				OEBUS_int(6) <= not(word)
---				and ( OEBUS_int(6) or nS2W );
---			else
---				case (MAS_state) is
---					when  B | C | D | E | G | J | N =>
---						OEBUS_int(6) <= '0';
---					when others =>
---						OEBUS_int(6) <= '1';
---				end case;
---			end if;
---			if(R_W040='1') then
---				OEBUS_int(7) <= not(long)
---				and ( OEBUS_int(7) or nS2W );
---			else
---				case (MAS_state) is
---					when A | B | C | D | E | F | G | H | J | K | M | N | DC =>
---						OEBUS_int(7) <= '0';
---					when others =>
---						OEBUS_int(7) <= '1';
---				end case;
---			end if;
+--         if(R_W040='1') then
+--            OEBUS_int(0) <= not(byte or word or long)
+--            and ( OEBUS_int(0) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when A | F | K =>
+--                  OEBUS_int(0) <= '0';
+--               when others =>
+--                  OEBUS_int(0) <= '1';
+--            end case;
+--         end if;
+--         if(R_W040='1') then
+--            OEBUS_int(1) <= not(byte)
+--            and ( OEBUS_int(1) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when C | H | L =>
+--                  OEBUS_int(1) <= '0';
+--               when others =>
+--                  OEBUS_int(1) <= '1';
+--            end case;
+--         end if;
+--         if(R_W040='1') then
+--            OEBUS_int(2) <= not(word or long)
+--            and ( OEBUS_int(2) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when A | F | H | K | L | M =>
+--                  OEBUS_int(2) <= '0';
+--               when others =>
+--                  OEBUS_int(2) <= '1';
+--            end case;
+--         end if;
+--         if(R_W040='1') then
+--            OEBUS_int(3) <= not(byte or word)
+--            and ( OEBUS_int(3) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when B | D | G | M =>
+--                  OEBUS_int(3) <= '0';
+--               when others =>
+--                  OEBUS_int(3) <= '1';
+--            end case;
+--         end if;
+--         if(R_W040='1') then
+--            OEBUS_int(4) <= not(long)
+--            and ( OEBUS_int(4) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when A | B | C | D | E | F | G | H | J | K | L | M | N | DC =>
+--                  OEBUS_int(4) <= '0';
+--               when others =>
+--                  OEBUS_int(4) <= '1';
+--            end case;
+--         end if;
+--         if(R_W040='1') then
+--            OEBUS_int(5) <= not(byte)
+--            and ( OEBUS_int(5) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when E | J | N =>
+--                  OEBUS_int(5) <= '0';
+--               when others =>
+--                  OEBUS_int(5) <= '1';
+--            end case;
+--         end if;
+--         if(R_W040='1') then
+--            OEBUS_int(6) <= not(word)
+--            and ( OEBUS_int(6) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when  B | C | D | E | G | J | N =>
+--                  OEBUS_int(6) <= '0';
+--               when others =>
+--                  OEBUS_int(6) <= '1';
+--            end case;
+--         end if;
+--         if(R_W040='1') then
+--            OEBUS_int(7) <= not(long)
+--            and ( OEBUS_int(7) or nS2W );
+--         else
+--            case (MAS_state) is
+--               when A | B | C | D | E | F | G | H | J | K | M | N | DC =>
+--                  OEBUS_int(7) <= '0';
+--               when others =>
+--                  OEBUS_int(7) <= '1';
+--            end case;
+--         end if;
 --
---		end if;
---	end process;
+--      end if;
+--   end process;
 
 -- original equations
-	process(BCLK)
-	begin
-		if(BCLK'event and  BCLK='1') then
+   process(BCLK)
+   begin
+      if(BCLK'event and  BCLK='1') then
 --register
 nDMACOE <= not(
         ( not(MAS0) and MAS1 and not(MAS2) and not(MAS3) and not(R_W040) ) );
@@ -440,8 +440,8 @@ OEBUS_int(7) <= not(
      or ( MAS1 and MAS3 and not(R_W040) )
      or ( not(nS2W) and R_W040 and not(OEBUS_int(7)) )
      or ( R_W040 and long ) );
-		end if;
-	end process;
+      end if;
+   end process;
 
 ---- original from 3640
 ----register
@@ -516,8 +516,8 @@ OEBUS_int(7) <= not(
 --     or ( not(nS2W) and R_W040 and not(OEBUS_int(6)) )
 --     or ( SLV3 and R_W040 and nRBERR and not(nRDSACK0) and not(nRDSACK1) ) );
 --
---		end if;
---	end process;
+--      end if;
+--   end process;
 
 end Behavioral;
 

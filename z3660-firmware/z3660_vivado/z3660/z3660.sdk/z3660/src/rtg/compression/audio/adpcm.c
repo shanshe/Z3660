@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "../../../main.h"
+#define inline
 
 #define int32 int32_t
 #define byte uint8_t
@@ -81,19 +83,19 @@ const byte imxOtherTable[6][64] = {
 };
 
 int32 clip_int32(int32 v, int32 amin, int32 amax) {
-	if (v < amin) return amin;
-	else if (v > amax) return amax;
-	return v;
+	if (v < amin) return (amin);
+	else if (v > amax) return (amax);
+	return (v);
 }
 
 inline uint16 READ_BE_UINT16(const void *ptr) {
 	const uint8 *b = (const uint8 *)ptr;
-	return (b[0] << 8) | b[1];
+	return ((b[0] << 8) | b[1]);
 }
 
 inline uint32 READ_BE_UINT32(const void *ptr) {
 	const uint8 *b = (const uint8 *)ptr;
-	return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | (b[3]);
+	return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | (b[3]));
 }
 
 inline void WRITE_BE_UINT16(void *ptr, uint16 value) {
@@ -256,5 +258,5 @@ uint32_t decompress_adpcm(uint8_t *compInput, uint8_t *compOutput, int channels)
 		}
 	}
 
-	return 0x2000;
+	return (0x2000);
 }

@@ -3,415 +3,975 @@
 /*				Include File Definitions						*/
 /* ------------------------------------------------------------ */
 
-#include "xaxivdma.h"
 #include "sii9022_init/sii9022_init.h"
-#include <stdio.h>
 #include "xuartps.h"
-#include "math.h"
 #include "main.h"
-#include <ctype.h>
-#include <stdlib.h>
+#include "interrupt.h"
 #include "xil_types.h"
 #include "xil_cache.h"
-#include "xparameters.h"
+#include "xil_cache_l.h"
+//#include "xparameters.h"
+#include <stdio.h>
 
 
-#include "xil_types.h"
-#include "vga_modes.h"
+#include "video.h"
+#include "ax.h"
+#include "rtg/fonts.h"
 
-#include "xvtc.h"
-#include "sleep.h"
-#include "xil_printf.h"
+#include "rtg/zz_video_modes.h"
+#include "rtg/zzregs.h"
+#include "rtg/gfx.h"
+#include "xaxivdma.h"
+#include "xclk_wiz.h"
+#include <sleep.h>
+#include "memorymap.h"
+#include "render/gfx2.h"
 
-/* ------------------------------------------------------------ */
-/*					Miscellaneous Declarations					*/
-/* ------------------------------------------------------------ */
+#include "ff.h"
+#include "mpg/pl_mpeg_player.h"
+
+#define VDMA_DEVICE_ID	XPAR_AXIVDMA_0_DEVICE_ID
+
+extern ZZ_VIDEO_STATE vs;
+extern XAxiVdma vdma;
+extern XClk_Wiz clkwiz;
+extern XClk_Wiz_Config conf;
+extern uint16_t original_h;
+extern uint32_t ticks;
+uint32_t sprite_buf[32 * 48];
+uint8_t sprite_clipped = 0;
+int16_t sprite_clip_x = 0, sprite_clip_y = 0;
+uint8_t color_reset=0;
+uint8_t stride_div = 1;
+
+uint16_t sprite_request_update_pos = 0;
+uint16_t sprite_request_update_data = 0;
+uint16_t sprite_request_show = 0;
+uint16_t sprite_request_hide = 0;
+uint16_t sprite_request_pos_x = 0;
+uint16_t sprite_request_pos_y = 0;
+
+uint16_t color16[8]={(uint16_t)((0x0f<<11)|(0x1f<<5)|(0x0f)),
+                     (uint16_t)((0x0f<<11)|(0x00<<5)|(0x00)),
+                     (uint16_t)((0x00<<11)|(0x1f<<5)|(0x00)),
+                     (uint16_t)((0x00<<11)|(0x00<<5)|(0x0f)),
+                     (uint16_t)((0x0f<<11)|(0x1f<<5)|(0x00)),
+                     (uint16_t)((0x00<<11)|(0x1f<<5)|(0x0f)),
+                     (uint16_t)((0x0f<<11)|(0x00<<5)|(0x0f)),
+                     (uint16_t)((0x04<<11)|(0x08<<5)|(0x04)),
+};
+uint32_t color32[8]={(uint32_t)((0xf0L<<16)|(0xf0L<<8)|(0xf0L)),
+                     (uint32_t)((0xf0L<<16)|(0x00L<<8)|(0x00L)),
+                     (uint32_t)((0x00L<<16)|(0xf0L<<8)|(0x00L)),
+                     (uint32_t)((0x00L<<16)|(0x00L<<8)|(0xf0L)),
+                     (uint32_t)((0xf0L<<16)|(0xf0L<<8)|(0x00L)),
+                     (uint32_t)((0x00L<<16)|(0xf0L<<8)|(0xf0L)),
+                     (uint32_t)((0xf0L<<16)|(0x00L<<8)|(0xf0L)),
+                     (uint32_t)((0x40L<<16)|(0x40L<<8)|(0x40L)),
+};
+zz_video_mode preset_video_modes[ZZVMODE_NUM] = {
+    //   HRES       VRES    HSTART  HEND    HMAX    VSTART  VEND    VMAX    POLARITY    MHZ     PIXELCLOCK HZ   VERTICAL HZ     HDMI    MUL/DIV/DIV2
+    {    1280,      720,    1390,   1430,   1650,   725,    730,    750,    0,          75,     75000000,       60,             0,      15, 1, 20 },
+    {    800,       600,    840,    968,    1056,   601,    605,    628,    0,          40,     40000000,       60,             0,      14, 1, 35 },
+    {    640,       480,    656,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             0,      15, 1, 60 },
+    {    1024,      768,    1048,   1184,   1344,   771,    777,    806,    0,          65,     65000000,       60,             0,      13, 1, 20 },
+    {    1280,      1024,   1328,   1440,   1688,   1025,   1028,   1066,   0,          108,    108000000,      60,             0,      54, 5, 10 },
+    {    1920,      1080,   2008,   2052,   2200,   1084,   1089,   1125,   0,          150,    150000000,      60,             0,      15, 1, 10 },
+    {    720,       576,    732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,             0,      45, 2, 83 },
+    {    1920,      1080,   2448,   2492,   2640,   1084,   1089,   1125,   0,          150,    150000000,      50,             0,      15, 1, 10 },
+    {    720,       480,    720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             0,      19, 1, 75 },
+    {    640,       512,    840,    968,    1056,   601,    605,    628,    0,          40,     40000000,       60,             0,      14, 1, 35 },
+	{	 1600,		1200,	1704,	1880,	2160,	1201,	1204,	1242,	0,			161,	16089999,		60,				0,		21, 1, 13 },
+	{	 2560,		1440,	2680,	2944,	3328,	1441,	1444,	1465,	0,			146,	15846000,		30,				0,		41, 2, 14 },
+	{    720,       576,    732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,             0,      31, 1,115 }, // 720x576 non-standard VSync (PAL Amiga)
+	{    720,       480,    720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             0,      61, 5, 49 }, // 720x480 non-standard VSync (PAL Amiga)
+	{    720,       576,    732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,             0,      59, 7, 31 }, // 720x576 non-standard VSync (NTSC Amiga)
+	{    720,       480,    720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             0,      37, 3, 49 }, // 720x480 non-standard VSync (NTSC Amiga)
+    {    640,       400,    656,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             0,      15, 1, 60 },
+    // The final entry here is the custom video mode, accessible through registers for debug purposes.
+    {    1280,      720,    1390,   1430,   1650,   725,    730,    750,    0,          75,     75000000,       60,             0,      15, 1, 20 },
+};
+
+void do_update_hw_sprite_pos(int16_t x, int16_t y);
+void do_clip_hw_sprite(int16_t offset_x, int16_t offset_y);
 
 
-//#define BIT_DISPLAY_RED 16
-//#define BIT_DISPLAY_BLUE 8
-//#define BIT_DISPLAY_GREEN 0
+int interrupt_init(void* isr_video);
 
-#define VGA_VDMA_ID XPAR_AXIVDMA_0_DEVICE_ID
-#define DISP_VTC_ID XPAR_VTC_0_DEVICE_ID
-//#define VID_VTC_IRPT_ID XPS_FPGA3_INT_ID
-//#define VID_GPIO_IRPT_ID XPS_FPGA4_INT_ID
-//#define SCU_TIMER_ID XPAR_SCUTIMER_DEVICE_ID
-//#define UART_BASEADDR XPAR_PS7_UART_1_BASEADDR
+ZZ_VIDEO_STATE* video_init() {
+#define NO_SCALE 0
+#define SCALEXY 3
+	vs.framebuffer = (uint32_t*) FRAMEBUFFER_ADDRESS;
+	vs.video_mode = ZZVMODE_800x600 | NO_SCALE << 12 | MNTVA_COLOR_16BIT565 << 8;
+	vs.colormode = 0;
+	vs.framebuffer_size=800*600*1;
+	interrupt_init(isr_video);
 
-#define H_STRIDE            1920
-//#define H_ACTIVE            1920
-#define V_ACTIVE            1080
+//	video_reset();
 
-#define VIDEO_LENGTH  (H_STRIDE*V_ACTIVE)
-//#define VIDEO_BASEADDR0 DDR_BASEADDR + 0x2000000
-//#define VIDEO_BASEADDR1 DDR_BASEADDR + 0x3000000
-//#define VIDEO_BASEADDR2 DDR_BASEADDR + 0x4000000
-
-#define DEMO_PATTERN_0 0
-#define DEMO_PATTERN_1 1
-
-
-//extern const unsigned char zturnhdmi[6220800];
-//extern const unsigned char gImage_beijing[8294400];
-
-
-/*
- * Framebuffers for video data
- */
-
-//u32 frameBuf[DEMO_MAX_FRAME];
-const u32 *frameBuf=(u32*)0x100000;//[DEMO_MAX_FRAME];
-
-u8 *pFrames; //array of pointers to the frame buffers
-
-
-/* ------------------------------------------------------------ */
-/*				Procedure Definitions							*/
-/* ------------------------------------------------------------ */
-
-
-XAxiVdma vdma;
-
-typedef enum {
-	DISPLAY_STOPPED = 0,
-	DISPLAY_RUNNING = 1
-} DisplayState;
-
-typedef struct {
-		u32 dynClkAddr; /*Physical Base address of the dynclk core*/
-		XAxiVdma *vdma; /*VDMA driver struct*/
-		XAxiVdma_DmaSetup vdmaConfig; /*VDMA channel configuration*/
-		XVtc vtc; /*VTC driver struct*/
-		VideoMode vMode; /*Current Video mode*/
-		u8 *framePtr[3]; /* Array of pointers to the framebuffers */
-		u32 stride; /* The line stride of the framebuffers, in bytes */
-		double pxlFreq; /* Frequency of clock currently being generated */
-		u32 curFrame; /* Current frame being displayed */
-		DisplayState state; /* Indicates if the Display is currently running */
-} DisplayCtrl;
-
-DisplayCtrl dispCtrl;
-
-int DisplayStart(DisplayCtrl *dispPtr)
-{
-	int Status;
-	XVtc_Timing vtcTiming;
-	XVtc_SourceSelect SourceSelect;
-
-	if (dispPtr->state == DISPLAY_RUNNING)
-	{
-		return XST_SUCCESS;
-	}
-
-	/*
-	 * Configure the vtc core with the display mode timing parameters
-	 */
-	vtcTiming.HActiveVideo = dispPtr->vMode.width;	/**< Horizontal Active Video Size */
-	vtcTiming.HFrontPorch = dispPtr->vMode.hps - dispPtr->vMode.width;	/**< Horizontal Front Porch Size */
-	vtcTiming.HSyncWidth = dispPtr->vMode.hpe - dispPtr->vMode.hps;		/**< Horizontal Sync Width */
-	vtcTiming.HBackPorch = dispPtr->vMode.hmax - dispPtr->vMode.hpe + 1;		/**< Horizontal Back Porch Size */
-	vtcTiming.HSyncPolarity = dispPtr->vMode.hpol;	/**< Horizontal Sync Polarity */
-	vtcTiming.VActiveVideo = dispPtr->vMode.height;	/**< Vertical Active Video Size */
-	vtcTiming.V0FrontPorch = dispPtr->vMode.vps - dispPtr->vMode.height;	/**< Vertical Front Porch Size */
-	vtcTiming.V0SyncWidth = dispPtr->vMode.vpe - dispPtr->vMode.vps;	/**< Vertical Sync Width */
-	vtcTiming.V0BackPorch = dispPtr->vMode.vmax - dispPtr->vMode.vpe + 1;;	/**< Horizontal Back Porch Size */
-	vtcTiming.V1FrontPorch = dispPtr->vMode.vps - dispPtr->vMode.height;	/**< Vertical Front Porch Size */
-	vtcTiming.V1SyncWidth = dispPtr->vMode.vpe - dispPtr->vMode.vps;	/**< Vertical Sync Width */
-	vtcTiming.V1BackPorch = dispPtr->vMode.vmax - dispPtr->vMode.vpe + 1;;	/**< Horizontal Back Porch Size */
-	vtcTiming.VSyncPolarity = dispPtr->vMode.vpol;	/**< Vertical Sync Polarity */
-	vtcTiming.Interlaced = 0;		/**< Interlaced / Progressive video */
-
-	/* Setup the VTC Source Select config structure. */
-	/* 1=Generator registers are source */
-	/* 0=Detector registers are source */
-	memset((void *)&SourceSelect, 0, sizeof(SourceSelect));
-	SourceSelect.VBlankPolSrc = 1;
-	SourceSelect.VSyncPolSrc = 1;
-	SourceSelect.HBlankPolSrc = 1;
-	SourceSelect.HSyncPolSrc = 1;
-	SourceSelect.ActiveVideoPolSrc = 1;
-	SourceSelect.ActiveChromaPolSrc= 1;
-	SourceSelect.VChromaSrc = 1;
-	SourceSelect.VActiveSrc = 1;
-	SourceSelect.VBackPorchSrc = 1;
-	SourceSelect.VSyncSrc = 1;
-	SourceSelect.VFrontPorchSrc = 1;
-	SourceSelect.VTotalSrc = 1;
-	SourceSelect.HActiveSrc = 1;
-	SourceSelect.HBackPorchSrc = 1;
-	SourceSelect.HSyncSrc = 1;
-	SourceSelect.HFrontPorchSrc = 1;
-	SourceSelect.HTotalSrc = 1;
-//	SourceSelect.FieldIdPolSrc = 1;
-
-	XVtc_SelfTest(&(dispPtr->vtc));
-
-	XVtc_RegUpdateEnable(&(dispPtr->vtc));
-	XVtc_SetGeneratorTiming(&(dispPtr->vtc), &vtcTiming);
-	XVtc_SetSource(&(dispPtr->vtc), &SourceSelect);
-    /*
-	 * Enable VTC core, releasing backpressure on VDMA
-	 */
-	XVtc_EnableGenerator(&dispPtr->vtc);
-
-	/*
-	 * Configure the VDMA to access a frame with the same dimensions as the
-	 * current mode
-	 */
-	dispPtr->vdmaConfig.VertSizeInput = dispPtr->vMode.height;
-	dispPtr->vdmaConfig.HoriSizeInput = (dispPtr->vMode.width) * 4;
-	dispPtr->vdmaConfig.FixedFrameStoreAddr = dispPtr->curFrame;
-	/*
-	 *Also reset the stride and address values, in case the user manually changed them
-	 */
-	dispPtr->vdmaConfig.Stride = dispPtr->stride;
-	dispPtr->vdmaConfig.FrameStoreStartAddr[0] = (u32)  dispPtr->framePtr[0];
-
-	/*
-	 * Perform the VDMA driver calls required to start a transfer. Note that no data is actually
-	 * transferred until the disp_ctrl core signals the VDMA core by pulsing fsync.
-	 */
-
-	Status = XAxiVdma_DmaConfig(dispPtr->vdma, XAXIVDMA_READ, &(dispPtr->vdmaConfig));
-	if (Status != XST_SUCCESS)
-	{
-		printf("Read channel config failed %d\r\n", Status);
-		return XST_FAILURE;
-	}
-	Status = XAxiVdma_DmaSetBufferAddr(dispPtr->vdma, XAXIVDMA_READ, dispPtr->vdmaConfig.FrameStoreStartAddr);
-	if (Status != XST_SUCCESS)
-	{
-		printf("Read channel set buffer address failed %d\r\n", Status);
-		return XST_FAILURE;
-	}
-	Status = XAxiVdma_DmaStart(dispPtr->vdma, XAXIVDMA_READ);
-	if (Status != XST_SUCCESS)
-	{
-		printf("Start read transfer failed %d\r\n", Status);
-		return XST_FAILURE;
-	}
-	Status = XAxiVdma_StartParking(dispPtr->vdma, dispPtr->curFrame, XAXIVDMA_READ);
-	if (Status != XST_SUCCESS)
-	{
-		printf("Unable to park the channel %d\r\n", Status);
-		return XST_FAILURE;
-	}
-
-	printf("Display running %s\n\r",dispPtr->vMode.label);
-	printf("FB %08lX\n\r",(u32)  dispPtr->framePtr[0]);
-
-	dispPtr->state = DISPLAY_RUNNING;
-
-	return XST_SUCCESS;
+	return(&vs);
 }
+void set_pixelclock(zz_video_mode *mode);
+void set_palette(uint32_t zdata,uint16_t op_palette);
 
-/* ------------------------------------------------------------ */
-
-/***	DisplayInitialize(DisplayCtrl *dispPtr, XAxiVdma *vdma, u16 vtcId, u32 dynClkAddr, u8 *framePtr[DISPLAY_NUM_FRAMES], u32 stride)
-**
-**	Parameters:
-**		dispPtr - Pointer to the struct that will be initialized
-**		vdma - Pointer to initialized VDMA struct
-**		vtcId - Device ID of the VTC core as found in xparameters.h
-**		dynClkAddr - BASE ADDRESS of the axi_dynclk core
-**		framePtr - array of pointers to the framebuffers. The framebuffers must be instantiated above this driver, and there must be 3
-**		stride - line stride of the framebuffers. This is the number of bytes between the start of one line and the start of another.
-**
-**	Return Value: int
-**		XST_SUCCESS if successful, XST_FAILURE otherwise
-**
-**	Errors:
-**
-**	Description:
-**		Initializes the driver struct for use.
-**
-*/
-int DisplayInitialize(DisplayCtrl *dispPtr, XAxiVdma *vdma, u16 vtcId, u8 *framePtr, u32 stride)
-{
-	int Status;
-	XVtc_Config *vtcConfig;
-//	ClkConfig clkReg;
-//	ClkMode clkMode;
-
-
-	/*
-	 * Initialize all the fields in the DisplayCtrl struct
-	 */
-	dispPtr->curFrame = 0;
-	dispPtr->framePtr[0] = framePtr;
-	dispPtr->state = DISPLAY_STOPPED;
-	dispPtr->stride = stride;
-	dispPtr->vMode = VMODE_1920x1080; // video_mode_init???
-
-	/* Initialize the VTC driver so that it's ready to use look up
-	 * configuration in the config table, then initialize it.
-	 */
-	vtcConfig = XVtc_LookupConfig(vtcId);
-	/* Checking Config variable */
-	if (NULL == vtcConfig) {
-		return (XST_FAILURE);
-	}
-	Status = XVtc_CfgInitialize(&(dispPtr->vtc), vtcConfig, vtcConfig->BaseAddress);
-	/* Checking status */
-	if (Status != (XST_SUCCESS)) {
-		return (XST_FAILURE);
-	}
-
-	dispPtr->vdma = vdma;
-
-	/*
-	 * Initialize the VDMA Read configuration struct
-	 */
-	dispPtr->vdmaConfig.FrameDelay = 0;
-	dispPtr->vdmaConfig.EnableCircularBuf = 1;
-	dispPtr->vdmaConfig.EnableSync = 0;
-	dispPtr->vdmaConfig.PointNum = 0;
-	dispPtr->vdmaConfig.EnableFrameCounter = 0;
-
-	return XST_SUCCESS;
-}
-
-void DemoPrintTest(u8 *frame, u32 width, u32 height, u32 stride, int pattern)
-{
-//	return ;
-	u32 i,j;
-
-	switch (pattern)
-	{
-	case DEMO_PATTERN_0:
-
-		for (i = 0; i < 108/*0*/; i++)
-		{
-			for (j = 0; j < 192/*0*/; j++)
-			{
-				frame[1920*4*i+4*j]=0x00;
-				frame[1920*4*i+4*j+1]=0xF0;
-				frame[1920*4*i+4*j+2]=0x00;
-				frame[1920*4*i+4*j+3]=0x00;
-			}
-		}
-
-		Xil_DCacheFlushRange((unsigned int) frame, 1920*1080*4);
-		break;
-	case DEMO_PATTERN_1:
-
-		for (i = 0; i < 108/*0*/; i++)
-		{
-			for (j = 0; j < 192/*0*/; j++)
-			{
-				frame[1920*4*i+4*j]=0x00;
-				frame[1920*4*i+4*j+1]=0x00;
-				frame[1920*4*i+4*j+2]=0xF0;
-				frame[1920*4*i+4*j+3]=0x00;
-			}
-		}
-
-		/*
-		 * Flush the framebuffer memory range to ensure changes are written to the
-		 * actual memory, and therefore accessible by the VDMA.
-		 */
-		Xil_DCacheFlushRange((unsigned int) frame, 1920*1080*4);
-		break;
-	default :
-		xil_printf("Error: invalid pattern passed to DemoPrintTest");
-	}
-}
-
-
-void init_vdma(int hsize, int vsize, int hdiv, int vdiv, u32 buspos)
-{
-	int Status;
-	XAxiVdma_Config *vdmaConfig;
-//	int i;
-//	int j;
-	/*
-	 * Initialize an array of pointers to the 3 frame buffers
-	 */
-
-	pFrames = (u8*)buspos;
-
-/*
-	for (i = 0; i < 1080; i++)
-	{
-		for (j = 0; j < 1920; j++)
-		{
-			frameBuf[0][1920*4*i+4*j]=0x00;
-			frameBuf[0][1920*4*i+4*j+1]=0x00;
-			frameBuf[0][1920*4*i+4*j+2]=0x00;
-			frameBuf[0][1920*4*i+4*j+3]=0xF0;
-		}
-	}
-*/
-	/*
-	 * Initialize VDMA driver
-	 */
-	vdmaConfig = XAxiVdma_LookupConfig(VGA_VDMA_ID);
-	if (!vdmaConfig)
-	{
-		xil_printf("No video DMA found for ID %d\r\n", VGA_VDMA_ID);
-		return;
-	}
-
-	Status = XAxiVdma_CfgInitialize(&vdma, vdmaConfig, vdmaConfig->BaseAddress);
-	if (Status != XST_SUCCESS)
-	{
-		xil_printf("VDMA Configuration Initialization failed %d\r\n", Status);
-		return;
-	}
-
-	/*
-	 * Initialize the Display controller and start it
-	 */
-	u32 stride = hsize *(vdmaConfig->Mm2SStreamWidth>>3);
-	Status = DisplayInitialize(&dispCtrl, &vdma, DISP_VTC_ID, pFrames, stride);
-	if (Status != XST_SUCCESS)
-	{
-		xil_printf("Display Ctrl initialization failed during demo initialization%d\r\n", Status);
-		return;
-	}
-
-	Status = DisplayStart(&dispCtrl);
-	if (Status != XST_SUCCESS)
-	{
-		xil_printf("Couldn't start display during demo initialization%d\r\n", Status);
-		return;
-	}
-	Xil_DCacheFlushRange((INTPTR)dispCtrl.framePtr[dispCtrl.curFrame], 1920*1080*4);
-//	DemoPrintTest(dispCtrl.framePtr[dispCtrl.curFrame], dispCtrl.vMode.width, dispCtrl.vMode.height, dispCtrl.stride, DEMO_PATTERN_1);
-}
-void cache_flush(void)
-{
-	Xil_DCacheFlushRange((INTPTR)dispCtrl.framePtr[dispCtrl.curFrame], 1920*1080*4);
-}
-void loop2(void)
-{
-	static int state=0;
-	if(XUartPs_IsReceiveData(STDOUT_BASEADDRESS))
-	{
-		XUartPs_RecvByte(STDOUT_BASEADDRESS);
-		switch(state)
-		{
-		case 0:
-			DemoPrintTest(dispCtrl.framePtr[dispCtrl.curFrame], dispCtrl.vMode.width, dispCtrl.vMode.height, dispCtrl.stride, DEMO_PATTERN_1);
-			state=1;
-			break;
-		case 1:
-			DemoPrintTest(dispCtrl.framePtr[dispCtrl.curFrame], dispCtrl.vMode.width, dispCtrl.vMode.height, dispCtrl.stride, DEMO_PATTERN_0);
-			state=0;
-			break;
-		}
-		xil_printf("press any key to change pattern\n\r");
-	}
-}
-
-void reset_video(int reset_frame_buffer)
-{
-	if(reset_frame_buffer)
-		memset((u32*)frameBuf,0,1920*1080*4);
-	sii9022_init();
-	init_vdma(1920,1080, 1, 1, (u32)frameBuf);
+void video_reset(void) {
+//	if(reset_frame_buffer)
+//		memset((uint32_t*)vs.framebuffer,0,1920*1080*2);
+//	Xil_ExceptionDisable();
+//	video_mode_init(ZZVMODE_1920x1080_60, 0, MNTVA_COLOR_16BIT565);
+//	Xil_ExceptionEnable();
+//	set_pixelclock(&preset_video_modes[ZZVMODE_800x600]);
+//	sii9022_init(&preset_video_modes[ZZVMODE_800x600]);
+//	init_vdma(800,600, 2, 1, (uint32_t)vs.framebuffer);
+//	if(reset_frame_buffer)
+//		memset((uint32_t*)frameBuf,0,800*600*4);
+//	set_pixelclock(&preset_video_modes[ZZVMODE_1920x1080_60]);
+//	sii9022_init(&preset_video_modes[ZZVMODE_1920x1080_60]);
+//	init_vdma(1920,1080, 1, 1, (uint32_t)frameBuf,&preset_video_modes[ZZVMODE_1920x1080_60]);
 	rtg_init();
+//	dump_vdma_status(&vdma);
+
+	vs.framebuffer_pan_width = 0;
+	vs.framebuffer_pan_offset = 0;
+	vs.split_request_pos = 0;
+	vs.split_pos = 1; // force update slpit_pos from split_request_pos and write to videoformatter
+
+	vs.sprite_colors[0] = 0x00ff00ff;
+	vs.sprite_colors[1] = 0x00000000;
+	vs.sprite_colors[2] = 0x00000000;
+	vs.sprite_colors[3] = 0x00000000;
+
+	vs.sprite_width = 16;
+	vs.sprite_height = 16;
+
+	sprite_request_hide = 1;
+//#define MPG_VIDEO_TEST
+#ifdef MPG_VIDEO_TEST
+//	static FIL fil;		/* File object */
+	static FATFS fatfs;
+	TCHAR *Path = "0:/";
+	TCHAR *filename = "Baila.mpg";
+	f_mount(&fatfs, Path, 1); // 1 mount immediately
+
+	f_open(&fil,filename, FA_OPEN_ALWAYS | FA_READ);
+
+	f_lseek(&fil, 0);
+	UINT NumBytesRead;
+	printf("Reading %s file\n",filename);
+	f_read(&fil, (void*)((uint32_t)vs.framebuffer), 1080,&NumBytesRead);
+
+//	f_close(&fil);
+	printf("\r\nFile read %d\n",NumBytesRead);
+//	reset_video(NO_RESET_FRAMEBUFFER);
+	f_lseek(&fil, 0);
+
+	original_h=256;
+	video_mode_init(ZZVMODE_640x480, NO_SCALE, MNTVA_COLOR_32BIT);
+	set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + 0), vs.vmode_hsize/vs.vmode_hdiv);
+	memset(vs.framebuffer,0,vs.size);
+//	fill_rect_solid(40, 40, 800-80, 600-80, swap16(color[color_reset&3]), MNTVA_COLOR_16BIT565);
+//	color_reset++;
+//	color_reset&=3;
+	set_pixelclock(&preset_video_modes[vs.video_mode]);
+	sii9022_init(&preset_video_modes[vs.video_mode]);
+
+	fpga_interrupt_connect(isr_video,isr_audio_tx);
+	Xil_ExceptionEnable();
+	player_mpeg(&fil,filename);
+//	Xil_ExceptionDisable();
+	f_close(&fil);
+#endif
+#define BOOT_SCREEN
+#ifdef BOOT_SCREEN
+
+//	memset((uint32_t*)vs.framebuffer,0,800*600*2);
+	while(video_formatter_read(0)==1);
+	while(video_formatter_read(0)==0);
+	original_h=256;
+	video_mode_init(ZZVMODE_640x480, NO_SCALE, MNTVA_COLOR_16BIT565);
+	set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + 0), vs.vmode_hsize/vs.vmode_hdiv);
+	memset(vs.framebuffer,0,vs.framebuffer_size);
+//	fill_rect_solid(40, 40, 800-80, 600-80, swap16(color[color_reset&3]), MNTVA_COLOR_16BIT565);
+//	color_reset++;
+//	color_reset&=3;
+	set_pixelclock(&preset_video_modes[vs.video_mode]);
+	sii9022_init(&preset_video_modes[vs.video_mode]);
+	while(video_formatter_read(0)==1);
+	while(video_formatter_read(0)==0);
+	init_vdma(vs.vmode_hsize,vs.vmode_vsize, 2, 1, (uint32_t)vs.framebuffer);
+#else
+	memset(vs.framebuffer,0,vs.size);
+#endif
+}
+void reset_init(void)
+{
+	audio_silence();
+	set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + (uint32_t) vs.framebuffer_pan_offset), vs.vmode_hsize/vs.vmode_hdiv);
+	if(vs.colormode==MNTVA_COLOR_8BIT)
+	{
+		set_palette((0<<24)|0,OP_PALETTE);
+		for(int i=0;i<8;i++)
+			set_palette(((i+2)<<24)|color32[i],OP_PALETTE);
+		set_palette((1<<24)|0xFFFFFF,OP_PALETTE);
+	}
+	sprite_request_hide=1;
+	vs.split_request_pos=0;
+	vs.framebuffer_pan_offset=0;
+}
+void min_distance(Point o,TriPoint d,Color color)
+{
+	int32_t dt0,dt1,dt2;
+	dt0=(o.x-d.P0.x)*(o.x-d.P0.x)+(o.y-d.P0.y)*(o.y-d.P0.y);
+	dt1=(o.x-d.P1.x)*(o.x-d.P1.x)+(o.y-d.P1.y)*(o.y-d.P1.y);
+	dt2=(o.x-d.P2.x)*(o.x-d.P2.x)+(o.y-d.P2.y)*(o.y-d.P2.y);
+	if(dt0<dt1)
+	{
+		if(dt0<dt2)
+		{
+			drawline(o, d.P0,color);
+		}
+		else
+		{
+			drawline(o, d.P2,color);
+		}
+	}
+	else
+	{
+		if(dt1<dt2)
+		{
+			drawline(o, d.P1,color);
+		}
+		else
+		{
+			drawline(o, d.P2,color);
+		}
+	}
+}
+void reset_run(void)
+{
+	static int16_t iteration=0;
+	iteration++;
+	int h=vs.vmode_vsize;
+
+//	static int i=0,j=0,k=1;
+//	int bar_w=10;
+	int w=vs.vmode_hsize;
+	if(vs.scalemode)
+	{
+		w=w>>1;
+		h=h>>1;
+		if(original_h<256)
+			h=original_h;
+	}
+/*
+	int jmax=80*4-20;
+	int imax=80*4;
+	if(original_h<=256)
+	{
+		bar_w=5;
+		jmax=80*2-20;
+		imax=80*2;
+	}
+	i+=bar_w;
+	if(i>=imax)
+	{
+		i=0;
+		while(video_formatter_read(0)==1); //wait vblank
+		while(video_formatter_read(0)==0);
+		j+=k;
+		if(j>=jmax)
+			k=-1;
+		if(j<=0)
+			k=1;
+	}
+	int delta=40+i+j;
+	if(original_h<=256)
+	{
+		delta=15+i+j;
+	}
+	uint32_t rgb=0;
+	if(vs.colormode==MNTVA_COLOR_32BIT)
+		rgb=color32[color_reset&7];
+	else if(vs.colormode==MNTVA_COLOR_16BIT565)
+		rgb=swap16(color16[color_reset&7]);
+	else if(vs.colormode==MNTVA_COLOR_8BIT)
+		rgb=((color_reset&7)+2)<<24;
+	if(delta<=h/2-bar_w)
+	{
+		fill_rect_solid(        delta,         delta, w-2*delta,           bar_w, rgb, vs.colormode);
+		fill_rect_solid(        delta, h-delta-bar_w, w-2*delta,           bar_w, rgb, vs.colormode);
+		fill_rect_solid(        delta,         delta,     bar_w, h-2*delta-bar_w, rgb, vs.colormode);
+		fill_rect_solid(w-delta-bar_w,         delta,     bar_w, h-2*delta-bar_w, rgb, vs.colormode);
+	}
+	color_reset++;
+*/
+/*
+	Point P0,P1;
+	Color color;
+	P0.x=400;
+	P0.y=20;
+	P1.x=200;
+	P1.y=200;
+	color.argb=0x0000FF00;
+	drawline(P0,P1, color);
+*/
+#define scalex(X) ((((X)*vs.vmode_hsize)>>(vs.scalemode?1:0))/800)
+#define scaley(Y) ((((Y)*vs.vmode_vsize)>>(vs.scalemode?1:0))/600)
+	Color grey;
+	grey.argb=0x003F3F3F;
+	Triangle rT,gT,bT;
+	{
+		// Blue Triangle
+		bT.P.P0.x=scalex(300);
+		bT.P.P0.y=scaley(350);
+		bT.P.P1.x=scalex(400);
+		bT.P.P1.y=scaley(200);
+		bT.P.P2.x=scalex(200);
+		bT.P.P2.y=scaley(300);
+		Point origin={scalex(400),scaley(300)};
+		Point origin2={scalex(300),scaley(275)};
+		bT.color.argb=0x000000FF;
+		static uint8_t dangle=0,dangle2=0;
+		dangle-=2;
+		dangle2+=2;
+		rotate(origin2,&bT.P.P0,dangle2);
+		rotate(origin2,&bT.P.P1,dangle2);
+		rotate(origin2,&bT.P.P2,dangle2);
+		rotate(origin,&bT.P.P0,dangle);
+		rotate(origin,&bT.P.P1,dangle);
+		rotate(origin,&bT.P.P2,dangle);
+		bT.H.h0=255;
+		bT.H.h1=128;
+		bT.H.h2=64;
+//		drawFilledTriangle(P,T.color.argb);
+ 		if((iteration&0x100)==0x100)
+			drawShadedTriangle(bT);
+		else
+			drawWireframeTriangle(bT.P,grey);//bT.color);
+	}
+	{
+		// Green Triangle
+		gT.P.P0.x=scalex(250);
+		gT.P.P0.y=scaley(250);
+		gT.P.P1.x=scalex(400);
+		gT.P.P1.y=scaley(200);
+		gT.P.P2.x=scalex(300);
+		gT.P.P2.y=scaley(320);
+		Point origin={scalex(400),scaley(300)};
+		Point origin2={scalex(325),scaley(260)};
+		gT.color.argb=0x0000FF00;
+		static uint8_t dangle=0,dangle2=0;
+		dangle+=2;
+		dangle2+=1;
+		rotate(origin2,&gT.P.P0,dangle2);
+		rotate(origin2,&gT.P.P1,dangle2);
+		rotate(origin2,&gT.P.P2,dangle2);
+		rotate(origin,&gT.P.P0,dangle);
+		rotate(origin,&gT.P.P1,dangle);
+		rotate(origin,&gT.P.P2,dangle);
+		gT.H.h0=64;
+		gT.H.h1=128;
+		gT.H.h2=255;
+//		drawFilledTriangle(P,T.color.argb);
+		if((iteration&0x100)==0x100)
+			drawShadedTriangle(gT);
+		else
+			drawWireframeTriangle(gT.P,grey);//gT.color);
+	}
+	{
+		// Red Triangle
+		rT.P.P0.x=scalex(200);
+		rT.P.P0.y=scaley(200);
+		rT.P.P1.x=scalex(350);
+		rT.P.P1.y=scaley(220);
+		rT.P.P2.x=scalex(400);
+		rT.P.P2.y=scaley(350);
+		Point origin={scalex(400),scaley(300)};
+		rT.color.argb=0x00FF0000;
+		static uint8_t dangle=0;
+		dangle++;
+		rotate(origin,&rT.P.P0,dangle);
+		rotate(origin,&rT.P.P1,dangle);
+		rotate(origin,&rT.P.P2,dangle);
+		rT.H.h0=255;
+		rT.H.h1=128;
+		rT.H.h2=64;
+//		drawFilledTriangle(P,T.color.argb);
+		if((iteration&0x100)==0x100)
+			drawShadedTriangle(rT);
+		else
+			drawWireframeTriangle(rT.P,grey);//rT.color);
+	}
+	min_distance(rT.P.P0,gT.P,grey);
+	min_distance(rT.P.P1,gT.P,grey);
+	min_distance(rT.P.P2,gT.P,grey);
+	min_distance(rT.P.P0,bT.P,grey);
+	min_distance(rT.P.P1,bT.P,grey);
+	min_distance(rT.P.P2,bT.P,grey);
+	min_distance(gT.P.P0,bT.P,grey);
+	min_distance(gT.P.P1,bT.P,grey);
+	min_distance(gT.P.P2,bT.P,grey);
+	min_distance(gT.P.P0,rT.P,grey);
+	min_distance(gT.P.P1,rT.P,grey);
+	min_distance(gT.P.P2,rT.P,grey);
+	min_distance(bT.P.P0,rT.P,grey);
+	min_distance(bT.P.P1,rT.P,grey);
+	min_distance(bT.P.P2,rT.P,grey);
+	min_distance(bT.P.P0,gT.P,grey);
+	min_distance(bT.P.P1,gT.P,grey);
+	min_distance(bT.P.P2,gT.P,grey);
+
+	Font20.BackColor=CL_TRANSPARENT;
+	displayStringAt(0,h/2-10,(uint8_t*)"Z3660 reset...",CENTER_MODE);
+//	usleep(10000);
+	handle_cache_flush();
+	while(video_formatter_read(0)==1); //wait vblank
+	while(video_formatter_read(0)==0);
+#if 0
+	Color black;
+	black.argb=0;
+	drawWireframeTriangle(P,black);
+	drawFilledTriangle(P,black);
+#else
+	memset(vs.framebuffer,0,vs.framebuffer_size);
+#endif
+}
+extern XAxiVdma_DmaSetup ReadCfg;
+extern XAxiVdma_Config *Config;
+
+// 32bit: hdiv=1, 16bit: hdiv=2, 8bit: hdiv=4, ...
+int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
+
+	int status;
+
+	if(Config==NULL)
+	{
+		Config = XAxiVdma_LookupConfig(VDMA_DEVICE_ID);
+
+		if (!Config) {
+			printf("VDMA not found for ID %d\r\n", VDMA_DEVICE_ID);
+			return(XST_FAILURE);
+		}
+	}
+		status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
+		if (status != XST_SUCCESS) {
+			printf("VDMA Configuration Initialization failed, status: %d\r\n", status);
+			printf("Halted\n");
+			while(1);
+			return(status);
+		}
+	//printf("VDMA MM2S DRE: %d\n", vdma.HasMm2SDRE);
+	//printf("VDMA Config MM2S DRE: %d\n", Config->HasMm2SDRE);
+
+	uint32_t stride = hsize * (Config->Mm2SStreamWidth >> 3);
+	if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (hsize / hdiv)) {
+		stride = (vs.framebuffer_pan_width * (Config->Mm2SStreamWidth >> 3)) * stride_div;
+	}
+
+	//printf("VDMA HDIV: %d VDIV: %d\n", hdiv, vdiv);
+
+	ReadCfg.VertSizeInput = vsize / vdiv;
+	ReadCfg.HoriSizeInput = (hsize * (Config->Mm2SStreamWidth >> 3)) / hdiv; // note: changing this breaks the output
+	ReadCfg.Stride = stride / hdiv; // note: changing this is not a problem
+	ReadCfg.FrameDelay = 0; /* This example does not test frame delay */
+	ReadCfg.EnableCircularBuf = 1; /* Only 1 buffer, continuous loop */
+	ReadCfg.EnableSync = 0; /* Gen-Lock */
+	ReadCfg.PointNum = 0;
+	ReadCfg.EnableFrameCounter = 0; /* Endless transfers */
+	ReadCfg.FixedFrameStoreAddr = 0; /* We are not doing parking */
+
+	ReadCfg.FrameStoreStartAddr[0] = bufpos;
+
+	//printf("VDMA Framebuffer at 0x%x\n", ReadCfg.FrameStoreStartAddr[0]);
+
+	status = XAxiVdma_DmaConfig(&vdma, XAXIVDMA_READ, &ReadCfg);
+	if (status != XST_SUCCESS) {
+		printf("VDMA Read channel config failed, status: %d\r\n", status);
+		return(status);
+	}
+
+	status = XAxiVdma_DmaSetBufferAddr(&vdma, XAXIVDMA_READ, ReadCfg.FrameStoreStartAddr);
+	if (status != XST_SUCCESS) {
+		printf("VDMA Read channel set buffer address failed, status: 0x%X\r\n", status);
+		return(status);
+	}
+
+	status = XAxiVdma_DmaStart(&vdma, XAXIVDMA_READ);
+	if (status != XST_SUCCESS) {
+		printf("VDMA Failed to start DMA engine (read channel), status: 0x%X\r\n", status);
+		return(status);
+	}
+	return(XST_SUCCESS);
+}
+int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
+
+	int status;
+
+	if(Config==NULL)
+	{
+		Config = XAxiVdma_LookupConfig(VDMA_DEVICE_ID);
+
+		if (!Config) {
+			printf("VDMA not found for ID %d\r\n", VDMA_DEVICE_ID);
+			return(XST_FAILURE);
+		}
+	}
+		status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
+		if (status != XST_SUCCESS) {
+			printf("VDMA Configuration Initialization failed, status: %d\r\n", status);
+			printf("Halted\n");
+			while(1);
+			return(status);
+		}
+	uint32_t stride = hsize * (Config->Mm2SStreamWidth >> 3);
+	if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (hsize / hdiv)) {
+		stride = (vs.framebuffer_pan_width * (Config->Mm2SStreamWidth >> 3)) * stride_div;
+	}
+
+	ReadCfg.VertSizeInput = vsize / vdiv;
+	ReadCfg.HoriSizeInput = (hsize * (Config->Mm2SStreamWidth >> 3)) / hdiv; // note: changing this breaks the output
+	ReadCfg.Stride = stride / hdiv; // note: changing this is not a problem
+	ReadCfg.FrameDelay = 0; /* This example does not test frame delay */
+	ReadCfg.EnableCircularBuf = 1; /* Only 1 buffer, continuous loop */
+	ReadCfg.EnableSync = 0; /* Gen-Lock */
+	ReadCfg.PointNum = 0;
+	ReadCfg.EnableFrameCounter = 0; /* Endless transfers */
+	ReadCfg.FixedFrameStoreAddr = 0; /* We are not doing parking */
+
+	ReadCfg.FrameStoreStartAddr[0] = bufpos;
+
+	//printf("VDMA Framebuffer at 0x%x\n", ReadCfg.FrameStoreStartAddr[0]);
+
+	status = XAxiVdma_DmaConfig(&vdma, XAXIVDMA_READ, &ReadCfg);
+	if (status != XST_SUCCESS) {
+		printf("VDMA Read channel config failed, status: %d\r\n", status);
+		return(status);
+	}
+
+	status = XAxiVdma_DmaSetBufferAddr(&vdma, XAXIVDMA_READ, ReadCfg.FrameStoreStartAddr);
+	if (status != XST_SUCCESS) {
+		printf("VDMA Read channel set buffer address failed, status: 0x%X\r\n", status);
+		return(status);
+	}
+
+	status = XAxiVdma_DmaStart(&vdma, XAXIVDMA_READ);
+	if (status != XST_SUCCESS) {
+		printf("VDMA Failed to start DMA engine (read channel), status: 0x%X\r\n", status);
+		return(status);
+	}
+	return(XST_SUCCESS);
 }
 
+int toggle=0;
+int vblank=0;
+extern int state68k;
+
+void isr_video(void *dummy)
+{
+	vblank=video_formatter_read(0);
+
+//	if (!videocap_enabled) {
+		if (!vblank) {
+			// if this is not the vblank interrupt, set up the split buffer
+			// TODO: VDMA doesn't seem to like switching buffers in the middle of a frame.
+			// the first line after a switch contains an extraneous word, so we end up
+			// with up to 4 pixels of the other buffer in the first line
+			if (vs.split_pos != 0)
+			{
+				if (vs.card_feature_enabled[CARD_FEATURE_SECONDARY_PALETTE]) {
+					video_formatter_write(1, MNTVF_OP_PALETTE_SEL);
+				}
+				init_vdma_irq(vs.vmode_hsize, vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv, (uint32_t)vs.framebuffer + vs.bgbuf_offset);
+			}
+		} else {
+			static int minitick=0;
+			minitick++;
+			ticks+=16; // 60Hz tick aprox.
+			if(minitick>=3)
+			{
+				minitick=0;
+				ticks+=2;
+			}
+			// if this is the vblank interrupt, set up the "normal" buffer in split mode
+			if (vs.card_feature_enabled[CARD_FEATURE_SECONDARY_PALETTE]) {
+				video_formatter_write(0, MNTVF_OP_PALETTE_SEL);
+			}
+			init_vdma_irq(vs.vmode_hsize, vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv, ((uint32_t)vs.framebuffer) + vs.framebuffer_pan_offset);
+
+		}
+
+	if(vblank)
+	{
+		if(state68k==M68K_RUNNING) {
+			handle_cache_flush();
+		}
+		if (sprite_request_show) {
+			vs.sprite_showing = 1;
+			sprite_request_show = 0;
+		}
+
+		if (sprite_request_update_data) {
+			do_clip_hw_sprite(0, 0);
+			sprite_request_update_data = 0;
+		}
+
+		if (sprite_request_update_pos) {
+			do_update_hw_sprite_pos(sprite_request_pos_x, sprite_request_pos_y);
+			video_formatter_write((vs.sprite_y_adj << 16) | vs.sprite_x_adj, MNTVF_OP_SPRITE_XY);
+			sprite_request_update_pos = 0;
+		}
+
+		if (sprite_request_hide) {
+			vs.sprite_x = 2000;
+			vs.sprite_y = 2000;
+			video_formatter_write((vs.sprite_y << 16) | vs.sprite_x, MNTVF_OP_SPRITE_XY);
+			sprite_request_hide = 0;
+			vs.sprite_showing = 0;
+		}
+
+		// handle screen dragging
+		if (vs.split_request_pos != vs.split_pos) {
+			int scale = 1;
+			if(vs.scalemode & 2) scale = 2;
+			vs.split_pos = vs.split_request_pos * scale;
+			video_formatter_write(vs.split_pos, MNTVF_OP_REPORT_LINE);
+		}
+	}
+
+}
+
+uint32_t dump_vdma_status(XAxiVdma *InstancePtr) {
+	uint32_t status = XAxiVdma_GetStatus(InstancePtr, XAXIVDMA_READ);
+
+	printf("Read channel dump\n\r");
+	printf("\tMM2S DMA Control Register: 0x%08lx\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_CR_OFFSET));
+	printf("\tMM2S DMA Status Register: 0x%08lx\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_SR_OFFSET));
+	printf("\tMM2S HI_FRMBUF Reg: 0x%08lx\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_HI_FRMBUF_OFFSET));
+	printf("\tFRMSTORE Reg: %ld\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_FRMSTORE_OFFSET));
+	printf("\tBUFTHRES Reg: %ld\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_BUFTHRES_OFFSET));
+	printf("\tMM2S Vertical Size Register: %ld\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_VSIZE_OFFSET));
+	printf("\tMM2S Horizontal Size Register: %ld\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_HSIZE_OFFSET));
+	printf("\tMM2S Frame Delay and Stride Register: %ld\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_STRD_FRMDLY_OFFSET));
+	printf("\tMM2S Start Address 1: 0x%08lx\r\n",
+			XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
+					XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_START_ADDR_OFFSET));
+
+	printf("VDMA status: ");
+	if (status & XAXIVDMA_SR_HALTED_MASK)
+		printf("halted\n");
+	else
+		printf("running\n");
+	if (status & XAXIVDMA_SR_IDLE_MASK)
+		printf("idle\n");
+	if (status & XAXIVDMA_SR_ERR_INTERNAL_MASK)
+		printf("internal err\n");
+	if (status & XAXIVDMA_SR_ERR_SLAVE_MASK)
+		printf("slave err\n");
+	if (status & XAXIVDMA_SR_ERR_DECODE_MASK)
+		printf("decode err\n");
+	if (status & XAXIVDMA_SR_ERR_FSZ_LESS_MASK)
+		printf("FSize Less Mismatch err\n");
+	if (status & XAXIVDMA_SR_ERR_LSZ_LESS_MASK)
+		printf("LSize Less Mismatch err\n");
+	if (status & XAXIVDMA_SR_ERR_SG_SLV_MASK)
+		printf("SG slave err\n");
+	if (status & XAXIVDMA_SR_ERR_SG_DEC_MASK)
+		printf("SG decode err\n");
+	if (status & XAXIVDMA_SR_ERR_FSZ_MORE_MASK)
+		printf("FSize More Mismatch err\n");
+
+	return(status);
+}
+/*
+void stubErrCallBack(void *CallBackRef, uint32_t ErrorMask)
+{
+	while(1);
+}
+uint32_t xClk_Wiz_CfgInitialize(XClk_Wiz *InstancePtr, XClk_Wiz_Config *CfgPtr,
+			   UINTPTR EffectiveAddr)
+{
+	InstancePtr->Config = *CfgPtr;
+
+	InstancePtr->Config.BaseAddr = EffectiveAddr;
+
+	// Set all handlers to stub values, let user configure this data later
+	InstancePtr->ClkOutOfRangeCallBack  = stubErrCallBack;
+	InstancePtr->ClkGlitchCallBack      = stubErrCallBack;
+	InstancePtr->ClkStopCallBack        = stubErrCallBack;
+
+	InstancePtr->ErrorCallBack = stubErrCallBack;
+
+	InstancePtr->IsReady = (uint32_t)(XIL_COMPONENT_IS_READY);
+
+	return(XST_SUCCESS);
+
+}
+*/
+void set_pixelclock(zz_video_mode *mode) {
+	XClk_Wiz_CfgInitialize(&clkwiz, &conf, XPAR_CLK_WIZ_2_BASEADDR);
+
+	uint32_t mul = mode->mul;
+	uint32_t div = mode->div<<1;
+	uint32_t div2 = mode->div2;
+
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_2_BASEADDR, 0x200,(0<<16) | (mul<<8) | div); // 50 * 200MHz  / 10 -> 1000MHz VCO
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_2_BASEADDR, 0x208,(0<<8) | div2)  ;          // 1000MHz / 7 = 142,9MHz
+
+	// load configuration
+	XClk_Wiz_WriteReg(XPAR_CLK_WIZ_2_BASEADDR, 0x25C,0x00000003);
+}
+
+void video_formatter_init(int scalemode, int colormode, int width, int height,
+		int htotal, int vtotal, int hss, int hse, int vss, int vse,
+		int polarity) {
+	uint32_t height_crop=height+1;
+	if(original_h<256) height_crop=(original_h+1)<<1;
+	Xil_ExceptionDisable();
+	video_formatter_write((vtotal << 16) | htotal, MNTVF_OP_MAX);
+	video_formatter_write((height << 16) | width, MNTVF_OP_DIMENSIONS);
+	video_formatter_write((hss << 16) | hse, MNTVF_OP_HS);
+	video_formatter_write((vss << 16) | vse, MNTVF_OP_VS);
+	video_formatter_write(polarity, MNTVF_OP_POLARITY);
+	video_formatter_write((height_crop << 16) |scalemode, MNTVF_OP_SCALE);
+	video_formatter_write(colormode, MNTVF_OP_COLORMODE);
+	Xil_ExceptionEnable();
+
+//	video_formatter_valign();
+}
+void video_system_init(zz_video_mode *mode, int hdiv, int vdiv) {
+
+	//printf("video_system_init(%d,%d)\n",vmode->hres,vmode->vres);
+
+	set_pixelclock(mode);
+	sii9022_init(mode);
+	init_vdma(mode->hres, mode->vres, hdiv, vdiv, (uint32_t)vs.framebuffer + vs.framebuffer_pan_offset);
+}
+
+void video_mode_init(int mode, int scalemode, int colormode) {
+	printf("video_mode_init: %d color: %d scale: %d\n", mode, colormode, scalemode);
+
+	// remenber mode
+	vs.video_mode = mode;
+	vs.scalemode = scalemode;
+	vs.colormode = colormode;
+
+	int hdiv = 1, vdiv = 1;
+	stride_div = 1;
+	uint32_t size;
+
+	if (scalemode & 1) {
+		hdiv = 2;
+		stride_div = 2;
+	}
+	if (scalemode & 2)
+		vdiv = 2;
+
+	// 8 bit
+	if (colormode == MNTVA_COLOR_8BIT)
+	{
+		size=1;
+		hdiv *= 4;
+	}
+	else if (colormode == MNTVA_COLOR_16BIT565 || colormode == MNTVA_COLOR_15BIT)
+	{
+		size=2;
+		hdiv *= 2;
+	}
+	else
+	{
+		size=4;
+	}
+
+	zz_video_mode *vmode = &preset_video_modes[mode];
+
+	video_system_init(vmode, hdiv, vdiv);
+
+	video_formatter_init(scalemode, colormode,
+			vmode->hres, vmode->vres,
+			vmode->hmax, vmode->vmax,
+			vmode->hstart, vmode->hend,
+			vmode->vstart, vmode->vend,
+			vmode->polarity);
+
+	// FIXME ???
+	vs.vmode_hsize = vmode->hres;
+	vs.vmode_vsize = vmode->vres;
+	vs.vmode_vdiv = vdiv;
+	vs.vmode_hdiv = hdiv;
+	vs.framebuffer_size=vmode->hres*vmode->vres*size;
+	vs.split_pos = 1; // force update slpit_pos from split_request_pos and write to videoformatter
+}
+
+void update_hw_sprite(uint8_t *data, int double_sprite)
+{
+	uint8_t cur_bit = 0x80;
+	uint8_t cur_color = 0, out_pos = 0, iter_offset = 0;
+	uint8_t cur_bytes[16];
+	uint32_t *colors = vs.sprite_colors;
+	uint16_t w = vs.sprite_width;
+	uint16_t h = vs.sprite_height;
+	uint8_t line_pitch = (w / 8) * 2;
+
+	for (uint8_t y_line = 0; y_line < h; y_line++) {
+		if (w <= 16) {
+			cur_bytes[0] = data[y_line * line_pitch];
+			cur_bytes[1] = data[(y_line * line_pitch) + 2];
+			cur_bytes[2] = data[(y_line * line_pitch) + 1];
+			cur_bytes[3] = data[(y_line * line_pitch) + 3];
+		}
+		else {
+			cur_bytes[0] = data[y_line * line_pitch];
+			cur_bytes[1] = data[(y_line * line_pitch) + 4];
+			cur_bytes[2] = data[(y_line * line_pitch) + 1];
+			cur_bytes[3] = data[(y_line * line_pitch) + 5];
+			cur_bytes[4] = data[(y_line * line_pitch) + 2];
+			cur_bytes[5] = data[(y_line * line_pitch) + 6];
+			cur_bytes[6] = data[(y_line * line_pitch) + 3];
+			cur_bytes[7] = data[(y_line * line_pitch) + 7];
+		}
+
+		while (out_pos < 8) {
+			for (uint8_t i = 0; i < line_pitch; i += 2) {
+				cur_color = (cur_bytes[i] & cur_bit) ? 1 : 0;
+				if (cur_bytes[i + 1] & cur_bit) cur_color += 2;
+
+				sprite_buf[(y_line * 32) + out_pos + iter_offset] = colors[cur_color] & 0x00ffffff;
+				iter_offset += 8;
+			}
+
+			out_pos++;
+			cur_bit >>= 1;
+			iter_offset = 0;
+		}
+		cur_bit = 0x80;
+		out_pos = 0;
+	}
+
+	sprite_request_update_data = 1;
+}
+
+void update_hw_sprite_clut(uint8_t *data_, uint8_t *colors, uint16_t w, uint16_t h, uint8_t keycolor, int double_sprite)
+{
+	uint8_t *data = data_;
+	uint8_t color[4];
+
+	for (int y = 0; y < h && y < 48; y++) {
+		for (int x = 0; x < w && x < 32; x++) {
+			if (data[x] == keycolor) {
+				*((uint32_t *)color) = 0x00ff00ff;
+			}
+			else {
+				color[0] = colors[(data[x] * 3)+2];
+				color[1] = colors[(data[x] * 3)+1];
+				color[2] = colors[(data[x] * 3)];
+				color[3] = 0x00;
+				if (*((uint32_t *)color) == 0x00FF00FF)
+					*((uint32_t *)color) = 0x00FE00FE;
+			}
+			sprite_buf[(y * 32) + x] = *((uint32_t *)color);
+		}
+		data += w;
+	}
+
+	sprite_request_update_data = 1;
+}
+
+void clear_hw_sprite()
+{
+	for (uint16_t i = 0; i < 32 * 48; i++) {
+		sprite_buf[i] = 0x00ff00ff;
+	}
+	//sprite_request_update_data = 1;
+}
+
+void do_clip_hw_sprite(int16_t offset_x, int16_t offset_y)
+{
+	uint16_t xo = 0, yo = 0;
+	if (offset_x < 0)
+		xo = -offset_x;
+	if (offset_y < 0)
+		yo = -offset_y;
+
+	for (int y = 0; y < 48; y++) {
+		//printf("CLIP %02d: ",y);
+		for (int x = 0; x < 32; x++) {
+			video_formatter_write((y * 32) + x, 14);
+			if (x < 32 - xo && y < 48 - yo) {
+				//printf("%06lx", sprite_buf[((y + yo) * 32) + (x + xo)] & 0x00ffffff);
+				video_formatter_write(sprite_buf[((y + yo) * 32) + (x + xo)] & 0x00ffffff, 15);
+			} else {
+				//printf("%06lx", 0x00ff00ff);
+				video_formatter_write(0x00ff00ff, 15);
+			}
+		}
+		//printf("\n");
+	}
+}
+
+void do_update_hw_sprite_pos(int16_t x, int16_t y) {
+	vs.sprite_x = x - vs.sprite_x_offset + 1;
+	// horizontally doubled mode
+	if (vs.scalemode & 1)
+		vs.sprite_x_adj = (vs.sprite_x * 2) + 1;
+	else
+		vs.sprite_x_adj = vs.sprite_x + 2;
+
+//	vs.sprite_y = y + vs.split_pos - vs.sprite_y_offset + 1;
+	vs.sprite_y = y - vs.sprite_y_offset + 1;
+
+	// vertically doubled mode
+	if (vs.scalemode & 2)
+		vs.sprite_y_adj = vs.sprite_y * 2;
+	else
+		vs.sprite_y_adj = vs.sprite_y;
+
+	if (vs.sprite_x < 0 || vs.sprite_y < 0) {
+		if (sprite_clip_x != vs.sprite_x || sprite_clip_y != vs.sprite_y) {
+			do_clip_hw_sprite((vs.sprite_x < 0) ? vs.sprite_x : 0, (vs.sprite_y < 0) ? vs.sprite_y : 0);
+		}
+		sprite_clipped = 1;
+		if (vs.sprite_x < 0) {
+			vs.sprite_x_adj = 0;
+			sprite_clip_x = vs.sprite_x;
+		}
+		if (vs.sprite_y < 0) {
+			vs.sprite_y_adj = 0;
+			sprite_clip_y = vs.sprite_y;
+		}
+	}
+	else if (sprite_clipped && vs.sprite_x >= 0 && vs.sprite_y >= 0) {
+		do_clip_hw_sprite(0, 0);
+		sprite_clipped = 0;
+	}
+}
+
+void update_hw_sprite_pos() {
+	sprite_request_pos_x = vs.sprite_x_base;
+	sprite_request_pos_y = vs.sprite_y_base;
+	sprite_request_update_pos = 1;
+}
+
+void hw_sprite_show(int show) {
+	if (show) {
+		sprite_request_show = 1;
+	} else {
+		sprite_request_hide = 1;
+	}
+}
 

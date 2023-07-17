@@ -29,8 +29,7 @@
 * this Software without prior written authorization from Xilinx.
 *
 ******************************************************************************/
-
-#include "xparameters.h"
+//#include "xparameters.h"
 #include "xil_cache.h"
 
 #include "platform_config.h"

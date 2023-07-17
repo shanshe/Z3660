@@ -217,33 +217,57 @@ BEGIN DRIVER
 END
 
 BEGIN DRIVER
- PARAMETER DRIVER_NAME = clk_wiz
- PARAMETER DRIVER_VER = 1.2
- PARAMETER HW_INSTANCE = clk_wiz_0
+ PARAMETER DRIVER_NAME = generic
+ PARAMETER DRIVER_VER = 2.0
+ PARAMETER HW_INSTANCE = z3660_0
 END
 
 BEGIN DRIVER
- PARAMETER DRIVER_NAME = gpio
- PARAMETER DRIVER_VER = 4.3
- PARAMETER HW_INSTANCE = axi_gpio_0
+ PARAMETER DRIVER_NAME = audio_formatter
+ PARAMETER DRIVER_VER = 1.0
+ PARAMETER HW_INSTANCE = processing_av_system_audio_video_engine_audio_formatter_0
 END
 
 BEGIN DRIVER
- PARAMETER DRIVER_NAME = clk_wiz
- PARAMETER DRIVER_VER = 1.2
- PARAMETER HW_INSTANCE = clk_wiz_1
+ PARAMETER DRIVER_NAME = i2stx
+ PARAMETER DRIVER_VER = 2.0
+ PARAMETER HW_INSTANCE = processing_av_system_audio_video_engine_i2s_transmitter_0
 END
 
 BEGIN DRIVER
  PARAMETER DRIVER_NAME = axivdma
  PARAMETER DRIVER_VER = 6.6
- PARAMETER HW_INSTANCE = video_axi_vdma_0
+ PARAMETER HW_INSTANCE = processing_av_system_audio_video_engine_video_axi_vdma_0
 END
 
 BEGIN DRIVER
- PARAMETER DRIVER_NAME = vtc
- PARAMETER DRIVER_VER = 8.0
- PARAMETER HW_INSTANCE = video_v_tc_0
+ PARAMETER DRIVER_NAME = generic
+ PARAMETER DRIVER_VER = 2.0
+ PARAMETER HW_INSTANCE = processing_av_system_audio_video_engine_video_video_formatter_0
+END
+
+BEGIN DRIVER
+ PARAMETER DRIVER_NAME = clk_wiz
+ PARAMETER DRIVER_VER = 1.2
+ PARAMETER HW_INSTANCE = processing_av_system_clock_generation_clk_wiz_0
+END
+
+BEGIN DRIVER
+ PARAMETER DRIVER_NAME = clk_wiz
+ PARAMETER DRIVER_VER = 1.2
+ PARAMETER HW_INSTANCE = processing_av_system_clock_generation_clk_wiz_1
+END
+
+BEGIN DRIVER
+ PARAMETER DRIVER_NAME = clk_wiz
+ PARAMETER DRIVER_VER = 1.2
+ PARAMETER HW_INSTANCE = processing_av_system_clock_generation_clk_wiz_2
+END
+
+BEGIN DRIVER
+ PARAMETER DRIVER_NAME = sysmon
+ PARAMETER DRIVER_VER = 7.5
+ PARAMETER HW_INSTANCE = processing_av_system_interconnect_matrix_xadc_wiz_0
 END
 
 

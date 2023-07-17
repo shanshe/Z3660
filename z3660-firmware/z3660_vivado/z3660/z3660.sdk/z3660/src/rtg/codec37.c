@@ -35,7 +35,7 @@ void Codec37Decoder_Next()
 
 int Codec37Decoder_GetCur()
 {
-	return num_decoders;
+	return(num_decoders);
 }
 
 void Codec37Decoder_MakeTable(int idx, int pitch, int index)
@@ -391,11 +391,11 @@ void Codec37Decoder_proc4WithoutFDFE(int idx, byte *dst, const byte *src, int32 
 }
 
 inline uint16 READ_UINT16(const void *ptr) {
-	return *(const uint16 *)(ptr);
+	return (*(const uint16 *)(ptr));
 }
 
 inline uint32 READ_UINT32(const void *ptr) {
-	return *(const uint32 *)(ptr);
+	return (*(const uint32 *)(ptr));
 }
 
 void Codec37Decoder_decode(int idx, uint8_t *dst, uint8_t *src)

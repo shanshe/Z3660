@@ -1,0 +1,15 @@
+##base _MHIBase
+##bias 30
+##public
+MHIAllocDecoder(task,mhisignal)(a0,d0)
+MHIFreeDecoder(handle)(a3)
+MHIQueueBuffer(handle,buffer,size)(a3,a0,d0)
+MHIGetEmpty(handle)(a3)
+MHIGetStatus(handle)(a3)
+MHIPlay(handle)(a3)
+MHIStop(handle)(a3)
+MHIPause(handle)(a3)
+MHIQuery(query)(d1)
+MHISetParam(handle,param,value)(a3,d0,d1)
+##end
+

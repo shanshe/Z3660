@@ -13,16 +13,18 @@
  * https://spdx.org/licenses/GPL-3.0-or-later.html
  *
 */
+#ifndef GFX_H
+#define GFX_H
 
 #include <stdint.h>
-
-#define Z3_SCRATCH_ADDR (0x33F0000 -0x100000)
-#define ADDR_ADJ 0x1F0000
+#include "../video.h"
+#include "../memorymap.h"
 
 #define MNTVF_OP_UNUSED 12
 #define MNTVF_OP_SPRITE_XY 13
 #define MNTVF_OP_SPRITE_ADDR 14
 #define MNTVF_OP_SPRITE_DATA 15
+#define MNTVF_OP_VSYNC 5
 #define MNTVF_OP_MAX 6
 #define MNTVF_OP_HS 7
 #define MNTVF_OP_VS 8
@@ -31,6 +33,8 @@
 #define MNTVF_OP_DIMENSIONS 2
 #define MNTVF_OP_COLORMODE 1
 #define MNTVF_OP_REPORT_LINE 17
+#define MNTVF_OP_PALETTE_SEL 18
+#define MNTVF_OP_PALETTE_HI 19
 
 typedef struct Vec2 {
 	float x;
@@ -48,15 +52,10 @@ typedef struct {
 } vec2_i32;
 
 void video_formatter_write(uint32_t data, uint16_t op);
-void handle_blitter_dma_op(uint16_t zdata);
+void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata);
 void handle_acc_op(uint16_t zdata);
 
 void set_fb(uint32_t* fb_, uint32_t pitch);
-void update_hw_sprite(uint8_t *data, uint32_t *colors, uint16_t w, uint16_t h);
-void update_hw_sprite_clut(uint8_t *data_, uint8_t *colors, uint16_t w, uint16_t h, uint8_t keycolor);
-void update_hw_sprite_pos(int16_t x, int16_t y);
-void clip_hw_sprite(int16_t offset_x, int16_t offset_y);
-void clear_hw_sprite();
 
 void fill_rect(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint32_t rect_rgb, uint32_t color_format, uint8_t mask);
 void fill_rect_solid(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint32_t rect_rgb, uint32_t color_format);
@@ -98,13 +97,16 @@ enum color_formats {
 	MNTVA_COLOR_8BIT,
 	MNTVA_COLOR_16BIT565,
 	MNTVA_COLOR_32BIT,
-	MNTVA_COLOR_1BIT,
+//	MNTVA_COLOR_1BIT,
 	MNTVA_COLOR_15BIT,
 	MNTVA_COLOR_NUM,
 };
 
 #define SWAP16(a) a = __builtin_bswap16(a)
 #define SWAP32(a) a = __builtin_bswap32(a)
+
+#define swap32(a) __builtin_bswap32(a)
+#define swap16(a) __builtin_bswap16(a)
 
 // see http://amigadev.elowar.com/read/ADCD_2.1/Libraries_Manual_guide/node0351.html
 #define JAM1	    0	      /* jam 1 color into raster */
@@ -419,7 +421,7 @@ enum gfx_minterm_modes {
 			s &= d; \
 			SET_FG_PIXEL8_MASK(0); break; \
 		case MINTERM_NEOR: \
-			d ^= (s & mask); break; \
+			d ^= ~(s & mask); break; \
 		case MINTERM_DST: /* This one does nothing. */ \
 			return; break; \
 		case MINTERM_NOTONLYSRC: \
@@ -495,9 +497,9 @@ enum gfx_minterm_modes {
 		case MINTERM_NEOR: \
 			switch (color_format) { \
 				case MNTVA_COLOR_16BIT565: \
-					((uint16_t *)d)[x] ^= (s & color_mask); break; \
+					((uint16_t *)d)[x] ^= ~(s & color_mask); break; \
 				case MNTVA_COLOR_32BIT: \
-					d[x] ^= (s & color_mask); break; \
+					d[x] ^= ~(s & color_mask); break; \
 			} break; \
 		case MINTERM_DST: /* This one does nothing. */ \
 			return; break; \
@@ -610,3 +612,5 @@ enum gfxdata_u8_types {
   GFXDATA_U8_LINE_PATTERN_OFFSET,
   GFXDATA_U8_LINE_PADDING,
 };
+
+#endif

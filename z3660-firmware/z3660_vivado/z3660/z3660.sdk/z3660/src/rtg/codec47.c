@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define inline
+
 void bompDecodeLine(uint8_t *dst, const uint8_t *src, int len);
 
 static int num_decoders = 0;
@@ -68,7 +70,7 @@ void Codec47Decoder_Next()
 
 int Codec47Decoder_GetCur()
 {
-	return num_decoders;
+	return(num_decoders);
 }
 
 #define COPY_4X1_LINE(dst, src)			\
@@ -93,15 +95,15 @@ int Codec47Decoder_GetCur()
 
 inline int32 ABS(int32 x)
 {
-    return (x >= 0) ? x : -x;
+    return( (x >= 0) ? x : -x);
 }
 
 inline uint16 READ_UINT16(const void *ptr) {
-	return *(const uint16 *)(ptr);
+	return (*(const uint16 *)(ptr));
 }
 
 inline uint32 READ_UINT32(const void *ptr) {
-	return *(const uint32 *)(ptr);
+	return (*(const uint32 *)(ptr));
 }
 
 static const  int8 codec47_table_small1[] = {
@@ -571,7 +573,7 @@ void Codec47Decoder_Init(int idx, int width, int height) {
 uint8_t Codec47Decoder_decode(int idx, byte *dst, const byte *src) {
     struct Codec47Decoder *dc = &c47_decoders[idx];
 	if ((dc->_tableBig == NULL) || (dc->_tableSmall == NULL) || (dc->_deltaBuf == NULL))
-		return 0;
+		return(0);
 
 	dc->_offset1 = dc->_deltaBufs[1] - dc->_curBuf;
 	dc->_offset2 = dc->_deltaBufs[0] - dc->_curBuf;
@@ -629,5 +631,5 @@ uint8_t Codec47Decoder_decode(int idx, byte *dst, const byte *src) {
 	}
 	dc->_prevSeqNb = seq_nb;
 
-	return 1;
+	return(1);
 }

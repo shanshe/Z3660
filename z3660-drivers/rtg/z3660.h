@@ -1,4 +1,11 @@
 /*
+ * Z3660 Graphics Card Driver based on MNT ZZ9000 rev 1.13
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * GNU General Public License v3.0 or later
+ */
+
+/*
  * MNT ZZ9000 Amiga Graphics Card Driver (ZZ9000.card)
  * Copyright (C) 2016-2019, Lukas F. Hartmann <lukas@mntre.com>
  *                          MNT Research GmbH, Berlin

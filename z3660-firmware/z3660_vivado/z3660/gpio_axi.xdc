@@ -12,8 +12,9 @@ set_property IOSTANDARD LVCMOS33 [get_ports IIC_0_scl_io]
 set_property PULLUP true [get_ports IIC_0_sda_io]
 set_property PULLUP true [get_ports IIC_0_scl_io]
 
+set_property PACKAGE_PIN V18 [get_ports INT6_ARM]
 
-set_property PACKAGE_PIN Y16 [get_ports NU_1]
+set_property PACKAGE_PIN Y16 [get_ports nTS_FPGA]
 set_property PACKAGE_PIN W18 [get_ports nCLKEN_clk]
 set_property PACKAGE_PIN Y17 [get_ports nTBI]
 set_property PACKAGE_PIN R14 [get_ports BCLK_clk]
@@ -114,7 +115,9 @@ set_property IOSTANDARD LVCMOS33 [get_ports {SIZ40[1]}]
 
 set_property IOSTANDARD LVCMOS33 [get_ports BP]
 
-set_property IOSTANDARD LVCMOS33 [get_ports NU_1]
+set_property IOSTANDARD LVCMOS33 [get_ports INT6_ARM]
+
+set_property IOSTANDARD LVCMOS33 [get_ports nTS_FPGA]
 set_property IOSTANDARD LVCMOS33 [get_ports nCLKEN_clk]
 set_property IOSTANDARD LVCMOS33 [get_ports nTBI]
 set_property IOSTANDARD LVCMOS33 [get_ports BCLK_clk]
@@ -184,15 +187,15 @@ set_property IOSTANDARD LVCMOS33 [get_ports {D040[29]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {D040[30]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {D040[31]}]
 
-create_clock -period 5.000 -name hdmi_clk -waveform {0.000 2.500} [get_nets hdmi_clk]
-set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports {hdmi_data[*]}]
-set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports {hdmi_data[*]}]
-set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports hdmi_de]
-set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports hdmi_de]
-set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports hdmi_hs]
-set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports hdmi_hs]
-set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports hdmi_vs]
-set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports hdmi_vs]
+#create_clock -period 5.000 -name hdmi_clk -waveform {0.000 2.500} [get_nets hdmi_clk]
+#set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports {hdmi_data[*]}]
+#set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports {hdmi_data[*]}]
+#set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports hdmi_de]
+#set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports hdmi_de]
+#set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports hdmi_hs]
+#set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports hdmi_hs]
+#set_output_delay -clock [get_clocks hdmi_clk] -min -2.000 [get_ports hdmi_vs]
+#set_output_delay -clock [get_clocks hdmi_clk] -max 0.000 [get_ports hdmi_vs]
 
 set_property PACKAGE_PIN T16 [get_ports {hdmi_data[0]}]
 set_property PACKAGE_PIN U17 [get_ports {hdmi_data[1]}]
@@ -244,6 +247,20 @@ set_property IOSTANDARD LVCMOS33 [get_ports hdmi_vs]
 #set_property PULLUP true [get_ports IIC_0_sda_io]
 #set_property PULLUP true [get_ports IIC_0_scl_io]
 
-set_property PACKAGE_PIN W19 [get_ports hdmi_intn]
-set_property IOSTANDARD LVCMOS33 [get_ports hdmi_intn]
+set_property PACKAGE_PIN W19 [get_ports {hdmi_intn[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {hdmi_intn[0]}]
+
+
+# audio output
+set_property IOSTANDARD LVCMOS33 [get_ports I2S_FSYNC_OUT]
+set_property IOSTANDARD LVCMOS33 [get_ports I2S_SCLK]
+set_property IOSTANDARD LVCMOS33 [get_ports I2SO_D0]
+
+create_clock -period 80.000 -name i2s_mclk -add [get_ports I2S_SCLK]
+
+set_property PACKAGE_PIN T17 [get_ports I2S_SCLK]
+set_property PACKAGE_PIN R18 [get_ports I2S_FSYNC_OUT]
+set_property PACKAGE_PIN V17 [get_ports I2SO_D0]
+
+
 
