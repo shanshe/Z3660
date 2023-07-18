@@ -1,12 +1,33 @@
 ----------------------------------------------------------------------------------
---
--- Z3660
+-- Company: 
+-- Engineer: 
 -- 
--- BCTL equations
+-- Create Date:    10:22:16 08/20/2021 
+-- Design Name: 
+-- Module Name:    BCTL - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
 --
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
 
 entity BCTL is
     Port ( BCLK : in  STD_LOGIC;
@@ -24,6 +45,7 @@ end BCTL;
 
 architecture Behavioral of BCTL is
 signal bus_state: STD_LOGIC_VECTOR(3 downto 0);
+signal bus_state_c: STD_LOGIC_VECTOR(3 downto 0);
 -- State Values
 CONSTANT B00: std_logic_vector(3 downto 0):= "1111";
 CONSTANT B01: std_logic_vector(3 downto 0):= "1001";
@@ -48,9 +70,11 @@ nBG040 <= not(
    begin
       if(n040RSTI='0') then
          bus_state<= B00;
+         bus_state_c <= B00;
          nBG <= '1';
          nBGACK040 <= '1';
       elsif(BCLK'event and  BCLK='1') then
+         bus_state <= bus_state_c;
 
 --register
 nBGACK040 <= not(
@@ -65,7 +89,7 @@ nBG <= not(
      or ( not(nSBR030) and not(bus_state(3)) and bus_state(2) and bus_state(0) and not(bus_state(1)) )
      or ( not(nSBR030) and not(bus_state(3)) and not(bus_state(2)) and bus_state(0) and bus_state(1) ) );
 --register
-bus_state(3) <= not(
+bus_state_c(3) <= not(
         ( not(nSBGACK030) and bus_state(3) and bus_state(2) and bus_state(0) and bus_state(1) )
      or ( not(nBB040) and not(nBR040) and bus_state(3) and bus_state(2) and not(bus_state(0)) and bus_state(1) )
      or ( nSBGACK030 and nSBR030 and not(nBR040) and bus_state(3) and bus_state(2) and bus_state(0) and bus_state(1) )
@@ -78,7 +102,7 @@ bus_state(3) <= not(
      or ( not(nSBR030) and not(nLOCK) and nLOCKE and not(bus_state(3)) and bus_state(2) and bus_state(0) and bus_state(1) )
      or ( not(nBB040) and not(nLOCK) and nLOCKE and bus_state(3) and not(bus_state(2)) and not(bus_state(0)) and bus_state(1) ) );
 --register
-bus_state(2) <= not(
+bus_state_c(2) <= not(
         ( not(nBB040) and nBR040 and bus_state(3) and bus_state(2) and not(bus_state(0)) and bus_state(1) )
      or ( nSBGACK030 and not(nSBR030) and bus_state(3) and bus_state(2) and bus_state(0) and bus_state(1) )
      or ( not(nSBR030) and not(bus_state(3)) and bus_state(2) and bus_state(0) and not(bus_state(1)) )
@@ -89,7 +113,17 @@ bus_state(2) <= not(
      or ( not(nBB040) and nLOCK and bus_state(3) and not(bus_state(2)) and not(bus_state(0)) and bus_state(1) )
      or ( not(nBB040) and not(nLOCK) and not(nLOCKE) and bus_state(3) and not(bus_state(2)) and not(bus_state(0)) and bus_state(1) ) );
 --register
-bus_state(0) <= not(
+bus_state_c(1) <= not(
+        ( not(nSBGACK030) and bus_state(3) and bus_state(2) and bus_state(0) )
+     or ( nSBGACK030 and not(nSBR030) and bus_state(3) and bus_state(2) and bus_state(0) )
+     or ( nSBGACK030 and not(nSBR030) and not(bus_state(3)) and not(bus_state(2)) and bus_state(0) and bus_state(1) )
+     or ( bus_state(3) and not(bus_state(2)) and bus_state(0) and not(bus_state(1)) )
+     or ( nSBGACK030 and nSBR030 and bus_state(3) and bus_state(2) and bus_state(0) and not(bus_state(1)) )
+     or ( bus_state(3) and bus_state(2) and not(bus_state(0)) and not(bus_state(1)) )
+     or ( not(nSBGACK030) and nSBR030 and not(bus_state(3)) and bus_state(2) and bus_state(0) and not(bus_state(1)) )
+     or ( nSBR030 and not(bus_state(3)) and not(bus_state(2)) and bus_state(0) and bus_state(1) ) );
+--register
+bus_state_c(0) <= not(
         ( not(nBB040) and nBR040 and bus_state(3) and bus_state(2) and not(bus_state(0)) and bus_state(1) )
      or ( nSBGACK030 and nSBR030 and not(nBR040) and bus_state(3) and bus_state(2) and bus_state(0) and bus_state(1) )
      or ( not(nSBGACK030) and bus_state(3) and bus_state(2) and bus_state(0) and not(bus_state(1)) )
@@ -100,16 +134,6 @@ bus_state(0) <= not(
      or ( nBB040 and bus_state(3) and not(bus_state(2)) and not(bus_state(0)) and bus_state(1) )
      or ( not(nBB040) and nLOCK and bus_state(3) and not(bus_state(2)) and not(bus_state(0)) and bus_state(1) )
      or ( not(nBB040) and not(nLOCK) and not(nLOCKE) and bus_state(3) and not(bus_state(2)) and not(bus_state(0)) and bus_state(1) ) );
---register
-bus_state(1) <= not(
-        ( not(nSBGACK030) and bus_state(3) and bus_state(2) and bus_state(0) )
-     or ( nSBGACK030 and not(nSBR030) and bus_state(3) and bus_state(2) and bus_state(0) )
-     or ( nSBGACK030 and not(nSBR030) and not(bus_state(3)) and not(bus_state(2)) and bus_state(0) and bus_state(1) )
-     or ( bus_state(3) and not(bus_state(2)) and bus_state(0) and not(bus_state(1)) )
-     or ( nSBGACK030 and nSBR030 and bus_state(3) and bus_state(2) and bus_state(0) and not(bus_state(1)) )
-     or ( bus_state(3) and bus_state(2) and not(bus_state(0)) and not(bus_state(1)) )
-     or ( not(nSBGACK030) and nSBR030 and not(bus_state(3)) and bus_state(2) and bus_state(0) and not(bus_state(1)) )
-     or ( nSBR030 and not(bus_state(3)) and not(bus_state(2)) and bus_state(0) and bus_state(1) ) );
 
       end if;
    end process;

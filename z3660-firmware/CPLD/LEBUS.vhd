@@ -1,12 +1,33 @@
 ----------------------------------------------------------------------------------
---
--- Z3660
+-- Company: 
+-- Engineer: 
 -- 
--- LEBUS equations
+-- Create Date:    12:38:30 08/20/2021 
+-- Design Name: 
+-- Module Name:    LEBUS - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
 --
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
 
 entity LEBUS_component is
     Port ( BCLK : in  STD_LOGIC;
@@ -25,7 +46,10 @@ entity LEBUS_component is
 end LEBUS_component;
 
 architecture Behavioral of LEBUS_component is
-
+--signal NEG_LE:  STD_LOGIC;
+--signal nSIG_LE:  STD_LOGIC;
+signal MAS_state: STD_LOGIC_VECTOR(3 downto 0);
+signal SLV_state: STD_LOGIC_VECTOR(3 downto 0);
 signal LEBUS_int: STD_LOGIC_VECTOR(7 downto 0);
 --LEBUS
 --  0   d31..24 d31..24

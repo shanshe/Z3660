@@ -124,6 +124,6 @@ NET "V_DETECTOR"  LOC = "P143"  ;
 #Created by Constraints Editor (xc95144xl-tq144-10) - 2021/08/25
 #Created by Constraints Editor (xc95144xl-tq144-10) - 2021/08/25
 NET "PCLK" TNM_NET = PCLK;
-TIMESPEC TS_PCLK = PERIOD "PCLK" 20 ns HIGH 50%;
+TIMESPEC TS_PCLK = PERIOD "PCLK" 10 ns HIGH 50%;
 NET "BCLK_int" TNM_NET = BCLK_int;
-TIMESPEC TS_BCLK_int = PERIOD "BCLK_int" 40 ns HIGH 50%;
+TIMESPEC TS_BCLK_int = PERIOD "BCLK_int" 20 ns HIGH 50%;

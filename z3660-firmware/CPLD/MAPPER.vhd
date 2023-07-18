@@ -1,12 +1,33 @@
 ----------------------------------------------------------------------------------
---
--- Z3660
+-- Company: 
+-- Engineer: 
 -- 
--- MAPPER equations
+-- Create Date:    09:10:21 08/20/2021 
+-- Design Name: 
+-- Module Name:    MAPPER - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
 --
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
 
 entity MAPPER is
     Port ( BCLK : in  STD_LOGIC;
@@ -25,7 +46,6 @@ begin
 
    process(nBGACK040,p040A,nREMAP_MOBO_RAM,R_W040)
    begin
-
 MA(26) <= (
         ( p040A(26) )
     or ( not(p040A(31)) and not(p040A(30)) and not(p040A(29)) and not(p040A(28)) and not(nREMAP_MOBO_RAM) and not(p040A(27)) and not(p040A(26)) and R_W040 and not(p040A(25)) and not(p040A(24)) and p040A(19) and p040A(23) and p040A(20) and p040A(22) and p040A(21) ) );
@@ -39,7 +59,7 @@ MA(24) <= (
          MA(26) <= 'H';
          MA(25) <= 'H';
          MA(24) <= 'H';
-     end if;
+      end if;
    end process;
 
    process(BCLK)
@@ -53,6 +73,7 @@ nREMAP_MOBO_RAM <= not(
 
      end if;
    end process;
+
 
 end Behavioral;
 

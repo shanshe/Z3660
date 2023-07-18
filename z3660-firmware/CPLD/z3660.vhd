@@ -10,7 +10,14 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
 use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
 
 entity z3660 is
     Port ( nAVEC : in  STD_LOGIC;
@@ -37,12 +44,12 @@ entity z3660 is
            nCPURST : in  STD_LOGIC;
            nCIIN : in  STD_LOGIC;
            nBR040 : in  STD_LOGIC;
-           nTA : buffer  STD_LOGIC;
+           nTA : out  STD_LOGIC;
            nTEA : out  STD_LOGIC;
            SIZ40 : in  STD_LOGIC_VECTOR (1 downto 0);
            nSTERM : in  STD_LOGIC;
            V_DETECTOR : in  STD_LOGIC;
-           n040RSTI : buffer  STD_LOGIC;
+           n040RSTI : out  STD_LOGIC;
            TP18 : out  STD_LOGIC;
            TP19 : out  STD_LOGIC;
            TM : in  STD_LOGIC_VECTOR (2 downto 0);
@@ -78,10 +85,10 @@ entity z3660 is
            NU_8 : in  STD_LOGIC;
            CLK90 : out  STD_LOGIC;
            FC : out  STD_LOGIC_VECTOR (2 downto 0);
-           A : buffer  STD_LOGIC_VECTOR (3 downto 0);
+           A : out  STD_LOGIC_VECTOR (3 downto 0);
            nBGACK : in  STD_LOGIC;
            BCLK : out  STD_LOGIC;
-           SIZ : buffer  STD_LOGIC_VECTOR (1 downto 0);
+           SIZ : out  STD_LOGIC_VECTOR (1 downto 0);
            NU_2 : in  STD_LOGIC; -- es TBI que viene que la FPGA
            NU_1 : in  STD_LOGIC;
            nBG : out  STD_LOGIC;
@@ -140,14 +147,14 @@ architecture Behavioral of z3660 is
          nCYCPEND : in  STD_LOGIC;
          n040RSTI : in  STD_LOGIC;
          nLSTERM : in  STD_LOGIC;
-         SLV0 : buffer  STD_LOGIC;
-         SLV1 : buffer  STD_LOGIC;
-         SLV2 : buffer  STD_LOGIC;
-         SLV3 : buffer  STD_LOGIC;
-         MAS0 : buffer  STD_LOGIC;
-         MAS1 : buffer  STD_LOGIC;
-         MAS2 : buffer  STD_LOGIC;
-         MAS3 : buffer  STD_LOGIC;
+         SLV0_out : out  STD_LOGIC;
+         SLV1_out : out  STD_LOGIC;
+         SLV2_out : out  STD_LOGIC;
+         SLV3_out : out  STD_LOGIC;
+         MAS0_out : out  STD_LOGIC;
+         MAS1_out : out  STD_LOGIC;
+         MAS2_out : out  STD_LOGIC;
+         MAS3_out : out  STD_LOGIC;
 --         nDS040 : out  STD_LOGIC;
 --         nAS040 : out  STD_LOGIC;
          R_W040 : in  STD_LOGIC;
@@ -229,8 +236,8 @@ architecture Behavioral of z3660 is
          MAS2 : in  STD_LOGIC;
          MAS3 : in  STD_LOGIC;
          FC : out  STD_LOGIC_VECTOR (2 downto 0);
-         SIZ : buffer  STD_LOGIC_VECTOR (1 downto 0);
-         A : buffer  STD_LOGIC_VECTOR (3 downto 0);
+         SIZ : out  STD_LOGIC_VECTOR (1 downto 0);
+         A : out  STD_LOGIC_VECTOR (3 downto 0);
          nIACK : out  STD_LOGIC;
          nBGACK040 : in  STD_LOGIC
          );
@@ -257,7 +264,7 @@ architecture Behavioral of z3660 is
    PORT (
          BCLK : in  STD_LOGIC;
          nPLSTERM : in  STD_LOGIC;
-         nRAVEC : buffer  STD_LOGIC;
+         nRAVEC_out : out  STD_LOGIC;
          nRBERR : in  STD_LOGIC;
 --         nTEND : in  STD_LOGIC;
          nAS040 : in  STD_LOGIC;
@@ -304,6 +311,10 @@ signal nAVEC040_int: STD_LOGIC :='1';
 signal nSBR030,nSBGACK030,nBGACK_D,nBR_D: STD_LOGIC :='1';
 signal nRCIIN: STD_LOGIC :='1';
 signal BCLK_int: STD_LOGIC :='0';
+signal nTS_030,nTS0,nTS1: STD_LOGIC :='1';
+signal FPGA_PRESENCE: STD_LOGIC :='1';
+signal FPGA_RAM_SELECTED: STD_LOGIC :='0';
+signal n040RSTI_int: STD_LOGIC :='1';
 
 begin
 
@@ -337,12 +348,40 @@ begin
    nSBGACK030 <= nBGACK_D or nBGACK;
    nSBR030 <= nBR_D or nBR;
 
-   n040EMUL <= nEMUL or not(n040RSTI);
+   n040RSTI <= n040RSTI_int;
+   n040EMUL <= nEMUL or not(n040RSTI_int);
 
    nLSTERM <= nAS040_int or nPLSTERM;
    nPLSTERM <= nSTERM; -- it is really the same signal
 
-   nTBI <= '0';
+   FPGA_RAM_SELECTED <= '1' when ((p040A(31)='0' and p040A(30)='0' and p040A(29)='0' and p040A(28)='0' and p040A(27)='1'))
+--                              or ((p040A(31)='0' and p040A(30)='0' and p040A(29)='0' and p040A(28)='1' and p040A(27)='0'))
+                                 else '0';
+   FPGA_PRESENCE <= NU_7;
+--   FPGA_PRESENCE<='1';
+
+   process(FPGA_PRESENCE,FPGA_RAM_SELECTED,NU_2,nTS)--,nTS1)
+   begin
+      if(FPGA_PRESENCE='1') then
+         if(FPGA_RAM_SELECTED='1') then
+            nTS_030 <= '1';
+         else
+            nTS_030 <= nTS;--nTS1;
+         end if;
+         nTBI <= not(NU_2); -- NU_2 viene de la FPGA y es realmente TBI
+      else
+         nTBI <= '0';
+         nTS_030 <= nTS;--nTS1;
+      end if;
+   end process;
+
+   process(PCLK)
+   begin
+      if(PCLK'event and PCLK='1') then
+         nTS0 <= nTS;
+         nTS1 <= nTS0;
+      end if;
+   end process;
 
    process(PCLK)
    begin
@@ -357,9 +396,10 @@ begin
    end process;
 
    BCLK<=BCLK_int;
-   nCLKEN <= BCLK_int; --nCLKEN_int; --FIX: BCLK_int is valid for 50 MHz, but also should be nCLKEN_int
+   nCLKEN <= BCLK_int;--nCLKEN_int; delays on -10 CPLD seems too tight
    CPUCLK <= CPUCLK_int;
    CLK90 <= CLK90_int;
+   
 
    process(BCLK_int)
    begin
@@ -367,30 +407,20 @@ begin
          nRBERR <= nBERR;
          nRHALT <= nHLT;
          if(nCPURST='0' or nPWRST='0') then
-            n040RSTI <= '0';
+            n040RSTI_int <= '0';
          else
-            n040RSTI <= '1';
+            n040RSTI_int <= '1';
          end if;
---         n040RSTI <= nCPURST;
---         nBR_D <= nBR;
---         nBGACK_D <= nBGACK;
---         nRCIIN <= nCIIN;
-      end if;
-   end process;
---latch 373
-   process(BCLK_int,nBR,nBGACK,nCIIN)
-   begin
-      if(BCLK_int='1') then
+--         n040RSTI_int <= nCPURST;
          nBR_D <= nBR;
          nBGACK_D <= nBGACK;
          nRCIIN <= nCIIN;
       end if;
    end process;
 
-
-   process(BCLK_int,n040RSTI)
+   process(BCLK_int,n040RSTI_int)
    begin
-      if(n040RSTI='0') then
+      if(n040RSTI_int='0') then
          n060IPL <= "111";
 --         n060IPL <= "011"; -- extra data write hold
       elsif(BCLK_int'event and  BCLK_int='1') then
@@ -444,23 +474,23 @@ begin
 --         nRHALT => nRHALT,
          nRAVEC => nRAVEC,
          nCYCPEND => nCYCPEND,
-         n040RSTI => n040RSTI,
+         n040RSTI => n040RSTI_int,
          nLSTERM => nLSTERM,
-         SLV0 => SLV0,
-         SLV1 => SLV1,
-         SLV2 => SLV2,
-         SLV3 => SLV3,
-         MAS0 => MAS0,
-         MAS1 => MAS1,
-         MAS2 => MAS2,
-         MAS3 => MAS3,
+         SLV0_out => SLV0,
+         SLV1_out => SLV1,
+         SLV2_out => SLV2,
+         SLV3_out => SLV3,
+         MAS0_out => MAS0,
+         MAS1_out => MAS1,
+         MAS2_out => MAS2,
+         MAS3_out => MAS3,
 --         nDS040 => nDS040_int,
 --         nAS040 => nAS040_int,
          R_W040 => R_W040,
 --         nTBI => nTBI,
 --         nTEA => nTEA_int,
 --         nTA => nTA_int,
-         nTS => nTS
+         nTS => nTS_030
          );
 --END BUSCON
 
@@ -476,12 +506,12 @@ begin
          SIZ40 => SIZ40,
          nPLSTERM => nPLSTERM,
          nRTERM => nRTERM,
-         nTS => nTS,
+         nTS => nTS_030,
          nDS040 => nDS040_int,
          nAS040 => nAS040_int,
          nTEA => nTEA_int,
 --         nTBI => nTBI,
-         n040RSTI => n040RSTI,
+         n040RSTI => n040RSTI_int,
          nTA => nTA_int,
          nBGACK040 => nBGACK040_int
          );
@@ -496,7 +526,7 @@ begin
          nBR040 => nBR040,
          nLOCK => nLOCK,
          nLOCKE => nLOCKE,
-         n040RSTI => n040RSTI,
+         n040RSTI => n040RSTI_int,
          nBG040 => nBG040,
          nBG => nBG_int,
          nBGACK040 => nBGACK040_int
@@ -512,8 +542,8 @@ begin
          nTEA => nTEA_int,
          nRAVEC => nRAVEC,
          nBGACK040 => nBGACK040_int,
-         nTS => nTS,
-         n040RSTI => n040RSTI,
+         nTS => nTS_030,
+         n040RSTI => n040RSTI_int,
 --         nTEND => nTEND,
          nCYCPEND => nCYCPEND,
          nTCI => nTCI_int,
@@ -565,7 +595,7 @@ begin
    term_unit: TERM PORT MAP (
          BCLK => BCLK_int,
          nPLSTERM => nPLSTERM,
-         nRAVEC => nRAVEC,
+         nRAVEC_out => nRAVEC,
          nRBERR => nRBERR,
 --         nTEND => nTEND,
          nAS040 => nAS040_int,
@@ -587,7 +617,7 @@ begin
 --         nPLSTERM => nPLSTERM,
          nPORESET => V_DETECTOR,
 --         nEMUL => nEMUL,
---         n040RSTI => n040RSTI,
+--         n040RSTI => n040RSTI_int,
 --         nLSTERM => nLSTERM,
          nPWRST => nPWRST
 --         n040EMUL => n040EMUL
@@ -595,4 +625,3 @@ begin
 --END RST
 
 end Behavioral;
-
