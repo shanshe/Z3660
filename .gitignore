@@ -8,3 +8,4 @@ z3660-firmware/z3660_vivado/z3660/z3660.sdk/.metadata/.plugins/org.eclipse.core.
 z3660-firmware/z3660_vivado/z3660/z3660.sdk/z3660/Debug/
 z3660-firmware/z3660_vivado/z3660/z3660.sdk/z3660/Release/
 *.str
+/.project
