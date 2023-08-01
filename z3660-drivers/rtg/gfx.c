@@ -347,8 +347,7 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 
 	zorro_version = 0;
 	b->CardFlags = 0;
-	if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x4))) zorro_version = 3;
-	else if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x3))) zorro_version = 2;
+	if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1))) zorro_version = 3;
 
 	// Find Z3 or Z2 model
 	if (zorro_version>=2) {

@@ -1,10 +1,3 @@
-/*
- * Z3660 Graphics Card Driver based on MNT ZZ9000 rev 1.13
- *
- * SPDX-License-Identifier: GPL-3.0-or-later
- * GNU General Public License v3.0 or later
- */
-
 #ifndef settings_H
 #define settings_H
 
@@ -28,28 +21,28 @@ struct P96MonitorInfo
 {
 	UBYTE	Name[32];	// Name des Monitortyps, z.B. "NEC P750"
 
-	ULONG	HSyncMin;	// Minimal unterstutzte Horizontalfrequenz in Hz
-	ULONG	HSyncMax;	// Maximal unterstutzte Horizontalfrequenz in Hz
+	ULONG	HSyncMin;	// Minimal unterstützte Horizontalfrequenz in Hz
+	ULONG	HSyncMax;	// Maximal unterstützte Horizontalfrequenz in Hz
 
-	UWORD	VSyncMin;	// Minimal unterstutzte Vertikalfrequenz in Hz
-	UWORD	VSyncMax;	// Maximal unterstutzte Vertikalfrequenz in Hz
+	UWORD	VSyncMin;	// Minimal unterstützte Vertikalfrequenz in Hz
+	UWORD	VSyncMax;	// Maximal unterstützte Vertikalfrequenz in Hz
 
 	ULONG	Flags;		// Siehe unten
 };
 
-#define MIB_DPMS_StandBy	(0)	// Monitor unterstutzt DPMS-Level "stand-by".
+#define MIB_DPMS_StandBy	(0)	// Monitor unterstützt DPMS-Level "stand-by".
 					// Dieses Feature ist optional, nicht jeder
-					// DPMS-fahige Monitor muB es unterstutzen.
+					// DPMS-fähige Monitor muß es unterstützen.
 					// Aktivierung: hsync aus, vsync an
 
-#define MIB_DPMS_Suspend	(1)	// Monitor unterstutzt DPMS-Level "suspend".
+#define MIB_DPMS_Suspend	(1)	// Monitor unterstützt DPMS-Level "suspend".
 					// Dieses Feature ist Pflicht, jeder
-					// DPMS-fahige Monitor muB es unterstutzen.
+					// DPMS-fähige Monitor muß es unterstützen.
 					// Aktivierung: hsync an, vsync aus
 
-#define MIB_DPMS_ActiveOff	(2)	// Monitor unterstutzt DPMS-Level "active off".
+#define MIB_DPMS_ActiveOff	(2)	// Monitor unterstützt DPMS-Level "active off".
 					// Dieses Feature ist Pflicht, jeder
-					// DPMS-fahige Monitor muB es unterstutzen.
+					// DPMS-fähige Monitor muß es unterstützen.
 					// Aktivierung: hsync aus, vsync aus
 
 #define MIF_DPMS_StandBy	(1UL << MIB_DPMS_StandBy)
@@ -142,10 +135,10 @@ struct ModeInfo{
 	UBYTE			Depth;
 	UBYTE			Flags;
 
-	UWORD			HorTotal;				// wichtig fur aufziehen (beeinflusst Timings)
-	UWORD			HorBlankSize;			// RahmengroBe
+	UWORD			HorTotal;				// wichtig für aufziehen (beeinflußt Timings)
+	UWORD			HorBlankSize;			// Rahmengröße
 	UWORD			HorSyncStart;			// bestimmt Bildlage
-	UWORD			HorSyncSize;			// muB Spezifikation fur Sync-Locke erfullen
+	UWORD			HorSyncSize;			// muß Spezifikation für Sync-Lücke erfüllen
 
 	UBYTE			HorSyncSkew;			// im Moment obsolet
 	UBYTE			HorEnableSkew;			//
@@ -157,11 +150,11 @@ struct ModeInfo{
 
 	union{
 		UBYTE		Clock;					// Tseng: Nummer der Hardwareclock
-		UBYTE		Numerator;				// Cirrus: Mumerator fur PLL
+		UBYTE		Numerator;				// Cirrus: Mumerator für PLL
 	} pll1;
 	union{
 		UBYTE		ClockDivide;			// Tseng: Clockteiler
-		UBYTE		Denominator;			// Cirrus: Denominator fur PLL
+		UBYTE		Denominator;			// Cirrus: Denominator für PLL
 	} pll2;
 	ULONG			PixelClock;				// PixelClock in Hz
 };

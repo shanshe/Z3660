@@ -112,7 +112,7 @@ static struct Library __attribute__((used)) *init_device(uint8_t *seg_list asm("
 
     if ((ExpansionBase = (struct Library*)OpenLibrary((uint8_t*)"expansion.library", 0L)) ) {
         // Find Z2 or Z3 model of Z3660
-        if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x4)) || (cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x3))) {
+        if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1)) ) {
             ok = 1;
             debug_z3660("Z3660_SCSI: Z3660 found.\n");
             ZZ9K_REGS = (ULONG)cd->cd_BoardAddr + PISCSI_OFFSET;

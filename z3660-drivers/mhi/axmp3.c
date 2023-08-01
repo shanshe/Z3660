@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
     if ((ExpansionBase = (struct ExpansionBase *)OpenLibrary((STRPTR) "expansion.library", 0)))
     {
         // Find Z3660
-        if ((cd = (struct ConfigDev *)FindConfigDev(cd, 0x6d6e, 0x4)))
+        if ((cd = (struct ConfigDev *)FindConfigDev(cd, 0x144B, 0x1)))
         {
             fprintf(stderr, "Z3660 detected.\n");
         }

@@ -201,7 +201,7 @@ BOOL UserLibInit(struct MHI_LibBase *MhiLibBase) {
 
 	if((ExpansionBase = (struct ExpansionBase*) OpenLibrary((STRPTR)"expansion.library", 0))) {
 		// Find Z3660
-		if((cd = (struct ConfigDev*)FindConfigDev(cd, 0x6D6E, 0x4))) {
+		if((cd = (struct ConfigDev*)FindConfigDev(cd, 0x144B, 0x1))) {
 			KPrintF((CONST_STRPTR) "Z3660 detected.\n");
 		}
 		else {

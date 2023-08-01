@@ -955,7 +955,7 @@ int main(void) {
 		return 0;
 	}
 
-	zz_cd = (struct ConfigDev*)FindConfigDev(zz_cd,0x6d6e,0x4);
+	zz_cd = (struct ConfigDev*)FindConfigDev(zz_cd,0x144B,0x1);
 	if (!zz_cd) {
 		CloseLibrary(ExpansionBase);
 		errorMessage("Z3660 not found.\n");

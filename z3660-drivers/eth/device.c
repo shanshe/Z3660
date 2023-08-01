@@ -160,7 +160,7 @@ __saveds struct Device *DevInit( ASMR(d0) DEVBASEP                  ASMREG(d0),
 
       if ((ExpansionBase = OpenLibrary("expansion.library", 0)) ) {
         // Find Z2 or Z3 model of Z3660
-        if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x4)) || (cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x3))) {
+        if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1)) ) {
           BPTR fh;
 
           D(("Z3660Net: Z3660 found.\n"));

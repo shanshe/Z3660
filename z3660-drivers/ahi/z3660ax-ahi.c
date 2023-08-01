@@ -142,19 +142,14 @@ static uint32_t __attribute__((used)) init(BPTR seg_list asm("a0"), struct Libra
     return 0;
 
   // TW: Zorro2/3 detection during early init phase.
-  // Find Z2 or Z3 model of Z3660... should be ZORRO 3 ID: 0x6d6e,0x4 (there is no ZORRO 2 version)
-  if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x4))) {
+  // Find Z2 or Z3 model of Z3660... should be ZORRO 3 ID: 0x144B,0x1 (there is no ZORRO 2 version)
+  if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1))) {
     // ZORRO 3
     Z9AXBase->zorro_version = 3;
     Z9AXBase->hw_addr = (uint32_t)cd->cd_BoardAddr;
 //    Z9AXBase->hw_size = (uint32_t)cd->cd_BoardSize;
   }
-  else if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x6d6e,0x3))) {
-    // ZORRO 2
-    Z9AXBase->zorro_version = 2;
-    Z9AXBase->hw_addr = (uint32_t)cd->cd_BoardAddr;
-//    Z9AXBase->hw_size = (uint32_t)cd->cd_BoardSize;
-  } else {
+  else {
     // Not detected
     Z9AXBase->zorro_version = 0;
     Z9AXBase->hw_addr = 0;
