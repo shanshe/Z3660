@@ -48,20 +48,20 @@ entity z3660 is
            n040RSTO : in  STD_LOGIC;
            nSNOOP : out  STD_LOGIC;
            LEBUS_DMA : out  STD_LOGIC;
-           TP7 : out  STD_LOGIC;
+           TP7 : in  STD_LOGIC;
            RESET_OUT : out  STD_LOGIC;
            PCLK : in  STD_LOGIC;
-           nTS : out  STD_LOGIC;                             ---------------------------
+           nTS : out  STD_LOGIC;
            nHLT : in  STD_LOGIC;
            nEMUL : in  STD_LOGIC;
            nLOCK : in  STD_LOGIC;
            nLOCKE : in  STD_LOGIC;
-           nDSACK : inout  STD_LOGIC_VECTOR (1 downto 0);      ---------------------------
+           nDSACK : inout  STD_LOGIC_VECTOR (1 downto 0);
            nBR : in  STD_LOGIC;
            nCPURST : in  STD_LOGIC;
            nCIIN : in  STD_LOGIC;
            nBR040 : in  STD_LOGIC;
-           nTA : inout  STD_LOGIC;                            ---------------------------
+           nTA : inout  STD_LOGIC;
            nTEA : out  STD_LOGIC;
            SIZ40 : inout  STD_LOGIC_VECTOR (1 downto 0);
            nSTERM : inout  STD_LOGIC;
@@ -69,7 +69,7 @@ entity z3660 is
            n040RSTI : out  STD_LOGIC;
            TM : inout  STD_LOGIC_VECTOR (2 downto 0);
            TT : inout  STD_LOGIC_VECTOR (1 downto 0);
-           J1 : out  STD_LOGIC;
+           J1 : in  STD_LOGIC;
            n040CIOUT : in  STD_LOGIC;
            nIPL : in  STD_LOGIC_VECTOR (2 downto 0);
            nDS040 : inout  STD_LOGIC;
@@ -412,7 +412,7 @@ nTA <= '0' when nTA_out='0' else 'Z';
    end process;
    nTEA <= nTEA_int when nBGACK040_int='0' else '1';
 --   nTEA <= '0' when nTEA_d(2 downto 0)="110" else 'Z';
-
+   
    nAVEC040 <= nAVEC040_int;
 -- TT = "00" -> normal
 -- TM = "000" -> Data Cache Push Access
@@ -467,18 +467,10 @@ nTA <= '0' when nTA_out='0' else 'Z';
 
    nBB040 <= '0' when DMA_select='1' else 'Z';
 
-   J1 <= '1' when( --p040A(31 downto 28) = "0100"  and
-   --nBGACK='0' and (nAS040='0' or nDS040='0') 
-   DMA_select='1' and nBGACK040_int/='0'
-   ) else '0';
-
---   J1  <= nAS040;--nBG040_int;--nAS040;
-   TP7 <= nBGACK when RAM_select='1' else '1';
-
-   TM(2 downto 0) <= "001" when (DMA_select='1' --and nAS040='0'
-   ) or nBG_ARM = '0' else "ZZZ";
-   TT(1 downto 0) <= "00"  when (DMA_select='1' --and nAS040='0'
-   ) or nBG_ARM = '0' else "ZZ";
+   TM(2 downto 0) <= "001" when DMA_select='1'
+   else "000" when nBG_ARM = '0' else "ZZZ";
+   TT(1 downto 0) <= "00"  when DMA_select='1'
+   or nBG_ARM = '0' else "ZZ";
 
 -- finish DMA with STERM
    nSTERM <= nDMA_STERM when (DMA_select='1') else 'Z';
@@ -614,7 +606,7 @@ nTA <= '0' when nTA_out='0' else 'Z';
    end process;
 -- fin nuevo para DMA
 
-   nBGACK040  <= '0';--nBGACK040_int and nBGACK; -- this signal is 244's buffer trisate
+   nBGACK040  <= '0' when NBG_ARM='1' else nBGACK040_int and nBG_int; -- this signal is 244's buffer trisate
 
    nBG        <= nBG_int;
    nSBGACK030 <= nBGACK_D or nBGACK;
@@ -640,8 +632,8 @@ nTA <= '0' when nTA_out='0' else 'Z';
    PS_MIO_0  <= not nIPL(0);
    PS_MIO_9  <= not nIPL(1);
    PS_MIO_12 <= not nIPL(2);
-   
    PS_MIO_15  <= nBG_ARM;
+
    nBR_ARM    <= PS_MIO_8;
    RESET_CPLD <= PS_MIO_13;
 

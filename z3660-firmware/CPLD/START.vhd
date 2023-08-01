@@ -57,25 +57,25 @@ nCYCPEND <= nCYCPEND_int;
 nTCI <= nTCI_int;
 nAVEC040 <= nAVEC040_int;
 --nTEND <= nTEND_int;
-   
-   process(BCLK,n040RSTI)
-   begin
-      if(n040RSTI='0') then
-         nCYCPEND_int <= '1';
-         nTCI_int <= '1';
-         nAVEC040_int <= '1';
-      elsif(BCLK'event and  BCLK='1') then
---         if(nAVEC040='1') then
---            nAVEC040 <= nAS040 or nRAVEC;
---         else
---            nAVEC040 <= not(nTA and nTEA and n040RSTI);
---         end if;
---         if(nTCI='1') then
---            nTCI <= nAS040 or nRCIIN;
---         else
---            nTCI <= not(nTA and nTEA and n040RSTI);
---         end if;
-            
+	
+	process(BCLK,n040RSTI)
+	begin
+		if(n040RSTI='0') then
+			nCYCPEND_int <= '1';
+			nTCI_int <= '1';
+			nAVEC040_int <= '1';
+		elsif(BCLK'event and  BCLK='1') then
+--			if(nAVEC040='1') then
+--				nAVEC040 <= nAS040 or nRAVEC;
+--			else
+--				nAVEC040 <= not(nTA and nTEA and n040RSTI);
+--			end if;
+--			if(nTCI='1') then
+--				nTCI <= nAS040 or nRCIIN;
+--			else
+--				nTCI <= not(nTA and nTEA and n040RSTI);
+--			end if;
+				
 --register
 nAVEC040_int <= not(
         ( not(nAS040) and nAVEC040_int and not(nRAVEC) )
@@ -85,7 +85,7 @@ nTCI_int <= not(
         ( not(nAS040) and not(nRCIIN) and nTCI_int )
      or ( nTA and not(nTCI_int) and nTEA and n040RSTI ) );
 --nSTART <= not(
---         ( not(nBGACK040) and not(nTS) )
+--			( not(nBGACK040) and not(nTS) )
 --     or ( not(nCYCPEND_int) and not(nBGACK040) ) );
 --register
 nCYCPEND_int <= not(
@@ -96,8 +96,8 @@ nCYCPEND_int <= not(
 --        ( nTA and nTEA and not(nTEND_int) and n040RSTI )
 --     or ( nTEND_int and not(nTS) ) );
 
-      end if;
-   end process;
+		end if;
+	end process;
 
 
 end Behavioral;
