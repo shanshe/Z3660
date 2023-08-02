@@ -17,7 +17,7 @@
 <br>
 <br>Current version of Schematics is v021. It has all fixes needed by v02 to have DMA compatibility (tested with ReA4091 as bus master), so you can build it.
 <br>
-<br>The exact model of Z-Turn board you will need is: MYS-7Z020-C ( mouser https://www.mouser.com/c/?q=MYS-7Z020-V2-0E1D-766-C-S ).
+<br>The exact model of Z-Turn board you will need is: MYS-7Z020-V2 ( mouser https://www.mouser.com/c/?q=MYS-7Z020-V2-0E1D-766-C-S ).
 <br>
 <br><p style="text-align:center;"><img src="./Images/Z3660_top_v02.jpg" alt="Z3660_top_v02.jpg" style="width:800px;"><br>v0.2 Z3660 without FPGA</br></p>
 <br>
