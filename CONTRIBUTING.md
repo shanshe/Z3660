@@ -29,9 +29,9 @@ In the tests that I have done (believe me, in two years there is time to do a lo
 
 In order to optimize for readability (more lines will be added as needed):
 
-  * Indent using three spaces (soft tabs)
-  * This is open source software. Consider the people who will read your code, and make it look nice for them.
-  * Comment your modifications, everyone should know what you are doing.
+   * Indent using three spaces (soft tabs)
+   * This is open source software. Consider the people who will read your code, and make it look nice for them.
+   * Comment your modifications, everyone should know what you are doing.
 
 Thanks,
 sHaNsHe (Double H Tech)
