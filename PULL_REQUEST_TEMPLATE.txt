@@ -1,0 +1,12 @@
+This is an example, modify whatever you want. Please delete this line.
+
+## Fixes Issue #???
+
+...or... 
+
+## Adds a new feature X
+
+## Changes proposed in this pull request:
+   1.
+   2.
+   3.
