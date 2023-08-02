@@ -7,5 +7,5 @@ z3660cfg.txt contains some configuration of the Z3660. It should be very self ex
 
 You can comment out a line with a `#` on the first character of a line. If you use multiple lines with the same configuration, last one config is what will be finally selected.
 
-# A note from Z-turn SD
+# A note on the type of SD card to use in the Z-Turn
 I have received a SD with every Z-turn I have bought, but they are HC and yes, they are really slow!!! Please use XC SDs.
