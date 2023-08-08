@@ -33,7 +33,7 @@ void load_rom(void)
 	static FIL fil;		/* File object */
 	static FATFS fatfs;
 	uint8_t *ROM=(uint8_t *)shared->load_rom_addr;
-	printf("Loading Kickstart on address: 0x%08X\n",(uint32_t)ROM);
+	printf("Loading Kickstart on address: 0x%08lX\n",(uint32_t)ROM);
 	TCHAR *Path = "0:/";
 	Xil_ExceptionDisable();
 	int ret;
@@ -54,7 +54,7 @@ retry:
 	}
 	unsigned int NumBytesRead;
 	printf("Reading %s file:\r\n[----------------]\r\n\033[F",config.kickstart);
-#define BYTES_TO_READ 256
+#define BYTES_TO_READ 128
 	for(int i=0,j=0,k=2;i<0x80000;i+=BYTES_TO_READ,j+=BYTES_TO_READ)
 	{
 		if(j==(512*1024/16))
@@ -62,13 +62,13 @@ retry:
 			j=0;
 			printf("%.*s\r\n\033[F",(int)++k,"[================]");
 		}
-		uint8_t buff[BYTES_TO_READ];
 		f_read(&fil, ROM+i, BYTES_TO_READ,&NumBytesRead);
 		if(NumBytesRead!=BYTES_TO_READ)
 		{
-			printf("Error reading at 0x%08x\nHALT!!!",i);
+			printf("\nError reading at file offset 0x%08x\nHALT!!!",i);
 			while(1);
 		}
+//		uint8_t buff[BYTES_TO_READ];
 //		for(int i1=0;i1<BYTES_TO_READ;i1++)
 //			ROM[i+i1]=buff[i1];
 	}
@@ -135,7 +135,7 @@ void cpu_emulator_reset(void)
 	CPLD_RESET_ARM(1);
 	printf("Resetting...\n\r");
 }
-static FATFS fatfs;
+
 void hard_reboot(void)
 {
 	cpu_emulator_reset();

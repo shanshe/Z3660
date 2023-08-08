@@ -15,6 +15,7 @@ BEGIN PROCESSOR
  PARAMETER DRIVER_NAME = cpu_cortexa9
  PARAMETER DRIVER_VER = 2.11
  PARAMETER HW_INSTANCE = ps7_cortexa9_0
+ PARAMETER extra_compiler_flags = -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -nostartfiles -g -Wall -Wextra
 END
 
 
@@ -275,6 +276,8 @@ BEGIN LIBRARY
  PARAMETER LIBRARY_NAME = xilffs
  PARAMETER LIBRARY_VER = 5.0
  PARAMETER PROC_INSTANCE = ps7_cortexa9_0
+ PARAMETER use_lfn = 1
+ PARAMETER use_strfunc = 1
 END
 
 

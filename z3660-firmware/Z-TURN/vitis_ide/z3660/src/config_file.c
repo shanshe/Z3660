@@ -4,7 +4,7 @@
  *  Created on: 28 feb. 2023
  *      Author: shanshe
  */
-#include "mpg/ff.h"
+#include <ff.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,14 +52,14 @@ void load_default_config(void)
 	config.boot_mode=UAEJIT;
 	sprintf(config.kickstart,"A4kOS321.rom");
 	for(int i=0;i<7;i++)
-		sprintf(config.scsi[i],"");
+		//sprintf(config.scsi[i],""); warning
+		config.scsi[i][0]=0;
 }
 void write_config_file(char *filename)
 {
 	static FIL fil;		/* File object */
 	f_open(&fil,filename, FA_OPEN_ALWAYS | FA_WRITE);
 	load_default_config();
-	UINT NumBytesWritten;
 	print_line(&fil,"## Z3660 config file ##\n");
 	print_line(&fil,"# Warning: File names have a limit of 8 characters (+ 3 characters for extension)\n");
 	print_line(&fil,"\n");
@@ -206,13 +206,13 @@ retry:
 			while(1);
 		}
 	}
-	unsigned int NumBytesRead;
 	printf("Reading %s file \n",Filename);
 	int cur_line = 1;
 	char parse_line[512];
 	char cur_cmd[128];
 	memset(&config, 0x00, sizeof(CONFIG));
-	sprintf(config.kickstart,"");
+//	sprintf(config.kickstart,""); // this produces a warning O_O
+	config.kickstart[0]=0;
 
 	while (!f_eof(&fil))
 	{
@@ -282,9 +282,9 @@ retry:
 	}
 	goto load_successful;
 
-load_failed:;
+//load_failed:;
 	printf("Error loading config file %s\n",Filename);
-	printf("Loading default config\n",Filename);
+	printf("Loading default config\n");
 	load_default_config();
 load_successful:;
 
@@ -316,7 +316,6 @@ retry:
 	ret=f_open(&fil,"env/bootmode", FA_OPEN_EXISTING | FA_READ);
 	if(ret==0)
 	{
-		unsigned int NumBytesRead;
 //		int cur_line = 1;
 		char parse_line[512];
 		char cur_cmd[128];
@@ -334,7 +333,6 @@ retry:
 	ret=f_open(&fil,"env/scsiboot", FA_OPEN_EXISTING | FA_READ);
 	if(ret==0)
 	{
-		unsigned int NumBytesRead;
 //		int cur_line = 1;
 		char parse_line[512];
 		char cur_cmd[128];
@@ -349,7 +347,6 @@ retry:
 	ret=f_open(&fil,"env/autoconfig_ram", FA_OPEN_EXISTING | FA_READ);
 	if(ret==0)
 	{
-		unsigned int NumBytesRead;
 //		int cur_line = 1;
 		char parse_line[512];
 		char cur_cmd[128];

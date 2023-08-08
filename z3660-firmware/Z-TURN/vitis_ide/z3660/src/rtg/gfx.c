@@ -564,7 +564,7 @@ void p2d_rect(int16_t sx, int16_t sy, int16_t dx, int16_t dy, int16_t w, int16_t
 	uint32_t *dp = fb + (dy * fb_pitch);
 
 	uint8_t cur_bit, base_bit, base_byte;
-	uint16_t cur_byte = 0;
+	int16_t cur_byte = 0;
 
 	uint32_t plane_size = src_line_pitch * h;
 	uint32_t *bmp_pal = (uint32_t *)bmp_data_src;
@@ -1593,4 +1593,4 @@ void acc_fill_flat_tri(uint32_t dest, TriangleDef *d, uint16_t w, uint16_t h, ui
 			tyw2 += tys2;
 		}
 	}
-};
+}

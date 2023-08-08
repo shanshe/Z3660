@@ -42,7 +42,7 @@
 #include "custom.h"
 #include "comptbl.h"
 #include "compemu.h"
-#include <uaestring.h>
+#include <uae/uaestring.h>
 #include <string.h>
 //#include <SDL.h>
 

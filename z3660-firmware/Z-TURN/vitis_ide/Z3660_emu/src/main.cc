@@ -313,16 +313,20 @@ void DataAbortHandler(void *data)
 			z3660_printf("Read Fault from 0x%08X\n",FaultAddress);
 		z3660_printf("Instruction 0x%08X\n",*((uint32_t *)DataAbortAddr));
 		z3660_printf("Opcode unknown\n");
+		asm volatile("pop {r4,r5,r6,lr}");  // pop registers
+		asm volatile("ldmia	sp!,{r0-r3,r12,lr}"); // pop registers
+		asm volatile("subs	pc, lr, #4");         // return
+		return;
 	}
 }
 
 XDmaPs DmaInstance;
 XScuGic GicInstance;
-extern u32 MMUTable;
-void SetTlbAttributes(INTPTR Addr, u32 attrib)
+extern uint32_t MMUTable;
+void SetTlbAttributes(INTPTR Addr, uint32_t attrib)
 {
-	u32 *ptr;
-	u32 section;
+	uint32_t *ptr;
+	uint32_t section;
 
 	section = Addr / 0x100000U;
 	ptr = &MMUTable;
@@ -394,7 +398,15 @@ int main()
     Xil_ICacheEnable();
     Xil_DCacheEnable();
 
-    for(int i=0x000;i<0x00F;i++)
+    // This has happend when upgrading to Vitis...
+    // This is incredible, MMU 0 position is not updated with the SetTlbAttributes subroutine!!!
+    uint32_t *ptr;
+    ptr = &MMUTable;
+    ptr[0]=0;
+    asm(" dsb");
+    // end of This is incredible
+
+    for(int i=0;i<0x00F;i++)     // RAM and Amiga regs, but 0x00F for kickstart
     	SetTlbAttributes(i*0x100000UL,RESERVED);
     for(int i=0x010;i<0x080;i++) // Mother Board RAM
     	SetTlbAttributes(i*0x100000UL,RESERVED);

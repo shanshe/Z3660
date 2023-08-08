@@ -124,7 +124,7 @@ void app_destroy(app_t *self) {
 
 	free(self);
 }
-uint32_t ticks=0;
+extern uint32_t ticks;
 uint32_t getTicks(void)
 {
 	return(ticks);

@@ -418,7 +418,7 @@ addrbank drct_bank = {
 		direct_write_32, direct_write_16, direct_write_8,
 		dummy_xlate, drct_check, NULL, NULL, NULL,
 		direct_read_32, direct_read_16,
-		ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special memory"
+		ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special_mem"
 		NULL, // sub_banks
 		0xFFFFFFFF, //mask
 		0, // startmask
@@ -434,7 +434,7 @@ addrbank romd_bank = {
 		dummy_write, dummy_write, dummy_write,
 		dummy_xlate, romd_check, NULL, NULL, NULL,
 		direct_read_32, direct_read_16,
-		ABFLAG_ROM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special memory"
+		ABFLAG_ROM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special_mem"
 		NULL, // sub_banks
 		0xFFFFFFFF, //mask
 		0, // startmask
@@ -450,7 +450,7 @@ addrbank z3ram_bank = {
 		z3ram_write_32, z3ram_write_16, z3ram_write_8,
 		dummy_xlate, z3ram_check, NULL, NULL, NULL,
 		z3ram_read_32, z3ram_read_16,
-		ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special memory"
+		ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special_mem"
 		NULL, // sub_banks
 		0xFFFFFFFF, //mask
 		0, // startmask
@@ -473,7 +473,7 @@ addrbank rtg_bank = {
 		rtg_write_32, rtg_write_16, rtg_write_8,
 		dummy_xlate, rtg_check, NULL, NULL, NULL,
 		rtg_read_32, rtg_read_16,
-		ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special memory"
+		ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special_mem"
 		NULL, // sub_banks
 		0xFFFFFFFF, //mask
 		0, // startmask
@@ -545,6 +545,11 @@ void uae_emulator(int enable_jit)
 		currprefs.cachesize              = changed_prefs.cachesize=32*1024;
 		currprefs.compfpu                = changed_prefs.compfpu=true;
 	}
+	else
+	{
+		currprefs.cachesize              = changed_prefs.cachesize=0;
+		currprefs.compfpu                = changed_prefs.compfpu=false;
+	}
 	currprefs.fpu_strict             = changed_prefs.fpu_strict=true;
 
 //	regs.natmem_offset=(uae_u8*)0x08000000;
@@ -570,8 +575,8 @@ void uae_emulator(int enable_jit)
 	RANGE_MAP(0x00F8,0x0100,slow_bank);//modo_bank); // Mother Board bank ( Mobo ROM )
 #endif
 	RANGE_MAP(0x0100,0x0800,mbrm_bank); // Mother Board bank ( Mother board RAM )
-	RANGE_MAP(0x0800,0x1800,drct_bank); // Direct bank ( CPU RAM )
-	RANGE_MAP(0x1800,0x8000,slow_bank); // Slow bank ( Z3 Expansion space )
+	RANGE_MAP(0x0800,0x1000,drct_bank); // Direct bank ( CPU RAM )
+	RANGE_MAP(0x1000,0x8000,slow_bank); // Slow bank ( Z3 Expansion space )
 	RANGE_MAP(0xFF00,0xFF01,auto_bank); // Autoconfig bank ( Z3660 and Z3 AutoConfig )
 
 	m68k_reset_newcpu(1);

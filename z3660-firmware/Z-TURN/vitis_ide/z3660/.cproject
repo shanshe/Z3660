@@ -37,7 +37,7 @@
                             							
                             <targetPlatform binaryParser="com.xilinx.sdk.managedbuilder.XELF.arm.a53.x32" id="xilinx.armv7.target.gnu.base.debug.64212820" isAbstract="false" name="Debug Platform" superClass="xilinx.armv7.target.gnu.base.debug"/>
                             							
-                            <builder buildPath="${workspace_loc:/Z3660}/Debug" enableAutoBuild="true" id="xilinx.gnu.armv7.toolchain.builder.debug.1056711282" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="GNU make" superClass="xilinx.gnu.armv7.toolchain.builder.debug"/>
+                            <builder buildPath="${workspace_loc:/Z3660}/Debug" enableAutoBuild="true" id="xilinx.gnu.armv7.toolchain.builder.debug.1056711282" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="GNU make" parallelBuildOn="true" parallelizationNumber="2" superClass="xilinx.gnu.armv7.toolchain.builder.debug"/>
                             							
                             <tool id="xilinx.gnu.armv7.c.toolchain.assembler.debug.1684712144" name="ARM v7 gcc assembler" superClass="xilinx.gnu.armv7.c.toolchain.assembler.debug">
                                 								
@@ -61,7 +61,7 @@
                                 								
                                 <option id="xilinx.gnu.compiler.inferred.swplatform.flags.280409075" name="Software Platform Inferred Flags" superClass="xilinx.gnu.compiler.inferred.swplatform.flags" useByScannerDiscovery="false" value=" " valueType="string"/>
                                 								
-                                <option id="xilinx.gnu.compiler.symbols.defined.305784804" superClass="xilinx.gnu.compiler.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
+                                <option id="xilinx.gnu.compiler.symbols.defined.305784804" name="Defined symbols (-D)" superClass="xilinx.gnu.compiler.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
                                     									
                                     <listOptionValue builtIn="false" value="__ARM_ARCH=7"/>
                                     									
@@ -69,9 +69,9 @@
                                     								
                                 </option>
                                 								
-                                <option id="xilinx.gnu.compiler.option.optimization.flags.243443746" superClass="xilinx.gnu.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-std=c99" valueType="string"/>
+                                <option id="xilinx.gnu.compiler.option.optimization.flags.243443746" name="Other optimization flags" superClass="xilinx.gnu.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-std=c99" valueType="string"/>
                                 								
-                                <option id="xilinx.gnu.compiler.dircategory.includes.1096218454" superClass="xilinx.gnu.compiler.dircategory.includes" useByScannerDiscovery="false"/>
+                                <option id="xilinx.gnu.compiler.dircategory.includes.1096218454" name="Include Paths" superClass="xilinx.gnu.compiler.dircategory.includes" useByScannerDiscovery="false"/>
                                 								
                                 <inputType id="xilinx.gnu.armv7.c.compiler.input.1657529656" name="C source files" superClass="xilinx.gnu.armv7.c.compiler.input"/>
                                 							

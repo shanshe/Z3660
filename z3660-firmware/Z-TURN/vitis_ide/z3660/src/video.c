@@ -578,7 +578,7 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 int toggle=0;
 int vblank=0;
 extern int state68k;
-
+uint32_t ticks=0;
 void isr_video(void *dummy)
 {
 	vblank=video_formatter_read(0);
@@ -835,7 +835,7 @@ void update_hw_sprite(uint8_t *data, int double_sprite)
 {
 	uint8_t cur_bit = 0x80;
 	uint8_t cur_color = 0, out_pos = 0, iter_offset = 0;
-	uint8_t cur_bytes[16];
+	uint8_t cur_bytes[16]={0};
 	uint32_t *colors = vs.sprite_colors;
 	uint16_t w = vs.sprite_width;
 	uint16_t h = vs.sprite_height;

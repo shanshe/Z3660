@@ -478,7 +478,7 @@
 
 /* Peripheral Definitions for peripheral Z3660_0 */
 #define XPAR_Z3660_0_BASEADDR 0x80000000
-#define XPAR_Z3660_0_HIGHADDR 0x87FFFFFF
+#define XPAR_Z3660_0_HIGHADDR 0x8FFFFFFF
 
 
 /******************************************************************/

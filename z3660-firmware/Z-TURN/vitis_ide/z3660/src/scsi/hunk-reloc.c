@@ -53,7 +53,7 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
         return -1;
 
     uint32_t discard = 0, cur_hunk = 0, offs32 = 0;
-    int n_bytes;
+    unsigned int n_bytes;
     switch (index) {
         case HUNKTYPE_HEADER:
             DEBUG("[HUNK_RELOC] Processing hunk HEADER.\n");
@@ -179,7 +179,7 @@ void reloc_hunk(struct hunk_reloc *h, uint8_t *buf, struct hunk_info *i) {
 }
 
 void process_hunks(FIL *in, struct hunk_info *h_info, struct hunk_reloc *r, uint32_t offset) {
-    int n_bytes;
+    unsigned int n_bytes;
 	READLW(lw, in);
     DEBUG_SPAMMY("Hunk ID: %.8X (%s)\n", lw, hunk_id_name(lw));
 

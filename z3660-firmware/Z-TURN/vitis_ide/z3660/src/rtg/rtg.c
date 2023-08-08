@@ -1134,13 +1134,13 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
 		case REG_ZZ_APPLY_BOOTMODE:
 			if(zdata>=0x55AA)
 			{
-				printf("Apply BOOTMODE %ld (%s)\r\n",bm,bootmode_names[bm]);
+				printf("Apply BOOTMODE %d (%s)\r\n",bm,bootmode_names[bm]);
 				write_env_files(bm,sb,ar);
 				hard_reboot();
 			}
 			else
 			{
-				printf("Apply BOOTMODE magic code not valid: 0x%x\r\n",zdata);
+				printf("Apply BOOTMODE magic code not valid: 0x%lx\r\n",zdata);
 			}
 			break;
 		case REG_ZZ_SCSIBOOT_EN:

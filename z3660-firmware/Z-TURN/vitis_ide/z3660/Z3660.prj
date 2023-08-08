@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="ASCII"?>
-<sdkproject:SdkProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdkproject="http://www.xilinx.com/sdkproject" name="Z3660" location="C:/Users/shanshe/workspace/Z3660" platform="C:/Users/shanshe/workspace/design_1_wrapper/export/design_1_wrapper/design_1_wrapper.xpfm" platformUID="xilinx:::0.0(custom)" systemProject="Z3660_system" sysConfig="design_1_wrapper" runtime="cpp" cpu="standalone_ps7_cortexa9_0" cpuInstance="ps7_cortexa9_0" os="standalone" mssSignature="47b0bc5d3e5bddaf12af2d12bd2dc009">
-  <configuration name="Debug" id="xilinx.gnu.armv7.exe.debug.78277449">
+<sdkproject:SdkProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdkproject="http://www.xilinx.com/sdkproject" name="Z3660" location="C:/Users/shanshe/workspace/Z3660" platform="C:/Users/shanshe/workspace/design_1_wrapper/export/design_1_wrapper/design_1_wrapper.xpfm" platformUID="xilinx:::0.0(custom)" systemProject="Z3660_system" sysConfig="design_1_wrapper" runtime="cpp" cpu="standalone_ps7_cortexa9_0" cpuInstance="ps7_cortexa9_0" os="standalone" mssSignature="c740d233087a5b682f12f62bf6b7f88a">
+  <configuration name="Debug" id="xilinx.gnu.armv7.exe.debug.199230205">
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
     <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>
-  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.1552601641" dirty="true">
+  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.602038441" dirty="true">
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>
-  <template appTemplateName="hello_world"/>
+  <template appTemplateName="empty_application"/>
 </sdkproject:SdkProject>

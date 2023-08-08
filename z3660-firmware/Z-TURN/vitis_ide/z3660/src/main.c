@@ -742,8 +742,8 @@ int main()
 	    state68k=-1; // don't use cache flush when using emulator
 	    cpu_emulator(); // infinite loop inside
 	}
-
-	shared->boot_rom_loaded=piscsi_init();
+	if(config.scsiboot==1 && config.boot_mode!=CPU)
+		shared->boot_rom_loaded=piscsi_init();
 
 //	piscsi_map_drive("hdf/ZDH0.hdf", 0);
 
