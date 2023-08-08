@@ -1,4 +1,4 @@
-# ENV
+# ENV DIRECTORY
 Like Amiga OS ENV: directory, here you can config some features of the Z3660 accelerator using some text files that overrides what you have selected in the z3660cfg.txt file. These files can be updated by ZTop Amiga application, or manually.
 
 Right now you can configure these features:
