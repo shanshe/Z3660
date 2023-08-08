@@ -40,28 +40,28 @@ short bug=TRUE;
 void
 panic(const char *fmt, ...)
 {
-    va_list ap;
-    struct Library *IntuitionBase;
-    struct EasyStruct es = {
-        sizeof (es),
-        0,
-        (STRPTR)"A4091 Panic",
-        (STRPTR) fmt,
-        (STRPTR)"OK",
-    };
-    printf("PANIC: ");
-    va_start(ap, fmt);
-    vprintf(fmt, ap);
-    va_end(ap);
-    printf("\n\n");
+   va_list ap;
+   struct Library *IntuitionBase;
+   struct EasyStruct es = {
+         sizeof (es),
+         0,
+         (STRPTR)"A4091 Panic",
+         (STRPTR) fmt,
+         (STRPTR)"OK",
+   };
+   printf("PANIC: ");
+   va_start(ap, fmt);
+   vprintf(fmt, ap);
+   va_end(ap);
+   printf("\n\n");
 
-    IntuitionBase = OpenLibrary((CONST_STRPTR)"intuition.library", 37);
-    if (IntuitionBase != NULL) {
-        va_start(ap, fmt);
-        (void) EasyRequestArgs(NULL, &es, NULL, ap);
-        va_end(ap);
-        CloseLibrary(IntuitionBase);
-    }
+   IntuitionBase = OpenLibrary((CONST_STRPTR)"intuition.library", 37);
+   if (IntuitionBase != NULL) {
+      va_start(ap, fmt);
+      (void) EasyRequestArgs(NULL, &es, NULL, ap);
+      va_end(ap);
+      CloseLibrary(IntuitionBase);
+   }
 }
 /*
 void
@@ -99,101 +99,101 @@ bsd_splbio(void)
 void
 bsd_splx(int ilevel)
 {
-    bsd_ilevel = ilevel;
-    if (bsd_ilevel == 0)
-        Enable();
+   bsd_ilevel = ilevel;
+   if (bsd_ilevel == 0)
+      Enable();
 }
 
 const char *
 device_xname(void *ptr)
 {
 #if 0
-    device_t dev = ptr;
-    if (dev == NULL)
-        return ("SCSI");
-    else
-        return (dev->dv_xname);
+   device_t dev = ptr;
+   if (dev == NULL)
+      return ("SCSI");
+   else
+      return (dev->dv_xname);
 #endif
-        return ("A4091");
+      return ("A4091");
 }
 
 void __restore_a4(void)
 {
-    __asm volatile("\tlea ___a4_init, a4");
+   __asm volatile("\tlea ___a4_init, a4");
 }
 
 #if 0
 unsigned int
 read_system_ticks(void)
 {
-    struct DateStamp ds;
-    DateStamp(&ds);  /* Measured latency is ~250us on A3000 A3640 */
-    return ((unsigned int) (ds.ds_Minute) * 60 * TICKS_PER_SECOND + ds.ds_Tick);
+   struct DateStamp ds;
+   DateStamp(&ds);  /* Measured latency is ~250us on A3000 A3640 */
+   return ((unsigned int) (ds.ds_Minute) * 60 * TICKS_PER_SECOND + ds.ds_Tick);
 }
 
 unsigned int
 ticks_since_last(void)
 {
-    unsigned int etime = read_system_ticks();
-    unsigned int stime;
-    static unsigned int last = 0;
-    stime = last;
-    last = etime;
-    if (etime < stime)
-        etime += 24 * 60 * 60 * TICKS_PER_SECOND;  /* Next day */
-    return (etime - stime);
+   unsigned int etime = read_system_ticks();
+   unsigned int stime;
+   static unsigned int last = 0;
+   stime = last;
+   last = etime;
+   if (etime < stime)
+      etime += 24 * 60 * 60 * TICKS_PER_SECOND;  /* Next day */
+   return (etime - stime);
 }
 #endif
 #if 0
 char *itoa(int16_t value, char *string, int radix)
 {
-    int n,r,a,b;
-    n = (value<0)?-value:value;
-    b = 0;
-    while (n)
-    {
-        r = n % radix;
-        if (r >= 10)
-            string[b++] = 'a' + (r - 10);
-        else
-            string[b++] = '0' + r;
-        n /= radix;
-    }
-    if (b == 0)
-        string[b++] = '0';
-    if (value < 0 && radix == 10)
-        string[b++] = '-';
-    string[b] = '\0';
-    a=0; b--;
-    while (a < b) {
-        char temp = string[a];
-        string[a] = string[b];
-        string[b] = temp;
-        a++;b--;
-    }
-    return string;
+   int n,r,a,b;
+   n = (value<0)?-value:value;
+   b = 0;
+   while (n)
+   {
+      r = n % radix;
+      if (r >= 10)
+         string[b++] = 'a' + (r - 10);
+      else
+         string[b++] = '0' + r;
+      n /= radix;
+   }
+   if (b == 0)
+      string[b++] = '0';
+   if (value < 0 && radix == 10)
+      string[b++] = '-';
+   string[b] = '\0';
+   a=0; b--;
+   while (a < b) {
+      char temp = string[a];
+      string[a] = string[b];
+      string[b] = temp;
+      a++;b--;
+   }
+   return string;
 }
 
 /* Return the index of the lowest set bit. (Counted from one) */
 int
 ffs(int i)
 {
-    int result = 0;
+   int result = 0;
 
-    if (i != 0) {
-        int x;
+   if (i != 0) {
+      int x;
 
-        x = (i & (-i)) - 1;
-        x -= ((x >> 1) & 0x55555555);
-        x = ((x >> 2) & 0x33333333) + (x & 0x33333333);
-        x = ((x >> 4) + x) & 0x0f0f0f0f;
-        x += (x >> 8);
-        x += (x >> 16);
+      x = (i & (-i)) - 1;
+      x -= ((x >> 1) & 0x55555555);
+      x = ((x >> 2) & 0x33333333) + (x & 0x33333333);
+      x = ((x >> 4) + x) & 0x0f0f0f0f;
+      x += (x >> 8);
+      x += (x >> 16);
 
-        result = 1 + (x & 0x3f);  /* The first bit has index 1. */
-    }
+      result = 1 + (x & 0x3f);  /* The first bit has index 1. */
+   }
 
-    return (result);
+   return (result);
 }
 #endif
 
@@ -202,104 +202,104 @@ callout_t *callout_head = NULL;
 static void
 callout_add(callout_t *c)
 {
-    c->co_prev = NULL;
-    c->co_next = callout_head;
-    if (callout_head != NULL)
-        callout_head->co_prev = c;
-    callout_head = c;
+   c->co_prev = NULL;
+   c->co_next = callout_head;
+   if (callout_head != NULL)
+      callout_head->co_prev = c;
+   callout_head = c;
 }
 
 static void
 callout_remove(callout_t *c)
 {
-    if (c == callout_head) {
-        callout_head = c->co_next;
-        if (callout_head != NULL)
-            callout_head->co_prev = NULL;
-        return;
-    }
-    if (c->co_prev != NULL)
-        c->co_prev->co_next = c->co_next;
-    if (c->co_next != NULL)
-        c->co_next->co_prev = c->co_prev;
+   if (c == callout_head) {
+      callout_head = c->co_next;
+      if (callout_head != NULL)
+         callout_head->co_prev = NULL;
+      return;
+   }
+   if (c->co_prev != NULL)
+      c->co_prev->co_next = c->co_next;
+   if (c->co_next != NULL)
+      c->co_next->co_prev = c->co_prev;
 }
 
 void
 callout_init(callout_t *c, u_int flags)
 {
-    c->func = NULL;
+   c->func = NULL;
 }
 
 #ifdef DEBUG
 void
 callout_list(void)
 {
-    callout_t *cur;
+   callout_t *cur;
 
-    for (cur = callout_head; cur != NULL; cur = cur->co_next) {
-        printf("%c %d %p(%p)\n", (cur == callout_head) ? '>' : ' ',
-               cur->ticks, cur->func, cur->arg);
-    }
+   for (cur = callout_head; cur != NULL; cur = cur->co_next) {
+      printf("%c %d %p(%p)\n", (cur == callout_head) ? '>' : ' ',
+            cur->ticks, cur->func, cur->arg);
+   }
 }
 #endif
 
 int
 callout_pending(callout_t *c)
 {
-    PRINTF_CALLOUT("callout %spending\n", (c->func == NULL) ? "not " : "");
-    return (c->func != NULL);
+   PRINTF_CALLOUT("callout %spending\n", (c->func == NULL) ? "not " : "");
+   return (c->func != NULL);
 }
 
 int
 callout_stop(callout_t *c)
 {
-    int pending = (c->func != NULL);
-    PRINTF_CALLOUT("callout stop %p\n", c->func);
-    c->func = NULL;
-    callout_remove(c);
-    return (pending);
+   int pending = (c->func != NULL);
+   PRINTF_CALLOUT("callout stop %p\n", c->func);
+   c->func = NULL;
+   callout_remove(c);
+   return (pending);
 }
 
 void
 callout_reset(callout_t *c, int ticks, void (*func)(void *), void *arg)
 {
-    c->ticks = ticks;
-    c->func = func;
-    c->arg = arg;
+   c->ticks = ticks;
+   c->func = func;
+   c->arg = arg;
 
-    callout_remove(c);
-    callout_add(c);
-    PRINTF_CALLOUT("callout_reset %p(%x) at %d\n",
-                   c->func, (uint32_t) c->arg, ticks);
+   callout_remove(c);
+   callout_add(c);
+   PRINTF_CALLOUT("callout_reset %p(%x) at %d\n",
+         c->func, (uint32_t) c->arg, ticks);
 }
 
 void
 callout_call(callout_t *c)
 {
-    if (c->func == NULL) {
-        PRINTF_CALLOUT("callout to NULL function\n");
-        return;
-    }
+   if (c->func == NULL) {
+      PRINTF_CALLOUT("callout to NULL function\n");
+      return;
+   }
 
-    PRINTF_CALLOUT("callout_call %p(%x)\n", c->func, (uint32_t) c->arg);
-    c->func(c->arg);
+   PRINTF_CALLOUT("callout_call %p(%x)\n", c->func, (uint32_t) c->arg);
+   c->func(c->arg);
 }
 
 void
 callout_run_timeouts(void)
 {
-    callout_t *cur;
+   callout_t *cur;
 
-    for (cur = callout_head; cur != NULL; cur = cur->co_next) {
-        if (cur->ticks == 1) {
-            cur->ticks = 0;
-            callout_call(cur);
-        } else if (cur->ticks != 0) {
-            cur->ticks -= TICKS_PER_SECOND;
-            if (cur->ticks < 1)
-                cur->ticks = 1;
-        }
-    }
+   for (cur = callout_head; cur != NULL; cur = cur->co_next) {
+      if (cur->ticks == 1) {
+         cur->ticks = 0;
+         callout_call(cur);
+      } else if (cur->ticks != 0) {
+         cur->ticks -= TICKS_PER_SECOND;
+         if (cur->ticks < 1)
+            cur->ticks = 1;
+      }
+   }
 }
 
 #if 0

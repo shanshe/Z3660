@@ -18,20 +18,20 @@
 #define     NSCMD_DEVICEQUERY       0x4000
 
 struct NSDeviceQueryResult {
-    /*
-    ** Standard information, must be reset for every query
-    */
-    ULONG   DevQueryFormat;         /* this is type 0               */
-    ULONG   SizeAvailable;          /* bytes available              */
+   /*
+   ** Standard information, must be reset for every query
+   */
+   ULONG   DevQueryFormat;         /* this is type 0               */
+   ULONG   SizeAvailable;          /* bytes available              */
 
-    /*
-    ** Common information (READ ONLY!)
-    */
-    UWORD   DeviceType;             /* what the device does         */
-    UWORD   DeviceSubType;          /* depends on the main type     */
-    UWORD   *SupportedCommands;     /* 0 terminated list of cmd's   */
+   /*
+   ** Common information (READ ONLY!)
+   */
+   UWORD   DeviceType;             /* what the device does         */
+   UWORD   DeviceSubType;          /* depends on the main type     */
+   UWORD   *SupportedCommands;     /* 0 terminated list of cmd's   */
 
-    /* May be extended in the future! Check SizeAvailable! */
+   /* May be extended in the future! Check SizeAvailable! */
 };
 
 

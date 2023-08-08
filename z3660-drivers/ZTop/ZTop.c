@@ -8,8 +8,8 @@
 /*
  * MNT ZZ9000 Amiga Graphics Card Diagnostics (ZZTop)
  * Copyright (C) 2016-2022, Lukas F. Hartmann <lukas@mntre.com>
- *													MNT Research GmbH, Berlin
- *													https://mntre.com
+ *                                       MNT Research GmbH, Berlin
+ *                                       https://mntre.com
  *
  * More Info: https://mntre.com/zz9000
  *
@@ -63,18 +63,18 @@ typedef struct Cpulist{
 } cpulist;
 
 enum {
-	CPU,
-	MUSASHI,
-	UAE,
-	UAEJIT,
-	NUM_BOOTMODES
+   CPU,
+   MUSASHI,
+   UAE,
+   UAEJIT,
+   NUM_BOOTMODES
 };
 char bootmode_names[NUM_BOOTMODES][20]={
-//	"XXXXXXXXXXXXXXXXXXX"
-	"   060 real CPU    ",
-	"  030 MUSASHI emu  ",
-	"    040 UAE emu    ",
-	"  040 UAE JIT emu  ",
+//   "XXXXXXXXXXXXXXXXXXX"
+   "   060 real CPU    ",
+   "  030 MUSASHI emu  ",
+   "    040 UAE emu    ",
+   "  040 UAE JIT emu  ",
 };
 cpulist dnode[NUM_BOOTMODES];
 
@@ -96,891 +96,892 @@ struct Library *TimerBase;
 
 void errorMessage(char* error)
 {
-	if (error) printf("Error: %s\n", error);
+   if (error) printf("Error: %s\n", error);
 }
 
 uint32_t zz_get_reg(uint32_t offset)
 {
-	return *((volatile uint32_t*)(zz_regs+offset));
+   return *((volatile uint32_t*)(zz_regs+offset));
 }
 
 void zz_set_reg(uint32_t offset, uint32_t value)
 {
-	*((volatile uint32_t*)(zz_regs+offset)) = value;
+   *((volatile uint32_t*)(zz_regs+offset)) = value;
 }
 
 double zz_get_temperature(void)
 {
-	double temp = (double)(zz_get_reg(REG_ZZ_TEMPERATURE));
-	return temp/10.0;
+   double temp = (double)(zz_get_reg(REG_ZZ_TEMPERATURE));
+   return temp/10.0;
 }
 
 double zz_get_voltage_aux(void)
 {
-	double vaux = (double)(zz_get_reg(REG_ZZ_VOLTAGE_AUX));
-	return vaux/100.0;
+   double vaux = (double)(zz_get_reg(REG_ZZ_VOLTAGE_AUX));
+   return vaux/100.0;
 }
 
 double zz_get_voltage_int(void)
 {
-	double vint = (double)(zz_get_reg(REG_ZZ_VOLTAGE_INT));
-	return vint/100.0;
+   double vint = (double)(zz_get_reg(REG_ZZ_VOLTAGE_INT));
+   return vint/100.0;
 }
 
 uint32_t zz_get_jit_enable(void)
 {
-	return zz_get_reg(REG_ZZ_JIT_ENABLE);
+   return zz_get_reg(REG_ZZ_JIT_ENABLE);
 }
 
 uint32_t zz_get_scsiboot_enable(void)
 {
-	return zz_get_reg(REG_ZZ_SCSIBOOT_EN);
+   return zz_get_reg(REG_ZZ_SCSIBOOT_EN);
 }
 
 uint32_t zz_get_emulation_used(void)
 {
-	return zz_get_reg(REG_ZZ_EMULATION_USED);
+   return zz_get_reg(REG_ZZ_EMULATION_USED);
 }
 
 uint32_t zz_get_ax_present(void)
 {
-	return zz_get_reg(REG_ZZ_AUDIO_CONFIG);
+   return zz_get_reg(REG_ZZ_AUDIO_CONFIG);
 }
 
 uint32_t zz_get_cpu_freq(void)
 {
-	return 	zz_get_reg(REG_ZZ_CPU_FREQ);
+   return    zz_get_reg(REG_ZZ_CPU_FREQ);
 }
 
 void zz_set_selected_bootmode(struct Window* win,uint16_t bm);
 uint32_t zz_get_selected_bootmode(struct Window* win)
 {
-	int bm=zz_get_reg(REG_ZZ_BOOTMODE);
-	zz_set_selected_bootmode(win,bm); // update this value on write registers...
-	return 	bm;
+   int bm=zz_get_reg(REG_ZZ_BOOTMODE);
+   zz_set_selected_bootmode(win,bm); // update this value on write registers...
+   return    bm;
 }
 
 uint32_t zz_get_usb_status(void)
 {
-	return zz_get_reg(REG_ZZ_USB_STATUS);
+   return zz_get_reg(REG_ZZ_USB_STATUS);
 }
 
 uint32_t zz_get_usb_capacity(void)
 {
-	return zz_get_reg(REG_ZZ_USB_CAPACITY);
+   return zz_get_reg(REG_ZZ_USB_CAPACITY);
 }
 
 void zz_set_jit_enabled(uint16_t enable)
 {
-	zz_set_reg(REG_ZZ_JIT_ENABLE, !!enable);
+   zz_set_reg(REG_ZZ_JIT_ENABLE, !!enable);
 }
 
 void zz_set_scsiboot_enabled(uint16_t enable)
 {
-	zz_set_reg(REG_ZZ_SCSIBOOT_EN, !!enable);
+   zz_set_reg(REG_ZZ_SCSIBOOT_EN, !!enable);
 }
 void zz_set_lpf_freq(uint16_t freq)
 {
-	zz_set_reg(REG_ZZ_AUDIO_PARAM, 9);
-	zz_set_reg(REG_ZZ_AUDIO_VAL, freq);
-//	zz_set_reg(REG_ZZ_AUDIO_PARAM, 0);
+   zz_set_reg(REG_ZZ_AUDIO_PARAM, 9);
+   zz_set_reg(REG_ZZ_AUDIO_VAL, freq);
+//   zz_set_reg(REG_ZZ_AUDIO_PARAM, 0);
 }
 
 void zz_set_cpu_freq(uint16_t freq)
 {
-	zz_set_reg(REG_ZZ_CPU_FREQ, freq);
+   zz_set_reg(REG_ZZ_CPU_FREQ, freq);
 }
 
 void zz_set_selected_bootmode(struct Window* win,uint16_t bm)
 {
-	zz_set_reg(REG_ZZ_BOOTMODE, bm);
-	if (bm==0)
-		GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
+   zz_set_reg(REG_ZZ_BOOTMODE, bm);
+   if (bm==0)
+      GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
 }
 
 void zz_set_apply_bootmode(void)
 {
-	zz_set_reg(REG_ZZ_APPLY_BOOTMODE, 0x55AA);
+   zz_set_reg(REG_ZZ_APPLY_BOOTMODE, 0x55AA);
 }
 
 double t_old=0;
 void refresh_zz_info(struct Window* win)
 {
-	uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
+   uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
 
-	int fwrev_major = fwrev>>8;
-	int fwrev_minor = fwrev&0xff;
-	double t = zz_get_temperature();
-	double vaux = zz_get_voltage_aux();
-	double vint = zz_get_voltage_int();
-	int z9ax_present = zz_get_ax_present();
-	int emulation_used = zz_get_emulation_used();
-	int jit_enable = zz_get_jit_enable();
-	int cpu_freq=zz_get_cpu_freq();
-	int bootmode=zz_get_selected_bootmode(win);
-	int scsiboot=zz_get_scsiboot_enable();
+   int fwrev_major = fwrev>>8;
+   int fwrev_minor = fwrev&0xff;
+   double t = zz_get_temperature();
+   double vaux = zz_get_voltage_aux();
+   double vint = zz_get_voltage_int();
+   int z9ax_present = zz_get_ax_present();
+   int emulation_used = zz_get_emulation_used();
+   int jit_enable = zz_get_jit_enable();
+   int cpu_freq=zz_get_cpu_freq();
+   int bootmode=zz_get_selected_bootmode(win);
+   int scsiboot=zz_get_scsiboot_enable();
 
-	double t_filt;
-	if (t_old==0)
-		t_filt=t;
-	else
-		t_filt=0.1*t+0.9*t_old;
-	t_old=t_filt;
+   double t_filt;
+   if (t_old==0)
+      t_filt=t;
+   else
+      t_filt=0.1*t+0.9*t_old;
+   t_old=t_filt;
 
-	GT_SetGadgetAttrs(gads[MYGAD_CPU_FREQ], win, NULL, GTSL_Level, cpu_freq, TAG_END);
+   GT_SetGadgetAttrs(gads[MYGAD_CPU_FREQ], win, NULL, GTSL_Level, cpu_freq, TAG_END);
 
-	snprintf(txt_buf, 20, "Z3660 %d.%d", fwrev_major, fwrev_minor);
-	GT_SetGadgetAttrs(gads[MYGAD_FWVER], win, NULL, GTST_String, txt_buf, TAG_END);
+   snprintf(txt_buf, 20, "Z3660 %d.%d", fwrev_major, fwrev_minor);
+   GT_SetGadgetAttrs(gads[MYGAD_FWVER], win, NULL, GTST_String, txt_buf, TAG_END);
 
-	snprintf(txt_buf, 20, "%.1f", t_filt);
-	GT_SetGadgetAttrs(gads[MYGAD_TEMP], win, NULL, GTST_String, txt_buf, TAG_END);
+   snprintf(txt_buf, 20, "%.1f", t_filt);
+   GT_SetGadgetAttrs(gads[MYGAD_TEMP], win, NULL, GTST_String, txt_buf, TAG_END);
 
-	snprintf(txt_buf, 20, "%.2f", vaux);
-	GT_SetGadgetAttrs(gads[MYGAD_VAUX], win, NULL, GTST_String, txt_buf, TAG_END);
+   snprintf(txt_buf, 20, "%.2f", vaux);
+   GT_SetGadgetAttrs(gads[MYGAD_VAUX], win, NULL, GTST_String, txt_buf, TAG_END);
 
-	snprintf(txt_buf, 20, "%.2f", vint);
-	GT_SetGadgetAttrs(gads[MYGAD_VINT], win, NULL, GTST_String, txt_buf, TAG_END);
+   snprintf(txt_buf, 20, "%.2f", vint);
+   GT_SetGadgetAttrs(gads[MYGAD_VINT], win, NULL, GTST_String, txt_buf, TAG_END);
 
-	if (emulation_used) {
-		GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, jit_enable, TAG_END);
-	} else {
-		GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, FALSE, TAG_END);
-	}
-	
-	if (bootmode!=0) {
-		GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, scsiboot, TAG_END);
-	} else {
-		GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
-	}
+   if (emulation_used) {
+      GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, jit_enable, TAG_END);
+   } else {
+      GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, FALSE, TAG_END);
+   }
 
-	if (z9ax_present) {
-		GT_SetGadgetAttrs(gads[MYGAD_Z9AX], win, NULL, GTST_String, (STRPTR)"Present", TAG_END);
-	} else {
-		GT_SetGadgetAttrs(gads[MYGAD_Z9AX], win, NULL, GTST_String, (STRPTR)"Not present", TAG_END);
-	}
+   if (bootmode!=0) {
+      GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, scsiboot, TAG_END);
+   } else {
+      GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
+   }
 
-	GT_SetGadgetAttrs(gads[MYGAD_LIST_BOOTMODE], win, NULL, GTLV_Selected, bootmode, TAG_END);
+   if (z9ax_present) {
+      GT_SetGadgetAttrs(gads[MYGAD_Z9AX], win, NULL, GTST_String, (STRPTR)"Present", TAG_END);
+   } else {
+      GT_SetGadgetAttrs(gads[MYGAD_Z9AX], win, NULL, GTST_String, (STRPTR)"Not present", TAG_END);
+   }
+
+   GT_SetGadgetAttrs(gads[MYGAD_LIST_BOOTMODE], win, NULL, GTLV_Selected, bootmode, TAG_END);
 }
 
 ULONG zz_perform_memtest(uint32_t offset)
 {
-	volatile uint32_t* bufferl = (volatile uint32_t*)(zz_cd->cd_BoardAddr+offset);
-	volatile uint16_t* bufferw = (volatile uint16_t*)bufferl;
-	uint32_t i = 0;
-	uint32_t errors = 0;
-	uint32_t rep=1024*256;
+   volatile uint32_t* bufferl = (volatile uint32_t*)(zz_cd->cd_BoardAddr+offset);
+   volatile uint16_t* bufferw = (volatile uint16_t*)bufferl;
+   uint32_t i = 0;
+   uint32_t errors = 0;
+   uint32_t rep=1024*256;
 
-	printf("zz_perform_memtest...\n");
+   printf("zz_perform_memtest...\n");
 
-	for (i=0; i<rep; i++) {
-		uint32_t v2 = 0;
-		uint32_t v = (i%2)?0xaaaa5555:0x33337777;
-		uint16_t v4 = 0;
-		uint16_t v3 = (i%2)?0xffff:0x0000;
+   for (i=0; i<rep; i++) {
+      uint32_t v2 = 0;
+      uint32_t v = (i%2)?0xaaaa5555:0x33337777;
+      uint16_t v4 = 0;
+      uint16_t v3 = (i%2)?0xffff:0x0000;
 
-		if ((i % (32*1024)) == 0) {
-			printf("`-- Test %p %6ld/%ld...\n", zz_cd->cd_BoardAddr+offset, i, rep);
-		}
+      if ((i % (32*1024)) == 0) {
+         printf("`-- Test %p %6ld/%ld...\n", zz_cd->cd_BoardAddr+offset, i, rep);
+      }
 
-		bufferl[i] = v;
-		v2 = bufferl[i];
+      bufferl[i] = v;
+      v2 = bufferl[i];
 
-		if (v!=v2) {
-			printf("32-bit mismatch at %p: 0x%lx should be 0x%lx\n",&bufferl[i],v2,v);
-			errors++;
-		}
+      if (v!=v2) {
+         printf("32-bit mismatch at %p: 0x%lx should be 0x%lx\n",&bufferl[i],v2,v);
+         errors++;
+      }
 
-		bufferw[i] = v3;
-		v4 = bufferw[i];
+      bufferw[i] = v3;
+      v4 = bufferw[i];
 
-		if (v3!=v4) {
-			printf("16-bit mismatch at %p: 0x%x should be 0x%x\n",&bufferw[i],v4,v3);
-			errors++;
-		}
-	}
-	printf("Done. %ld errors.\n", errors);
-	return errors;
+      if (v3!=v4) {
+         printf("16-bit mismatch at %p: 0x%x should be 0x%x\n",&bufferw[i],v4,v3);
+         errors++;
+      }
+   }
+   printf("Done. %ld errors.\n", errors);
+   return errors;
 }
 
 ULONG zz_perform_memtest_rand(uint32_t offset, int rep)
 {
-	uint32_t errors = 0;
-	const int sz = 16;
-	volatile uint16_t* buffer = (volatile uint16_t*)(zz_cd->cd_BoardAddr+offset);
+   uint32_t errors = 0;
+   const int sz = 16;
+   volatile uint16_t* buffer = (volatile uint16_t*)(zz_cd->cd_BoardAddr+offset);
 
-	printf("zz_perform_memtest_rand...\n");
+   printf("zz_perform_memtest_rand...\n");
 
-	uint16_t* tbuf = malloc(2*sz);
-	if (!tbuf) {
-		printf("Error: Could not allocate memory for test buffer\n");
-		return 1;
-	}
+   uint16_t* tbuf = malloc(2*sz);
+   if (!tbuf) {
+      printf("Error: Could not allocate memory for test buffer\n");
+      return 1;
+   }
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test %p %3d/%d...\n", zz_cd->cd_BoardAddr+offset, k, rep);
-		}
-		// step 1: fill buffer with random data
-		for (int i=0; i<sz; i++) {
-			tbuf[sz] = rand();
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test %p %3d/%d...\n", zz_cd->cd_BoardAddr+offset, k, rep);
+      }
+      // step 1: fill buffer with random data
+      for (int i=0; i<sz; i++) {
+         tbuf[sz] = rand();
+      }
 
-		buffer[0] = tbuf[0];
-		buffer[1] = tbuf[1];
-		buffer[2] = tbuf[2];
-		buffer[3] = tbuf[3];
-		buffer[4] = tbuf[4];
-		buffer[5] = tbuf[5];
-		buffer[6] = tbuf[6];
-		buffer[7] = tbuf[7];
-		buffer[8] = tbuf[8];
-		buffer[9] = tbuf[9];
-		buffer[10] = tbuf[10];
-		buffer[11] = tbuf[11];
-		buffer[12] = tbuf[12];
-		buffer[13] = tbuf[13];
-		buffer[14] = tbuf[14];
-		buffer[15] = tbuf[15];
+      buffer[0] = tbuf[0];
+      buffer[1] = tbuf[1];
+      buffer[2] = tbuf[2];
+      buffer[3] = tbuf[3];
+      buffer[4] = tbuf[4];
+      buffer[5] = tbuf[5];
+      buffer[6] = tbuf[6];
+      buffer[7] = tbuf[7];
+      buffer[8] = tbuf[8];
+      buffer[9] = tbuf[9];
+      buffer[10] = tbuf[10];
+      buffer[11] = tbuf[11];
+      buffer[12] = tbuf[12];
+      buffer[13] = tbuf[13];
+      buffer[14] = tbuf[14];
+      buffer[15] = tbuf[15];
 
-		for (int i=0; i<sz; i++) {
-			uint16_t v = buffer[i];
-			if (v != tbuf[i]) {
-				if (errors<100) printf("Mismatch at %p: 0x%x should be 0x%x\n",&buffer[i],v,tbuf[i]);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint16_t v = buffer[i];
+         if (v != tbuf[i]) {
+            if (errors<100) printf("Mismatch at %p: 0x%x should be 0x%x\n",&buffer[i],v,tbuf[i]);
+            errors++;
+         }
+      }
+   }
 
-	free(tbuf);
+   free(tbuf);
 
-	printf("Done. %ld errors.\n", errors);
-	return errors;
+   printf("Done. %ld errors.\n", errors);
+   return errors;
 }
 
 ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 {
-	unsigned long errors = 0;
-	const int sz = 16;
-	volatile uint32_t * buffer32 = (volatile uint32_t *)(offset);
-	volatile uint16_t * buffer16 = (volatile uint16_t *)(offset);
-	volatile uint8_t  * buffer8  = (volatile uint8_t  *)(offset);
+   unsigned long errors = 0;
+   const int sz = 16;
+   volatile uint32_t * buffer32 = (volatile uint32_t *)(offset);
+   volatile uint16_t * buffer16 = (volatile uint16_t *)(offset);
+   volatile uint8_t  * buffer8  = (volatile uint8_t  *)(offset);
 
-	printf("zz_perform_memtest... address 0x%lx write32 read32\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write32 read32\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer32)+i;
-			uint32_t value = rand();
-			// write32
-			*((uint32_t *)dir)=value;
-			//read32
-			uint32_t v = *((uint32_t *)dir);
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer32)+i;
+         uint32_t value = rand();
+         // write32
+         *((uint32_t *)dir)=value;
+         //read32
+         uint32_t v = *((uint32_t *)dir);
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write32 read16\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write32 read16\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer32)+i;
-			uint32_t value = rand();
-			// write32
-			*((uint32_t *)dir)=value;
-			//read16
-			uint16_t vlow  = *((uint16_t *)dir+1);
-			uint16_t vhigh = *((uint16_t *)dir);
-			uint32_t v=(vhigh<<16)|vlow;
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer32)+i;
+         uint32_t value = rand();
+         // write32
+         *((uint32_t *)dir)=value;
+         //read16
+         uint16_t vlow  = *((uint16_t *)dir+1);
+         uint16_t vhigh = *((uint16_t *)dir);
+         uint32_t v=(vhigh<<16)|vlow;
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write32 read8\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write32 read8\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer32)+i;
-			uint32_t value = rand();
-			// write32
-			*((uint32_t *)dir)=value;
-			//read8
-			uint32_t vhh = *((uint8_t *)dir);
-			uint32_t vlh = *((uint8_t *)dir+2);
-			uint32_t vhl = *((uint8_t *)dir+1);
-			uint32_t vll = *((uint8_t *)dir+3);
-			uint32_t v=(vhh<<24)|(vhl<<16)|(vlh<<8)|vll;
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer32)+i;
+         uint32_t value = rand();
+         // write32
+         *((uint32_t *)dir)=value;
+         //read8
+         uint32_t vhh = *((uint8_t *)dir);
+         uint32_t vlh = *((uint8_t *)dir+2);
+         uint32_t vhl = *((uint8_t *)dir+1);
+         uint32_t vll = *((uint8_t *)dir+3);
+         uint32_t v=(vhh<<24)|(vhl<<16)|(vlh<<8)|vll;
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write16 read32\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write16 read32\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer16)+i;
-			uint16_t value1 = rand();
-			uint16_t value2 = rand();
-			uint32_t value=(value1<<16)|value2;
-			// write16
-			*((uint16_t *)dir+1)=value2;
-			*((uint16_t *)dir)=value1;
-			//read32
-			uint32_t v = *((uint32_t *)dir);
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer16)+i;
+         uint16_t value1 = rand();
+         uint16_t value2 = rand();
+         uint32_t value=(value1<<16)|value2;
+         // write16
+         *((uint16_t *)dir+1)=value2;
+         *((uint16_t *)dir)=value1;
+         //read32
+         uint32_t v = *((uint32_t *)dir);
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write16 read16\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write16 read16\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer16)+i;
-			uint16_t value = rand();
-			// write16
-			*((uint16_t *)dir)=value;
-			//read16
-			uint16_t v = *((uint16_t *)dir);
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer16)+i;
+         uint16_t value = rand();
+         // write16
+         *((uint16_t *)dir)=value;
+         //read16
+         uint16_t v = *((uint16_t *)dir);
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write16 read8\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write16 read8\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer16)+i;
-			uint16_t value = rand();
-			// write16
-			*((uint16_t *)dir)=value;
-			//read8
-			uint8_t vl = *((uint8_t *)dir+1);
-			uint8_t vh = *((uint8_t *)dir);
-			uint16_t v=(vh<<8)|vl;
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer16)+i;
+         uint16_t value = rand();
+         // write16
+         *((uint16_t *)dir)=value;
+         //read8
+         uint8_t vl = *((uint8_t *)dir+1);
+         uint8_t vh = *((uint8_t *)dir);
+         uint16_t v=(vh<<8)|vl;
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write8 read32\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write8 read32\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer8)+i;
-			uint8_t value1 = rand();
-			uint8_t value2 = rand();
-			uint8_t value3 = rand();
-			uint8_t value4 = rand();
-			uint32_t value=(value1<<24)|(value2<<16)|(value3<<8)|value4;
-			// write8
-			*((uint8_t *)dir)=value1;
-			*((uint8_t *)dir+2)=value3;
-			*((uint8_t *)dir+1)=value2;
-			*((uint8_t *)dir+3)=value4;
-			//read32
-			uint32_t v = *((uint32_t *)dir);
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer8)+i;
+         uint8_t value1 = rand();
+         uint8_t value2 = rand();
+         uint8_t value3 = rand();
+         uint8_t value4 = rand();
+         uint32_t value=(value1<<24)|(value2<<16)|(value3<<8)|value4;
+         // write8
+         *((uint8_t *)dir)=value1;
+         *((uint8_t *)dir+2)=value3;
+         *((uint8_t *)dir+1)=value2;
+         *((uint8_t *)dir+3)=value4;
+         //read32
+         uint32_t v = *((uint32_t *)dir);
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write8 read16\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write8 read16\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer8)+i;
-			uint8_t value1 = rand();
-			uint8_t value2 = rand();
-			uint16_t value=(value1<<8)|value2;
-			// write8
-			*((uint8_t *)dir+1)=value2;
-			*((uint8_t *)dir)=value1;
-			//read16
-			uint16_t v = *((uint16_t *)dir);
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer8)+i;
+         uint8_t value1 = rand();
+         uint8_t value2 = rand();
+         uint16_t value=(value1<<8)|value2;
+         // write8
+         *((uint8_t *)dir+1)=value2;
+         *((uint8_t *)dir)=value1;
+         //read16
+         uint16_t v = *((uint16_t *)dir);
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("zz_perform_memtest... address 0x%lx write8 read8\n",offset);
+   printf("zz_perform_memtest... address 0x%lx write8 read8\n",offset);
 
-	for (int k = 0; k < rep; k++) {
-		if ((k % 128) == 0) {
-			printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-		}
+   for (int k = 0; k < rep; k++) {
+      if ((k % 128) == 0) {
+         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+      }
 
-		for (int i=0; i<sz; i++) {
-			uint32_t dir=(uint32_t)(buffer8)+i;
-			uint8_t value = rand();
-			// write8
-			*((uint8_t *)dir)=value;
-			//read16
-			uint8_t v = *((uint8_t *)dir);
-			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%02x should be 0x%02x\n",(uint32_t *)dir,v,value);
-				errors++;
-			}
-		}
-	}
+      for (int i=0; i<sz; i++) {
+         uint32_t dir=(uint32_t)(buffer8)+i;
+         uint8_t value = rand();
+         // write8
+         *((uint8_t *)dir)=value;
+         //read16
+         uint8_t v = *((uint8_t *)dir);
+         if (v != value) {
+            if (errors<100) printf("Mismatch at %p: 0x%02x should be 0x%02x\n",(uint32_t *)dir,v,value);
+            errors++;
+         }
+      }
+   }
 
-	printf("Done. %ld errors.\n", errors);
-	return errors;
+   printf("Done. %ld errors.\n", errors);
+   return errors;
 }
 
 ULONG zz_perform_memtest_fpgareg() {
-	volatile uint16_t* d1 = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1030);
-	volatile uint16_t* d2 = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1034);
-	volatile uint16_t* dr = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1030);
+   volatile uint16_t* d1 = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1030);
+   volatile uint16_t* d2 = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1034);
+   volatile uint16_t* dr = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1030);
 
-	printf("zz_perform_memtest_fpgareg...\n");
+   printf("zz_perform_memtest_fpgareg...\n");
 
-	*d2 = 1;
-	for (int i = 0; i < 0x100000*2; i++) {
-		*d1 = i;
-	}
+   *d2 = 1;
+   for (int i = 0; i < 0x100000*2; i++) {
+      *d1 = i;
+   }
 
-	printf("Done. Result: %x\n", *dr);
+   printf("Done. Result: %x\n", *dr);
 
-	return 0;
+   return 0;
 }
 
 ULONG zz_perform_memtest_multi() {
-	uint32_t offset = 0x100000;
-	zz_perform_memtest(offset);
-	zz_perform_memtest_rand(offset, 1024);
-	printf("Testing CPU access to Z3660 Memory...\n");
-	zz_perform_memtest_cross((unsigned long)zz_cd->cd_BoardAddr+offset, 1024);
-	printf("Testing CPU access to CHIP...\n");
-	zz_perform_memtest_cross(offset, 1024);
-	//zz_perform_memtest_fpgareg();
+   uint32_t offset = 0x100000;
+   zz_perform_memtest(offset);
+   zz_perform_memtest_rand(offset, 1024);
+   printf("Testing CPU access to Z3660 Memory...\n");
+   zz_perform_memtest_cross((unsigned long)zz_cd->cd_BoardAddr+offset, 1024);
+   printf("Testing CPU access to CHIP...\n");
+   zz_perform_memtest_cross(offset, 1024);
+   //zz_perform_memtest_fpgareg();
 
-	return 0;
+   return 0;
 }
 
 VOID handleGadgetEvent(struct Window *win, struct Gadget *gad, ULONG code)
 {
-	switch (gad->GadgetID)
-	{
-		case MYGAD_BTN_REFRESH: {
-			refresh_zz_info(win);
-			break;
-		}
-		case MYGAD_BTN_TEST: {
-			zz_perform_memtest_multi();
-			break;
-		}
-		case MYGAD_JIT: {
-			if(zz_get_emulation_used())
-				zz_set_jit_enabled(code);
-			else
-				GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, FALSE, TAG_END);
-//				refresh_zz_info(win);
-			break;
-		}
-		case MYGAD_LPF: {
-			zz_set_lpf_freq(code);
-			break;
-		}
-		case MYGAD_CPU_FREQ: {
-			zz_set_cpu_freq(code);
-			break;
-		}
-		case MYGAD_LIST_BOOTMODE: {
-			zz_set_selected_bootmode(win,code);
-			break;
-		}
-		case MYGAD_BTN_APPLY_BOOTMODE: {
-			zz_set_apply_bootmode();
-			break;
-		}
-		case MYGAD_SCSIBOOT: {
-			int bootmode=zz_get_selected_bootmode(win);
-			if(bootmode!=0)
-				zz_set_scsiboot_enabled(code);
-			else
-				GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
-			break;
-		}
-	}
+   switch (gad->GadgetID)
+   {
+      case MYGAD_BTN_REFRESH: {
+         refresh_zz_info(win);
+         break;
+      }
+      case MYGAD_BTN_TEST: {
+         zz_perform_memtest_multi();
+         break;
+      }
+      case MYGAD_JIT: {
+         if(zz_get_emulation_used())
+            zz_set_jit_enabled(code);
+         else
+            GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, FALSE, TAG_END);
+//            refresh_zz_info(win);
+         break;
+      }
+      case MYGAD_LPF: {
+         zz_set_lpf_freq(code);
+         break;
+      }
+      case MYGAD_CPU_FREQ: {
+// It doesn't work well...
+//         zz_set_cpu_freq(code);
+         break;
+      }
+      case MYGAD_LIST_BOOTMODE: {
+         zz_set_selected_bootmode(win,code);
+         break;
+      }
+      case MYGAD_BTN_APPLY_BOOTMODE: {
+         zz_set_apply_bootmode();
+         break;
+      }
+      case MYGAD_SCSIBOOT: {
+         int bootmode=zz_get_selected_bootmode(win);
+         if(bootmode!=0)
+            zz_set_scsiboot_enabled(code);
+         else
+            GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
+         break;
+      }
+   }
 }
 
 struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topborder)
 {
-	struct NewGadget ng;
-	struct Gadget *gad;
+   struct NewGadget ng;
+   struct Gadget *gad;
 
-	gad = CreateContext(glistptr);
+   gad = CreateContext(glistptr);
 
-	ng.ng_LeftEdge   = 20;
-	ng.ng_TopEdge    = 190+topborder;
-	ng.ng_Width      = 100;
-	ng.ng_Height     = 14;
-	ng.ng_GadgetText = (STRPTR)"Bus Test";
-	ng.ng_TextAttr   = &Topaz80;
-	ng.ng_VisualInfo = vi;
-	ng.ng_GadgetID   = MYGAD_BTN_TEST;
-	ng.ng_Flags      = 0;
+   ng.ng_LeftEdge   = 20;
+   ng.ng_TopEdge    = 190+topborder;
+   ng.ng_Width      = 100;
+   ng.ng_Height     = 14;
+   ng.ng_GadgetText = (STRPTR)"Bus Test";
+   ng.ng_TextAttr   = &Topaz80;
+   ng.ng_VisualInfo = vi;
+   ng.ng_GadgetID   = MYGAD_BTN_TEST;
+   ng.ng_Flags      = 0;
 
-	gads[MYGAD_BTN_REFRESH] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
-										TAG_END);
+   gads[MYGAD_BTN_REFRESH] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
+                              TAG_END);
 
-	ng.ng_LeftEdge   = 160;
-	ng.ng_GadgetID   = MYGAD_BTN_REFRESH;
-	ng.ng_GadgetText = (STRPTR)"Refresh";
+   ng.ng_LeftEdge   = 160;
+   ng.ng_GadgetID   = MYGAD_BTN_REFRESH;
+   ng.ng_GadgetText = (STRPTR)"Refresh";
 
-	gads[MYGAD_BTN_TEST] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
-										TAG_END);
+   gads[MYGAD_BTN_TEST] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
+                              TAG_END);
 
-	ng.ng_LeftEdge   = 160;
-	ng.ng_TopEdge    = 20+topborder;
-	ng.ng_GadgetID   = MYGAD_CPU_FREQ;
-	ng.ng_GadgetText = (STRPTR)"CPU Frequency";
+   ng.ng_LeftEdge   = 160;
+   ng.ng_TopEdge    = 20+topborder;
+   ng.ng_GadgetID   = MYGAD_CPU_FREQ;
+   ng.ng_GadgetText = (STRPTR)"CPU Frequency";
 
-	gads[MYGAD_CPU_FREQ] = gad = CreateGadget(SLIDER_KIND, gad, &ng,
-										GTSL_Min, 50,
-										GTSL_Max, 100,
-										GTSL_Level, 100,
-										GTSL_LevelFormat, "%ld MHz",
-										GTSL_MaxLevelLen, 10,
-										GTSL_LevelPlace, PLACETEXT_ABOVE,
-										TAG_END);
+   gads[MYGAD_CPU_FREQ] = gad = CreateGadget(SLIDER_KIND, gad, &ng,
+                              GTSL_Min, 50,
+                              GTSL_Max, 100,
+                              GTSL_Level, 100,
+                              GTSL_LevelFormat, "%ld MHz",
+                              GTSL_MaxLevelLen, 10,
+                              GTSL_LevelPlace, PLACETEXT_ABOVE,
+                              TAG_END);
 
-//	gads[MYGAD_ZORROVER] = gad = CreateGadget(INTEGER_KIND, gad, &ng,
-//										GTIN_Number, 0,
-//										TAG_END);
+//   gads[MYGAD_ZORROVER] = gad = CreateGadget(INTEGER_KIND, gad, &ng,
+//                              GTIN_Number, 0,
+//                              TAG_END);
 
-	ng.ng_TopEdge    = 40+topborder;
-	ng.ng_GadgetID   = MYGAD_FWVER;
-	ng.ng_GadgetText = (STRPTR)"Firmware Version";
+   ng.ng_TopEdge    = 40+topborder;
+   ng.ng_GadgetID   = MYGAD_FWVER;
+   ng.ng_GadgetText = (STRPTR)"Firmware Version";
 
-	gads[MYGAD_FWVER] = gad = CreateGadget(STRING_KIND, gad, &ng,
-										GTST_String, "",
-										TAG_END);
+   gads[MYGAD_FWVER] = gad = CreateGadget(STRING_KIND, gad, &ng,
+                              GTST_String, "",
+                              TAG_END);
 
-	ng.ng_TopEdge    = 60+topborder;
-	ng.ng_GadgetID   = MYGAD_TEMP;
-	ng.ng_GadgetText = (STRPTR)"Core Temperature C";
+   ng.ng_TopEdge    = 60+topborder;
+   ng.ng_GadgetID   = MYGAD_TEMP;
+   ng.ng_GadgetText = (STRPTR)"Core Temperature C";
 
-	gads[MYGAD_TEMP] = gad = CreateGadget(STRING_KIND, gad, &ng,
-										GTST_String, "",
-										TAG_END);
+   gads[MYGAD_TEMP] = gad = CreateGadget(STRING_KIND, gad, &ng,
+                              GTST_String, "",
+                              TAG_END);
 
-	ng.ng_TopEdge    = 80+topborder;
-	ng.ng_GadgetID   = MYGAD_VAUX;
-	ng.ng_GadgetText = (STRPTR)"Aux Voltage V";
+   ng.ng_TopEdge    = 80+topborder;
+   ng.ng_GadgetID   = MYGAD_VAUX;
+   ng.ng_GadgetText = (STRPTR)"Aux Voltage V";
 
-	gads[MYGAD_VAUX] = gad = CreateGadget(STRING_KIND, gad, &ng,
-										GTST_String, "",
-										TAG_END);
+   gads[MYGAD_VAUX] = gad = CreateGadget(STRING_KIND, gad, &ng,
+                              GTST_String, "",
+                              TAG_END);
 
-	ng.ng_TopEdge    = 100+topborder;
-	ng.ng_GadgetID   = MYGAD_VINT;
-	ng.ng_GadgetText = (STRPTR)"Core Voltage V";
+   ng.ng_TopEdge    = 100+topborder;
+   ng.ng_GadgetID   = MYGAD_VINT;
+   ng.ng_GadgetText = (STRPTR)"Core Voltage V";
 
-	gads[MYGAD_VINT] = gad = CreateGadget(STRING_KIND, gad, &ng,
-										GTST_String, "",
-										TAG_END);
+   gads[MYGAD_VINT] = gad = CreateGadget(STRING_KIND, gad, &ng,
+                              GTST_String, "",
+                              TAG_END);
 
-	ng.ng_TopEdge    = 120+topborder;
-	ng.ng_GadgetID   = MYGAD_Z9AX;
-	ng.ng_GadgetText = (STRPTR)"Z3660 AHI";
+   ng.ng_TopEdge    = 120+topborder;
+   ng.ng_GadgetID   = MYGAD_Z9AX;
+   ng.ng_GadgetText = (STRPTR)"Z3660 AHI";
 
-	gads[MYGAD_Z9AX] = gad = CreateGadget(STRING_KIND, gad, &ng,
-										GTST_String, "",
-										TAG_END);
+   gads[MYGAD_Z9AX] = gad = CreateGadget(STRING_KIND, gad, &ng,
+                              GTST_String, "",
+                              TAG_END);
 
-	ng.ng_TopEdge    = 140+topborder;
-	ng.ng_GadgetID   = MYGAD_JIT;
-	ng.ng_GadgetText = (STRPTR)"JIT enabled";
+   ng.ng_TopEdge    = 140+topborder;
+   ng.ng_GadgetID   = MYGAD_JIT;
+   ng.ng_GadgetText = (STRPTR)"JIT enabled";
 
-	gads[MYGAD_JIT]  = gad = CreateGadget(CHECKBOX_KIND, gad, &ng,
-	                                	GTCB_Scaled, FALSE, TAG_END);
+   gads[MYGAD_JIT]  = gad = CreateGadget(CHECKBOX_KIND, gad, &ng,
+                                      GTCB_Scaled, FALSE, TAG_END);
 
-	ng.ng_TopEdge    = 160+topborder;
-	ng.ng_GadgetID   = MYGAD_LPF;
-	ng.ng_GadgetText = (STRPTR)"Audio Lowpass";
+   ng.ng_TopEdge    = 160+topborder;
+   ng.ng_GadgetID   = MYGAD_LPF;
+   ng.ng_GadgetText = (STRPTR)"Audio Lowpass";
 
-	gads[MYGAD_LPF]  = gad = CreateGadget(SLIDER_KIND, gad, &ng,
-										GTSL_Min, 0,
-										GTSL_Max, 23900,
-										GTSL_Level, 23900,
-										GTSL_LevelFormat, "%ld Hz",
-										GTSL_MaxLevelLen, 10,
-										GTSL_LevelPlace, PLACETEXT_BELOW,
-										TAG_END);
+   gads[MYGAD_LPF]  = gad = CreateGadget(SLIDER_KIND, gad, &ng,
+                              GTSL_Min, 0,
+                              GTSL_Max, 23900,
+                              GTSL_Level, 23900,
+                              GTSL_LevelFormat, "%ld Hz",
+                              GTSL_MaxLevelLen, 10,
+                              GTSL_LevelPlace, PLACETEXT_BELOW,
+                              TAG_END);
 
-	ng.ng_LeftEdge   = 280;
-	ng.ng_TopEdge    = 20+topborder;
-	ng.ng_Width      = 20*8;
-	ng.ng_Height     = 10*NUM_BOOTMODES+2;
-	ng.ng_GadgetID   = MYGAD_LIST_BOOTMODE;
-	ng.ng_GadgetText = (STRPTR)"Boot Mode";
-	struct List *dlist;
-	dlist = AllocMem(sizeof(struct List), MEMF_CLEAR);
-	NewList(dlist);
-	for(int i=0;i<NUM_BOOTMODES;i++)
-	{
+   ng.ng_LeftEdge   = 280;
+   ng.ng_TopEdge    = 20+topborder;
+   ng.ng_Width      = 20*8;
+   ng.ng_Height     = 10*NUM_BOOTMODES+2;
+   ng.ng_GadgetID   = MYGAD_LIST_BOOTMODE;
+   ng.ng_GadgetText = (STRPTR)"Boot Mode";
+   struct List *dlist;
+   dlist = AllocMem(sizeof(struct List), MEMF_CLEAR);
+   NewList(dlist);
+   for(int i=0;i<NUM_BOOTMODES;i++)
+   {
         dnode[i].node.ln_Name = AllocMem(strlen(bootmode_names[i]) + 1, MEMF_CLEAR);
         strcpy(dnode[i].node.ln_Name, bootmode_names[i]);
-		AddTail(dlist, (struct Node *) &dnode[i]);
-	}
-	int selected_option=0;
-	gads[MYGAD_LIST_BOOTMODE] = gad = CreateGadget(LISTVIEW_KIND, gad, &ng,
-										GTLV_Labels, dlist,
-										GTLV_Selected, selected_option,
-										GTLV_ScrollWidth, 0,
-										GTLV_ShowSelected, NULL,
-										TAG_END);
+      AddTail(dlist, (struct Node *) &dnode[i]);
+   }
+   int selected_option=0;
+   gads[MYGAD_LIST_BOOTMODE] = gad = CreateGadget(LISTVIEW_KIND, gad, &ng,
+                              GTLV_Labels, dlist,
+                              GTLV_Selected, selected_option,
+                              GTLV_ScrollWidth, 0,
+                              GTLV_ShowSelected, NULL,
+                              TAG_END);
 
-	ng.ng_TopEdge    = 20+topborder+10*NUM_BOOTMODES+2;
-	ng.ng_LeftEdge   = 280+14*8+(20*8-(100))/2;
-	ng.ng_Height     = 14;
-	ng.ng_Width      = 100;
-	ng.ng_GadgetID   = MYGAD_SCSIBOOT;
-	ng.ng_GadgetText = (STRPTR)"SCSI BOOT enabled";
+   ng.ng_TopEdge    = 20+topborder+10*NUM_BOOTMODES+2;
+   ng.ng_LeftEdge   = 280+14*8+(20*8-(100))/2;
+   ng.ng_Height     = 14;
+   ng.ng_Width      = 100;
+   ng.ng_GadgetID   = MYGAD_SCSIBOOT;
+   ng.ng_GadgetText = (STRPTR)"SCSI BOOT enabled";
 
-	gads[MYGAD_SCSIBOOT] = gad = CreateGadget(CHECKBOX_KIND, gad, &ng,
-	                                	GTCB_Scaled, FALSE, TAG_END);
+   gads[MYGAD_SCSIBOOT] = gad = CreateGadget(CHECKBOX_KIND, gad, &ng,
+                                      GTCB_Scaled, FALSE, TAG_END);
 
-	ng.ng_TopEdge    = 40+topborder+10*NUM_BOOTMODES+2;
-	ng.ng_LeftEdge   = 280+(20*8-(15*8+10))/2;
-	ng.ng_Height     = 14;
-	ng.ng_Width      = 15*8+10;
-	ng.ng_GadgetID   = MYGAD_BTN_APPLY_BOOTMODE;
-	ng.ng_GadgetText = (STRPTR)"Apply Boot Mode";
+   ng.ng_TopEdge    = 40+topborder+10*NUM_BOOTMODES+2;
+   ng.ng_LeftEdge   = 280+(20*8-(15*8+10))/2;
+   ng.ng_Height     = 14;
+   ng.ng_Width      = 15*8+10;
+   ng.ng_GadgetID   = MYGAD_BTN_APPLY_BOOTMODE;
+   ng.ng_GadgetText = (STRPTR)"Apply Boot Mode";
 
-	gads[MYGAD_BTN_TEST] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
-										TAG_END);
+   gads[MYGAD_BTN_TEST] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
+                              TAG_END);
 
-	return(gad);
+   return(gad);
 }
 
 VOID process_window_events(struct Window *mywin)
 {
-	struct IntuiMessage *imsg;
-	ULONG imsgClass;
-	UWORD imsgCode;
-	struct Gadget *gad;
-	BOOL terminated = FALSE;
+   struct IntuiMessage *imsg;
+   ULONG imsgClass;
+   UWORD imsgCode;
+   struct Gadget *gad;
+   BOOL terminated = FALSE;
 
-	/*if((timerport = CreateMsgPort())) {
-		if((timerio=(struct timerequest *)CreateIORequest(timerport, sizeof(struct timerequest)))) {
-			if(OpenDevice((STRPTR) TIMERNAME, UNIT_MICROHZ, (struct IORequest *) timerio,0) == 0) {
-				TimerBase = (struct Library *)timerio->tr_node.io_Device;
-			}
-			else {
-				DeleteIORequest((struct IORequest *)timerio);
-				DeleteMsgPort(timerport);
-			}
-		}
-		else {
-			DeleteMsgPort(timerport);
-		}
-	}
+   /*if((timerport = CreateMsgPort())) {
+      if((timerio=(struct timerequest *)CreateIORequest(timerport, sizeof(struct timerequest)))) {
+         if(OpenDevice((STRPTR) TIMERNAME, UNIT_MICROHZ, (struct IORequest *) timerio,0) == 0) {
+            TimerBase = (struct Library *)timerio->tr_node.io_Device;
+         }
+         else {
+            DeleteIORequest((struct IORequest *)timerio);
+            DeleteMsgPort(timerport);
+         }
+      }
+      else {
+         DeleteMsgPort(timerport);
+      }
+   }
 
-	if(!TimerBase) {
-		errorMessage("Can't open timer.device");
-		return;
-	}
+   if(!TimerBase) {
+      errorMessage("Can't open timer.device");
+      return;
+   }
 
-	timerio->tr_node.io_Command = TR_ADDREQUEST;
-	timerio->tr_time.tv_secs = 1;
-	timerio->tr_time.tv_micro = 0;
-	SendIO((struct IORequest *) timerio);*/
+   timerio->tr_node.io_Command = TR_ADDREQUEST;
+   timerio->tr_time.tv_secs = 1;
+   timerio->tr_time.tv_micro = 0;
+   SendIO((struct IORequest *) timerio);*/
 
-	while (!terminated) {
-		Wait ((1U << mywin->UserPort->mp_SigBit)); // | (1U << timerport->mp_SigBit) );
+   while (!terminated) {
+      Wait ((1U << mywin->UserPort->mp_SigBit)); // | (1U << timerport->mp_SigBit) );
 
-		/*if ((!terminated) && (1U << timerport->mp_SigBit)) {
-			refresh_zz_info(mywin);
-		}*/
+      /*if ((!terminated) && (1U << timerport->mp_SigBit)) {
+         refresh_zz_info(mywin);
+      }*/
 
-		while ((!terminated) && (imsg = GT_GetIMsg(mywin->UserPort))) {
-			gad = (struct Gadget *)imsg->IAddress;
+      while ((!terminated) && (imsg = GT_GetIMsg(mywin->UserPort))) {
+         gad = (struct Gadget *)imsg->IAddress;
 
-			imsgClass = imsg->Class;
-			imsgCode = imsg->Code;
+         imsgClass = imsg->Class;
+         imsgCode = imsg->Code;
 
-			GT_ReplyIMsg(imsg);
+         GT_ReplyIMsg(imsg);
 
-			switch (imsgClass) {
-				/* GadTools puts the gadget address into IAddress of IDCMP_MOUSEMOVE
-				** messages.	This is NOT true for standard Intuition messages,
-				** but is an added feature of GadTools.
-				*/
-				case IDCMP_GADGETDOWN:
-				case IDCMP_MOUSEMOVE:
-				case IDCMP_GADGETUP:
-					handleGadgetEvent(mywin, gad, imsgCode);
-					break;
-				case IDCMP_VANILLAKEY:
-					//handleVanillaKey(mywin, imsgCode, slider_level);
-					break;
-				case IDCMP_CLOSEWINDOW:
-					terminated = TRUE;
-					break;
-				case IDCMP_REFRESHWINDOW:
-					/* With GadTools, the application must use GT_BeginRefresh()
-					** where it would normally have used BeginRefresh()
-					*/
-					GT_BeginRefresh(mywin);
-					GT_EndRefresh(mywin, TRUE);
-					break;
-			}
-		}
+         switch (imsgClass) {
+            /* GadTools puts the gadget address into IAddress of IDCMP_MOUSEMOVE
+            ** messages.   This is NOT true for standard Intuition messages,
+            ** but is an added feature of GadTools.
+            */
+            case IDCMP_GADGETDOWN:
+            case IDCMP_MOUSEMOVE:
+            case IDCMP_GADGETUP:
+               handleGadgetEvent(mywin, gad, imsgCode);
+               break;
+            case IDCMP_VANILLAKEY:
+               //handleVanillaKey(mywin, imsgCode, slider_level);
+               break;
+            case IDCMP_CLOSEWINDOW:
+               terminated = TRUE;
+               break;
+            case IDCMP_REFRESHWINDOW:
+               /* With GadTools, the application must use GT_BeginRefresh()
+               ** where it would normally have used BeginRefresh()
+               */
+               GT_BeginRefresh(mywin);
+               GT_EndRefresh(mywin, TRUE);
+               break;
+         }
+      }
 
-		/*timerio->tr_node.io_Command = TR_ADDREQUEST;
-		timerio->tr_time.tv_secs = 1;
-		timerio->tr_time.tv_micro = 0;
-		SendIO((struct IORequest *) timerio);*/
-	}
+      /*timerio->tr_node.io_Command = TR_ADDREQUEST;
+      timerio->tr_time.tv_secs = 1;
+      timerio->tr_time.tv_micro = 0;
+      SendIO((struct IORequest *) timerio);*/
+   }
 
-	/*if(TimerBase) {
-		WaitIO((struct IORequest *) timerio);
-		CloseDevice((struct IORequest *) timerio);
-		DeleteIORequest((struct IORequest *) timerio);
-		DeleteMsgPort(timerport);
-		TimerBase = NULL;
-	}*/
+   /*if(TimerBase) {
+      WaitIO((struct IORequest *) timerio);
+      CloseDevice((struct IORequest *) timerio);
+      DeleteIORequest((struct IORequest *) timerio);
+      DeleteMsgPort(timerport);
+      TimerBase = NULL;
+   }*/
 }
 
 VOID gadtoolsWindow(VOID) {
-	struct TextFont *font;
-	struct Screen		*mysc;
-	struct Window		*mywin;
-	struct Gadget		*glist;
-	void						*vi;
-	UWORD						topborder;
+   struct TextFont *font;
+   struct Screen      *mysc;
+   struct Window      *mywin;
+   struct Gadget      *glist;
+   void                  *vi;
+   UWORD                  topborder;
 
-	if (NULL == (font = OpenFont(&Topaz80)))
-		errorMessage("Failed to open Topaz 80");
-	else {
-		if (NULL == (mysc = LockPubScreen(NULL)))
-			errorMessage("Couldn't lock default public screen");
-		else {
-			if (NULL == (vi = (void *)GetVisualInfo(mysc, TAG_END)))
-				errorMessage("GetVisualInfo() failed");
-			else {
-				topborder = mysc->WBorTop + (mysc->Font->ta_YSize + 1);
+   if (NULL == (font = OpenFont(&Topaz80)))
+      errorMessage("Failed to open Topaz 80");
+   else {
+      if (NULL == (mysc = LockPubScreen(NULL)))
+         errorMessage("Couldn't lock default public screen");
+      else {
+         if (NULL == (vi = (void *)GetVisualInfo(mysc, TAG_END)))
+            errorMessage("GetVisualInfo() failed");
+         else {
+            topborder = mysc->WBorTop + (mysc->Font->ta_YSize + 1);
 
-				if (NULL == createAllGadgets(&glist, vi, topborder))
-					errorMessage("createAllGadgets() failed");
-				else {
-					if (NULL == (mywin = OpenWindowTags(NULL,
-							WA_Title,              "Z3660 ZTop 1.13",
-							WA_Gadgets,    glist,   WA_AutoAdjust,     TRUE,
-							WA_Width,        460,   WA_MinWidth,        460,
-							WA_InnerHeight,  220,   WA_MinHeight,       220,
-							WA_DragBar,     TRUE,   WA_DepthGadget,    TRUE,
-							WA_Activate,    TRUE,   WA_CloseGadget,    TRUE,
-							WA_SizeGadget, FALSE,   WA_SimpleRefresh,  TRUE,
-							WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_REFRESHWINDOW |
-							IDCMP_VANILLAKEY | SLIDERIDCMP | STRINGIDCMP |
-							BUTTONIDCMP,
-							WA_PubScreen, mysc,
-							TAG_END))) {
-						errorMessage("OpenWindow() failed");
-					} else {
-						refresh_zz_info(mywin);
-						GT_RefreshWindow(mywin, NULL);
-						process_window_events(mywin);
-						CloseWindow(mywin);
-					}
-				}
+            if (NULL == createAllGadgets(&glist, vi, topborder))
+               errorMessage("createAllGadgets() failed");
+            else {
+               if (NULL == (mywin = OpenWindowTags(NULL,
+                     WA_Title,              "Z3660 ZTop 1.13",
+                     WA_Gadgets,    glist,   WA_AutoAdjust,     TRUE,
+                     WA_Width,        460,   WA_MinWidth,        460,
+                     WA_InnerHeight,  220,   WA_MinHeight,       220,
+                     WA_DragBar,     TRUE,   WA_DepthGadget,    TRUE,
+                     WA_Activate,    TRUE,   WA_CloseGadget,    TRUE,
+                     WA_SizeGadget, FALSE,   WA_SimpleRefresh,  TRUE,
+                     WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_REFRESHWINDOW |
+                     IDCMP_VANILLAKEY | SLIDERIDCMP | STRINGIDCMP |
+                     BUTTONIDCMP,
+                     WA_PubScreen, mysc,
+                     TAG_END))) {
+                  errorMessage("OpenWindow() failed");
+               } else {
+                  refresh_zz_info(mywin);
+                  GT_RefreshWindow(mywin, NULL);
+                  process_window_events(mywin);
+                  CloseWindow(mywin);
+               }
+            }
 
-				FreeGadgets(glist);
-				FreeVisualInfo(vi);
-			}
-			UnlockPubScreen(NULL, mysc);
-		}
-		CloseFont(font);
-	}
+            FreeGadgets(glist);
+            FreeVisualInfo(vi);
+         }
+         UnlockPubScreen(NULL, mysc);
+      }
+      CloseFont(font);
+   }
 }
 
 int main(void) {
-	if (!(ExpansionBase = (struct Library*)OpenLibrary((CONST_STRPTR)"expansion.library",0L))) {
-		errorMessage("Requires expansion.library");
-		return 0;
-	}
+   if (!(ExpansionBase = (struct Library*)OpenLibrary((CONST_STRPTR)"expansion.library",0L))) {
+      errorMessage("Requires expansion.library");
+      return 0;
+   }
 
-	zz_cd = (struct ConfigDev*)FindConfigDev(zz_cd,0x144B,0x1);
-	if (!zz_cd) {
-		CloseLibrary(ExpansionBase);
-		errorMessage("Z3660 not found.\n");
-		return 0;
-	}
+   zz_cd = (struct ConfigDev*)FindConfigDev(zz_cd,0x144B,0x1);
+   if (!zz_cd) {
+      CloseLibrary(ExpansionBase);
+      errorMessage("Z3660 not found.\n");
+      return 0;
+   }
 
-	zz_regs = (UBYTE*)zz_cd->cd_BoardAddr;
-	CloseLibrary(ExpansionBase);
+   zz_regs = (UBYTE*)zz_cd->cd_BoardAddr;
+   CloseLibrary(ExpansionBase);
 
-	if (NULL == (IntuitionBase = OpenLibrary((CONST_STRPTR)"intuition.library", 37)))
-		errorMessage("Requires V37 intuition.library");
-	else {
-		if (NULL == (GfxBase = OpenLibrary((CONST_STRPTR)"graphics.library", 37)))
-			errorMessage("Requires V37 graphics.library");
-		else {
-			if (NULL == (GadToolsBase = OpenLibrary((CONST_STRPTR)"gadtools.library", 37)))
-				errorMessage("Requires V37 gadtools.library");
-			else {
-				gadtoolsWindow();
-				CloseLibrary(GadToolsBase);
-			}
-			CloseLibrary(GfxBase);
-		}
-		CloseLibrary(IntuitionBase);
-	}
+   if (NULL == (IntuitionBase = OpenLibrary((CONST_STRPTR)"intuition.library", 37)))
+      errorMessage("Requires V37 intuition.library");
+   else {
+      if (NULL == (GfxBase = OpenLibrary((CONST_STRPTR)"graphics.library", 37)))
+         errorMessage("Requires V37 graphics.library");
+      else {
+         if (NULL == (GadToolsBase = OpenLibrary((CONST_STRPTR)"gadtools.library", 37)))
+            errorMessage("Requires V37 gadtools.library");
+         else {
+            gadtoolsWindow();
+            CloseLibrary(GadToolsBase);
+         }
+         CloseLibrary(GfxBase);
+      }
+      CloseLibrary(IntuitionBase);
+   }
 
-	return 0;
+   return 0;
 }
