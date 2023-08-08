@@ -27,7 +27,6 @@ kickstart kicks/A4kOS322.rom
 #scsi1 hdf/ZDH0.hdf
 #scsi2 hdf/Programs.hdf
 #scsi3 hdf/cputester_rdb.hdf
-#scsi4 hdf/8GB.hdf
 
 # Autoconfig RAM Enable (256 MB Zorro III RAM
 # (YES or NO, in capitals
