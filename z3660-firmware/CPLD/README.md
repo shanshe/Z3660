@@ -1,5 +1,7 @@
 # Z3660 CPLD
 
-To build CPLD XC95144XL, I use ISE 13.1. Also I use IMPACT to flash the device, with a platform cable from Xilinx (use "JTAG" labeled connector of the PCB).
-<br>Optionally, there are people flashing these CPLDs using a Raspberry Pi... google for it if you need it.
-<br>The "z3660.jed" file is what you flash into the CPLD.
+Two versions here:
+
+ * <b>DMA_WIP</b> is a "work in progress" (WIP) version, which works with Z3 DMA masters. Right now has some problems to boot, as it may need some reset before boot (maybe even power off-on cycles). CPU emulation has nothing to do with DMA (need some missing functions on emulation), so don't try it...
+
+ * <b>MASTER_no_DMA</b> version works with both, 060 and CPU emulation.
