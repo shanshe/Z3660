@@ -276,6 +276,8 @@ BEGIN LIBRARY
  PARAMETER LIBRARY_NAME = xilffs
  PARAMETER LIBRARY_VER = 5.0
  PARAMETER PROC_INSTANCE = ps7_cortexa9_0
+ PARAMETER enable_exfat = true
+ PARAMETER enable_multi_partition = true
  PARAMETER use_lfn = 1
  PARAMETER use_strfunc = 1
 END

@@ -1,7 +1,8 @@
 #ifndef _HUNK_RELOC_H
 #define _HUNK_RELOC_H
 
-#include "../mpg/ff.h"
+//#include "../mpg/ff.h"
+#include <ff.h>
 
 struct hunk_reloc {
     uint32_t src_hunk;

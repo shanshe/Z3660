@@ -3,7 +3,9 @@
 #include <stdint.h>
 
 #include "hunk-reloc.h"
-#include "../mpg/ff.h"
+//#include "../mpg/ff.h"
+#include <ff.h>
+#include "../defines.h"
 
 #define be16toh(val) __builtin_bswap16(val)
 #define htobe16(val) __builtin_bswap16(val)
@@ -102,7 +104,7 @@ struct piscsi_dev {
     FIL *fd;
     uint32_t lba;
     uint32_t num_partitions;
-    uint32_t fshd_offs;
+    uint64_t fshd_offs;
     uint32_t block_size;
     struct PartitionBlock *pb[16];
     struct RigidDiskBlock *rdb;

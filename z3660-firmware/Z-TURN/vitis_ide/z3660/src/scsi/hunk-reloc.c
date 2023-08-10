@@ -7,7 +7,8 @@
 #include "hunk-reloc.h"
 #include "z3660_scsi_enums.h"
 #include "scsi.h"
-#include "../mpg/ff.h"
+//#include "../mpg/ff.h"
+#include <ff.h>
 
 #ifdef FAKESTORM
 #define lseek64 lseek
@@ -111,7 +112,7 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
                     READLW(cur_hunk, f);
                     DEBUG("[HUNK_RELOC] [RELOC32] Relocating %d offsets pointing to hunk %d.\n", discard, cur_hunk);
                     if(discard>2048)
-                    	printf("Warning!!!!! Relocating %d offsets > 2048\n",discard);
+                    	printf("Warning!!!!! Relocating %ld offsets > 2048\n",discard);
                     for(uint32_t i = 0; i < discard; i++) {
                         READLW(offs32, f);
                         DEBUG_SPAMMY("[HUNK_RELOC] [RELOC32] #%d: @%.8X in hunk %d\n", i + 1, offs32, cur_hunk);
@@ -225,7 +226,7 @@ int load_lseg(FIL* fd, uint8_t **buf_p, struct hunk_info *i, struct hunk_reloc *
     uint8_t *block = malloc(block_size);
     uint32_t next_blk = 0;
     struct LoadSegBlock *lsb = (struct LoadSegBlock *)block;
-    int n_bytes;
+    unsigned int n_bytes;
     f_read(fd, block, block_size,&n_bytes);
     if (BE(lsb->lsb_ID) != LOADSEG_IDENTIFIER) {
         DEBUG("[LOAD_LSEG] Attempted to load a non LSEG-block: %.8X", BE(lsb->lsb_ID));
@@ -283,7 +284,7 @@ int load_fs(struct piscsi_fs *fs, char *dosID) {
     f_lseek(&in, 0);
 
     fs->binary_data = malloc(file_size);
-    int n_bytes;
+    unsigned int n_bytes;
     f_read(&in,fs->binary_data, file_size, &n_bytes);
     f_lseek(&in, 0);
     process_hunks(&in, &fs->h_info, fs->relocs, 0x0);

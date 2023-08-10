@@ -27,7 +27,8 @@
 #include "memorymap.h"
 #include "render/gfx2.h"
 
-#include "mpg/ff.h"
+//#include "mpg/ff.h"
+#include <ff.h>
 #include "mpg/pl_mpeg_player.h"
 
 #define VDMA_DEVICE_ID	XPAR_AXIVDMA_0_DEVICE_ID
@@ -162,8 +163,8 @@ void video_reset(void) {
 #ifdef MPG_VIDEO_TEST
 //	static FIL fil;		/* File object */
 	static FATFS fatfs;
-	TCHAR *Path = "0:/";
-	TCHAR *filename = "Baila.mpg";
+	TCHAR *Path = DEFAULT_ROOT;
+	TCHAR *filename = DEFAULT_ROOT "Baila.mpg";
 	f_mount(&fatfs, Path, 1); // 1 mount immediately
 
 	f_open(&fil,filename, FA_OPEN_ALWAYS | FA_READ);

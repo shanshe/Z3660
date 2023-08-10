@@ -34,7 +34,7 @@ void load_rom(void)
 	static FATFS fatfs;
 	uint8_t *ROM=(uint8_t *)shared->load_rom_addr;
 	printf("Loading Kickstart on address: 0x%08lX\n",(uint32_t)ROM);
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 	Xil_ExceptionDisable();
 	int ret;
 
@@ -79,10 +79,10 @@ retry:
 //	while(1);
 #endif
 #ifdef DUMP_ROM
-	char Filename[]="DiagROM11.rom";
+	char Filename[]=DEFAULT_ROOT "DiagROM11.rom";
 	static FIL fil;		/* File object */
 	static FATFS fatfs;
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 	f_mount(&fatfs, Path, 1); // 1 mount immediately
 //	f_open(&fil,Filename, FA_OPEN_ALWAYS | FA_READ);
 	f_open(&fil,Filename, FA_OPEN_ALWAYS | FA_WRITE);

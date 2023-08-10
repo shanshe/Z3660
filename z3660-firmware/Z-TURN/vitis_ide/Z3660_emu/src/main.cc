@@ -81,7 +81,9 @@ extern "C" void write_rtg_register(uint16_t zaddr,uint32_t zdata)
 		shared->write_rtg_data=zdata;
 	last_zaddr=zaddr;
 	last_zdata=zdata;
+	asm(" NOP");
 	shared->write_rtg=1;
+	asm(" NOP");
 	shared->shared_data=1;
 	while(shared->write_rtg==1){NOP;}
 }

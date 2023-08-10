@@ -7,5 +7,5 @@ To build the file BOOT.bin, I am using Vitis 2023 (Vivado for RTL and Vitis IDE 
 <br>* Launch Vitis IDE (from Tools).
 <br>* Choose as workspace the directory vitis_ide
 <br>* Build all.
-<br>* Create Boot Image, importing from existing BIF file from Z3660_system/_ide/bootimage/Z3660_system.bit
-<br>The "BOOT.bin" file (Z3660_system/_ide/bootimage directory) must be copied to the root of your Z-turn SD.
+<br>* Build Z3660_system in order to create Boot Image.
+<br>The "BOOT.bin" file (Z3660_system/DEBUG/sd_card directory) must be copied to the root of your Z-turn SD (first FAT32 partition).

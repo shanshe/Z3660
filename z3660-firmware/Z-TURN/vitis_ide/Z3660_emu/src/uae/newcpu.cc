@@ -3445,7 +3445,6 @@ void exec_nostats (void)
 	}
 }
 cpu_history pc_hist[MAXRUN]={0};
-uint32_t counter=0;
 void execute_normal(void)
 {
 	struct regstruct *r = &regs;
@@ -3466,13 +3465,6 @@ void execute_normal(void)
 
 		special_mem = DISTRUST_CONSISTENT_MEM;
 		pc_hist[blocklen].location = (uae_u16*)r->pc_p;
-		counter++;
-		if(counter==431303)
-			printf("stop here1... %ld\n",counter);
-if(((uae_u32)r->pc_p)&0xF0000000)
-	printf("stop here...\n");
-if(((uae_u32)r->pc_p)==0x00f81eae)
-	printf("stop here...too...\n");
 		cpu_cycles = (*cpufunctbl[r->opcode])(r->opcode);
 
 		cpu_cycles = adjust_cycles(cpu_cycles);

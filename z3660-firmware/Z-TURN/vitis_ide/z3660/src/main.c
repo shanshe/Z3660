@@ -98,7 +98,7 @@ XGpioPs_Config *GpioPsConfigPtr;
 // To test logical drive 0, FileName should be "0:/<File name>" or
 // "<file_name>". For logical drive 1, FileName should be "1:/<file_name>"
 //
-static char FileName[32] = "Test.bin";
+static char FileName[32] = DEFAULT_ROOT "Test.bin";
 static char *SD_File;
 int FfsSdPolledExample(void)
 {
@@ -113,7 +113,7 @@ int FfsSdPolledExample(void)
 	// To test logical drive 0, Path should be "0:/"
 	// For logical drive 1, Path should be "1:/"
 	//
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 
 	for(BuffCnt = 0; BuffCnt < FileSize; BuffCnt++){
 		SourceAddress[BuffCnt] = TEST + BuffCnt;
@@ -205,13 +205,13 @@ int FfsSdPolledExample(void)
 	return XST_SUCCESS;
 }
 */
-//char Filename[]="Test.hdf";
-//char Filename[]="hd0.hdf";
-//char Filename[]="hd0.img";
 /*
+//char Filename[]=DEFAULT_ROOT "Test.hdf";
+//char Filename[]=DEFAULT_ROOT "hd0.img";
+char Filename[]=DEFAULT_ROOT "hd0.hdf";
 void CreateHdf(void)
 {
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 	uint32_t BufferSize = (10*1024*1024);
 
 	//
@@ -232,7 +232,7 @@ void CreateHdf(void)
 //static FATFS fatfs;
 void PrepareHdf(void)
 {
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_PATH;
 
 	f_mount(&fatfs, Path, 0);
 	set_hard_drive_image_file_amiga(0,Filename);
@@ -466,7 +466,7 @@ void fpga_feature_enable(int en_ram,int en_rtg,int en_z3ram)
 		printf("FPGA Z3 RAM DISABLED\n\r");
 	}
 }
-char Filename[]="Z3660.bin";
+char Filename[]=DEFAULT_ROOT "Z3660.bin";
 //extern uint32_t *frameBuf;
 extern ZZ_VIDEO_STATE* video_state;
 int state68k=M68K_RUNNING;
@@ -612,6 +612,9 @@ int main()
 
 	init_shared();
 
+	VolToPart[1].pd=0;
+	VolToPart[1].pt=2;
+
 	read_config_file();
 
 	read_env_files();
@@ -679,7 +682,7 @@ int main()
 #ifdef READ_BOOT_IMAGE
 	static FIL fil;		/* File object */
 	static FATFS fatfs;
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 	f_mount(&fatfs, Path, 1); // 1 mount immediately
 	f_open(&fil,Filename, FA_OPEN_ALWAYS | FA_READ);
 	f_lseek(&fil, 4);

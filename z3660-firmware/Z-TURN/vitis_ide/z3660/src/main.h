@@ -26,7 +26,8 @@
 #include "xadcps.h"
 #include "xuartps.h"
 
-#include "mpg/ff.h"
+//#include "mpg/ff.h"
+#include <ff.h>
 
 #include "xaxivdma.h"
 #include "sii9022_init/sii9022_init.h"
@@ -168,5 +169,5 @@ void arm_write_amiga(uint32_t address, uint32_t data, uint32_t size);
 
 #define M68K_RUNNING 0
 #define M68K_RESET   1
-
+#include "defines.h"
 #endif /* SRC_MAIN_H_ */

@@ -25,8 +25,8 @@ enum YESNO{
 typedef struct {
 	int boot_mode;
 	int scsiboot;
-	char kickstart[100];
-	char scsi[7][100];
+	char kickstart[150];
+	char scsi[7][150];
 	int autoconfig_ram;
 } CONFIG;
 

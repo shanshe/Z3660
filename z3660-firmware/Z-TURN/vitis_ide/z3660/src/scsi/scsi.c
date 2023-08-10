@@ -7,8 +7,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 //#include <endian.h>
-#include "../mpg/ffconf.h"
-#include "../mpg/ff.h"
+//#include "../mpg/ffconf.h"
+//#include "../mpg/ff.h"
+#include <ffconf.h>
+#include <ff.h>
+
 //#include <xil_cache.h>
 #include <xparameters.h>
 #include "../memorymap.h"
@@ -158,12 +161,12 @@ int piscsi_init() {
         devs[i].c = devs[i].h = devs[i].s = 0;
     }
 
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 	f_mount(&fatfs, Path, 1); // 1 mount immediately
 
     if (piscsi_rom_ptr == NULL) {
         FIL in;
-        int ret = f_open(&in,"z3660_scsi.rom", FA_READ | FA_OPEN_EXISTING);
+        int ret = f_open(&in,DEFAULT_ROOT "z3660_scsi.rom", FA_READ | FA_OPEN_EXISTING);
         if (ret != FR_OK) {
             printf("[PISCSI] Could not open PISCSI Boot ROM file for reading!\n");
             // Zero out the boot ROM offset from the autoconfig ROM.
@@ -412,7 +415,7 @@ void piscsi_find_filesystems(struct piscsi_dev *d) {
             {
                 char fs_save_filename[256];
                 memset(fs_save_filename, 0x00, 256);
-                sprintf(fs_save_filename, "data/fs/%c%c%c.%d", dosID[0], dosID[1], dosID[2], dosID[3]);
+                sprintf(fs_save_filename,DEFAULT_ROOT "data/fs/%c%c%c.%d", dosID[0], dosID[1], dosID[2], dosID[3]);
                 FIL save_fs;
                 int ret = f_open(&save_fs,fs_save_filename, FA_READ|FA_WRITE|FA_OPEN_EXISTING);
                 if (ret != FR_OK) {

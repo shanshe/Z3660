@@ -61,7 +61,6 @@ void write_config_file(char *filename)
 	f_open(&fil,filename, FA_OPEN_ALWAYS | FA_WRITE);
 	load_default_config();
 	print_line(&fil,"## Z3660 config file ##\n");
-	print_line(&fil,"# Warning: File names have a limit of 8 characters (+ 3 characters for extension)\n");
 	print_line(&fil,"\n");
 	print_line(&fil,"##General Configuration\n");
 	print_line(&fil,"\n");
@@ -177,11 +176,11 @@ int get_yesno_type(char *cmd) {
 
 void read_config_file(void)
 {
-	char Filename[]="z3660cfg.txt";
+	char Filename[]=DEFAULT_ROOT "z3660cfg.txt";
 	static FIL fil;		/* File object */
 	static FATFS fatfs;
 
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 
 	Xil_ExceptionDisable();
 
@@ -197,10 +196,10 @@ retry:
 	ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
 	if(ret!=0)
 	{
-		printf("Error opening file \"%s\"\nCreating default file...\n",Filename);
-		write_config_file(Filename);
-		ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
-		if(ret!=0)
+//		printf("Error opening file \"%s\"\nCreating default file...\n",Filename);
+//		write_config_file(Filename);
+//		ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
+//		if(ret!=0)
 		{
 			printf("Error opening config file %s\nHALT!!!\n",Filename);
 			while(1);
@@ -241,7 +240,7 @@ retry:
 
 		case CONFITEM_KICKSTART:
 			get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-			sprintf(config.kickstart, cur_cmd);
+			sprintf(config.kickstart,"%s%s", DEFAULT_ROOT, cur_cmd);
 			printf("[CFG] Kickstart file %s.\n", config.kickstart);
 			break;
 
@@ -260,7 +259,7 @@ retry:
 		case CONFITEM_SCSI6: {
 			int index=item-CONFITEM_SCSI0;
 			get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-			sprintf(config.scsi[index], cur_cmd);
+			sprintf(config.scsi[index],"%s%s", DEFAULT_ROOT, cur_cmd);
 			printf("[CFG] scsi%d file %s\n", index, config.scsi[index]);
 			break;
 		}
@@ -299,7 +298,7 @@ void read_env_files(void)
 	static FIL fil;		/* File object */
 	static FATFS fatfs;
 
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 
 	Xil_ExceptionDisable();
 
@@ -313,7 +312,7 @@ retry:
 		goto retry;
 	}
 
-	ret=f_open(&fil,"env/bootmode", FA_OPEN_EXISTING | FA_READ);
+	ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_OPEN_EXISTING | FA_READ);
 	if(ret==0)
 	{
 //		int cur_line = 1;
@@ -368,7 +367,7 @@ void write_env_files(int bootmode, int scsiboot, int autoconfig_ram)
 	static FIL fil;		/* File object */
 	static FATFS fatfs;
 
-	TCHAR *Path = "0:/";
+	TCHAR *Path = DEFAULT_ROOT;
 
 	Xil_ExceptionDisable();
 
@@ -382,7 +381,7 @@ retry:
 		goto retry;
 	}
 
-	ret=f_open(&fil,"env/bootmode", FA_CREATE_ALWAYS | FA_WRITE);
+	ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_CREATE_ALWAYS | FA_WRITE);
 	if(ret==0)
 	{
 		f_printf(&fil,"%s\n",bootmode_names[bootmode]);
