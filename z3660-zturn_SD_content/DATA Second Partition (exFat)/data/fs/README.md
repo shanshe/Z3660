@@ -1,2 +1,2 @@
-# SCSI
-Filesystem will be cached here.
+# SCSI Temporary folders and files
+Filesystems will be cached here.

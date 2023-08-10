@@ -1,6 +1,6 @@
 # Z3660 Z-Turn
 
-To build the file BOOT.bin, I am using Vitis 2023 (Vivado for RTL and Vitis IDE for ARMs).
+To build the file BOOT.bin, I am using Vitis 2023.1 (Vivado for RTL and Vitis IDE for ARMs).
 <br>* You should import Block Design from vivado/design_1.tcl file.
 <br>* Generate Bitstream.
 <br>* Export hardware (Include bitstream).

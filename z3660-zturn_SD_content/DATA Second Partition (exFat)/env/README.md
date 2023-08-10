@@ -3,11 +3,11 @@ Like Amiga OS ENV: directory, here you can config some features of the Z3660 acc
 
 Right now you can configure these features:
 
-Do you want Z3 RAM expansion? You should put it to NO if you use some Z3 DMA card.
+Do you want Z3 RAM expansion? You should write NO if you use some Z3 DMA card.
 
 `autoconfig_ram: YES or NO`
 
-Choose your boot between real CPU or emulator. 
+Choose your boot mode, between real cpu (CPU) or emulator (MUSASHI, UAE or UAEJIT). 
 
 `bootmode: CPU, MUSASHI, UAE or UAEJIT`
 
