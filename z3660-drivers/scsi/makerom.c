@@ -11,68 +11,68 @@
 char *rombuf, *zerobuf, *devicebuf;
 
 int main(int argc, char *argv[]) {
-   FILE *rom = fopen("bootrom", "rb");
-   if (!rom) {
-      printf("Could not open file bootrom for reading.\n");
-      return 1;
-   }
-   FILE *out = fopen("z3660_scsi.rom", "wb+");
-   if (!out) {
-      printf("Could not open file z3660_scsi.rom for writing.\n");
-      fclose(rom);
-      return 1;
-   }
-   FILE *device = NULL;
-   if (argc > 1) {
-      device = fopen(argv[1], "rb");
-   }
-   else {
-      device = fopen("z3660_scsi.device", "rb");
-   }
-   if (!device) {
-      printf("Could not open device file for reading.\n");
-      fclose(rom);
-      fclose(out);
-      return 1;
-   }
+    FILE *rom = fopen("bootrom", "rb");
+    if (!rom) {
+        printf("Could not open file bootrom for reading.\n");
+        return 1;
+    }
+    FILE *out = fopen("z3660_scsi.rom", "wb+");
+    if (!out) {
+        printf("Could not open file z3660_scsi.rom for writing.\n");
+        fclose(rom);
+        return 1;
+    }
+    FILE *device = NULL;
+    if (argc > 1) {
+        device = fopen(argv[1], "rb");
+    }
+    else {
+        device = fopen("z3660_scsi.device", "rb");
+    }
+    if (!device) {
+        printf("Could not open device file for reading.\n");
+        fclose(rom);
+        fclose(out);
+        return 1;
+    }
 
-   fseek(device, 0, SEEK_END);
-   fseek(rom, 0, SEEK_END);
-   uint32_t rom_size = ftell(rom);
-   uint32_t device_size = ftell(device);
-   fseek(rom, 0, SEEK_SET);
-   fseek(device, 0, SEEK_SET);
+    fseek(device, 0, SEEK_END);
+    fseek(rom, 0, SEEK_END);
+    uint32_t rom_size = ftell(rom);
+    uint32_t device_size = ftell(device);
+    fseek(rom, 0, SEEK_SET);
+    fseek(device, 0, SEEK_SET);
 
-   uint32_t pad_size = BOOTLDR_SIZE - rom_size;
+    uint32_t pad_size = BOOTLDR_SIZE - rom_size;
+    
+    printf("total size %ld\n",(long)(rom_size + pad_size + device_size));
+    
+    rombuf = malloc(rom_size);
+    devicebuf = malloc(device_size);
+    zerobuf = malloc(pad_size);
+    memset(zerobuf, 0x00, pad_size);
 
-   printf("total size %ld\n",(long)(rom_size + pad_size + device_size));
+    fread(rombuf, rom_size, 1, rom);
+    fread(devicebuf, device_size, 1, device);
 
-   rombuf = malloc(rom_size);
-   devicebuf = malloc(device_size);
-   zerobuf = malloc(pad_size);
-   memset(zerobuf, 0x00, pad_size);
+    fwrite(rombuf, rom_size, 1, out);
+    fwrite(zerobuf, pad_size, 1, out);
+    fwrite(devicebuf, device_size, 1, out);
 
-   fread(rombuf, rom_size, 1, rom);
-   fread(devicebuf, device_size, 1, device);
+    free(zerobuf);
+    zerobuf = malloc(DIAG_TOTAL_SIZE - (rom_size + pad_size + device_size));
+    memset(zerobuf, 0x00, DIAG_TOTAL_SIZE - (rom_size + pad_size + device_size));
+    fwrite(zerobuf, DIAG_TOTAL_SIZE - (rom_size + pad_size + device_size), 1, out);
 
-   fwrite(rombuf, rom_size, 1, out);
-   fwrite(zerobuf, pad_size, 1, out);
-   fwrite(devicebuf, device_size, 1, out);
+    printf("z3660_scsi.rom successfully created.\n");
 
-   free(zerobuf);
-   zerobuf = malloc(DIAG_TOTAL_SIZE - (rom_size + pad_size + device_size));
-   memset(zerobuf, 0x00, DIAG_TOTAL_SIZE - (rom_size + pad_size + device_size));
-   fwrite(zerobuf, DIAG_TOTAL_SIZE - (rom_size + pad_size + device_size), 1, out);
+    free(rombuf);
+    free(zerobuf);
+    free(devicebuf);
+    
+    fclose(out);
+    fclose(device);
+    fclose(rom);
 
-   printf("z3660_scsi.rom successfully created.\n");
-
-   free(rombuf);
-   free(zerobuf);
-   free(devicebuf);
-
-   fclose(out);
-   fclose(device);
-   fclose(rom);
-
-   return 0;
+    return 0;
 }
