@@ -36,6 +36,7 @@
 #include "xil_misc_psreset_api.h"
 #include "config_file.h"
 #include "scsi/scsi.h"
+#include "LTC2990/ltc2990.h"
 
 #ifdef CPU_EMULATOR
 #include "cpu_emulator.h"
@@ -393,7 +394,7 @@ void configure_gpio(void)
 
 	XGpioPs_SetDirectionPin(&GpioPs, LED1, 1);
 	XGpioPs_SetOutputEnablePin(&GpioPs, LED1, 1);
-	XGpioPs_WritePin(&GpioPs, LED1, 0);
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
 
 	XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_13, 1);
 	XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_13, 1);
@@ -579,7 +580,7 @@ int main()
 
 	configure_clk(100,50,0,0);
 
-	XGpioPs_WritePin(&GpioPs, LED1, 1);
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
 	DiscreteSet(REG0, FPGA_RESET);
 	CPLD_RESET_ARM(0);
 	NBR_ARM(0);
@@ -703,12 +704,15 @@ int main()
 #else
 	video_reset();
 #endif
-	XGpioPs_WritePin(&GpioPs, LED1, 1);
+
+	ltc2990_init();
+
+	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
 	DiscreteSet(REG0, FPGA_RESET);
 	CPLD_RESET_ARM(0);
 	usleep(2500);
 
-	XGpioPs_WritePin(&GpioPs, LED1, 0);
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
 	DiscreteClear(REG0, FPGA_RESET);
 
 	int ret=0;

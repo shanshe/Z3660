@@ -99,17 +99,24 @@ enum zz_reg_offsets {
     REG_ZZ_CPU_FREQ       = 0x0F8,
     REG_ZZ_DEBUG          = 0x0FC,
 
-	ZZ_CUSTOM_VIDMODE     = 0x100,
-	ZZ_CUSTOM_VIDMODE_DATA= 0x104,
+   ZZ_CUSTOM_VIDMODE     = 0x100,
+   ZZ_CUSTOM_VIDMODE_DATA= 0x104,
     REG_ZZ_EMULATION_USED = 0x108,
     REG_ZZ_JIT_ENABLE     = 0x10C,
 
-	REG_ZZ_BOOTMODE       = 0x110,
-	REG_ZZ_APPLY_BOOTMODE = 0x114,
-	REG_ZZ_SCSIBOOT_EN    = 0x118,
-	REG_ZZ_AUTOC_RAM_EN   = 0x11C,
+   REG_ZZ_BOOTMODE       = 0x110,
+   REG_ZZ_APPLY_BOOTMODE = 0x114,
+   REG_ZZ_SCSIBOOT_EN    = 0x118,
+   REG_ZZ_AUTOC_RAM_EN   = 0x11C,
 
-	//NOT USED 0x11C - 0xFFC
+   REG_ZZ_LTC_TEMP       = 0x120,
+   REG_ZZ_LTC_V1         = 0x124,
+   REG_ZZ_LTC_V2         = 0x128,
+   REG_ZZ_LTC_RESISTOR   = 0x12C,
+
+   REG_ZZ_LTC_VCC        = 0x130,
+
+   //NOT USED 0x134 - 0xFFC
 
     REG_ZZ_OP_DATA        = 0x1000,
     REG_ZZ_OP             = 0x1004,
