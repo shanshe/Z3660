@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <unistd.h>
+//#include <unistd.h>
 //#include <endian.h>
 //#include "../mpg/ffconf.h"
 //#include "../mpg/ff.h"
 #include <ffconf.h>
 #include <ff.h>
+#include "../main.h"
 
 //#include <xil_cache.h>
 #include <xparameters.h>
@@ -155,6 +156,8 @@ struct hunk_reloc piscsi_hreloc[2048];
 static FATFS fatfs;
 
 int piscsi_init() {
+	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
+
     for (int i = 0; i < 8; i++) {
         devs[i].fd = 0;
         devs[i].lba = 0;
@@ -174,6 +177,7 @@ int piscsi_init() {
 //            ac_piscsi_rom[21] = 0;
 //            ac_piscsi_rom[22] = 0;
 //            ac_piscsi_rom[23] = 0;
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return(0); // Boot ROM disabled
         }
         piscsi_rom_size = in.obj.objsize;
@@ -195,6 +199,7 @@ int piscsi_init() {
         printf("[PISCSI] Boot ROM already loaded.\n");
     }
 //    fflush(stdout);
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
     return(1); // Boot ROM loaded
 }
 
@@ -226,6 +231,7 @@ void piscsi_shutdown() {
 }
 
 void piscsi_find_partitions(struct piscsi_dev *d) {
+	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
     FIL *fd = d->fd;
     int cur_partition = 0;
     uint8_t tmp;
@@ -239,6 +245,7 @@ void piscsi_find_partitions(struct piscsi_dev *d) {
 
     if (!d->rdb || d->rdb->rdb_PartitionList == 0) {
         DEBUG("[PISCSI] No partitions on disk.\n");
+    	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
         return;
     }
 
@@ -252,6 +259,7 @@ next_partition:;
     uint32_t first = be32toh(*((uint32_t *)&block[0]));
     if (first != PART_IDENTIFIER) {
         DEBUG("Entry at block %d is not a valid partition. Aborting.\n", BE(d->rdb->rdb_PartitionList));
+    	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
         return;
     }
 
@@ -291,10 +299,12 @@ partition_renamed:
     d->num_partitions = cur_partition + 1;
 //    d->fshd_offs = lseek64(fd, 0, SEEK_CUR);
     d->fshd_offs = fd->fptr;
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
     return;
 }
 
 int piscsi_parse_rdb(struct piscsi_dev *d) {
+	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
     FIL *fd = d->fd;
     int i = 0;
     uint8_t *block = malloc(PISCSI_MAX_BLOCK_SIZE);
@@ -322,12 +332,16 @@ rdb_found:;
         free(d->rdb);
     d->rdb = rdb;
     sprintf(d->rdb->rdb_DriveInitName, "z3660_scsi.device");
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
     return 0;
 
 no_rdb_found:;
     if (block)
-        free(block);
+    {
+    	free(block);
+    }
 
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
     return -1;
 }
 
@@ -716,6 +730,7 @@ void piscsi_debugme(uint32_t index) {
 }
 
 void handle_piscsi_write(uint32_t addr, uint32_t val, uint8_t type) {
+	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
     int32_t r;
     uint32_t map;
 #ifndef PISCSI_DEBUG
@@ -1015,11 +1030,13 @@ fs_found:;
             DEBUG("[!!!PISCSI] WARN: Unhandled %s register write to %.8X: %d\n", op_type_names[type], addr, val);
             break;
     }
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
 }
 
 #define PIB 0x00
 
 uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
+	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
     if (type) {}
 
     if (addr >= PISCSI_CMD_ROM) {
@@ -1042,8 +1059,10 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
                     break;
             }
             Xil_DCacheFlushRange((INTPTR)piscsi_rom_ptr,BOOT_ROM_SIZE);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return v;
         }
+    	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
         return 0;
     }
 
@@ -1053,56 +1072,69 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
         case PISCSI_CMD_ADDR3:
         case PISCSI_CMD_ADDR4: {
             int i = (addr - PISCSI_CMD_ADDR1) / 4;
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return piscsi_u32[i];
             break;
         }
         case PISCSI_CMD_DRVTYPE:
             if (devs[piscsi_cur_drive].fd == 0) {
                 DEBUG("[PISCSI] %s Read from DRVTYPE %d, drive not attached.\n", op_type_names[type], piscsi_cur_drive);
+            	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
                 return 0;
             }
             DEBUG("[PISCSI] %s Read from DRVTYPE %d, drive attached.\n", op_type_names[type], piscsi_cur_drive);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return 1;
             break;
         case PISCSI_CMD_DRVNUM:
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return piscsi_cur_drive;
             break;
         case PISCSI_CMD_CYLS:
             DEBUG("[PISCSI] %s Read from CYLS %d: %d\n", op_type_names[type], piscsi_cur_drive, devs[piscsi_cur_drive].c);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return devs[piscsi_cur_drive].c;
             break;
         case PISCSI_CMD_HEADS:
             DEBUG("[PISCSI] %s Read from HEADS %d: %d\n", op_type_names[type], piscsi_cur_drive, devs[piscsi_cur_drive].h);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return devs[piscsi_cur_drive].h;
             break;
         case PISCSI_CMD_SECS:
             DEBUG("[PISCSI] %s Read from SECS %d: %d\n", op_type_names[type], piscsi_cur_drive, devs[piscsi_cur_drive].s);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return devs[piscsi_cur_drive].s;
             break;
         case PISCSI_CMD_BLOCKS: {
             uint32_t blox = devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size;
             DEBUG("[PISCSI] %s Read from BLOCKS %d: %d\n", op_type_names[type], piscsi_cur_drive, (uint32_t)(devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size));
             DEBUG("fs: %lld (%d)\n", devs[piscsi_cur_drive].fs, blox);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return blox;
             break;
         }
         case PISCSI_CMD_GETPART: {
             DEBUG("[PISCSI] Get ROM partition %d offset: %.8X\n", rom_cur_partition, rom_partitions[rom_cur_partition]);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return rom_partitions[rom_cur_partition];
             break;
         }
         case PISCSI_CMD_GETPRIO:
             DEBUG("[PISCSI] Get partition %d boot priority: %d\n", rom_cur_partition, rom_partition_prio[rom_cur_partition]);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return rom_partition_prio[rom_cur_partition];
             break;
         case PISCSI_CMD_CHECKFS:
             DEBUG("[PISCSI] Get current loaded file system: %.8X\n", filesystems[rom_cur_fs].FS_ID);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return filesystems[rom_cur_fs].FS_ID;
         case PISCSI_CMD_FSSIZE:
             DEBUG("[PISCSI] Get alloc size of loaded file system: %d\n", filesystems[rom_cur_fs].h_info.alloc_size);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return filesystems[rom_cur_fs].h_info.alloc_size;
         case PISCSI_CMD_BLOCKSIZE:
             DEBUG("[PISCSI] Get block size of drive %d: %d\n", piscsi_cur_drive, devs[piscsi_cur_drive].block_size);
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return devs[piscsi_cur_drive].block_size;
         case PISCSI_CMD_GET_FS_INFO: {
             int i = 0;
@@ -1120,6 +1152,7 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
                     }
                 }
             }
+        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
             return 1;
         }
         default:
@@ -1127,5 +1160,6 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
             break;
     }
 
+	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
     return 0;
 }
