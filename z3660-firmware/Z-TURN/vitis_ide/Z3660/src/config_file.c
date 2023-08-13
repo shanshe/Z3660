@@ -329,7 +329,7 @@ retry:
 	}
 	f_close(&fil);
 
-	ret=f_open(&fil,"env/scsiboot", FA_OPEN_EXISTING | FA_READ);
+	ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_OPEN_EXISTING | FA_READ);
 	if(ret==0)
 	{
 //		int cur_line = 1;
@@ -343,7 +343,7 @@ retry:
 		printf("[ENV] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
 	}
 
-	ret=f_open(&fil,"env/autoconfig_ram", FA_OPEN_EXISTING | FA_READ);
+	ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_OPEN_EXISTING | FA_READ);
 	if(ret==0)
 	{
 //		int cur_line = 1;
@@ -388,14 +388,14 @@ retry:
 	}
 	f_close(&fil);
 
-	ret=f_open(&fil,"env/scsiboot", FA_CREATE_ALWAYS | FA_WRITE);
+	ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_CREATE_ALWAYS | FA_WRITE);
 	if(ret==0)
 	{
 		f_printf(&fil,"%s\n",yesno_names[scsiboot]);
 	}
 	f_close(&fil);
 
-	ret=f_open(&fil,"env/autoconfig_ram", FA_CREATE_ALWAYS | FA_WRITE);
+	ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_CREATE_ALWAYS | FA_WRITE);
 	if(ret==0)
 	{
 		f_printf(&fil,"%s\n",yesno_names[autoconfig_ram]);
