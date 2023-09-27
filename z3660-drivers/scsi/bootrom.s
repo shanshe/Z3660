@@ -87,15 +87,15 @@ PiSCSINextFS    EQU   $74
 PiSCSICopyFS    EQU   $78
 PiSCSIFSSize    EQU   $7C
 PiSCSISetFSH    EQU   $80
-PiSCSIDbgMsg    EQU $1000
-PiSCSIDbg1      EQU $1010
-PiSCSIDbg2      EQU $1014
-PiSCSIDbg3      EQU $1018
-PiSCSIDbg4      EQU $101C
-PiSCSIDbg5      EQU $1020
-PiSCSIDbg6      EQU $1024
-PiSCSIDbg7      EQU $1028
-PiSCSIDbg8      EQU $102C
+PiSCSIDbgMsg    EQU  $100
+PiSCSIDbg1      EQU  $110
+PiSCSIDbg2      EQU  $114
+PiSCSIDbg3      EQU  $118
+PiSCSIDbg4      EQU  $11C
+PiSCSIDbg5      EQU  $120
+PiSCSIDbg6      EQU  $124
+PiSCSIDbg7      EQU  $128
+PiSCSIDbg8      EQU  $12C
 
 *******  RomStart  ***************************************************
 **********************************************************************
@@ -192,8 +192,8 @@ bpatches:
             add.l   #ROMOFFS,d1     ;add offset to where your ROMs are
 rloop:
             move.w  (a1)+,d0        ;d0=word offs. into Diag needing patch
-            bmi.s   endpatches       ;-1 is end of patch offset table
-            add.l   d1,0(a2,d0.w)    ;add ROM address to coded relative offset
+            bmi.s   endpatches      ;-1 is end of patch offset table
+            add.l   d1,0(a2,d0.w)   ;add ROM address to coded relative offset
             bra.s   rloop
 
 endpatches:
@@ -216,6 +216,7 @@ BootEntry:
             move.l  RT_INIT(A0),a0        ; set vector to DOS INIT
             jsr     (a0)                  ; and initialize DOS
             rts
+            align 2
 cardbase:   dc.l    0
 
 *

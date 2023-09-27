@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #define BOOTLDR_SIZE 0x1000
-#define DIAG_TOTAL_SIZE 0x20000
+#define DIAG_TOTAL_SIZE 0x4000 //0x20000
 
 char *rombuf, *zerobuf, *devicebuf;
 

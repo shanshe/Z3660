@@ -25,8 +25,10 @@
 
 #include "z3660_scsi_enums.h"
 #include <stdint.h>
+#include <string.h>
 
 #include "z3660_scsi.h"
+#include "z3660_regs.h"
 
 #pragma pack(4)
 struct piscsi_base {
@@ -53,12 +55,20 @@ struct ExecBase *SysBase;
 uint8_t *saved_seg_list;
 uint8_t is_open;
 
-//#define WRITESHORT(cmd, val) *(unsigned short *)((unsigned long)(ZZ9K_REGS + cmd)) = val;
-#define WRITELONG(cmd, val) *(unsigned long *)((unsigned long)(ZZ9K_REGS + cmd)) = val;
-//#define WRITEBYTE(cmd, val) *(unsigned char *)((unsigned long)(ZZ9K_REGS + cmd)) = val;
+//#define WRITESHORT(cmd, val) *(unsigned short *)((unsigned long)(ZZ9K_REGS + PISCSI_OFFSET + cmd)) = val;
+#define WRITELONG(cmd, val) *(unsigned long *)((unsigned long)(ZZ9K_REGS + PISCSI_OFFSET + (cmd))) = (val);
+//#define WRITEBYTE(cmd, val) *(unsigned char *)((unsigned long)(ZZ9K_REGS + PISCSI_OFFSET + cmd)) = val;
 
-//#define READSHORT(cmd, var) var = *(volatile unsigned short *)(ZZ9K_REGS  + cmd);
-#define READLONG(cmd, var) var = *(volatile unsigned long *)(ZZ9K_REGS  + cmd);
+#define WRITE_CMD(COMMAND,UNIT,DATA,LEN)  do{               \
+            uint32_t len2=LEN;                              \
+/*            CacheClearE((APTR)DATA,len,CACRF_ClearD); */  \
+            CachePreDMA((APTR)(DATA),&len2,0);              \
+            WRITELONG(COMMAND, UNIT);                       \
+            CachePostDMA((APTR)DATA,&len2,0);               \
+            }while(0)
+
+//#define READSHORT(cmd, var) var = *(volatile unsigned short *)(ZZ9K_REGS + PISCSI_OFFSET + cmd);
+#define READLONG(cmd, var) var = *(volatile unsigned long *)(ZZ9K_REGS + PISCSI_OFFSET + cmd);
 
 asm("romtag:                                \n"
     "       dc.w    "XSTR(RTC_MATCHWORD)"   \n"
@@ -115,12 +125,12 @@ static struct Library __attribute__((used)) *init_device(uint8_t *seg_list asm("
         if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1)) ) {
             ok = 1;
             debug_z3660("Z3660_SCSI: Z3660 found.\n");
-            ZZ9K_REGS = (ULONG)cd->cd_BoardAddr + PISCSI_OFFSET;
+            ZZ9K_REGS = (ULONG)cd->cd_BoardAddr;
 
             for (int i = 0; i < NUM_UNITS; i++) {
                 uint32_t r = 0;
                 WRITELONG(PISCSI_CMD_DRVNUM, (i));
-                dev_base->units[i].regs_ptr = ZZ9K_REGS;
+                dev_base->units[i].regs_ptr = ZZ9K_REGS + PISCSI_OFFSET;
                 READLONG(PISCSI_CMD_DRVTYPE, r);
                 dev_base->units[i].enabled = r;
                 dev_base->units[i].present = r;
@@ -184,9 +194,10 @@ static void __attribute__((used)) open(struct Library *dev asm("a6"), struct IOE
     }
 
     iotd->iotd_Req.io_Error = io_err;
-    int counter=((struct Library *)dev_base->pi_dev)->lib_OpenCnt++;
-    if(counter==1)
-        boot_menu();
+//    int counter=
+    ((struct Library *)dev_base->pi_dev)->lib_OpenCnt++;
+//    if(counter==1)
+//        boot_menu();
 
 }
 
@@ -256,34 +267,50 @@ uint8_t piscsi_rw(struct piscsi_unit *u, struct IORequest *io) {
         case TD_WRITE64:
         case NSCMD_TD_WRITE64:
         case TD_FORMAT64:
-        case NSCMD_TD_FORMAT64:
+        case NSCMD_TD_FORMAT64: {
+            if((ULONG)data<0x08000000)
+                memcpy((uint8_t *)(ZZ9K_REGS + 0x80000), data, len);
             WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
             WRITELONG(PISCSI_CMD_ADDR2, len);
             WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
             WRITELONG(PISCSI_CMD_ADDR4, iostd->io_Actual);
-            WRITELONG(PISCSI_CMD_WRITE64, u->unit_num);
+            WRITE_CMD(PISCSI_CMD_WRITE64,u->unit_num,data,len);
             break;
+        }
         case TD_READ64:
-        case NSCMD_TD_READ64:
+        case NSCMD_TD_READ64: {
             WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
             WRITELONG(PISCSI_CMD_ADDR2, len);
             WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
             WRITELONG(PISCSI_CMD_ADDR4, iostd->io_Actual);
-            WRITELONG(PISCSI_CMD_READ64, u->unit_num);
+            WRITE_CMD(PISCSI_CMD_READ64,u->unit_num,data,len);
+            ULONG dma;
+            READLONG(PISCSI_CMD_USED_DMA,dma);
+            if(dma!=0)
+                memcpy((uint8_t *)data,(uint8_t *)(ZZ9K_REGS + 0x80000), len);
             break;
+        }
         case TD_FORMAT:
-        case CMD_WRITE:
+        case CMD_WRITE: {
+            if((ULONG)data<0x08000000)
+                memcpy((uint8_t *)(ZZ9K_REGS + 0x80000), data, len);
             WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
             WRITELONG(PISCSI_CMD_ADDR2, len);
             WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-            WRITELONG(PISCSI_CMD_WRITEBYTES, u->unit_num);
+            WRITE_CMD(PISCSI_CMD_WRITEBYTES,u->unit_num,data,len);
             break;
-        case CMD_READ:
+        }
+        case CMD_READ: {
             WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
             WRITELONG(PISCSI_CMD_ADDR2, len);
             WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-            WRITELONG(PISCSI_CMD_READBYTES, u->unit_num);
+            WRITE_CMD(PISCSI_CMD_READBYTES,u->unit_num,data,len);
+            ULONG dma;
+            READLONG(PISCSI_CMD_USED_DMA,dma);
+            if(dma!=0)
+                memcpy((uint8_t *)data,(uint8_t *)(ZZ9K_REGS + 0x80000), len);
             break;
+        }
     }
 
     if (sderr) {
@@ -425,16 +452,24 @@ scsireadwrite:;
             }
 
             if (write == 0) {
+                uint32_t len=blocks << 9;
                 WRITELONG(PISCSI_CMD_ADDR1, block);
-                WRITELONG(PISCSI_CMD_ADDR2, (blocks << 9));
+                WRITELONG(PISCSI_CMD_ADDR2, len);
                 WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-                WRITELONG(PISCSI_CMD_READ, u->unit_num);
+                WRITE_CMD(PISCSI_CMD_READ,u->unit_num,data,len);
+                ULONG dma;
+                READLONG(PISCSI_CMD_USED_DMA,dma);
+                if(dma!=0)
+                    memcpy((uint8_t *)data,(uint8_t *)(ZZ9K_REGS + 0x80000), len);
             }
             else {
+                uint32_t len=blocks << 9;
+                if((ULONG)data<0x08000000)
+                    memcpy((uint8_t *)(ZZ9K_REGS + 0x80000), data, len);
                 WRITELONG(PISCSI_CMD_ADDR1, block);
-                WRITELONG(PISCSI_CMD_ADDR2, (blocks << 9));
+                WRITELONG(PISCSI_CMD_ADDR2, len);
                 WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-                WRITELONG(PISCSI_CMD_WRITE, u->unit_num);
+                WRITE_CMD(PISCSI_CMD_WRITE,u->unit_num,data,len);
             }
 
             scsi->scsi_Actual = scsi->scsi_Length;

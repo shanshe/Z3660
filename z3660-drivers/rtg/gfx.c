@@ -64,11 +64,11 @@ struct GFXBase {
 #define __saveds__
 
 #define DEVICE_VERSION 1
-#define DEVICE_REVISION 13
+#define DEVICE_REVISION 01
 #define DEVICE_PRIORITY 0
 #define DEVICE_ID_STRING "$VER Z3660.card " XSTR(DEVICE_VERSION) "." XSTR(DEVICE_REVISION) " " DEVICE_DATE
 #define DEVICE_NAME "Z3660.card"
-#define DEVICE_DATE "(04.18.2023)"
+#define DEVICE_DATE "(27.09.2023)"
 
 int __attribute__((no_reorder)) _start()
 {
@@ -391,8 +391,8 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 		KPrintF((CONST_STRPTR)"Z3660.card: FW Revision Major: %ld.\n", fwrev_major);
 		KPrintF((CONST_STRPTR)"Z3660.card: FW Revision Minor: %ld.\n", fwrev_minor);
 
-		if (fwrev_major <= 1 && fwrev_minor < 13) {
-			char *alert = "\x00\x14\x14 vX.XX: Z3660.card v1.13 needs at least firmware (BOOT.bin) v1.13.\x00\x00";
+		if (fwrev_major <= 1 && fwrev_minor < 1) {
+			char *alert = "\x00\x14\x14 vX.XX: Z3660.card v1.01 needs at least firmware (BOOT.bin) v1.01.\x00\x00";
 			alert[5]='0'+fwrev_major;
 			alert[7]='0'+(fwrev_minor/10);
 			alert[8]='0'+(fwrev_minor%10);
