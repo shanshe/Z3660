@@ -11,6 +11,6 @@ Choose your boot mode, between real cpu (CPU) or emulator (MUSASHI, UAE or UAEJI
 
 `bootmode: CPU, MUSASHI, UAE or UAEJIT`
 
-Do you want to boot from SD scsi emulation? When using a real CPU you should select here NO (still in development)
+Do you want to boot from SD scsi emulation?
 
 `scsiboot: YES or NO.`
