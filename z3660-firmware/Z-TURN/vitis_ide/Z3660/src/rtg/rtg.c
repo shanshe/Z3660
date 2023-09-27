@@ -27,10 +27,22 @@
 #define inline
 
 unsigned int cur_mem_offset = 0x03500000;
+typedef struct {
+   uint32_t Core_temp;
+   uint32_t Aux_volt;
+   uint32_t Core_volt;
+   uint32_t LTC_temp;
+   uint32_t LTC_3V3;
+   uint32_t LTC_5V;
+   uint32_t LTC_060_temp;
+   uint32_t LTC_VCC;
+} Measures;
+Measures measures;
 
 //#define XPAR_PROCESSING_AV_SYSTEM_AUDIO_VIDEO_ENGINE_VIDEO_VIDEO_FORMATTER_0_BASEADDR 0x78C20000
 #define VIDEO_FORMATTER_BASEADDR XPAR_PROCESSING_AV_SYSTEM_AUDIO_VIDEO_ENGINE_VIDEO_VIDEO_FORMATTER_0_BASEADDR
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
+uint32_t read_rtg_register(uint16_t zaddr);
 
 uint32_t gpio=0;
 uint16_t ack_request=0;
@@ -40,7 +52,7 @@ uint32_t custom_vmode_param=0;
 uint32_t custom_video_mode=ZZVMODE_CUSTOM;
 int bm=0,sb=0,ar=0;
 void hard_reboot(void);
-void write_env_files(int bootmode, int scsiboot, int autoconfig_ram);
+int write_env_files(int bootmode, int scsiboot, int autoconfig_ram);
 
 // ethernet state
 uint32_t ethernet_send_result = 0;
@@ -65,6 +77,7 @@ uint32_t decoder_params[ZZ_NUM_DECODER_PARAMS];
 int decoder_param = 0; // selected parameter
 int decoder_bytes_decoded = 0;
 int max_samples = 0;
+int frfb=0;
 
 //int video_mode = ZZVMODE_1920x1080_50 | 2 << 12 | MNTVA_COLOR_32BIT << 8;
 //int video_mode;// = ZZVMODE_800x600 | 2 << 12 | MNTVA_COLOR_32BIT << 8;
@@ -123,25 +136,11 @@ inline void set_palette(uint32_t zdata,uint16_t op_palette)
 ZZ_VIDEO_STATE* video_state;
 void rtg_init(void)
 {
-   *((uint32_t *)(RTG_BASE+REG_ZZ_FW_VERSION))= swap32(REVISION_MAJOR << 8 | REVISION_MINOR); // BS
-   //    *((uint32_t *)(RTG_BASE+REG_ZZ_VBLANK_STATUS))= swap32(0); // this is now read directly from FPGA, so this value is not used anymore
-   *((uint32_t *)(RTG_BASE+REG_ZZ_AUDIO_CONFIG))= swap32(1); // AX is present
-   *((uint32_t *)(RTG_BASE+REG_ZZ_DECODER_FIFORX))= swap32(0);
-   *((uint32_t *)(RTG_BASE+REG_ZZ_CPU_FREQ))= swap32(cpu_freq); // FIXME this is for now fixed at 100MHz
-   *((uint32_t *)(RTG_BASE+REG_ZZ_EMULATION_USED))= swap32(config.boot_mode==UAEJIT || config.boot_mode==UAE);
-   *((uint32_t *)(RTG_BASE+REG_ZZ_SCSIBOOT_EN))= swap32(config.scsiboot==YES);
-
-   uint8_t* mac = ethernet_get_mac_address_ptr();
-   *((uint32_t *)(RTG_BASE+REG_ZZ_ETH_MAC_HI))= swap32((((uint32_t)mac[0])<<8)|mac[1]);
-   *((uint32_t *)(RTG_BASE+REG_ZZ_ETH_MAC_LO))= swap32((((uint32_t)mac[2])<<24)|(((uint32_t)mac[3])<<16)|(((uint32_t)mac[4])<<8)|mac[5]);
-
    printf("RTG init...\r\n");
    video_state->framebuffer_pan_offset=0;
 
    ethernet_send_result = 0;
-   *((uint32_t *)(RTG_BASE+REG_ZZ_ETH_TX))=swap32(ethernet_send_result);
-   int frfb=0;
-   *((uint32_t *)(RTG_BASE+REG_ZZ_ETH_RX_ADDRESS))= swap32(RX_BACKLOG_ADDRESS+(frfb<<11)); // <<11 = 2048 (FRAME_SIZE)
+   frfb=0;
    eth_backlog_nag_counter = 0;
    interrupt_enabled_ethernet=0;
    interrupt_enabled_audio=0;
@@ -162,84 +161,95 @@ void rtg_init(void)
    for(int i=0;i<10;i++)
       audio_adau_set_eq_gain(i,50);
 
-   *((uint32_t *)(RTG_BASE+REG_ZZ_BOOTMODE))= swap32(config.boot_mode);
+   bm=config.boot_mode;
+   sb=config.scsiboot;
+   ar=config.autoconfig_ram;
+
 }
 uint32_t *address;
 uint32_t zdata;
 uint32_t op_data=0;
-uint16_t zaddr;
+uint32_t zaddr;
 
+#define ETH_BACKLOG_NAG_COUNTER_MAX 5000
+int eth_backlog_nag_counter_max=ETH_BACKLOG_NAG_COUNTER_MAX;
 #ifdef CPU_EMULATOR
-#define IDLE_TASK_COUNT_MAX 30000
+#define IDLE_TASK_COUNT_MAX 300000
 #else
 #define IDLE_TASK_COUNT_MAX 3000000
 #endif
 int idle_task_count_max=IDLE_TASK_COUNT_MAX;
+long int task_counter=0;
 void other_tasks(void)
 {
-   static int adc_time_counter=0;
-   adc_time_counter++;
-   if(adc_time_counter==100000)
-      *((uint32_t *)(RTG_BASE+REG_ZZ_TEMPERATURE))= swap32((uint32_t)(xadc_get_temperature()*10.0));
-   if(adc_time_counter==200000)
-      *((uint32_t *)(RTG_BASE+REG_ZZ_VOLTAGE_AUX))= swap32((uint32_t)(xadc_get_aux_voltage()*100.0));
-   if(adc_time_counter==300000)
+   task_counter++;
+   if(task_counter==100000)
    {
-      *((uint32_t *)(RTG_BASE+REG_ZZ_VOLTAGE_INT))= swap32((uint32_t)(xadc_get_int_voltage()*100.0));
+      measures.Core_temp=(uint32_t)(xadc_get_temperature()*10.0);
+      iic_write_ltc2990(LTC_TRIGGER_REG,0); // any value trigger a conversion
    }
-   if(adc_time_counter==400000)
+   else if(task_counter==200000)
    {
-      adc_time_counter=0;
-      int data;
-      float value,value3,value4;
-
-      // read a previously triggered conversion
-
+      measures.Aux_volt=(uint32_t)(xadc_get_aux_voltage()*100.0);
+   }
+   else if(task_counter==300000)
+   {
+      measures.Core_volt=(uint32_t)(xadc_get_int_voltage()*100.0);
+   }
+   else if(task_counter==400000)
+   {
       iic_read_ltc2990(LTC_TINT_MSB);
-      data = ((ReadBuffer_ltc2990[0]&0x1F)<<8) | ReadBuffer_ltc2990[1];
-      // xli_printf does not support float...
-      value=data*0.0625*100.0;
-      *((uint32_t *)(RTG_BASE+REG_ZZ_LTC_TEMP))= swap32((uint32_t)value);
-
+      int data_in = ((ReadBuffer_ltc2990[0]&0x1F)<<8) | ReadBuffer_ltc2990[1];
+      float value=data_in*0.0625;
+      measures.LTC_temp=(uint32_t)(value*100.0);
+   }
+   else if(task_counter==500000)
+   {
       iic_read_ltc2990(LTC_V1_MSB);
-      data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      value=data*(305.8e-6)*10.*100.0;
-      *((uint32_t *)(RTG_BASE+REG_ZZ_LTC_V1))= swap32((uint32_t)value);
-
+      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+      float value=data_in*(305.8e-6)*10.;
+      measures.LTC_3V3=(uint32_t)(value*100.0);
+   }
+   else if(task_counter==600000)
+   {
       iic_read_ltc2990(LTC_V2_MSB);
-      data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      value=data*(305.8e-6)*10.*100.0;
-      *((uint32_t *)(RTG_BASE+REG_ZZ_LTC_V2))= swap32((uint32_t)value);
-
+      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+      float value=data_in*(305.8e-6)*10.;
+      measures.LTC_5V=(uint32_t)(value*100.0);
+   }
+   else if(task_counter==700000)
+   {
       iic_read_ltc2990(LTC_V3_MSB);
-      data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      value3=data*(305.8e-6);
+      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+      float value3=data_in*(305.8e-6);
 
       iic_read_ltc2990(LTC_V4_MSB);
-      data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      value4=data*(305.8e-6)*10.;
-
+      data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+      float value4=data_in*(305.8e-6)*10.;
       // resistor calculation
-      value=value3/(value4-value3)*9000.;
-      *((uint32_t *)(RTG_BASE+REG_ZZ_LTC_RESISTOR))= swap32((uint32_t)value);
-
-      iic_read_ltc2990(LTC_VCC_MSB);
-      data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      value=(2.5+data*305.18e-6)*100.0;
-      *((uint32_t *)(RTG_BASE+REG_ZZ_LTC_VCC))= swap32((uint32_t)value);
-
-      // trigger a conversion
-      iic_write_ltc2990(LTC_CONTROL_REG,0b01011111); // V1, V2, V3, V4
-      usleep(2500);
-      iic_write_ltc2990(LTC_TRIGGER_REG,0); // any value trigger a conversion
-
+      float value=value3/(value4-value3)*9000.;
+      float real_resistor_calibrated=config.resistor*9000/(9000-config.resistor);
+      float offset=real_resistor_calibrated*((float)(1./2.8))-config.temperature;
+      value=value*((float)(1./2.8))-offset;
+      measures.LTC_060_temp=(uint32_t)(value*100.);
    }
+   else if(task_counter==800000)
+   {
+      iic_read_ltc2990(LTC_VCC_MSB);
+      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+      float value=(2.5+data_in*305.18e-6);
+      measures.LTC_VCC=(uint32_t)(value*100.0);
+
+      task_counter=0;
+   }
+   if(1)
    {
       current_interrupt=amiga_interrupt_get();
       if(last_interrupt != current_interrupt)
       {
          last_interrupt=current_interrupt;
-         *((uint32_t *)(RTG_BASE+REG_ZZ_INT_STATUS))= swap32(last_interrupt);
+         *((uint32_t *)(RTG_BASE+REG_ZZ_INT_STATUS))=swap32(current_interrupt);
+//         Xil_DCacheFlushRange(RTG_BASE+REG_ZZ_INT_STATUS,4);
       }
    }
    static int idle_task_count=0;
@@ -258,7 +268,7 @@ void other_tasks(void)
 
    // check for queued up ethernet frames and interrupt amiga
    int ethernet_backlog = ethernet_get_backlog();
-   if (ethernet_backlog > 0 && eth_backlog_nag_counter > 5000) {
+   if (ethernet_backlog > 0 && eth_backlog_nag_counter > eth_backlog_nag_counter_max) {
       amiga_interrupt_set(AMIGA_INTERRUPT_ETH);
       eth_backlog_nag_counter = 0;
    }
@@ -271,15 +281,10 @@ void other_tasks(void)
 void rtg_loop(void)
 {
    gpio=read_reg_s01(REG1);
-   //   if((gpio&0xC0000000)!=0)
    if((gpio&0x80000000)!=0) //write
    {
-      //      if((gpio&0x80000000)!=0) // write cycle
-      address=(uint32_t *)((gpio&0xFFFF) + RTG_BASE);
-
-      //         if(zaddr!=0x80)
-      //            printf("W %02x %08lx\r\n",zaddr,zdata);
-      zaddr=gpio&0xFFFF;
+      address=(uint32_t *)((gpio&0x1FFFFF) + RTG_BASE);
+      zaddr=gpio&0x1FFFFF;
 
       if(zaddr<0x2000)
       {
@@ -288,62 +293,129 @@ void rtg_loop(void)
       }
       else
       {
-         zaddr-=0x2000;
-         int type=0;
-         if((gpio&0x30000000)==0x00000000)
+#define SCSI_ADDR_MAX 0x6000 //0x80000 //0x6000
+         if(zaddr<SCSI_ADDR_MAX)
          {
-            type=2;
-            zdata=swap32(*address);
-         }
-         else if((gpio&0x30000000)==0x20000000)
-         {
-            type=1;
-            zdata=swap16(*(uint16_t*)address);
+            zaddr-=0x2000;
+            int offset=(gpio>>26)&3;
+            zaddr+=offset;
+            address+=offset;
+            int type=OP_TYPE_BYTE;
+            if(((gpio&0x30000000)==0x00000000)
+             ||((gpio&0x30000000)==0x30000000))
+            {
+               type=OP_TYPE_LONGWORD;
+               zdata=swap32(*address);
+            }
+            else if((gpio&0x30000000)==0x20000000)
+            {
+               type=OP_TYPE_WORD;
+               zdata=swap16(*(uint16_t*)address);
+            }
+            else
+               zdata=*(uint8_t*)address;
+            handle_piscsi_write(zaddr, zdata, type);
          }
          else
-            zdata=*(uint8_t*)address;
-         handle_piscsi_write(zaddr, zdata, type);
+         {
+            printf("Write to zaddr= 0x%08lX\n",zaddr);
+         }
       }
       ack_request=1;
    }
-#if 0
    else if((gpio&0x40000000)!=0) //read
    {
-      //      if((gpio&0x80000000)!=0) // write cycle
-      address=(uint32_t *)((gpio&0xFFFF) + RTG_BASE);
-
-      //         if(zaddr!=0x80)
-      //            printf("W %02x %08lx\r\n",zaddr,zdata);
-      zaddr=gpio&0xFFFF;
+      address=(uint32_t *)((gpio&0x1FFFFF) + RTG_BASE);
+      zaddr=gpio&0x1FFFFF;
       if(zaddr<0x2000)
       {
-         //zdata=swap32(*address);
-         //write_rtg_register(zaddr,zdata);
+         zdata=read_rtg_register(zaddr);
+//         zdata=swap32(*address);
+         write_reg_s01(REG5,zdata);
       }
       else
       {
-         zaddr-=0x2000;
-         int type=0;
-         if((gpio&0x30000000)==0x00000000)
+         if(zaddr<SCSI_ADDR_MAX)
          {
-            type=2;
+            zaddr-=0x2000;
+            zdata=handle_piscsi_read(zaddr&0x1FFFFC, 2);
+/*
+            int offset=(gpio>>26)&3;
+            zaddr+=offset;
+            if((gpio&0x30000000)==0x00000000)
+            {
+               zdata=handle_piscsi_read(zaddr, 2);
+            }
+            else if((gpio&0x30000000)==0x20000000)
+            {
+               if(offset&2)
+                  zdata=handle_piscsi_read(zaddr, 1)&0x0000FFFF;
+               else
+                  zdata=(handle_piscsi_read(zaddr, 1)<<16)&0xFFFF0000;
+            }
+            else
+            {
+               switch(offset)
+               {
+               	   case 0:
+                       zdata=handle_piscsi_read(zaddr, 0)<<24;
+               		   break;
+               	   case 1:
+                       zdata=handle_piscsi_read(zaddr, 0)<<16;
+               		   break;
+               	   case 2:
+                       zdata=handle_piscsi_read(zaddr, 0)<<8;
+               		   break;
+               	   case 3:
+                       zdata=handle_piscsi_read(zaddr, 0);
+               		   break;
+               }
+            }
+*/
+            write_reg_s01(REG5,zdata);
          }
-         else if((gpio&0x30000000)==0x20000000)
-         {
-            type=1;
-         }
-
-         zdata=handle_piscsi_read(zaddr, type);
-         if(type==2)
-            *address=swap32(zdata);
-         else if(type==1)
-            *(uint16_t*)address=swap16(zdata);
          else
-            *(uint8_t*)address=zdata;
+         {
+        	zdata=swap32(*((uint32_t *)(RTG_BASE+(zaddr&0x1FFFFC))));
+/*
+            int offset=(gpio>>26)&3;
+             zaddr+=offset;
+             if((gpio&0x30000000)==0x00000000)
+             {
+                zdata=swap32(*((uint32_t *)(RTG_BASE+zaddr)));
+             }
+             else if((gpio&0x30000000)==0x20000000)
+             {
+                if(offset&2)
+                   zdata=swap16(*((uint16_t *)(RTG_BASE+zaddr)))&0x0000FFFF;
+                else
+                   zdata=(swap16(*((uint16_t *)(RTG_BASE+zaddr)))<<16)&0xFFFF0000;
+             }
+             else
+             {
+                switch(offset)
+                {
+                	   case 0:
+                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)))<<24;
+                		   break;
+                	   case 1:
+                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)))<<16;
+                		   break;
+                	   case 2:
+                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)))<<8;
+                		   break;
+                	   case 3:
+                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)));
+                		   break;
+                }
+             }
+*/
+             write_reg_s01(REG5,zdata);
+         }
       }
       ack_request=1;
    }
-#endif
+
    if(ack_request==1)
    {
       DiscreteSet(REG0,READ_WRITE_ACK);
@@ -358,10 +430,109 @@ void rtg_loop(void)
    }
    other_tasks();
 }
+uint32_t read_rtg_register(uint16_t zaddr)
+{
+   uint32_t data=0;
+   if(zaddr&3)
+      printf("read unaligned to 0x%08X\n",zaddr);
+   switch (zaddr&0x1FFFFC)
+   {
+   case REG_ZZ_INT_STATUS:
+      data=amiga_interrupt_get();
+      break;
+   case REG_ZZ_FW_VERSION:
+//      data=(REVISION_MINOR << 24) | (REVISION_MAJOR << 16);
+      data=(REVISION_MAJOR << 8 ) | (REVISION_MINOR      );
+      break;
+   case REG_ZZ_ETH_TX:
+      data=ethernet_send_result;
+      break;
+   case REG_ZZ_ETH_RX_ADDRESS: {
+      //int frfb = ethernet_receive_frame();
+      data=RX_BACKLOG_ADDRESS+(frfb<<11); // <<11 = 2048 (FRAME_SIZE)
+      break;
+   }
+   case REG_ZZ_AUDIO_SWAB:
+      data=audio_buffer_collision;
+      break;
+   case REG_ZZ_AUDIO_VAL:
+      data=audio_params[audio_param]; // read param
+      break;
+   case REG_ZZ_AUDIO_CONFIG:
+      data=1; // AX is present
+      break;
+   case REG_ZZ_DECODER_FIFORX:
+      data=fifo_get_read_index();
+      break;
+   case REG_ZZ_DECODE:
+      data=decoder_bytes_decoded;
+      break;
+//   case REG_ZZ_VBLANK_STATUS:
+//      return(0); // this is now read directly from FPGA, so this value is not used anymore
+   case REG_ZZ_CPU_FREQ:
+      data=cpu_freq; // FIXME this is for now fixed at 100MHz
+      break;
+   case REG_ZZ_EMULATION_USED:
+      data=config.boot_mode==UAEJIT || config.boot_mode==UAE || config.boot_mode==MUSASHI;
+      break;
+   case REG_ZZ_SCSIBOOT_EN:
+      data=config.scsiboot==YES;
+      break;
+   case REG_ZZ_AUTOC_RAM_EN:
+      data=config.autoconfig_ram==YES;
+      break;
 
+   case REG_ZZ_ETH_MAC_HI: {
+      uint8_t* mac = ethernet_get_mac_address_ptr();
+      data=(((uint32_t)mac[0])<<8)|mac[1];
+      break;
+   }
+   case REG_ZZ_ETH_MAC_LO: {
+      uint8_t* mac = ethernet_get_mac_address_ptr();
+      data=(((uint32_t)mac[2])<<24)|(((uint32_t)mac[3])<<16)|(((uint32_t)mac[4])<<8)|mac[5];
+      break;
+   }
+   case REG_ZZ_JIT_ENABLE:
+      data=shared->jit_enabled;
+      break;
+   case REG_ZZ_BOOTMODE:
+      data=config.boot_mode;
+      break;
+   case REG_ZZ_TEMPERATURE:
+      data=measures.Core_temp;
+      break;
+   case REG_ZZ_VOLTAGE_AUX:
+      data=measures.Aux_volt;
+      break;
+   case REG_ZZ_VOLTAGE_INT:
+      data=measures.Core_volt;
+      break;
+   case REG_ZZ_LTC_TEMP:
+      data=measures.LTC_temp;
+      break;
+   case REG_ZZ_LTC_V1:
+      data=measures.LTC_3V3;
+      break;
+   case REG_ZZ_LTC_V2:
+      data=measures.LTC_5V;
+      break;
+   case REG_ZZ_LTC_060_TEMP:
+      data=measures.LTC_060_temp;
+      break;
+   case REG_ZZ_LTC_VCC:
+      data=measures.LTC_VCC;
+      break;
+   default:
+      printf("Read to 0x%X RTG register\n",zaddr);
+      return(swap32(*((uint32_t *)(RTG_BASE+zaddr))));
+   }
+   return(data);
+}
 void write_rtg_register(uint16_t zaddr,uint32_t zdata)
 {
-   switch (zaddr) {
+   if(zaddr&3)
+      printf("write unaligned to 0x%08X\n",zaddr);
+   switch (zaddr&0x1FFFFC) {
    // Various blitter/video registers
    case REG_ZZ_PAN:
       video_state->framebuffer_pan_offset = zdata;
@@ -413,7 +584,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
             amiga_interrupt_clear(AMIGA_INTERRUPT_ETH);
          }
       }
-      *((uint32_t *)(RTG_BASE+REG_ZZ_INT_STATUS))= swap32(amiga_interrupt_get());
+      *((uint32_t *)(RTG_BASE+REG_ZZ_INT_STATUS))=swap32(amiga_interrupt_get());
       break;
    case REG_ZZ_MODE: {
       //printf("mode change: %lx\n", zdata);
@@ -521,10 +692,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
       handle_acc_op(zdata);
       break;
    }
-   case REG_ZZ_FW_VERSION: // this is readonly, so restore its value if it is written
-      *((uint32_t *)RTG_BASE+REG_ZZ_FW_VERSION)= (REVISION_MAJOR << 24 | REVISION_MINOR << 16);
-      break;
-      // DMA RTG rendering
+   // DMA RTG rendering
    case REG_ZZ_BLITTER_DMA_OP: {
       handle_blitter_dma_op(video_state,zdata);
       break;
@@ -780,13 +948,11 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          // Ethernet
       case REG_ZZ_ETH_TX:
          ethernet_send_result = ethernet_send_frame(zdata);
-         *((uint32_t *)(RTG_BASE+REG_ZZ_ETH_TX))=swap32(ethernet_send_result);
          //            printf("SEND frame sz: %ld res: %ld\n",zdata,ethernet_send_result);
          break;
       case REG_ZZ_ETH_RX: {
          //            printf("RECV eth frame sz: %ld\n",zdata);
-         int frfb = ethernet_receive_frame();
-         *((uint32_t *)(RTG_BASE+REG_ZZ_ETH_RX_ADDRESS))= swap32(RX_BACKLOG_ADDRESS+(frfb<<11)); // <<11 = 2048 (FRAME_SIZE)
+         frfb = ethernet_receive_frame();
          //            printf("REG_ZZ_ETH_RX_ADDRESS=0x%08x\n",RX_BACKLOG_ADDRESS+(frfb<<11));
          //            mntzorro_write(MNTZ_BASE_ADDR, MNTZORRO_REG4, frfb);
          break;
@@ -812,7 +978,6 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          if (zdata&(1<<15)) byteswap = 0;
          audio_offset = (zdata&0x7fff)<<8; // *256
          audio_buffer_collision = audio_swab(audio_scale, audio_offset, byteswap);
-         *((uint32_t *)(RTG_BASE+REG_ZZ_AUDIO_SWAB))= swap32(audio_buffer_collision);
          //               printf("audio_offset 0x%08lx\n",audio_offset);
          break;
       }
@@ -851,7 +1016,6 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
 
          if (zdata<ZZ_NUM_AUDIO_PARAMS) {
             audio_param = zdata;
-            *((uint32_t *)(RTG_BASE+REG_ZZ_AUDIO_VAL))= swap32(audio_params[audio_param]); // read param
          } else {
             audio_param = -1;
          }
@@ -912,7 +1076,6 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
       case REG_ZZ_AUDIO_CONFIG: {
          // audio config
          audio_set_interrupt_enabled((int)(zdata&1));
-         *((uint32_t *)(RTG_BASE+REG_ZZ_AUDIO_CONFIG))= swap32(1); // AX is present
          break;
       }
       case REG_ZZ_DECODER_PARAM:
@@ -967,7 +1130,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
             decode_mp3_init_fifo(input_buffer, input_buffer_size);
             decoder_bytes_decoded = -1;
             break;
-         case DECODE_RUN: {
+         case DECODE_RUN:
             max_samples = output_buffer_size;
             int mp3_freq = mp3_get_hz();
             if (mp3_freq != 48000) {
@@ -988,13 +1151,8 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
             //                     if(decoder_bytes_decoded>0)
             //                        printf("[decode:mp3:%s] %p (%d) -> %p (%d) %ld %ld\n", decode_command_str[(int)zdata], input_buffer, input_buffer_size,
             //                           output_buffer, output_buffer_size,fifo_get_read_index(),swap32(*((uint32_t *)(RTG_BASE+REG_ZZ_DECODER_FIFOTX))));
+            break;
          }
-         break;
-         }
-         *((uint32_t *)(RTG_BASE+REG_ZZ_DECODER_FIFORX))= swap32(fifo_get_read_index());
-         //               printf("[fifo:fiforx:%d]\n",fifo_get_read_index());
-         // this is used only by axmp3 app
-         *((uint32_t *)(RTG_BASE+REG_ZZ_DECODE))= swap32(decoder_bytes_decoded);
          break;
       }
       /*
@@ -1181,8 +1339,9 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          if(zdata>=0x55AA)
          {
             printf("Apply BOOTMODE %d (%s)\r\n",bm,bootmode_names[bm]);
-            write_env_files(bm,sb,ar);
-            hard_reboot();
+            piscsi_shutdown();
+            if(write_env_files(bm,sb,ar)==1)
+               hard_reboot();
          }
          else
          {

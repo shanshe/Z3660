@@ -45,8 +45,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 //			printf("    %x %x %x %x\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
             SWAP16(data->x[0]);		SWAP16(data->x[1]);
             SWAP16(data->y[0]);		SWAP16(data->y[1]);
-//			printf("OP2 %d %d %d %d\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
-//			printf("    %x %x %x %x\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
+//			printf("OP2 %4d %4d %4d %4d\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
+//			printf("    %04x %04x %04x %04x\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
 
             SWAP16(data->pitch[0]);
             SWAP32(data->offset[0]);

@@ -7,6 +7,7 @@
 #include <ff.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "xil_exception.h"
 #include "config_file.h"
@@ -15,90 +16,103 @@
 CONFIG config;
 extern SHARED *shared;
 const char *config_item_names[CONFITEM_NUM] = {
-		"NONE",
-		"bootmode",
-		"kickstart",
-		"scsiboot",
-		"scsi0",
-		"scsi1",
-		"scsi2",
-		"scsi3",
-		"scsi4",
-		"scsi5",
-		"scsi6",
-		"autoconfig_ram",
+      "NONE",
+      "bootmode",
+      "kickstart",
+      "scsiboot",
+      "scsi0",
+      "scsi1",
+      "scsi2",
+      "scsi3",
+      "scsi4",
+      "scsi5",
+      "scsi6",
+      "autoconfig_ram",
+      "resistor",
+      "temperature",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
-		"CPU",
-		"MUSASHI",
-		"UAE",
-		"UAEJIT",
+      "CPU",
+      "MUSASHI",
+      "UAE",
+      "UAEJIT",
 };
 const char *yesno_names[YESNO_NUM] = {
-		"NO",
-		"YES",
+      "NO",
+      "YES",
 };
 void print_line(FIL *fil, char* line_in, ...)
 {
-	va_list args;
-	UINT NumBytesWritten;
-	char line[100];
-	va_start(args, line_in);
-	sprintf(line,line_in, args);
-	f_write(fil, line, strlen(line),&NumBytesWritten);
+   va_list args;
+   UINT NumBytesWritten;
+   char line[100];
+   va_start(args, line_in);
+   sprintf(line,line_in, args);
+   f_write(fil, line, strlen(line),&NumBytesWritten);
 }
 void load_default_config(void)
 {
-	config.boot_mode=UAEJIT;
-	sprintf(config.kickstart,"A4kOS321.rom");
-	for(int i=0;i<7;i++)
-		//sprintf(config.scsi[i],""); warning
-		config.scsi[i][0]=0;
+   config.boot_mode=UAEJIT;
+   sprintf(config.kickstart,"A4kOS321.rom");
+   for(int i=0;i<7;i++)
+      //sprintf(config.scsi[i],""); warning
+      config.scsi[i][0]=0;
+   config.scsiboot=0;
+   config.autoconfig_ram=0;
+   config.resistor=800.0;
+   config.temperature=27.0;
 }
 void write_config_file(char *filename)
 {
-	static FIL fil;		/* File object */
-	f_open(&fil,filename, FA_OPEN_ALWAYS | FA_WRITE);
-	load_default_config();
-	print_line(&fil,"## Z3660 config file ##\n");
-	print_line(&fil,"\n");
-	print_line(&fil,"##General Configuration\n");
-	print_line(&fil,"\n");
-	print_line(&fil,"# Select boot mode: \"CPU\" for 060 CPU, \"MUSASHI\" \"UAE\" or \"UAEJIT\" for emulator\n");
-	print_line(&fil,"#bootmode CPU\n");
-	print_line(&fil,"#bootmode MUSASHI\n");
-	print_line(&fil,"#bootmode UAE\n");
-	print_line(&fil,"bootmode UAEJIT\n");
-	print_line(&fil,"\n");
-	print_line(&fil,"## Emulation Configuration\n");
-	print_line(&fil,"\n");
-	print_line(&fil,"# Select your kickstart file to map it on ARM's internal RAM, or comment lines to use installed Kickstart on your Amiga\n");
-	print_line(&fil,"#kickstart DiagROM.rom\n");
-	print_line(&fil,"#kickstart A4kOS31.rom\n");
-	print_line(&fil,"#kickstart A4kOS321.rom\n");
-	print_line(&fil,"kickstart A4kOS322.rom\n");
-	print_line(&fil,"\n");
-	print_line(&fil,"# Load scsi ROM on boot (boot from SCSI hdf files on SD)\n");
-	print_line(&fil,"# (YES or NO, in capitals)\n");
-	print_line(&fil,"scsiboot NO\n");
-	print_line(&fil,"#scsiboot YES\n");
-	print_line(&fil,"\n");
-	print_line(&fil,"# Select your hdf files (from scsi0 to scsi6)\n");
-	print_line(&fil,"#scsi0 hdf/A4000.hdf\n");
-	print_line(&fil,"#scsi1 hdf/ZDH0.hdf\n");
-	print_line(&fil,"#scsi2 hdf/Programs.hdf\n");
-	print_line(&fil,"\n");
-	print_line(&fil,"# Autoconfig RAM Enable (256 MB Zorro III RAM)\n");
-	print_line(&fil,"# (YES or NO, in capitals)\n");
-	print_line(&fil,"autoconfig_ram NO\n");
-	print_line(&fil,"#autoconfig_ram YES\n");
-	print_line(&fil,"\n");
-	f_close(&fil);
+   static FIL fil;      /* File object */
+   f_open(&fil,filename, FA_OPEN_ALWAYS | FA_WRITE);
+   load_default_config();
+   print_line(&fil,"## Z3660 config file ##\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"##General Configuration\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Select boot mode: \"CPU\" for 060 CPU, \"MUSASHI\" \"UAE\" or \"UAEJIT\" for emulator\n");
+   print_line(&fil,"#bootmode CPU\n");
+   print_line(&fil,"#bootmode MUSASHI\n");
+   print_line(&fil,"#bootmode UAE\n");
+   print_line(&fil,"bootmode UAEJIT\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"## Emulation Configuration\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Select your kickstart file to map it on ARM's internal RAM, or comment lines to use installed Kickstart on your Amiga\n");
+   print_line(&fil,"#kickstart DiagROM.rom\n");
+   print_line(&fil,"#kickstart A4kOS31.rom\n");
+   print_line(&fil,"#kickstart A4kOS321.rom\n");
+   print_line(&fil,"kickstart A4kOS322.rom\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Load scsi ROM on boot (boot from SCSI hdf files on SD)\n");
+   print_line(&fil,"# (YES or NO, in capitals)\n");
+   print_line(&fil,"scsiboot NO\n");
+   print_line(&fil,"#scsiboot YES\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Select your hdf files (from scsi0 to scsi6)\n");
+   print_line(&fil,"#scsi0 hdf/A4000.hdf\n");
+   print_line(&fil,"#scsi1 hdf/ZDH0.hdf\n");
+   print_line(&fil,"#scsi2 hdf/Programs.hdf\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Autoconfig RAM Enable (256 MB Zorro III RAM)\n");
+   print_line(&fil,"# (YES or NO, in capitals)\n");
+   print_line(&fil,"autoconfig_ram NO\n");
+   print_line(&fil,"#autoconfig_ram YES\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Temperature sensor calibration (THERM)\n");
+   print_line(&fil,"# Theoretical value 780 Ohms @ 25 Celsius, but every 060 has a random offset.\n");
+   print_line(&fil,"# Resistor R30 (measured from R30 right pad to ground, with 060 cooled to room temperature) in Ohms\n");
+   print_line(&fil,"resistor 800.0\n");
+   print_line(&fil,"# Room temperature in Celsius\n");
+   print_line(&fil,"temperature 27.0\n");
+   print_line(&fil,"\n");
+   f_close(&fil);
 
-	printf("File %s written OK\n",filename);
+   printf("File %s written OK\n",filename);
 }
 void trim_whitespace(char *str) {
-	//trailing white spaces
+   //trailing white spaces
   while (strlen(str) != 0 && (str[strlen(str) - 1] == ' ' || str[strlen(str) - 1] == '\t' || str[strlen(str) - 1] == 0x0A || str[strlen(str) - 1] == 0x0D)) {
     str[strlen(str) - 1] = '\0';
   }
@@ -173,237 +187,273 @@ int get_yesno_type(char *cmd) {
   }
   return NO;
 }
+float get_float_type(char *cmd) {
+  return atof(cmd);
+}
 
 void read_config_file(void)
 {
-	char Filename[]=DEFAULT_ROOT "z3660cfg.txt";
-	static FIL fil;		/* File object */
-	static FATFS fatfs;
+   char Filename[]=DEFAULT_ROOT "z3660cfg.txt";
+   static FIL fil;      /* File object */
+   static FATFS fatfs;
 
-	TCHAR *Path = DEFAULT_ROOT;
+   TCHAR *Path = DEFAULT_ROOT;
 
-	Xil_ExceptionDisable();
+   Xil_ExceptionDisable();
 
-	int ret;
+   int ret;
 retry:
-	ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
-	if(ret!=0)
-	{
-		printf("Error opening SD media\nRetry in 5 seconds\n");
-		sleep(5);
-		goto retry;
-	}
-	ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
-	if(ret!=0)
-	{
-//		printf("Error opening file \"%s\"\nCreating default file...\n",Filename);
-//		write_config_file(Filename);
-//		ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
-//		if(ret!=0)
-		{
-			printf("Error opening config file %s\nHALT!!!\n",Filename);
-			while(1);
-		}
-	}
-	printf("Reading %s file \n",Filename);
-	int cur_line = 1;
-	char parse_line[512];
-	char cur_cmd[128];
-	memset(&config, 0x00, sizeof(CONFIG));
-//	sprintf(config.kickstart,""); // this produces a warning O_O
-	config.kickstart[0]=0;
+   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   if(ret!=0)
+   {
+      printf("Error opening SD media\nRetry in 5 seconds\n");
+      sleep(5);
+      goto retry;
+   }
+   ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
+   if(ret!=0)
+   {
+//      printf("Error opening file \"%s\"\nCreating default file...\n",Filename);
+//      write_config_file(Filename);
+//      ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
+//      if(ret!=0)
+      {
+         printf("Error opening config file %s\nHALT!!!\n",Filename);
+         while(1);
+      }
+   }
+   printf("Reading %s file \n",Filename);
+   int cur_line = 1;
+   char parse_line[512];
+   char cur_cmd[128];
+   memset(&config, 0x00, sizeof(CONFIG));
+//   sprintf(config.kickstart,""); // this produces a warning O_O
+   config.kickstart[0]=0;
 
-	while (!f_eof(&fil))
-	{
-		int str_pos = 0;
-		memset(parse_line, 0x00, 512);
-		f_gets(parse_line, (s32)512, &fil);
+   while (!f_eof(&fil))
+   {
+      int str_pos = 0;
+      memset(parse_line, 0x00, 512);
+      f_gets(parse_line, (s32)512, &fil);
 
-		if (strlen(parse_line) <= 2 || parse_line[0] == '#' || parse_line[0] == '/')
-			goto skip_line;
+      if (strlen(parse_line) <= 2 || parse_line[0] == '#' || parse_line[0] == '/')
+         goto skip_line;
 
-		trim_whitespace(parse_line);
+      trim_whitespace(parse_line);
 
-		get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-		int item=get_config_item_type(cur_cmd);
-		switch (item) {
-		//	      case CONFITEM_CPUTYPE:
-		//	        cfg->cpu_type = get_m68k_cpu_type(parse_line + str_pos);
-		//	        break;
-		case CONFITEM_BOOTMODE:
-			get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-			config.boot_mode=get_bootmode_type(cur_cmd);
-			printf("[CFG] Boot mode %s.\n", bootmode_names[config.boot_mode]);
-			shared->cfg_emu=config.boot_mode;
-			shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
-			break;
+      get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+      int item=get_config_item_type(cur_cmd);
+      switch (item) {
+      //         case CONFITEM_CPUTYPE:
+      //           cfg->cpu_type = get_m68k_cpu_type(parse_line + str_pos);
+      //           break;
+      case CONFITEM_BOOTMODE:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.boot_mode=get_bootmode_type(cur_cmd);
+         printf("[CFG] Boot mode %s.\n", bootmode_names[config.boot_mode]);
+         shared->cfg_emu=config.boot_mode;
+         shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
+         break;
 
-		case CONFITEM_KICKSTART:
-			get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-			sprintf(config.kickstart,"%s%s", DEFAULT_ROOT, cur_cmd);
-			printf("[CFG] Kickstart file %s.\n", config.kickstart);
-			break;
+      case CONFITEM_KICKSTART:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         sprintf(config.kickstart,"%s%s", DEFAULT_ROOT, cur_cmd);
+         printf("[CFG] Kickstart file %s.\n", config.kickstart);
+         break;
 
-		case CONFITEM_SCSI_BOOT_ENABLE:
-			get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-			config.scsiboot=get_yesno_type(cur_cmd);
-			printf("[CFG] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
-			break;
+      case CONFITEM_SCSI_BOOT_ENABLE:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.scsiboot=get_yesno_type(cur_cmd);
+         printf("[CFG] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
+         break;
 
-		case CONFITEM_SCSI0:
-		case CONFITEM_SCSI1:
-		case CONFITEM_SCSI2:
-		case CONFITEM_SCSI3:
-		case CONFITEM_SCSI4:
-		case CONFITEM_SCSI5:
-		case CONFITEM_SCSI6: {
-			int index=item-CONFITEM_SCSI0;
-			get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-			sprintf(config.scsi[index],"%s%s", DEFAULT_ROOT, cur_cmd);
-			printf("[CFG] scsi%d file %s\n", index, config.scsi[index]);
-			break;
-		}
+      case CONFITEM_SCSI0:
+      case CONFITEM_SCSI1:
+      case CONFITEM_SCSI2:
+      case CONFITEM_SCSI3:
+      case CONFITEM_SCSI4:
+      case CONFITEM_SCSI5:
+      case CONFITEM_SCSI6: {
+         int index=item-CONFITEM_SCSI0;
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         sprintf(config.scsi[index],"%s%s", DEFAULT_ROOT, cur_cmd);
+         printf("[CFG] scsi%d file %s\n", index, config.scsi[index]);
+         break;
+      }
 
-		case CONFITEM_AUTOCONFIG_RAM_ENABLE:
-			get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-			config.autoconfig_ram=get_yesno_type(cur_cmd);
-			printf("[CFG] AutoConfig RAM %s.\n", yesno_names[config.autoconfig_ram]);
-			break;
+      case CONFITEM_AUTOCONFIG_RAM_ENABLE:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.autoconfig_ram=get_yesno_type(cur_cmd);
+         printf("[CFG] AutoConfig RAM %s.\n", yesno_names[config.autoconfig_ram]);
+         break;
 
-		case CONFITEM_NONE:
-		default:
-			printf("[CFG] Unknown config item %s on line %d.\n", cur_cmd, cur_line);
-			break;
-		}
+      case CONFITEM_RESISTOR:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.resistor=get_float_type(cur_cmd);
+         printf("[CFG] Calibrated Resistor %.1f.\n", config.resistor);
+         break;
 
-		skip_line:
-		cur_line++;
-	}
-	goto load_successful;
+      case CONFITEM_TEMPERATURE:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.temperature=get_float_type(cur_cmd);
+         printf("[CFG] Calibrated Temperature %.1f.\n", config.temperature);
+         break;
+
+      case CONFITEM_NONE:
+      default:
+         printf("[CFG] Unknown config item %s on line %d.\n", cur_cmd, cur_line);
+         break;
+      }
+
+      skip_line:
+      cur_line++;
+   }
+   goto load_successful;
 
 //load_failed:;
-	printf("Error loading config file %s\n",Filename);
-	printf("Loading default config\n");
-	load_default_config();
+   printf("Error loading config file %s\n",Filename);
+   printf("Loading default config\n");
+   load_default_config();
 load_successful:;
 
-	f_close(&fil);
-	f_mount(NULL, Path, 0); // NULL unmount, 0 delayed
-	printf("Config file read OK\n");
+   f_close(&fil);
+   f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+   printf("Config file read OK\n");
 
-	Xil_ExceptionEnable();
+   Xil_ExceptionEnable();
 }
 void read_env_files(void)
 {
-	static FIL fil;		/* File object */
-	static FATFS fatfs;
+   static FIL fil;      /* File object */
+   static FATFS fatfs;
 
-	TCHAR *Path = DEFAULT_ROOT;
+   TCHAR *Path = DEFAULT_ROOT;
 
-	Xil_ExceptionDisable();
+   Xil_ExceptionDisable();
 
-	int ret;
+   int ret;
 retry:
-	ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
-	if(ret!=0)
-	{
-		printf("Error opening SD media\nRetry in 5 seconds\n");
-		sleep(5);
-		goto retry;
-	}
+   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   if(ret!=0)
+   {
+      printf("Error opening SD media\nRetry in 5 seconds\n");
+      sleep(5);
+      goto retry;
+   }
 
-	ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_OPEN_EXISTING | FA_READ);
-	if(ret==0)
-	{
-//		int cur_line = 1;
-		char parse_line[512];
-		char cur_cmd[128];
-		int str_pos = 0;
-		memset(parse_line, 0x00, 512);
-		f_gets(parse_line, (s32)512, &fil);
-		get_next_string(parse_line, cur_cmd, &str_pos, '\n');
-		config.boot_mode=get_bootmode_type(cur_cmd);
-		printf("[ENV] Boot mode %s.\n", bootmode_names[config.boot_mode]);
-		shared->cfg_emu=config.boot_mode;
-		shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
-	}
-	f_close(&fil);
+   ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+//      int cur_line = 1;
+      char parse_line[512];
+      char cur_cmd[128];
+      int str_pos = 0;
+      memset(parse_line, 0x00, 512);
+      f_gets(parse_line, (s32)512, &fil);
+      get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+      config.boot_mode=get_bootmode_type(cur_cmd);
+      printf("[ENV] Boot mode %s.\n", bootmode_names[config.boot_mode]);
+      shared->cfg_emu=config.boot_mode;
+      shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
+   }
+   f_close(&fil);
 
-	ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_OPEN_EXISTING | FA_READ);
-	if(ret==0)
-	{
-//		int cur_line = 1;
-		char parse_line[512];
-		char cur_cmd[128];
-		int str_pos = 0;
-		memset(parse_line, 0x00, 512);
-		f_gets(parse_line, (s32)512, &fil);
-		get_next_string(parse_line, cur_cmd, &str_pos, '\n');
-		config.scsiboot=get_yesno_type(cur_cmd);
-		printf("[ENV] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
-	}
+   ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+//      int cur_line = 1;
+      char parse_line[512];
+      char cur_cmd[128];
+      int str_pos = 0;
+      memset(parse_line, 0x00, 512);
+      f_gets(parse_line, (s32)512, &fil);
+      get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+      config.scsiboot=get_yesno_type(cur_cmd);
+      printf("[ENV] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
+   }
 
-	ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_OPEN_EXISTING | FA_READ);
-	if(ret==0)
-	{
-//		int cur_line = 1;
-		char parse_line[512];
-		char cur_cmd[128];
-		int str_pos = 0;
-		memset(parse_line, 0x00, 512);
-		f_gets(parse_line, (s32)512, &fil);
-		get_next_string(parse_line, cur_cmd, &str_pos, '\n');
-		config.autoconfig_ram=get_yesno_type(cur_cmd);
-		printf("[ENV] AutoConfig Ram %s.\n", yesno_names[config.autoconfig_ram]);
-	}
-	f_close(&fil);
+   ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+//      int cur_line = 1;
+      char parse_line[512];
+      char cur_cmd[128];
+      int str_pos = 0;
+      memset(parse_line, 0x00, 512);
+      f_gets(parse_line, (s32)512, &fil);
+      get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+      config.autoconfig_ram=get_yesno_type(cur_cmd);
+      printf("[ENV] AutoConfig Ram %s.\n", yesno_names[config.autoconfig_ram]);
+   }
+   f_close(&fil);
 
-
-	f_mount(NULL, Path, 0); // NULL unmount, 0 delayed
-	Xil_ExceptionEnable();
+   f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+   Xil_ExceptionEnable();
 }
-void write_env_files(int bootmode, int scsiboot, int autoconfig_ram)
+int write_env_files(int bootmode, int scsiboot, int autoconfig_ram)
 {
-	static FIL fil;		/* File object */
-	static FATFS fatfs;
+   static FIL fil;      /* File object */
+   static FATFS fatfs;
 
-	TCHAR *Path = DEFAULT_ROOT;
+   TCHAR *Path = DEFAULT_ROOT;
 
-	Xil_ExceptionDisable();
+   Xil_ExceptionDisable();
 
-	int ret;
+   int ret;
 retry:
-	ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
-	if(ret!=0)
-	{
-		printf("Error opening SD media\nRetry in 5 seconds\n");
-		sleep(5);
-		goto retry;
-	}
+   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   if(ret!=0)
+   {
+      printf("Error opening SD media\nRetry in 5 seconds\n");
+      sleep(5);
+      goto retry;
+   }
 
-	ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_CREATE_ALWAYS | FA_WRITE);
-	if(ret==0)
-	{
-		f_printf(&fil,"%s\n",bootmode_names[bootmode]);
-	}
-	f_close(&fil);
+   ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/bootmode with %s\r\n",bootmode_names[bootmode]);
+      f_printf(&fil,"%s\n",bootmode_names[bootmode]);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/bootmode\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
 
-	ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_CREATE_ALWAYS | FA_WRITE);
-	if(ret==0)
-	{
-		f_printf(&fil,"%s\n",yesno_names[scsiboot]);
-	}
-	f_close(&fil);
+   ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/scsiboot with %s\r\n",yesno_names[scsiboot]);
+      f_printf(&fil,"%s\n",yesno_names[scsiboot]);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/scsiboot\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
 
-	ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_CREATE_ALWAYS | FA_WRITE);
-	if(ret==0)
-	{
-		f_printf(&fil,"%s\n",yesno_names[autoconfig_ram]);
-	}
-	f_close(&fil);
+   ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/autoconfig_ram with %s\r\n",yesno_names[autoconfig_ram]);
+      f_printf(&fil,"%s\n",yesno_names[autoconfig_ram]);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/autoconfig_ram\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
 
-	usleep(10000);
-	f_mount(NULL, Path, 1); // NULL unmount, 1 immediately
-	Xil_ExceptionEnable();
-	usleep(10000);
+   usleep(10000);
+   f_mount(NULL, Path, 1); // NULL unmount, 1 immediately
+   Xil_ExceptionEnable();
+   usleep(10000);
+   return(1);
 }

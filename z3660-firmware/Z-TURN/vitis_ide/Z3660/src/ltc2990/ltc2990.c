@@ -17,9 +17,9 @@ extern XIicPs IicInstance;      /* The instance of the IIC device. */
 
 #define IIC_DEVICE_ID   XPAR_XIICPS_0_DEVICE_ID
 
-uint8_t WriteBuffer_ltc2990[2];
+volatile uint8_t WriteBuffer_ltc2990[2];
 
-uint8_t ReadBuffer_ltc2990[2];   /* Read buffer for reading a page. */
+volatile uint8_t ReadBuffer_ltc2990[2];   /* Read buffer for reading a page. */
 
 int iic_write_ltc2990(uint8_t command,uint8_t data)
 {
@@ -79,7 +79,7 @@ int ltc2990_init(void)
 {
    // 0 celsuis, 1 single, 0 reserved, 11 all mode, 111 V1, V2, V3, V4
    usleep(2500);
-   iic_write_ltc2990(LTC_CONTROL_REG,0b01011111);
+   iic_write_ltc2990(LTC_CONTROL_REG,0b01011111); // V1, V2, V3, V4
    usleep(25000);
 
    xil_printf("Init LTC2990\n\r");

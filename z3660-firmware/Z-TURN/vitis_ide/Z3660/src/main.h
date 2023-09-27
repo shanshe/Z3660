@@ -9,7 +9,7 @@
 #define SRC_MAIN_H_
 
 #define REVISION_MAJOR 1
-#define REVISION_MINOR 13
+#define REVISION_MINOR 01
 
 #define M_PI 3.14159265358979323846
 
@@ -85,6 +85,9 @@ typedef struct {
 	volatile uint32_t read_scsi_type;  // 0xFFFF0054
 	volatile uint32_t boot_rom_loaded; // 0xFFFF0058
 	volatile uint32_t write_scsi_in_progress; // 0xFFFF005C
+	volatile uint32_t read_rtg;        // 0xFFFF0060
+	volatile uint32_t read_rtg_addr;   // 0xFFFF0064
+	volatile uint32_t read_rtg_data;   // 0xFFFF0068
 } SHARED;
 extern SHARED *shared;
 #define REG_BASE_ADDRESS XPAR_Z3660_0_BASEADDR
@@ -110,8 +113,12 @@ extern SHARED *shared;
 #define USER_SW1     PS_MIO_50 // MIO 50
 #define PS_MIO51_501 PS_MIO_51 // MIO 51 (ethernet reset)
 
-#define REG0 0
-#define REG1 4
+#define REG0 0x00
+#define REG1 0x04
+//#define REG2 0x08
+//#define REG3 0x0C
+//#define REG4 0x10
+#define REG5 0x14
 
 #define FPGA_RAM_EN              (1L<< 0)  // SAXI REG0  0
 #define FPGA_RAM_BURST_READ_EN   (1L<< 1)  // SAXI REG0  1
@@ -120,6 +127,8 @@ extern SHARED *shared;
 #define FPGA_ENCONDITION_BCLK    (3L<< 8)  // SAXI REG0  9..8
 #define FPGA_256MB_AUTOCONFIG_EN (1L<<12)  // SAXI REG0 12
 #define FPGA_RTG_AUTOCONFIG_EN   (1L<<13)  // SAXI REG0 13
+#define FPGA_AUTOCONFIG_BOOT_EN  (1L<<27)  // SAXI REG0 27
+#define FPGA_BP                  (1L<<28)  // SAXI REG0 28
 #define FPGA_INT6                (1L<<29)  // SAXI REG0 29
 #define READ_WRITE_ACK           (1L<<30)  // SAXI REG0 30
 #define FPGA_RESET               (1L<<31)  // SAXI REG0 31
@@ -138,10 +147,15 @@ extern SHARED *shared;
 
 #define read_reg_s01(Offset) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S01+(Offset)))
 #define write_reg_s01(Offset,Data) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S01+(Offset)))=(Data)
-#define write_reg64_s01(Offset,Data) (*(volatile uint64_t *)(REG_BASE_ADDRESS_S01+(Offset)))=(Data)
+//#define write_reg64_s01(Offset,Data) (*(volatile uint64_t *)(REG_BASE_ADDRESS_S01+(Offset)))=(Data)
 
 #define write_reg_s00(Offset,Data) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S00+(Offset)))=(Data)
 #define read_reg_s00(Offset) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S00+(Offset)))
+#define write_reg64_s00(Offset,Data) (*(volatile uint64_t *)(REG_BASE_ADDRESS_S00+(Offset)))=(Data)
+#define write_mem32(Offset,Data) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S00+0x04000000+((Offset&0x00FFFFFF)<<2)))=(Data)
+#define write_mem16(Offset,Data) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S00+0x08000000+((Offset&0x00FFFFFF)<<2)))=(Data)
+#define write_mem8(Offset,Data)  (*(volatile uint32_t *)(REG_BASE_ADDRESS_S00+0x0C000000+((Offset&0x00FFFFFF)<<2)))=(Data)
+
 #define DiscreteSet(Offset,Mask) write_reg_s01(Offset,read_reg_s01(Offset)|(Mask))
 #define DiscreteClear(Offset,Mask) write_reg_s01(Offset,read_reg_s01(Offset)&(~(Mask)))
 

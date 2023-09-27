@@ -28,6 +28,8 @@ typedef struct {
 	char kickstart[150];
 	char scsi[7][150];
 	int autoconfig_ram;
+	float resistor;
+	float temperature;
 } CONFIG;
 
 enum CONFITEM {
@@ -43,12 +45,14 @@ enum CONFITEM {
 	CONFITEM_SCSI5,
 	CONFITEM_SCSI6,
 	CONFITEM_AUTOCONFIG_RAM_ENABLE,
+	CONFITEM_RESISTOR,
+	CONFITEM_TEMPERATURE,
 	CONFITEM_NUM
 };
 
 void read_config_file(void);
 void read_env_files(void);
 extern const char *bootmode_names[];
-
+int write_env_files(int bootmode, int scsiboot, int autoconfig_ram);
 extern CONFIG config;
 #endif /* SRC_CONFIG_FILE_H_ */

@@ -70,6 +70,9 @@ typedef struct {
 	volatile uint32_t read_scsi_type;  // 0xFFFF0054
 	volatile uint32_t boot_rom_loaded; // 0xFFFF0058
 	volatile uint32_t write_scsi_in_progress; // 0xFFFF005C
+	volatile uint32_t read_rtg;        // 0xFFFF0060
+	volatile uint32_t read_rtg_addr;   // 0xFFFF0064
+	volatile uint32_t read_rtg_data;   // 0xFFFF0068
 } SHARED;
 
 enum BOOTMODE{

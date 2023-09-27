@@ -112,3 +112,14 @@ domain active {standalone_ps7_cortexa9_0}
 bsp reload
 platform generate -domains 
 platform generate -domains standalone_ps7_cortexa9_0 
+platform generate -domains 
+platform generate -domains 
+platform clean
+platform generate
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 

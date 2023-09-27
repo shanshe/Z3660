@@ -23,14 +23,21 @@ extern "C" {
 #include "cpu_emulator.h"
 #include <xil_mmu.h>
 #include "xil_cache.h"
-//uint32_t video_formatter_read(uint16_t op);
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
+uint32_t read_rtg_register(uint16_t zaddr);
 void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type);
 uint32_t read_scsi_register(uint16_t zaddr,int type);
 void reset_autoconfig(void);
 extern "C" void init_ovl_chip_ram_bank(void);
 extern "C" void init_z3_ram_bank(void);
 extern "C" void init_rtg_bank(void);
+
+extern "C" unsigned int rtg_regs_read_32(uaecptr address);
+extern "C" unsigned int rtg_regs_read_16(uaecptr address);
+extern "C" unsigned int rtg_regs_read_8(uaecptr address);
+extern "C" void rtg_regs_write_32(uaecptr address, unsigned int data);
+extern "C" void rtg_regs_write_16(uaecptr address, unsigned int data);
+extern "C" void rtg_regs_write_8(uaecptr address, unsigned int data);
 
 extern XGpioPs GpioPs;
 int cpu_type=M68K_CPU_TYPE_68030;
@@ -53,9 +60,9 @@ void cpu_emulator_reset(void)
    ovl=1;
    m68k_pulse_reset();
    reset_autoconfig();
-   *(uint32_t *)0x83c00000=0x80000000;
-   dsb();
-   *(uint32_t *)0x83c00000=0x00000000;
+//   *(uint32_t *)0x83c00000=0x80000000;
+//   dsb();
+//   *(uint32_t *)0x83c00000=0x00000000;
 }
 //int irq=0;
 //int last_cpu_level=0;
@@ -250,8 +257,7 @@ extern "C" void write_autoconfig(uint32_t address, uint32_t data)
             // core0 continues
                 shared->core0_hold=0;
             }
-            else
-            if ((configured&2) == 0 && (enabled&2) == 2)
+            else if ((configured&2) == 0 && (enabled&2) == 2)
             {
                 autoConfigBaseRTG = data&0xFFFF0000;         // RTG
                 configured|=2;
@@ -296,7 +302,7 @@ inline int not_decode(uint32_t address)
 //      return(1);
    if(0
       ||(address>=0x18000000 && address<0x40000000)
-      ||(address>=0x78000000 && address<0xFF000000)
+//      ||(address>=0x78000000 && address<0xFF000000)
 //      ||(address>=RTG_BASE && address<0x40000000)
       ||(address>=0x00E00000 && address<0x00E80000)
 //      ||(address>=0x00DD0000 && address<0x00DE0000) mobo IDE (SCSI control)
@@ -356,17 +362,23 @@ unsigned int read_long(unsigned int address)
 #define VIDEO_FORMATTER_BASEADDR XPAR_PROCESSING_AV_SYSTEM_AUDIO_VIDEO_ENGINE_VIDEO_VIDEO_FORMATTER_0_BASEADDR
          return(*(uint32_t *)VIDEO_FORMATTER_BASEADDR);
       }
-      if(add<0x100000)
+      if(add<0x6000)
       {
          if(add>=0x2000)
             return(read_scsi_register(add-0x2000,2));
+         else
+            return(read_rtg_register(add));
       }
-      return(swap32(*(uint32_t*)(Z3660_RTG_BASE+add)));
+      if(add>=0x80000)
+    	  data=swap32(*(uint32_t*)(Z3660_RTG_BASE+add));
+      else
+    	  data=read_scsi_register(add-0x2000,2);
+      return(data);
    }
    if(not_decode(address))
    {
 //      z3660_printf(" Read Long\n");
-      return(0);
+      return(0xFFFFFFFF);
    }
    if(address>=0xFF000000 && address<0xFF010000)
    {
@@ -416,17 +428,23 @@ unsigned int read_word(unsigned int address)
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured&2))
    {
       uint32_t add=address-autoConfigBaseRTG;
-      if(add<0x100000)
+      if(add<0x6000)
       {
          if(add>=0x2000)
             return(read_scsi_register(add-0x2000,1));
+         else
+            return(read_rtg_register(add));
       }
-      return(swap16(*(uint16_t *)(Z3660_RTG_BASE+add)));
+      if(add>=0x80000)
+    	  data=swap16(*(uint16_t *)(Z3660_RTG_BASE+add));
+      else
+    	  data=read_scsi_register(add-0x2000,1);
+      return(data);
    }
    if(not_decode(address))
    {
 //      z3660_printf(" Read Word\n");
-      return(0);
+      return(0XFFFF);
    }
    if(address>=0xFF000000 && address<0xFF010000)
    {
@@ -480,17 +498,36 @@ unsigned int read_byte(unsigned int address)
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured&2))
    {
       uint32_t add=address-autoConfigBaseRTG;
-      if(add<0x100000)
+      if(add<0x6000)
       {
          if(add>=0x2000)
             return(read_scsi_register(add-0x2000,0));
+         else
+         {
+        	 data=read_rtg_register(add&0x1FFFFC);
+        	 switch(add&0x3)
+        	 {
+        	 	 case 0:
+        	 		 return((data>>24)&0xFF);
+        	 	 case 1:
+        	 		 return((data>>16)&0xFF);
+        	 	 case 2:
+        	 		 return((data>>8 )&0xFF);
+        	 	 case 3:
+        	 		 return((data    )&0xFF);
+        	 }
+         }
       }
-      return(Z3660_RTG_BASE[add]);
+      if(add>=0x80000)
+    	  data=Z3660_RTG_BASE[add];
+      else
+    	  data=read_scsi_register(add-0x2000,0);
+      return(data);
    }
    if(not_decode(address))
    {
 //      z3660_printf(" Read Byte\n");
-      return(0);
+      return(0xFF);
    }
    if(address>=0xFF000000 && address<0xFF010000)
    {
@@ -566,13 +603,17 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured&2))
    {
       uint32_t add=address-autoConfigBaseRTG;
-      Z3660_RTG_BASE[add]=value&0xFF;
-      if(add<0x100000)
+      if(add<0x6000)
       {
-         if(add<0x2000)
-            write_rtg_register(add,value);
-         else
+         Z3660_RTG_BASE[add]=value&0xFF;
+         if(add>=0x2000)
             write_scsi_register(add-0x2000,value,0);
+         else
+            write_rtg_register(add,value);
+      }
+      else
+      {
+         Z3660_RTG_BASE[add]=value&0xFF;
       }
       return;
    }
@@ -634,13 +675,17 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured&2))
    {
       uint32_t add=address-autoConfigBaseRTG;
-      *(uint16_t*)(Z3660_RTG_BASE+add)=swap16(value);
-      if(add<0x100000)
+      if(add<0x6000)
       {
-         if(add<0x2000)
-            write_rtg_register(add,value);
-         else
+         *(uint16_t*)(Z3660_RTG_BASE+add)=swap16(value);
+         if(add>=0x2000)
             write_scsi_register(add-0x2000,value,1);
+         else
+            write_rtg_register(add,value);
+      }
+      else
+      {
+         *(uint16_t*)(Z3660_RTG_BASE+add)=swap16(value);
       }
       return;
    }
@@ -702,13 +747,17 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured&2))
    {
       uint32_t add=address-autoConfigBaseRTG;
-      *(((uint32_t*)(Z3660_RTG_BASE+add)))=swap32(value);
       if(add<0x100000)
       {
-         if(add<0x2000)
-            write_rtg_register(add,value);
-         else
+         *(((uint32_t*)(Z3660_RTG_BASE+add)))=swap32(value);
+         if(add>=0x2000)
             write_scsi_register(add-0x2000,value,2);
+         else
+            write_rtg_register(add,value);
+      }
+      else
+      {
+         *(((uint32_t*)(Z3660_RTG_BASE+add)))=swap32(value);
       }
       return;
    }
@@ -869,7 +918,9 @@ inline void arm_write_amiga_long(uint32_t address, uint32_t data)
       write_reg(0x18,bank);
       last_bank=bank;
    }
+   NOP;
    write_mem32(address,data);
+   NOP;
 #endif
    write_pending=1;
 #ifndef WRITE_FINISH_DELAYED
@@ -912,7 +963,9 @@ inline void arm_write_amiga_word(uint32_t address, uint32_t data)
       write_reg(0x18,bank);
       last_bank=bank;
    }
+   NOP;
    write_mem16(address,data);
+   NOP;
 #endif
    write_pending=1;
 #ifndef WRITE_FINISH_DELAYED
@@ -955,7 +1008,9 @@ inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
       write_reg(0x18,bank);
       last_bank=bank;
    }
+   NOP;
    write_mem8(address,data);
+   NOP;
 #endif
    write_pending=1;
 #ifndef WRITE_FINISH_DELAYED
