@@ -32,3 +32,10 @@ kickstart kicks/A4kOS322.rom
 # (YES or NO, in capitals
 #autoconfig_ram NO
 autoconfig_ram YES
+
+# Temperature sensor calibration (THERM)
+# Theoretical value 780 Ohms @ 25 Celsius, but every 060 has a random offset.
+# Resistor R30 (measured from R30 right pad to ground, with 060 cooled to room temperature) in Ohms
+resistor 800.0
+# Room temperature in Celsius
+temperature 27.0
