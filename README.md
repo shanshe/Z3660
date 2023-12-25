@@ -36,3 +36,6 @@ It has the same band-pass filters as the AX module, but made in software by one 
 <br>
 <br>One of the Z-turn ARM CPU can run the emulation code of a 68040 CPU with JIT that reaches up to 120 MIPS!!!<br>It is based on Amiberry CPU code (for 32bit ARM). (And yes, I know, but Emu68 no longer supports 32 bit ARM).
 <br>You can even switch between the real 060 CPU and the emulation by clicking on an app (and rebooting).
+<br>
+<br><b>Discord channel link:</b>
+<br><br>https://discord.gg/EQUTeMb8
