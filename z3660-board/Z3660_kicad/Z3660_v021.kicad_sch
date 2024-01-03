@@ -1,0 +1,105 @@
+(kicad_sch (version 20230121) (generator eeschema)
+
+  (uuid 72366acb-6c86-4134-89df-01ed6e4dc8e0)
+
+  (paper "A4")
+
+  (title_block
+    (title "Z3660 by sHaNsHe (Double H Tech)")
+    (date "2023-08-06")
+    (rev "v0.21")
+  )
+
+  (lib_symbols
+  )
+
+
+  (sheet (at 133.35 71.12) (size 40.64 25.4) (fields_autoplaced)
+    (stroke (width 0) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 00000000-0000-0000-0000-00005edf3731)
+    (property "Sheetname" "CPU Connector" (at 133.35 69.5448 0)
+      (effects (font (size 2.9972 2.9972)) (justify left bottom))
+    )
+    (property "Sheetfile" "Sheet4.kicad_sch" (at 133.35 97.3966 0)
+      (effects (font (size 2 2)) (justify left top))
+    )
+    (instances
+      (project "Z3660_v021"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0" (page "4"))
+      )
+    )
+  )
+
+  (sheet (at 81.28 71.12) (size 40.64 25.4) (fields_autoplaced)
+    (stroke (width 0) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 00000000-0000-0000-0000-00005f53443b)
+    (property "Sheetname" "Data Bus Buffer" (at 81.28 69.5448 0)
+      (effects (font (size 2.9972 2.9972)) (justify left bottom))
+    )
+    (property "Sheetfile" "Sheet2.kicad_sch" (at 81.28 97.3966 0)
+      (effects (font (size 2 2)) (justify left top))
+    )
+    (instances
+      (project "Z3660_v021"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0" (page "2"))
+      )
+    )
+  )
+
+  (sheet (at 29.21 29.21) (size 40.64 25.4) (fields_autoplaced)
+    (stroke (width 0) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 00000000-0000-0000-0000-000061513069)
+    (property "Sheetname" "CPU and CLK" (at 29.21 27.6348 0)
+      (effects (font (size 2.9972 2.9972)) (justify left bottom))
+    )
+    (property "Sheetfile" "Sheet1.kicad_sch" (at 29.21 55.4866 0)
+      (effects (font (size 2 2)) (justify left top))
+    )
+    (instances
+      (project "Z3660_v021"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0" (page "1"))
+      )
+    )
+  )
+
+  (sheet (at 29.21 71.12) (size 40.64 25.4) (fields_autoplaced)
+    (stroke (width 0) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 00000000-0000-0000-0000-0000615132fb)
+    (property "Sheetname" "Bus Adapter CPLD" (at 29.21 69.5448 0)
+      (effects (font (size 2.9972 2.9972)) (justify left bottom))
+    )
+    (property "Sheetfile" "Sheet3.kicad_sch" (at 29.21 97.3966 0)
+      (effects (font (size 2 2)) (justify left top))
+    )
+    (instances
+      (project "Z3660_v021"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0" (page "3"))
+      )
+    )
+  )
+
+  (sheet (at 81.28 29.21) (size 40.64 25.4) (fields_autoplaced)
+    (stroke (width 0) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 00000000-0000-0000-0000-00006350b937)
+    (property "Sheetname" "ZTURN and 3.3V" (at 81.28 27.6348 0)
+      (effects (font (size 2.9972 2.9972)) (justify left bottom))
+    )
+    (property "Sheetfile" "Sheet5.kicad_sch" (at 81.28 55.4866 0)
+      (effects (font (size 2 2)) (justify left top))
+    )
+    (instances
+      (project "Z3660_v021"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0" (page "5"))
+      )
+    )
+  )
+
+  (sheet_instances
+    (path "/" (page "6"))
+  )
+)
