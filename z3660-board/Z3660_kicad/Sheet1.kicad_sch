@@ -7,7 +7,8 @@
   (title_block
     (title "Z3660 by sHaNsHe (Double H Tech)")
     (date "2023-08-06")
-    (rev "v0.21")
+    (rev "v0.21a")
+    (comment 1 "v0.21a Changed Array Networks")
   )
 
   (lib_symbols
@@ -369,261 +370,6 @@
         (pin passive line (at 2.54 0 180) (length 1.016)
           (name "2" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Device:R_Pack08" (pin_names (offset 0) hide) (in_bom yes) (on_board yes)
-      (property "Reference" "RN" (at -12.7 0 90)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "R_Pack08" (at 10.16 0 90)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 12.065 0 90)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "R network parallel topology isolated" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_description" "8 resistor network, parallel topology" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_fp_filters" "DIP* SOIC* R*Array*Concave* R*Array*Convex*" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "R_Pack08_0_1"
-        (rectangle (start -11.43 -2.413) (end 8.89 2.413)
-          (stroke (width 0.254) (type default))
-          (fill (type background))
-        )
-        (rectangle (start -10.795 1.905) (end -9.525 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (rectangle (start -8.255 1.905) (end -6.985 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (rectangle (start -5.715 1.905) (end -4.445 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (rectangle (start -3.175 1.905) (end -1.905 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (rectangle (start -0.635 1.905) (end 0.635 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -10.16 -2.54)
-            (xy -10.16 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -10.16 1.905)
-            (xy -10.16 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -7.62 -2.54)
-            (xy -7.62 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -7.62 1.905)
-            (xy -7.62 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -5.08 -2.54)
-            (xy -5.08 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -5.08 1.905)
-            (xy -5.08 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -2.54 -2.54)
-            (xy -2.54 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy -2.54 1.905)
-            (xy -2.54 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 0 -2.54)
-            (xy 0 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 0 1.905)
-            (xy 0 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 2.54 -2.54)
-            (xy 2.54 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 2.54 1.905)
-            (xy 2.54 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 5.08 -2.54)
-            (xy 5.08 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 5.08 1.905)
-            (xy 5.08 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 7.62 -2.54)
-            (xy 7.62 -1.905)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 7.62 1.905)
-            (xy 7.62 2.54)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (rectangle (start 1.905 1.905) (end 3.175 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (rectangle (start 4.445 1.905) (end 5.715 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (rectangle (start 6.985 1.905) (end 8.255 -1.905)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "R_Pack08_1_1"
-        (pin passive line (at -10.16 -5.08 90) (length 2.54)
-          (name "R1.1" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 5.08 5.08 270) (length 2.54)
-          (name "R7.2" (effects (font (size 1.27 1.27))))
-          (number "10" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 2.54 5.08 270) (length 2.54)
-          (name "R6.2" (effects (font (size 1.27 1.27))))
-          (number "11" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 0 5.08 270) (length 2.54)
-          (name "R5.2" (effects (font (size 1.27 1.27))))
-          (number "12" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -2.54 5.08 270) (length 2.54)
-          (name "R4.2" (effects (font (size 1.27 1.27))))
-          (number "13" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 5.08 270) (length 2.54)
-          (name "R3.2" (effects (font (size 1.27 1.27))))
-          (number "14" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -7.62 5.08 270) (length 2.54)
-          (name "R2.2" (effects (font (size 1.27 1.27))))
-          (number "15" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -10.16 5.08 270) (length 2.54)
-          (name "R1.2" (effects (font (size 1.27 1.27))))
-          (number "16" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -7.62 -5.08 90) (length 2.54)
-          (name "R2.1" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -5.08 90) (length 2.54)
-          (name "R3.1" (effects (font (size 1.27 1.27))))
-          (number "3" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -2.54 -5.08 90) (length 2.54)
-          (name "R4.1" (effects (font (size 1.27 1.27))))
-          (number "4" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 0 -5.08 90) (length 2.54)
-          (name "R5.1" (effects (font (size 1.27 1.27))))
-          (number "5" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 2.54 -5.08 90) (length 2.54)
-          (name "R6.1" (effects (font (size 1.27 1.27))))
-          (number "6" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 5.08 -5.08 90) (length 2.54)
-          (name "R7.1" (effects (font (size 1.27 1.27))))
-          (number "7" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 7.62 -5.08 90) (length 2.54)
-          (name "R8.1" (effects (font (size 1.27 1.27))))
-          (number "8" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 7.62 5.08 270) (length 2.54)
-          (name "R8.2" (effects (font (size 1.27 1.27))))
-          (number "9" (effects (font (size 1.27 1.27))))
         )
       )
     )
@@ -1802,6 +1548,149 @@
         )
       )
     )
+    (symbol "Z3660_v02:R_Pack04" (pin_names (offset 0) hide) (in_bom yes) (on_board yes)
+      (property "Reference" "RN23" (at 0 -17.78 90)
+        (effects (font (size 1.27 1.27)))
+      )
+      (property "Value" "22" (at 0 -22.86 90)
+        (effects (font (size 1.27 1.27)))
+      )
+      (property "Footprint" "Resistor_SMD:R_Array_Convex_4x0603" (at 6.985 0 90)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "Datasheet" "~" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "ki_keywords" "R network parallel topology isolated" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "ki_description" "4 resistor network, parallel topology" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "ki_fp_filters" "DIP* SOIC* R*Array*Concave* R*Array*Convex*" (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (symbol "R_Pack04_0_1"
+        (rectangle (start -6.35 -2.413) (end 3.81 2.413)
+          (stroke (width 0.254) (type default))
+          (fill (type background))
+        )
+        (rectangle (start -5.715 1.905) (end -4.445 -1.905)
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (rectangle (start -3.175 1.905) (end -1.905 -1.905)
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (rectangle (start -0.635 1.905) (end 0.635 -1.905)
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy -5.08 -2.54)
+            (xy -5.08 -1.905)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy -5.08 1.905)
+            (xy -5.08 2.54)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy -2.54 -2.54)
+            (xy -2.54 -1.905)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy -2.54 1.905)
+            (xy -2.54 2.54)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 0 -2.54)
+            (xy 0 -1.905)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 0 1.905)
+            (xy 0 2.54)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 2.54 -2.54)
+            (xy 2.54 -1.905)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 2.54 1.905)
+            (xy 2.54 2.54)
+          )
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (rectangle (start 1.905 1.905) (end 3.175 -1.905)
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+      )
+      (symbol "R_Pack04_1_1"
+        (pin passive line (at -5.08 -5.08 90) (length 2.54)
+          (name "R1.1" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at -2.54 -5.08 90) (length 2.54)
+          (name "R2.1" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 0 -5.08 90) (length 2.54)
+          (name "R3.1" (effects (font (size 1.27 1.27))))
+          (number "3" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 2.54 -5.08 90) (length 2.54)
+          (name "R4.1" (effects (font (size 1.27 1.27))))
+          (number "4" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 2.54 5.08 270) (length 2.54)
+          (name "R4.2" (effects (font (size 1.27 1.27))))
+          (number "5" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 0 5.08 270) (length 2.54)
+          (name "R3.2" (effects (font (size 1.27 1.27))))
+          (number "6" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at -2.54 5.08 270) (length 2.54)
+          (name "R2.2" (effects (font (size 1.27 1.27))))
+          (number "7" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at -5.08 5.08 270) (length 2.54)
+          (name "R1.2" (effects (font (size 1.27 1.27))))
+          (number "8" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
     (symbol "power:+3V3" (power) (pin_names (offset 0)) (in_bom yes) (on_board yes)
       (property "Reference" "#PWR" (at 0 -3.81 0)
         (effects (font (size 1.27 1.27)) hide)
@@ -2355,7 +2244,7 @@
   (junction (at 88.9 26.67) (diameter 0) (color 0 0 0 0)
     (uuid ea020aa6-c820-47b1-bdf7-82790dcca121)
   )
-  (junction (at 45.72 111.76) (diameter 0) (color 0 0 0 0)
+  (junction (at 44.45 111.76) (diameter 0) (color 0 0 0 0)
     (uuid ea595952-24b1-49ec-93c0-acc526881c25)
   )
   (junction (at 195.58 242.57) (diameter 0) (color 0 0 0 0)
@@ -3253,7 +3142,7 @@
     (stroke (width 0) (type default))
     (uuid 1aaf34a3-282e-4633-82fa-9d6cdf32efbb)
   )
-  (wire (pts (xy 59.69 121.92) (xy 66.04 121.92))
+  (wire (pts (xy 58.42 121.92) (xy 66.04 121.92))
     (stroke (width 0) (type default))
     (uuid 1adf5b66-bb75-45dd-8d12-c23148ca9b05)
   )
@@ -3298,7 +3187,7 @@
     (stroke (width 0) (type default))
     (uuid 2276bf47-b441-4aa2-ba22-8213875ce0ee)
   )
-  (wire (pts (xy 49.53 121.92) (xy 39.37 121.92))
+  (wire (pts (xy 48.26 121.92) (xy 39.37 121.92))
     (stroke (width 0) (type default))
     (uuid 2276e018-ceb6-4356-b3fe-3b8fe418011b)
   )
@@ -3392,10 +3281,6 @@
     (stroke (width 0) (type default))
     (uuid 2af1d271-3c6a-476d-8eba-6b2aab466da3)
   )
-  (wire (pts (xy 39.37 116.84) (xy 49.53 116.84))
-    (stroke (width 0) (type default))
-    (uuid 2b1702da-cd06-4bb1-8baa-348b7c98f494)
-  )
   (bus (pts (xy 217.17 222.25) (xy 217.17 224.79))
     (stroke (width 0) (type default))
     (uuid 2c596257-8264-4a3e-98e1-c41a998da321)
@@ -3462,7 +3347,7 @@
     (stroke (width 0) (type default))
     (uuid 30cf5573-2ac5-4d4b-8678-7fcebe2bcd36)
   )
-  (wire (pts (xy 45.72 111.76) (xy 49.53 111.76))
+  (wire (pts (xy 44.45 111.76) (xy 48.26 111.76))
     (stroke (width 0) (type default))
     (uuid 31446a24-8ce7-4dca-ab0b-d907a8be5e8d)
   )
@@ -3581,11 +3466,11 @@
     (stroke (width 0) (type default))
     (uuid 3d8ae180-8beb-4868-96bd-080dbdab2951)
   )
-  (wire (pts (xy 59.69 124.46) (xy 71.12 124.46))
+  (wire (pts (xy 58.42 124.46) (xy 71.12 124.46))
     (stroke (width 0) (type default))
     (uuid 3dcbc8df-d8be-49ed-aa9e-e9898cc87281)
   )
-  (wire (pts (xy 59.69 114.3) (xy 68.58 114.3))
+  (wire (pts (xy 58.42 114.3) (xy 68.58 114.3))
     (stroke (width 0) (type default))
     (uuid 3ee908cd-0d24-4dce-9ee8-bb20eba30337)
   )
@@ -3718,7 +3603,7 @@
     (stroke (width 0) (type default))
     (uuid 49ac7b6c-c1e6-46fa-96d5-cfe59658eec2)
   )
-  (wire (pts (xy 59.69 116.84) (xy 73.66 116.84))
+  (wire (pts (xy 58.42 116.84) (xy 73.66 116.84))
     (stroke (width 0) (type default))
     (uuid 4b1f23d2-5bf9-4fe7-bea3-570c1668b32d)
   )
@@ -3776,7 +3661,7 @@
     (stroke (width 0) (type default))
     (uuid 50d092a1-cb48-4b36-9419-53ddb3f8fa14)
   )
-  (wire (pts (xy 59.69 119.38) (xy 68.58 119.38))
+  (wire (pts (xy 58.42 119.38) (xy 68.58 119.38))
     (stroke (width 0) (type default))
     (uuid 516a51d8-36d1-44ca-a8dc-c3505f5dc2af)
   )
@@ -3976,7 +3861,7 @@
     (stroke (width 0) (type default))
     (uuid 62ab9051-fded-466c-9df1-9b40d76dc590)
   )
-  (wire (pts (xy 49.53 114.3) (xy 45.72 114.3))
+  (wire (pts (xy 48.26 114.3) (xy 44.45 114.3))
     (stroke (width 0) (type default))
     (uuid 631e4b79-dee6-47d6-8f13-c5d7a2e6b9d7)
   )
@@ -4075,7 +3960,7 @@
     (stroke (width 0) (type default))
     (uuid 6f9eaa06-a700-43c2-a40b-b52d1ada4775)
   )
-  (wire (pts (xy 49.53 129.54) (xy 39.37 129.54))
+  (wire (pts (xy 48.26 129.54) (xy 39.37 129.54))
     (stroke (width 0) (type default))
     (uuid 713e4d09-6cf1-49fc-bf2e-c643eb7890b8)
   )
@@ -4273,7 +4158,7 @@
     (stroke (width 0) (type default))
     (uuid 85e898d6-983f-4977-9dfa-e5b961e989c1)
   )
-  (wire (pts (xy 49.53 124.46) (xy 39.37 124.46))
+  (wire (pts (xy 48.26 124.46) (xy 39.37 124.46))
     (stroke (width 0) (type default))
     (uuid 8672a05d-b750-4ddd-a92d-4c58fddcdd4e)
   )
@@ -4331,7 +4216,7 @@
     (stroke (width 0) (type default))
     (uuid 8d9ea4cf-1047-42af-bf72-13258f22d6ad)
   )
-  (wire (pts (xy 59.69 127) (xy 78.74 127))
+  (wire (pts (xy 58.42 127) (xy 78.74 127))
     (stroke (width 0) (type default))
     (uuid 8dfebcdc-9c8c-4947-8057-9d2e5e6930dd)
   )
@@ -4434,7 +4319,7 @@
     (stroke (width 0) (type default))
     (uuid 97972d9a-c8ac-431f-b1f4-0da8477b5639)
   )
-  (wire (pts (xy 45.72 100.33) (xy 45.72 111.76))
+  (wire (pts (xy 44.45 100.33) (xy 44.45 111.76))
     (stroke (width 0) (type default))
     (uuid 97a215e3-4c97-44a3-b6ed-6c5756b30e04)
   )
@@ -4698,6 +4583,10 @@
     (stroke (width 0) (type default))
     (uuid acb025c1-3784-47d1-b5e9-772bcda8c549)
   )
+  (wire (pts (xy 39.37 116.84) (xy 48.26 116.84))
+    (stroke (width 0) (type default))
+    (uuid ad19de64-06ef-424f-bfe0-482a560894fe)
+  )
   (wire (pts (xy 73.66 180.34) (xy 78.74 180.34))
     (stroke (width 0) (type default))
     (uuid ad541cb2-f097-4769-b1c0-c1cca23ca9bd)
@@ -4710,7 +4599,7 @@
     (stroke (width 0) (type default))
     (uuid ad8c2a20-27d0-4e2a-aabf-44a509bf342a)
   )
-  (wire (pts (xy 49.53 127) (xy 39.37 127))
+  (wire (pts (xy 48.26 127) (xy 39.37 127))
     (stroke (width 0) (type default))
     (uuid aee35d5f-0638-4cb1-b58c-265232f425a0)
   )
@@ -5078,7 +4967,7 @@
     (uuid cf6f78f4-03aa-42aa-b552-de87537940f7)
   )
 
-  (wire (pts (xy 59.69 111.76) (xy 60.96 111.76))
+  (wire (pts (xy 58.42 111.76) (xy 60.96 111.76))
     (stroke (width 0) (type default))
     (uuid d061e706-6591-48eb-96dc-1d942bc24919)
   )
@@ -5145,7 +5034,7 @@
     (stroke (width 0) (type default))
     (uuid d29de56e-ac57-4735-90dd-72749897208a)
   )
-  (wire (pts (xy 49.53 119.38) (xy 39.37 119.38))
+  (wire (pts (xy 48.26 119.38) (xy 39.37 119.38))
     (stroke (width 0) (type default))
     (uuid d2b76814-7e11-4ea5-b409-7892e0c8500a)
   )
@@ -5425,11 +5314,11 @@
     (stroke (width 0) (type default))
     (uuid f3642676-ce32-431a-adfa-a8e750bc449d)
   )
-  (wire (pts (xy 60.96 129.54) (xy 59.69 129.54))
+  (wire (pts (xy 60.96 129.54) (xy 58.42 129.54))
     (stroke (width 0) (type default))
     (uuid f3bb56e1-e158-446a-98ec-53273ab1bba6)
   )
-  (wire (pts (xy 45.72 114.3) (xy 45.72 111.76))
+  (wire (pts (xy 44.45 114.3) (xy 44.45 111.76))
     (stroke (width 0) (type default))
     (uuid f3c1a6b2-4e0a-47c9-8b0b-964e029cc410)
   )
@@ -6469,7 +6358,7 @@
     (property "Value" "100nF" (at 204.2668 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 201.93 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 201.93 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 201.93 31.75 0)
@@ -6478,7 +6367,7 @@
     (pin "1" (uuid 281af95a-9c1f-4062-a760-1a90042a8772))
     (pin "2" (uuid b2a07961-6920-4ad7-bdfc-63a5300b93c8))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C16") (unit 1)
         )
@@ -6495,7 +6384,7 @@
     (property "Value" "100nF" (at 214.4268 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 212.09 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 212.09 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 212.09 31.75 0)
@@ -6504,7 +6393,7 @@
     (pin "1" (uuid a19d6755-e466-477d-8223-6d92901916c1))
     (pin "2" (uuid 0a9b9ccc-5008-49a9-88e9-79b5ab109a0e))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C17") (unit 1)
         )
@@ -6529,7 +6418,7 @@
     )
     (pin "1" (uuid 496d0b83-529a-451c-b911-88a12891f913))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR019") (unit 1)
         )
@@ -6546,7 +6435,7 @@
     (property "Value" "100nF" (at 192.8368 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 190.5 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 190.5 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 190.5 31.75 0)
@@ -6555,7 +6444,7 @@
     (pin "1" (uuid 4d41a658-e531-4dc2-a4e7-92055534928a))
     (pin "2" (uuid ffe6a6cf-a44e-4a96-904d-c6416261fb2e))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C15") (unit 1)
         )
@@ -6572,7 +6461,7 @@
     (property "Value" "100nF" (at 224.5868 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 222.25 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 222.25 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 222.25 31.75 0)
@@ -6581,7 +6470,7 @@
     (pin "1" (uuid eceec907-e494-49e6-b51d-8be5df9251a2))
     (pin "2" (uuid 0e45aa0a-52e3-457b-8114-f0a0c490f352))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C18") (unit 1)
         )
@@ -6598,7 +6487,7 @@
     (property "Value" "100nF" (at 234.7468 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 232.41 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 232.41 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 232.41 31.75 0)
@@ -6607,7 +6496,7 @@
     (pin "1" (uuid 062fb426-2e17-4145-a762-1f8c033a15ac))
     (pin "2" (uuid 7934d28a-e879-47f7-818a-6f29def725e0))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C19") (unit 1)
         )
@@ -6624,7 +6513,7 @@
     (property "Value" "100nF" (at 244.9068 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 242.57 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 242.57 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 242.57 31.75 0)
@@ -6633,7 +6522,7 @@
     (pin "1" (uuid e93be426-24b5-49b1-ba2c-1bcd7fd59a7b))
     (pin "2" (uuid 3feffedd-8f1b-4038-87f6-f108b7a9e25e))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C20") (unit 1)
         )
@@ -6650,7 +6539,7 @@
     (property "Value" "100nF" (at 255.0668 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 252.73 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 252.73 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 252.73 31.75 0)
@@ -6659,7 +6548,7 @@
     (pin "1" (uuid b4f266b5-2382-4189-8998-9c343633f28d))
     (pin "2" (uuid d5f55242-cee6-4aa8-833b-6416d3cf88fd))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C21") (unit 1)
         )
@@ -6676,7 +6565,7 @@
     (property "Value" "100nF" (at 265.2268 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 262.89 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 262.89 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 262.89 31.75 0)
@@ -6685,7 +6574,7 @@
     (pin "1" (uuid d371452f-e596-4bd1-8a41-00bfc1d912eb))
     (pin "2" (uuid 5d984356-7c9e-4e8d-bfff-e46873421519))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C22") (unit 1)
         )
@@ -6702,7 +6591,7 @@
     (property "Value" "100nF" (at 275.3868 32.893 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 273.05 31.75 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 273.05 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 273.05 31.75 0)
@@ -6711,7 +6600,7 @@
     (pin "1" (uuid 93a90d8f-1341-4d2a-9f21-3c2082f348af))
     (pin "2" (uuid 8bf78793-491b-4f7a-940a-9b22b1800dc5))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C23") (unit 1)
         )
@@ -6736,7 +6625,7 @@
     )
     (pin "1" (uuid 73b046d9-2f89-429e-8631-3e2969504967))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR016") (unit 1)
         )
@@ -6753,7 +6642,7 @@
     (property "Value" "Jumper_NO_Small" (at 341.5792 72.263 90)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" (at 340.36 71.12 0)
+    (property "Footprint" "Z3660_v02:PinHeader_1x02_P2.54mm_Vertical" (at 340.36 71.12 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 340.36 71.12 0)
@@ -6762,7 +6651,7 @@
     (pin "1" (uuid 50e63e79-95ea-45d3-9948-295a8700a8cd))
     (pin "2" (uuid 85845731-b21c-4087-996c-3bb49fb0e4eb))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP2") (unit 1)
         )
@@ -6779,14 +6668,14 @@
     (property "Value" "MountingHole" (at 218.44 258.953 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_4mm" (at 215.9 257.81 0)
+    (property "Footprint" "Z3660_v02:MountingHole_4mm" (at 215.9 257.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 215.9 257.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H1") (unit 1)
         )
@@ -6803,14 +6692,14 @@
     (property "Value" "MountingHole" (at 218.44 264.033 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_4mm" (at 215.9 262.89 0)
+    (property "Footprint" "Z3660_v02:MountingHole_4mm" (at 215.9 262.89 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 215.9 262.89 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H4") (unit 1)
         )
@@ -6827,14 +6716,14 @@
     (property "Value" "MountingHole" (at 240.03 258.953 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_4mm" (at 237.49 257.81 0)
+    (property "Footprint" "Z3660_v02:MountingHole_4mm" (at 237.49 257.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 237.49 257.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H2") (unit 1)
         )
@@ -6851,14 +6740,14 @@
     (property "Value" "MountingHole" (at 240.03 264.033 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_2.2mm_M2" (at 237.49 262.89 0)
+    (property "Footprint" "Z3660_v02:MountingHole_2.2mm_M2" (at 237.49 262.89 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 237.49 262.89 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H5") (unit 1)
         )
@@ -6875,14 +6764,14 @@
     (property "Value" "MountingHole" (at 260.35 258.953 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_4mm" (at 257.81 257.81 0)
+    (property "Footprint" "Z3660_v02:MountingHole_4mm" (at 257.81 257.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 257.81 257.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H3") (unit 1)
         )
@@ -6899,14 +6788,14 @@
     (property "Value" "MountingHole" (at 260.35 264.033 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_2.2mm_M2" (at 257.81 262.89 0)
+    (property "Footprint" "Z3660_v02:MountingHole_2.2mm_M2" (at 257.81 262.89 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 257.81 262.89 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H6") (unit 1)
         )
@@ -6923,7 +6812,7 @@
     (property "Value" "1k" (at 51.943 38.1 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 54.61 38.1 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 54.61 38.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 54.61 38.1 0)
@@ -6932,7 +6821,7 @@
     (pin "1" (uuid 0300b8f8-5b6c-468a-99b5-c7d4891470e0))
     (pin "2" (uuid d8eb3349-0983-4e22-b0ed-5a4df4f20902))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R8") (unit 1)
         )
@@ -6949,7 +6838,7 @@
     (property "Value" "1k" (at 43.053 38.1 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 45.72 38.1 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 45.72 38.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 45.72 38.1 0)
@@ -6958,7 +6847,7 @@
     (pin "1" (uuid 341dfc37-1fdd-45aa-a2ac-1e3a916ed88a))
     (pin "2" (uuid 4c40a365-5c85-499a-97b8-71715aa5730a))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R7") (unit 1)
         )
@@ -6975,7 +6864,7 @@
     (property "Value" "1k" (at 34.163 38.1 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 36.83 38.1 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 36.83 38.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 36.83 38.1 0)
@@ -6984,7 +6873,7 @@
     (pin "1" (uuid 73f4b2be-ca84-4368-82ae-77a9b122991f))
     (pin "2" (uuid 3f803ed9-7414-4f12-9f3b-f85a9891973c))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R6") (unit 1)
         )
@@ -7009,7 +6898,7 @@
     )
     (pin "1" (uuid 9c9aa7fa-4bba-4877-abcc-3f5e0b806b54))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR018") (unit 1)
         )
@@ -7026,7 +6915,7 @@
     (property "Value" "1k" (at 25.273 38.1 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 27.94 38.1 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 27.94 38.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 27.94 38.1 0)
@@ -7035,7 +6924,7 @@
     (pin "1" (uuid 8fb0b698-1fd2-4a49-a2eb-b78063f81872))
     (pin "2" (uuid a1061b1f-1a94-407c-a79a-21cdcad04679))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R5") (unit 1)
         )
@@ -7043,24 +6932,24 @@
     )
   )
 
-  (symbol (lib_id "power:+3V3") (at 45.72 100.33 0) (unit 1)
+  (symbol (lib_id "power:+3V3") (at 44.45 100.33 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 00000000-0000-0000-0000-00006160cfad)
-    (property "Reference" "#PWR023" (at 45.72 104.14 0)
+    (property "Reference" "#PWR023" (at 44.45 104.14 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Value" "+3V3" (at 46.101 95.9358 0)
+    (property "Value" "+3V3" (at 44.831 95.9358 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 45.72 100.33 0)
+    (property "Footprint" "" (at 44.45 100.33 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Datasheet" "" (at 45.72 100.33 0)
+    (property "Datasheet" "" (at 44.45 100.33 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (pin "1" (uuid 9650970d-a3e7-4fb4-be45-1c86afcbe12b))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR023") (unit 1)
         )
@@ -7077,7 +6966,7 @@
     (property "Value" "100nF" (at 288.0868 167.513 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 285.75 166.37 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 285.75 166.37 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 285.75 166.37 0)
@@ -7086,7 +6975,7 @@
     (pin "1" (uuid ccd5a4d4-dec9-40da-82b0-c806603703a7))
     (pin "2" (uuid 04ae15ba-d585-4798-8563-9a8c11501ff5))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C25") (unit 1)
         )
@@ -7111,7 +7000,7 @@
     )
     (pin "1" (uuid 682be038-f138-4f16-be1b-84401ade96ff))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR026") (unit 1)
         )
@@ -7136,7 +7025,7 @@
     )
     (pin "1" (uuid 0263fd7b-6cf2-4d2f-81c7-cf3ee0f6f802))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR029") (unit 1)
         )
@@ -7153,7 +7042,7 @@
     (property "Value" "7407" (at 267.97 95.8596 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" (at 267.97 101.6 0)
+    (property "Footprint" "Z3660_v02:SOIC-14_3.9x8.7mm_P1.27mm" (at 267.97 101.6 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "www.st.com/resource/en/datasheet/74lcx07.pdf" (at 267.97 101.6 0)
@@ -7174,7 +7063,7 @@
     (pin "14" (uuid 90b27258-7fae-4625-ab6d-d5639674332e))
     (pin "7" (uuid 3a7e470f-3901-4eef-8519-c8cd966891e9))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 3)
         )
@@ -7191,7 +7080,7 @@
     (property "Value" "7407" (at 311.912 72.263 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "" (at 306.07 71.12 0)
+    (property "Footprint" "Z3660_v02:SOIC-14_3.9x8.7mm_P1.27mm" (at 306.07 71.12 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "www.st.com/resource/en/datasheet/74lcx07.pdf" (at 306.07 71.12 0)
@@ -7212,7 +7101,7 @@
     (pin "14" (uuid ad407585-25c9-4089-a795-a2fe654205d3))
     (pin "7" (uuid 9f5d0606-7560-4f4c-b2d2-0ba7fde71f70))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 7)
         )
@@ -7229,7 +7118,7 @@
     (property "Value" "100nF" (at 322.3768 72.263 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 320.04 71.12 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 320.04 71.12 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 320.04 71.12 0)
@@ -7238,7 +7127,7 @@
     (pin "1" (uuid e9d55a68-3d99-4d56-bf2c-ae5eab7d5c47))
     (pin "2" (uuid 077bcfae-17f0-417c-a38c-b7ddc5524b15))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C24") (unit 1)
         )
@@ -7263,7 +7152,7 @@
     )
     (pin "1" (uuid 1b58e067-cb68-4fd4-ae97-7c69e4e4660a))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR021") (unit 1)
         )
@@ -7288,49 +7177,9 @@
     )
     (pin "1" (uuid a66c67fd-1564-4f7f-88b0-ee33bf3dd5dd))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR022") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Device:R_Pack08") (at 53.34 147.32 270) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 00000000-0000-0000-0000-0000622e5918)
-    (property "Reference" "RN3" (at 35.56 147.32 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "22" (at 30.48 147.32 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Z3660_v02:R_Array_Convex_8x0602" (at 53.34 159.385 90)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 53.34 147.32 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 4dcc4663-a3d5-49a4-9c76-92e70c8f48c0))
-    (pin "10" (uuid 419b60af-fe14-4927-b6b7-c865d105310c))
-    (pin "11" (uuid 34129a62-32a4-4c3e-bb6e-ab7b88d972b5))
-    (pin "12" (uuid 26187dbe-313a-450c-83d6-f95dbfef3b8c))
-    (pin "13" (uuid c56f5485-bfaf-4df9-ae4e-2a5fb5544ead))
-    (pin "14" (uuid ef8b7d7f-5a8a-4819-872d-54cc1a0342e5))
-    (pin "15" (uuid 28200a2d-44f1-4f9d-afde-5f080d917bc8))
-    (pin "16" (uuid a79dda53-5bcf-424f-a9d5-e9537328d079))
-    (pin "2" (uuid f05f85b8-7988-4ce8-acbc-25891f92b954))
-    (pin "3" (uuid 8527ee54-3fdd-4bfa-b410-e8b319c399ab))
-    (pin "4" (uuid 159460ca-c531-4a0b-a26c-abc5b611fbc9))
-    (pin "5" (uuid c7105ee2-e943-4291-a63a-446347c1d758))
-    (pin "6" (uuid 0eded97b-fcfc-48b4-a82d-f61c672ac586))
-    (pin "7" (uuid 903fab34-3357-42df-afc9-1504fad8a942))
-    (pin "8" (uuid 465ec459-7a30-41a1-b48c-45af3c17eb83))
-    (pin "9" (uuid 8b568c7e-3db7-41bc-ad5a-7e4f731e9e8e))
-    (instances
-      (project "Z3660_v021"
-        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
-          (reference "RN3") (unit 1)
         )
       )
     )
@@ -7345,7 +7194,7 @@
     (property "Value" "NC" (at 299.593 196.85 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 302.26 196.85 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 302.26 196.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 302.26 196.85 0)
@@ -7354,49 +7203,9 @@
     (pin "1" (uuid 3e506dde-3365-4d34-8f3c-efd0c4ef3d54))
     (pin "2" (uuid 89c218e3-4d13-40d0-8bff-436611f45b98))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R12") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Device:R_Pack08") (at 53.34 167.64 270) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 00000000-0000-0000-0000-0000624706d7)
-    (property "Reference" "RN4" (at 35.56 167.64 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "22" (at 30.48 167.64 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Z3660_v02:R_Array_Convex_8x0602" (at 53.34 179.705 90)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 53.34 167.64 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 55a46434-e92a-4046-8f34-638b20b2fce4))
-    (pin "10" (uuid 97855816-8ae4-462b-a917-591e6f1615ab))
-    (pin "11" (uuid dec10c10-c91f-479c-8b79-01c196085f54))
-    (pin "12" (uuid 54590dea-c63c-4e74-934e-46318e2ec8d2))
-    (pin "13" (uuid 836b828a-358f-42f2-91ca-ef5a5ffb118b))
-    (pin "14" (uuid 6942a83e-6acc-419a-a8a1-faaf709163f2))
-    (pin "15" (uuid e58f720c-45d9-45ac-a0b3-d3a596602d2e))
-    (pin "16" (uuid 3391acfb-ef4d-4b49-ba9f-079d51743809))
-    (pin "2" (uuid c8f3e575-d11c-46a2-a887-88803a68a49c))
-    (pin "3" (uuid d8336880-3315-41ea-b38a-a86f5bb7f8a7))
-    (pin "4" (uuid a9d684e7-3fc4-4d97-95da-d5db65d9b3f9))
-    (pin "5" (uuid 0e285928-59a9-4e02-93a7-081aba408bd1))
-    (pin "6" (uuid d4ec411d-fe78-4cec-bf9b-819af3cfde25))
-    (pin "7" (uuid ce79449a-e6b9-4137-b3ea-a3296bf1b4f1))
-    (pin "8" (uuid ec7bf04d-8d1c-4d1f-886c-b9d6202a40f9))
-    (pin "9" (uuid 5eb1deac-3641-47f4-a6bc-4315ba92ea50))
-    (instances
-      (project "Z3660_v021"
-        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
-          (reference "RN4") (unit 1)
         )
       )
     )
@@ -7419,49 +7228,9 @@
     )
     (pin "1" (uuid de9c1f41-4b89-46a7-86d3-eeaa5d09c91f))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR030") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Device:R_Pack08") (at 53.34 187.96 270) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 00000000-0000-0000-0000-0000624c653d)
-    (property "Reference" "RN5" (at 35.56 187.96 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "22" (at 30.48 187.96 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Z3660_v02:R_Array_Convex_8x0602" (at 53.34 200.025 90)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 53.34 187.96 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 720710b5-4beb-4a10-9c64-d304b13cd7de))
-    (pin "10" (uuid 2d1125f1-b722-4771-ad56-d3b22eb027f5))
-    (pin "11" (uuid 508fb5ad-4ece-44a6-b4b9-551c9a30fc7b))
-    (pin "12" (uuid 807fd13f-b23c-4330-927f-227a30e3b220))
-    (pin "13" (uuid fad98ebb-7ab1-4ad6-b8d7-41f36371b2eb))
-    (pin "14" (uuid cc11d9b0-1ae2-4128-99bc-e26413ea8348))
-    (pin "15" (uuid c7204d96-4207-4d90-8303-9743851f7704))
-    (pin "16" (uuid 59c80ede-7a6d-4b20-a38f-dfd678cb9c1f))
-    (pin "2" (uuid 13c7e450-1778-43a2-8b94-4b6493fb8de3))
-    (pin "3" (uuid 4325d302-3f70-4dd0-8f4e-62d3a54302f4))
-    (pin "4" (uuid bf725849-dc96-4851-b7b1-0095b99441eb))
-    (pin "5" (uuid b5a8947a-94d6-4e7b-89e5-ce8bcd878e03))
-    (pin "6" (uuid 4e57084d-b8e2-4ecd-a35e-1229c4c4b71f))
-    (pin "7" (uuid 62caf8bc-3c81-4c66-b94b-b1a54939cc30))
-    (pin "8" (uuid 6ea67578-c776-4d6c-84b4-40858cf52964))
-    (pin "9" (uuid 884f14c4-7138-4815-ad48-a071f25d0fe2))
-    (instances
-      (project "Z3660_v021"
-        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
-          (reference "RN5") (unit 1)
         )
       )
     )
@@ -7476,96 +7245,16 @@
     (property "Value" "MountingHole" (at 218.44 269.113 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_2.2mm_M2" (at 215.9 267.97 0)
+    (property "Footprint" "Z3660_v02:MountingHole_2.2mm_M2" (at 215.9 267.97 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 215.9 267.97 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H7") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Device:R_Pack08") (at 53.34 208.28 270) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 00000000-0000-0000-0000-00006251bb6f)
-    (property "Reference" "RN6" (at 35.56 208.28 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "22" (at 30.48 208.28 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Z3660_v02:R_Array_Convex_8x0602" (at 53.34 220.345 90)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 53.34 208.28 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid aa751329-9e7e-478e-aff5-41e5ca96d488))
-    (pin "10" (uuid 3e202877-a1cd-4d23-a29f-3c54da1fefc5))
-    (pin "11" (uuid c1715f99-6c0a-49c2-b479-1570c516fc59))
-    (pin "12" (uuid f3b04720-4eba-4d26-b08a-2237e16e2b81))
-    (pin "13" (uuid 6ee87167-6e6f-4c6f-9dd3-fc91da525f25))
-    (pin "14" (uuid 43816db4-8dc0-4c2d-8c1e-9cde2e1ca8a8))
-    (pin "15" (uuid 444c2fef-069f-4cb7-8590-383be46bd2ac))
-    (pin "16" (uuid ae639545-29e8-48b9-93a6-9f0c23bedff4))
-    (pin "2" (uuid fc36a86f-2a5f-4d50-ad65-7367602f1b70))
-    (pin "3" (uuid c0de2888-68b1-4e96-9f74-11c9aa7861c8))
-    (pin "4" (uuid 5da458b8-df61-436a-a6d3-1a54f1f3c03b))
-    (pin "5" (uuid 6c7d75ec-a8f3-4ab1-a583-b0d888ba34c7))
-    (pin "6" (uuid 3724a2a6-2598-4d0e-b570-4c0729a9c88b))
-    (pin "7" (uuid 803a6ee0-a3e7-40b4-ab7f-fa96fdae930a))
-    (pin "8" (uuid 88aad568-47b6-448a-93de-f9621b775ad2))
-    (pin "9" (uuid 798140f5-e689-4d76-8752-2bf7346290f9))
-    (instances
-      (project "Z3660_v021"
-        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
-          (reference "RN6") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Device:R_Pack08") (at 54.61 121.92 270) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 00000000-0000-0000-0000-0000628c786f)
-    (property "Reference" "RN1" (at 54.61 106.2482 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "1k" (at 54.61 108.5596 90)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Z3660_v02:R_Array_Convex_8x0602" (at 54.61 133.985 90)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 54.61 121.92 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid e1b8ffff-7b49-4f1c-b06b-96df62ca0848))
-    (pin "10" (uuid 8d4ab549-a5e1-49d6-a054-3869ab5eb419))
-    (pin "11" (uuid 3a713602-9023-4ead-a788-3bcd4f529f82))
-    (pin "12" (uuid 42e07449-612a-4724-a89d-cffcc069977c))
-    (pin "13" (uuid a01028fa-48c1-4c1d-95d4-aaeb67266d5f))
-    (pin "14" (uuid cb963f28-08ee-4f08-9a23-6ba264cc8ea1))
-    (pin "15" (uuid 5ea302c3-ea8a-4625-bb7f-c1a63d42b61d))
-    (pin "16" (uuid ab571bf0-4ceb-45e3-803b-d8179c7ca5a8))
-    (pin "2" (uuid e813144e-a0fe-480d-94e7-1b2bde957d2d))
-    (pin "3" (uuid c66e36cc-53d1-4a5e-9d31-c1311eca3d70))
-    (pin "4" (uuid 7bd4db57-2e9c-4bcd-9838-116625da0c0e))
-    (pin "5" (uuid ab0dee6a-d7b3-4e67-91a1-63e9f8845992))
-    (pin "6" (uuid 2c81a49a-31c9-4586-a129-dee0162317ef))
-    (pin "7" (uuid 12fb6842-3626-4b88-9482-63d11e180bf8))
-    (pin "8" (uuid 3e2aa6de-4949-442a-b80e-dfba17921b09))
-    (pin "9" (uuid 955f43db-0261-463b-96d5-fdf674f44665))
-    (instances
-      (project "Z3660_v021"
-        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
-          (reference "RN1") (unit 1)
         )
       )
     )
@@ -7580,7 +7269,7 @@
     (property "Value" "7407" (at 345.44 90.7796 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" (at 345.44 96.52 0)
+    (property "Footprint" "Z3660_v02:SOIC-14_3.9x8.7mm_P1.27mm" (at 345.44 96.52 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "www.st.com/resource/en/datasheet/74lcx07.pdf" (at 345.44 96.52 0)
@@ -7601,7 +7290,7 @@
     (pin "14" (uuid b141b017-5b6e-4d56-860b-b0dbf9f796bc))
     (pin "7" (uuid f910a6c5-1f43-4e1c-8022-a82a1b17af49))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 1)
         )
@@ -7618,7 +7307,7 @@
     (property "Value" "7407" (at 345.44 102.2096 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" (at 345.44 107.95 0)
+    (property "Footprint" "Z3660_v02:SOIC-14_3.9x8.7mm_P1.27mm" (at 345.44 107.95 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "www.st.com/resource/en/datasheet/74lcx07.pdf" (at 345.44 107.95 0)
@@ -7639,7 +7328,7 @@
     (pin "14" (uuid 54c44201-c404-4df0-b726-be9e5af35a80))
     (pin "7" (uuid 6209ca22-88fc-4329-83f6-5e864166d17d))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 2)
         )
@@ -7656,7 +7345,7 @@
     (property "Value" "7407" (at 318.77 112.3696 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" (at 318.77 118.11 0)
+    (property "Footprint" "Z3660_v02:SOIC-14_3.9x8.7mm_P1.27mm" (at 318.77 118.11 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "www.st.com/resource/en/datasheet/74lcx07.pdf" (at 318.77 118.11 0)
@@ -7677,7 +7366,7 @@
     (pin "14" (uuid 334a7f50-0f43-4652-9205-47c8aad653da))
     (pin "7" (uuid 01a4dee4-11dc-4ed6-bd0f-12952b21c618))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 4)
         )
@@ -7694,7 +7383,7 @@
     (property "Value" "7407" (at 318.77 126.3396 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" (at 318.77 132.08 0)
+    (property "Footprint" "Z3660_v02:SOIC-14_3.9x8.7mm_P1.27mm" (at 318.77 132.08 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "www.st.com/resource/en/datasheet/74lcx07.pdf" (at 318.77 132.08 0)
@@ -7715,7 +7404,7 @@
     (pin "14" (uuid f1ab7644-44a5-45e6-ae34-89900daba471))
     (pin "7" (uuid 5646194b-0f2a-49f3-b08e-c2a39a8652db))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 5)
         )
@@ -7732,7 +7421,7 @@
     (property "Value" "7407" (at 267.97 108.5596 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" (at 267.97 114.3 0)
+    (property "Footprint" "Z3660_v02:SOIC-14_3.9x8.7mm_P1.27mm" (at 267.97 114.3 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "www.st.com/resource/en/datasheet/74lcx07.pdf" (at 267.97 114.3 0)
@@ -7753,7 +7442,7 @@
     (pin "14" (uuid 976efafd-a7cf-4c81-9a5d-86b918caac99))
     (pin "7" (uuid 240e8145-ba6c-4f0d-afc4-8ceff95395d6))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 6)
         )
@@ -7781,7 +7470,7 @@
     (pin "3" (uuid aefa89f2-4e33-4167-8ae0-0242645996fe))
     (pin "4" (uuid 58802be5-c6ae-4c4f-85e6-728b88076996))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "X1") (unit 1)
         )
@@ -7806,7 +7495,7 @@
     )
     (pin "1" (uuid 4170f56b-6851-4823-9a34-72982b9f72d8))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR025") (unit 1)
         )
@@ -7832,7 +7521,7 @@
     (pin "1" (uuid 9b54147d-7c20-4900-b328-769683f0f0b7))
     (pin "2" (uuid e84b7dce-446f-4ce6-aa7a-32ee10127045))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "FB1") (unit 1)
         )
@@ -7857,7 +7546,7 @@
     )
     (pin "1" (uuid 5e9d1b1b-9f4e-47ae-9fef-f62a59941c42))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR033") (unit 1)
         )
@@ -7882,7 +7571,7 @@
     )
     (pin "1" (uuid 60b0f879-22df-4c12-8d7b-9d62c0650af0))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR028") (unit 1)
         )
@@ -7899,7 +7588,7 @@
     (property "Value" "100nF" (at 78.5368 30.353 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 76.2 29.21 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 76.2 29.21 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 76.2 29.21 0)
@@ -7908,7 +7597,7 @@
     (pin "1" (uuid 25a00f1e-88dc-42b0-907f-4f8a9e561b87))
     (pin "2" (uuid 1843108c-016f-4de3-8283-2f185e09276b))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C11") (unit 1)
         )
@@ -7925,7 +7614,7 @@
     (property "Value" "100nF" (at 103.9368 30.353 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 101.6 29.21 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 101.6 29.21 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 101.6 29.21 0)
@@ -7934,7 +7623,7 @@
     (pin "1" (uuid 68299487-470d-4ccf-97ce-f39708a207bc))
     (pin "2" (uuid 6ab79fcf-1227-4ff9-a271-a9cc969603d0))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C12") (unit 1)
         )
@@ -7951,7 +7640,7 @@
     (property "Value" "22uF" (at 91.2114 30.353 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_Elec_5x5.4" (at 88.9 29.21 0)
+    (property "Footprint" "Z3660_v02:CP_Elec_6.3x3.9" (at 88.9 29.21 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 88.9 29.21 0)
@@ -7960,7 +7649,7 @@
     (pin "1" (uuid 213a2f75-ba32-493e-90a9-eb96c76d620c))
     (pin "2" (uuid db433b7e-1a58-40ee-81f7-9c46e3f8dd01))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C61") (unit 1)
         )
@@ -7985,7 +7674,7 @@
     )
     (pin "1" (uuid 4a323359-cd67-4fca-b5cb-91a30cc564f5))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR017") (unit 1)
         )
@@ -8002,7 +7691,7 @@
     (property "Value" "100nF" (at 116.6368 30.353 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 114.3 29.21 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 114.3 29.21 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 114.3 29.21 0)
@@ -8011,7 +7700,7 @@
     (pin "1" (uuid b1f29380-86a1-4ddb-9f4e-4b5948738334))
     (pin "2" (uuid 42c21dd6-41ec-4261-b88e-0c2441361b0d))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C13") (unit 1)
         )
@@ -8028,7 +7717,7 @@
     (property "Value" "22uF" (at 129.3114 30.353 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_Elec_5x5.4" (at 127 29.21 0)
+    (property "Footprint" "Z3660_v02:CP_Elec_6.3x3.9" (at 127 29.21 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 127 29.21 0)
@@ -8037,7 +7726,7 @@
     (pin "1" (uuid 7f89a16e-1031-4ff2-859e-9ec390f18ad4))
     (pin "2" (uuid f3ff9329-4e4e-4c0c-ad39-e7a855913f25))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C62") (unit 1)
         )
@@ -8054,7 +7743,7 @@
     (property "Value" "100nF" (at 142.0368 30.353 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 139.7 29.21 0)
+    (property "Footprint" "Z3660_v02:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" (at 139.7 29.21 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 139.7 29.21 0)
@@ -8063,7 +7752,7 @@
     (pin "1" (uuid de844bfa-d12a-4bde-a6d4-4e0ea5119a44))
     (pin "2" (uuid a1eb3cf9-2967-4fa3-8651-3c148e69dcb7))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C14") (unit 1)
         )
@@ -8080,7 +7769,7 @@
     (property "Value" "22uF" (at 249.9614 223.393 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_Elec_5x5.4" (at 247.65 222.25 0)
+    (property "Footprint" "Z3660_v02:CP_Elec_6.3x3.9" (at 247.65 222.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 247.65 222.25 0)
@@ -8089,7 +7778,7 @@
     (pin "1" (uuid a786f0f1-0c8a-4a65-b23d-6182e5cfbcb5))
     (pin "2" (uuid d3e18f68-f284-4a79-8200-2883a92c2e5a))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C26") (unit 1)
         )
@@ -8106,7 +7795,7 @@
     (property "Value" "22uF" (at 260.1214 223.393 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_Elec_5x5.4" (at 257.81 222.25 0)
+    (property "Footprint" "Z3660_v02:CP_Elec_6.3x3.9" (at 257.81 222.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 257.81 222.25 0)
@@ -8115,7 +7804,7 @@
     (pin "1" (uuid 26a284f1-4c34-48c6-af74-6a7921547860))
     (pin "2" (uuid 4048b8c2-e4c5-47d1-b98e-8d1e7968cacf))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C27") (unit 1)
         )
@@ -8132,7 +7821,7 @@
     (property "Value" "22uF" (at 270.2814 223.393 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_Elec_5x5.4" (at 267.97 222.25 0)
+    (property "Footprint" "Z3660_v02:CP_Elec_6.3x3.9" (at 267.97 222.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 267.97 222.25 0)
@@ -8141,7 +7830,7 @@
     (pin "1" (uuid cfe589e0-7a65-44ca-ab38-5c0978094d0a))
     (pin "2" (uuid 85f09218-940b-4bcc-a088-2c7ca9925490))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C28") (unit 1)
         )
@@ -8166,7 +7855,7 @@
     )
     (pin "1" (uuid 8cbb9563-9adc-44d2-96c7-c14d2b0a4ccd))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR015") (unit 1)
         )
@@ -8191,7 +7880,7 @@
     )
     (pin "1" (uuid 6e27d124-e83a-4285-b780-2addcc16ecc4))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR031") (unit 1)
         )
@@ -8216,7 +7905,7 @@
     )
     (pin "1" (uuid c039bdd0-259e-4098-a7aa-6c7b135e1783))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR032") (unit 1)
         )
@@ -8233,7 +7922,7 @@
     (property "Value" "33" (at 219.71 132.08 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 223.52 130.81 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 223.52 130.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 223.52 130.81 0)
@@ -8242,7 +7931,7 @@
     (pin "1" (uuid ec9fde3e-96ff-4859-b7d4-bf84497ccf4e))
     (pin "2" (uuid 4949aa27-19ae-4970-9276-dc1239c86da4))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R9") (unit 1)
         )
@@ -8259,7 +7948,7 @@
     (property "Value" "33" (at 219.71 134.62 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 223.52 133.35 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 223.52 133.35 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 223.52 133.35 0)
@@ -8268,7 +7957,7 @@
     (pin "1" (uuid d2252915-c585-468d-9185-d2d40c50fe22))
     (pin "2" (uuid fbf3bec8-a6b6-4bfe-8b71-645b203122e0))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R10") (unit 1)
         )
@@ -8285,7 +7974,7 @@
     (property "Value" "1k2" (at 229.87 156.21 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 232.41 154.94 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 232.41 154.94 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 232.41 154.94 0)
@@ -8294,7 +7983,7 @@
     (pin "1" (uuid 1f96237e-964d-487f-bce9-5b0880e39096))
     (pin "2" (uuid 6181483b-a0a5-41d9-8127-095105b79e6d))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R11") (unit 1)
         )
@@ -8319,7 +8008,7 @@
     )
     (pin "1" (uuid 1cb3abab-f084-4c3c-a42d-5a0445cfb3fc))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR027") (unit 1)
         )
@@ -8555,7 +8244,7 @@
     (pin "98" (uuid 23f3d242-5248-485b-a0ea-5a1a8a6ecb25))
     (pin "99" (uuid 5300e8f0-2f5f-4337-8def-fbe93851603a))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U4") (unit 1)
         )
@@ -8580,7 +8269,7 @@
     )
     (pin "1" (uuid ec3f3b83-6f6a-45ca-9040-8d1fd377236b))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR020") (unit 1)
         )
@@ -8597,7 +8286,7 @@
     (property "Value" "Jumper_NO_Small" (at 332.6892 72.263 90)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" (at 331.47 71.12 0)
+    (property "Footprint" "Z3660_v02:PinHeader_1x02_P2.54mm_Vertical" (at 331.47 71.12 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 331.47 71.12 0)
@@ -8606,7 +8295,7 @@
     (pin "1" (uuid bfeb4acf-4d7a-43f3-854a-45231573dff0))
     (pin "2" (uuid 349c5b80-fece-40b7-8988-f1c7b3dc3437))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP1") (unit 1)
         )
@@ -8631,9 +8320,41 @@
     )
     (pin "1" (uuid 465e339a-006d-4513-8607-dbe19d2ae1a1))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR024") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 203.2 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 27494309-5ae4-4038-a521-01c953588250)
+    (property "Reference" "RN9" (at 35.56 203.2 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 203.2 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 210.185 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 203.2 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid b5e4f6e8-9b77-4399-be86-f65f3609aa33))
+    (pin "2" (uuid c83646bd-7fb9-44e3-9665-b03188a6d24b))
+    (pin "3" (uuid 30e9dfe5-17d2-4dc4-bf2e-db9491901948))
+    (pin "4" (uuid 7d21e63c-021b-4796-8320-bd3c42645dc0))
+    (pin "5" (uuid d902fb3a-91c6-41e8-b04d-e2042c763e7c))
+    (pin "6" (uuid 1bd6a838-a70d-4c43-bd6f-809bd7d9ae4c))
+    (pin "7" (uuid 336dcd73-ddfe-4bdf-8df1-98bf8d7eebdd))
+    (pin "8" (uuid 1814be32-cb31-44e4-ab54-40e423a3bc68))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN9") (unit 1)
         )
       )
     )
@@ -8648,7 +8369,7 @@
     (property "Value" "SolderJumper_3_Bridged12" (at 277.7491 159.774 90)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm_NumberLabels" (at 279.4 158.75 0)
+    (property "Footprint" "Z3660_v02:SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm_NumberLabels" (at 279.4 158.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 279.4 158.75 0)
@@ -8658,7 +8379,7 @@
     (pin "2" (uuid 5b0e417d-aa70-4be7-9d6c-86dcf6772c6a))
     (pin "3" (uuid ba0eee5d-2f62-4252-bc1f-376679388040))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP11") (unit 1)
         )
@@ -8675,7 +8396,7 @@
     (property "Value" "SolderJumper_3_Bridged12" (at 359.0291 166.124 90)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm_NumberLabels" (at 360.68 165.1 0)
+    (property "Footprint" "Z3660_v02:SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm_NumberLabels" (at 360.68 165.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 360.68 165.1 0)
@@ -8685,9 +8406,137 @@
     (pin "2" (uuid 91de5f4d-8f36-4442-bf57-8ad32c9067d5))
     (pin "3" (uuid e13c4d87-3224-4a9f-b182-0e0e1e5a983c))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP8") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 213.36 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 39bca70d-b226-4a72-8019-d2d2523f58bc)
+    (property "Reference" "RN10" (at 35.56 213.36 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 213.36 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 220.345 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 213.36 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 15b0502f-aa99-4e40-9a82-eecaf40004c1))
+    (pin "2" (uuid 61a4b6ad-2540-4f79-bfbd-86b5e7b08dfb))
+    (pin "3" (uuid f8a1cefa-ccee-47c4-a839-c16a28f98135))
+    (pin "4" (uuid 8e4d790a-cf49-4758-8741-59f5de797351))
+    (pin "5" (uuid 43fa5399-5d8c-4419-bd3f-cefb999011de))
+    (pin "6" (uuid 789a391f-3d85-4c39-b717-f906a04c897a))
+    (pin "7" (uuid e039e083-b614-4fac-8781-9c6b293f6311))
+    (pin "8" (uuid d7519089-a2dd-418f-bda3-2eab6d53145b))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN10") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 152.4 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 40201f0d-8d7d-4fec-a383-ecd1362f837d)
+    (property "Reference" "RN4" (at 35.56 152.4 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 152.4 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 159.385 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 152.4 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 9d58a4b4-d3af-45ac-b8c1-83e7b3d81d8b))
+    (pin "2" (uuid ed8d1d2e-7672-45a9-aab6-10ce0a05cab6))
+    (pin "3" (uuid 00396421-4706-43fd-923f-a1e473cf8b54))
+    (pin "4" (uuid 403478ec-b005-4c33-bc36-93313055d616))
+    (pin "5" (uuid 7390cb77-a710-47d1-a4cb-6d015ca29e95))
+    (pin "6" (uuid 0eb52561-e16f-43ee-8d43-6bb538f4eb4a))
+    (pin "7" (uuid a46ad12c-b4fb-4de9-ac48-9b2fca4bf569))
+    (pin "8" (uuid 850d4fbd-8b3c-4d8c-bb2a-f4c88a530d86))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN4") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 193.04 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 40aaf18b-0e32-41bb-91fb-f7523dfdc946)
+    (property "Reference" "RN8" (at 35.56 193.04 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 193.04 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 200.025 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 193.04 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid ee11a878-cf21-4f8c-a487-ea83af511309))
+    (pin "2" (uuid 13154a68-4c7c-47a0-bf6d-7bef5d5fabe3))
+    (pin "3" (uuid fdc1983d-37f1-4183-bd5a-e4dcad16df3d))
+    (pin "4" (uuid 82d90ab5-8dc0-4f07-84b6-daefac837dcb))
+    (pin "5" (uuid fbc65840-def3-44dd-8fc5-53ce05927ade))
+    (pin "6" (uuid 5e0059bd-3eb1-47a8-9599-86f092b55ae5))
+    (pin "7" (uuid ee72033a-5e2c-4f29-9a52-c8039acb62ac))
+    (pin "8" (uuid 4fb51a7b-cb29-44cc-b2e1-fc7551ed8538))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN8") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 162.56 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 44d3c496-edb3-4ffc-8420-aeeecbef6fdc)
+    (property "Reference" "RN5" (at 35.56 162.56 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 162.56 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 169.545 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 162.56 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 19461162-3840-4103-b6fd-992128cacb45))
+    (pin "2" (uuid 320aaf8e-33d8-4fb6-90da-b84dd6f2666a))
+    (pin "3" (uuid 5ad5bb09-e7c7-4462-8729-961080236bf1))
+    (pin "4" (uuid 9f2de875-2495-4441-a0cf-98f160917b17))
+    (pin "5" (uuid d78dd273-7eeb-4875-a252-50a26e6713e4))
+    (pin "6" (uuid 0a40ad67-1e59-49f1-b504-99b6b382e926))
+    (pin "7" (uuid d2d49675-4ad6-4731-adb7-9afd9d92c0dd))
+    (pin "8" (uuid 0992b36d-70ad-43a4-a353-a26158286b9d))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN5") (unit 1)
         )
       )
     )
@@ -8702,16 +8551,48 @@
     (property "Value" "MountingHole" (at 218.44 274.193 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "MountingHole:MountingHole_2.2mm_M2" (at 215.9 273.05 0)
+    (property "Footprint" "Z3660_v02:MountingHole_2.2mm_M2" (at 215.9 273.05 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 215.9 273.05 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H8") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 127 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 6121b4dd-a749-436d-bca5-4af67205c7aa)
+    (property "Reference" "RN2" (at 35.56 127 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "1k" (at 30.48 127 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 133.985 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 127 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 8eb814b2-556f-452b-a544-6238bdb8ebd7))
+    (pin "2" (uuid 87b175e1-d38a-438b-aef7-7191a6dcd05d))
+    (pin "3" (uuid 25480f2f-0a56-45e9-a038-85963ef596b2))
+    (pin "4" (uuid 0e205d8a-d7d2-473f-9f2c-968d95c6e4d5))
+    (pin "5" (uuid b7b04df2-069a-4613-b382-e5c245068382))
+    (pin "6" (uuid 25f04c3f-4d2d-44b8-aa88-3ee3e9ea7d3f))
+    (pin "7" (uuid ae53b0ee-5be0-4556-a016-f0ce54900dd4))
+    (pin "8" (uuid 4e296519-e980-45fe-8e70-c75c1cf490cf))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN2") (unit 1)
         )
       )
     )
@@ -8734,7 +8615,7 @@
     )
     (pin "1" (uuid a0b1093f-2859-421d-bc1d-d8c24eaf9ad0))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR079") (unit 1)
         )
@@ -8751,7 +8632,7 @@
     (property "Value" "120" (at 364.49 99.06 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 364.49 96.52 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 364.49 96.52 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 364.49 96.52 0)
@@ -8760,9 +8641,105 @@
     (pin "1" (uuid 85b80061-ad23-495a-b311-d535e31da02e))
     (pin "2" (uuid 9a2c341f-5ee5-4de4-821e-53203c25dde8))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R19") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 142.24 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 89e394a5-781c-48f1-8102-a5e8476d19f9)
+    (property "Reference" "RN3" (at 35.56 142.24 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 142.24 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 149.225 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 142.24 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 61f0531e-c243-4b33-a6b6-3bc22097428e))
+    (pin "2" (uuid 78e86bf8-d8fe-44b7-aa75-292f24c5fccb))
+    (pin "3" (uuid b072fd08-5eb7-4b46-a54d-6c57e08c8f2d))
+    (pin "4" (uuid 785d84bb-e07b-4d1d-b326-4e2e36f5be50))
+    (pin "5" (uuid 7dde167e-b874-435a-b765-3346c9c6638c))
+    (pin "6" (uuid 55a3111d-e726-435b-8e5e-dc8477a70309))
+    (pin "7" (uuid 31893e58-2170-4530-8a46-e480576d6fb2))
+    (pin "8" (uuid 08cc6c2e-f19f-487a-889f-233798003c15))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN3") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 172.72 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 96829db7-664a-4055-84ba-1b176b833ab0)
+    (property "Reference" "RN6" (at 35.56 172.72 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 172.72 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 179.705 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 172.72 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid de78c2f5-1363-4910-b2cb-477676bd0699))
+    (pin "2" (uuid 691e729b-fc74-49b5-8fec-79da4053d30a))
+    (pin "3" (uuid 95806fac-7f9a-4024-b915-ecb565295bd6))
+    (pin "4" (uuid e02b64a3-7fb0-4489-b9a1-ea76b4af9479))
+    (pin "5" (uuid 93f58c7d-d7ce-483d-ae8a-e958723892c0))
+    (pin "6" (uuid 6372217d-53c3-42d2-9b12-3eded2f482b7))
+    (pin "7" (uuid 3dad02a6-d986-419c-ac17-495b14384123))
+    (pin "8" (uuid 6b2ffc38-422b-4f79-be46-467cb120f819))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN6") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 116.84 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 979f15f3-987f-4bab-95f7-f67e9805f6ea)
+    (property "Reference" "RN1" (at 35.56 116.84 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "1k" (at 30.48 116.84 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 123.825 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 116.84 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid f01cc454-39eb-4719-a26c-7edc2688c26a))
+    (pin "2" (uuid c7d569d7-e037-4ebe-a79a-0ed232e35cd2))
+    (pin "3" (uuid 1c58262d-8748-45e3-ba8e-c96e4b21fb44))
+    (pin "4" (uuid c43254a1-e2dc-4a72-bf90-b6f6376b05c4))
+    (pin "5" (uuid 9cc0ffb2-4154-474d-a291-ec704e3509cd))
+    (pin "6" (uuid 59bc5cec-f1c7-4823-ad5c-44ae437d022c))
+    (pin "7" (uuid a377dd52-c77d-47a0-b6d8-3cfff37eb105))
+    (pin "8" (uuid 405adf8f-b8fc-41dc-b943-71fe163383da))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN1") (unit 1)
         )
       )
     )
@@ -8777,7 +8754,7 @@
     (property "Value" "Jumper_NO_Small" (at 350.4692 72.263 90)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" (at 349.25 71.12 0)
+    (property "Footprint" "Z3660_v02:PinHeader_1x02_P2.54mm_Vertical" (at 349.25 71.12 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 349.25 71.12 0)
@@ -8786,7 +8763,7 @@
     (pin "1" (uuid 1d4e41f2-5626-4f65-9fba-6111ce8fca17))
     (pin "2" (uuid cf0a1515-129e-46f7-ae99-ff1fe633193f))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP3") (unit 1)
         )
@@ -8811,9 +8788,41 @@
     )
     (pin "1" (uuid f2819209-b432-47e9-a418-5fe0a250fc51))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR094") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Z3660_v02:R_Pack04") (at 53.34 182.88 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid bda85476-bddb-4f9d-beb6-3a659b0e0d84)
+    (property "Reference" "RN7" (at 35.56 182.88 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "22" (at 30.48 182.88 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Z3660_v02:R_Array_Convex_4x0603" (at 53.34 189.865 90)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 53.34 182.88 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid d4f141fc-a119-4f7d-bc5a-552e5d64a6cc))
+    (pin "2" (uuid 8a7c1c4d-86a3-4ed3-85a8-2a37d30c78f0))
+    (pin "3" (uuid f4343edf-778a-48ec-9ae9-641f34de6489))
+    (pin "4" (uuid 43c34b90-660a-45d9-91b9-92fa0aa18328))
+    (pin "5" (uuid 82f08fee-da21-4563-8b05-014b7fb940a6))
+    (pin "6" (uuid 5a954d07-8534-4ae8-89f9-fc5b6d67997b))
+    (pin "7" (uuid b401cfb6-4a14-4b20-8d25-717f42ba57a0))
+    (pin "8" (uuid 047ac2b3-c413-4d23-99ae-5db958cda8fe))
+    (instances
+      (project "Z3660_v021a"
+        (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
+          (reference "RN7") (unit 1)
         )
       )
     )
@@ -8828,7 +8837,7 @@
     (property "Value" "Jumper_3_Open" (at 379.3242 116.594 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" (at 377.19 115.57 0)
+    (property "Footprint" "Z3660_v02:PinHeader_1x03_P2.54mm_Vertical" (at 377.19 115.57 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 377.19 115.57 0)
@@ -8838,7 +8847,7 @@
     (pin "2" (uuid 498ba7a8-bb57-4010-8468-24753dbacbfe))
     (pin "3" (uuid 1126c680-d62a-4933-837c-de044a4113cc))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP7") (unit 1)
         )
@@ -8863,7 +8872,7 @@
     )
     (pin "1" (uuid 28020e8e-438e-4f8d-b2a3-8a9b5ac7b3f8))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR095") (unit 1)
         )
@@ -8880,7 +8889,7 @@
     (property "Value" "1k" (at 265.43 124.46 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 269.24 123.19 0)
+    (property "Footprint" "Z3660_v02:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" (at 269.24 123.19 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 269.24 123.19 0)
@@ -8889,7 +8898,7 @@
     (pin "1" (uuid 6bfe2652-b759-4082-82eb-9952d6d3e682))
     (pin "2" (uuid b03c945f-ead9-4999-b956-7cfb7673e495))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R20") (unit 1)
         )
@@ -8906,7 +8915,7 @@
     (property "Value" "Jumper_3_Open" (at 379.3242 131.834 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" (at 377.19 130.81 0)
+    (property "Footprint" "Z3660_v02:PinHeader_1x03_P2.54mm_Vertical" (at 377.19 130.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 377.19 130.81 0)
@@ -8916,7 +8925,7 @@
     (pin "2" (uuid 330c1068-2a52-442f-a722-7c60d43d17e8))
     (pin "3" (uuid d3141a9e-355b-4c0f-93a3-9a49d5834423))
     (instances
-      (project "Z3660_v021"
+      (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP6") (unit 1)
         )

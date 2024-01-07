@@ -9,13 +9,13 @@
   (property "ki_keywords" "net tie short")
   (attr exclude_from_pos_files exclude_from_bom)
   (net_tie_pad_groups "1, 2")
-  (fp_text reference "REF**" (at 0 -1.2) (layer "F.SilkS") hide
+  (fp_text reference "NT3" (at 0 -1.2 180) (layer "F.SilkS") hide
       (effects (font (size 1 1) (thickness 0.15)))
-    (tstamp ef0cdb1b-b3e8-4aab-b7fd-523c794f0bac)
+    (tstamp f45b70e1-8ab5-4284-bf2c-59ae8dda1e04)
   )
-  (fp_text value "NetTie_2" (at 0 1.2) (layer "F.Fab") hide
+  (fp_text value "NetTie_2" (at 0 1.2 180) (layer "F.Fab") hide
       (effects (font (size 1 1) (thickness 0.15)))
-    (tstamp 61728abd-aff9-4ea1-aca9-48ed32859419)
+    (tstamp d1f9420c-fc33-427b-9219-c5d3bdfc5314)
   )
   (fp_poly
     (pts
@@ -25,7 +25,7 @@
       (xy -0.5 0.25)
     )
 
-    (stroke (width 0) (type solid)) (fill solid) (layer "F.Cu") (tstamp 11a95f65-250d-4025-bdda-c1fb96210b9b))
-  (pad "1" smd circle (at -0.5 0 180) (size 0.5 0.5) (layers "F.Cu") (tstamp 3167e2db-823e-4b9d-adb0-6f2bd7ab87e4))
-  (pad "2" smd circle (at 0.5 0 180) (size 0.5 0.5) (layers "F.Cu") (tstamp 3fb0a4a2-1ece-457d-990e-bc5c2fc9c78b))
+    (stroke (width 0) (type solid)) (fill solid) (layer "F.Cu") (tstamp 3879eaf3-f41b-417d-b5b1-47aaa8fb052b))
+  (pad "1" smd circle (at -0.5 0) (size 0.5 0.5) (layers "F.Cu") (tstamp e3650555-dd2c-45af-aa07-dd07028bd384))
+  (pad "2" smd circle (at 0.5 0) (size 0.5 0.5) (layers "F.Cu") (tstamp 1ac7c45c-2174-4c5b-9d30-306fcfbd99e0))
 )

@@ -1,4 +1,4 @@
-21791945404643020
+21913004124329816
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -13,6 +13,13 @@ audio belton reverb
 0
 7
 7
+Battery
+BatteryClip_Keystone_54_D16-19mm
+Battery clip for batteries with a diameter between 16-19 mm: https://www.keyelco.com/product.cfm/product_id/826
+battery clip 18650 18350 17350 CR123A 2/3A
+0
+3
+1
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -236,6 +243,13 @@ BatteryHolder_MPD_BH-18650-PC2
 18650 Battery Holder
 0
 2
+2
+Battery
+BatteryHolder_Multicomp_BC-2001_1x2032
+CR2032 retainer clip, SMT ( http://www.farnell.com/datasheets/1505853.pdf )
+BC-2001 CR2032 2032 Battery Holder
+0
+3
 2
 Battery
 BatteryHolder_Seiko_MS621F
@@ -1279,6 +1293,13 @@ Ultraminiature Surface Mount Slide Switch, right-angle, https://www.ckswitches.c
 
 0
 7
+3
+Button_Switch_SMD
+SW_SPDT_REED_MSDM-DT
+Littlefuse 14.73x2.54mm, 175VDC 5W, SPDT Reed Switch MSDM-DT, https://www.littelfuse.com/~/media/electronics/datasheets/reed_switches/littelfuse_reed_switches_mdsm_dt_datasheet.pdf.pdf
+Littlefuse Reed SPDT Switch
+0
+3
 3
 Button_Switch_SMD
 SW_SPST_B3S-1000
@@ -8356,6 +8377,13 @@ Connector SMA, 0Hz to 20GHz, 50Ohm, Edge Mount (http://suddendocs.samtec.com/pri
 SMA Straight Samtec Edge Mount
 0
 5
+2
+Connector_Coaxial
+SMA_Wurth_60312102114405_Vertical
+Würth WR-SMA PCB SMT Jack, Vertical (https://www.we-online.com/components/products/datasheet/60312102114405.pdf)
+Coaxial Connector 50 ohms Female
+0
+3
 2
 Connector_Coaxial
 SMA_Wurth_60312002114503_Vertical
@@ -42638,7 +42666,7 @@ RJ12 RJ18 RJ25 jack connector 6P6C
 6
 Connector_RJ
 RJ45_Abracon_ARJP11A-MA_Horizontal
-Shielded RJ45 ethernet connector with transformer and POE (https://abracon.com/Magnetics/lan/ARJP11A.PDF)
+Shielded RJ45 ethernet connector with transformer and POE, https://abracon.com/Magnetics/lan/ARJP11A.PDF
 ethernet 8p8c transformer poe rj45
 0
 15
@@ -42665,6 +42693,13 @@ RJ45 8p8c dual ethernet cat5
 26
 25
 Connector_RJ
+RJ45_Amphenol_RJHSE538X-04
+Shielded, LEDs, 4 Ports, https://cdn.amphenol-cs.com/media/wysiwyg/files/drawing/rjhse538x04.pdf
+RJ45 8p8c quad ethernet cat5
+0
+52
+49
+Connector_RJ
 RJ45_Amphenol_RJHSE5380
 Shielded, https://www.amphenolcanada.com/ProductSearch/drawings/AC/RJHSE538X.pdf
 RJ45 8p8c ethernet cat5
@@ -42680,7 +42715,7 @@ RJ45 8p8c ethernet cat5
 65
 Connector_RJ
 RJ45_Amphenol_RJMG1BD3B8K1ANR
-1 Port RJ45 Magjack Connector Through Hole 10/100 Base-T, AutoMDIX, https://www.amphenolcanada.com/ProductSearch/Drawings/AC/RJMG1BD3B8K1ANR.PDF
+1 Port RJ45 Magjack Connector Through Hole 10/100 Base-T, AutoMDIX, https://www.amphenol-cs.com/media/wysiwyg/files/drawing/rjmg1bd3b8k1anr.pdf
 RJ45 Magjack
 0
 14
@@ -46802,6 +46837,13 @@ USB 3.0 type A right angle
 13
 10
 Connector_USB
+USB3_A_Molex_48406-0001_Horizontal_Stacked
+USB 3.0, type A, right angle, stacked (https://www.molex.com/content/dam/molex/molex-dot-com/products/automated/en-us/salesdrawingpdf/484/48406/484060001_sd.pdf)
+USB 3.0 type A right angle stacked dual
+0
+22
+19
+Connector_USB
 USB3_A_Plug_Wuerth_692112030100_Horizontal
 USB3 type A Plug, Horizontal, http://katalog.we-online.de/em/datasheet/692112030100.pdf
 usb A plug horizontal
@@ -46856,6 +46898,13 @@ https://www.molex.com/pdm_docs/sd/1050570001_sd.pdf
 USB A Vertical
 0
 7
+5
+Connector_USB
+USB_A_Receptacle_GCT_USB1046
+GCT USB1046, USB Type A, https://gct.co/files/drawings/usb1046.pdf
+USB SMD Type-A Receptacle Right Angle
+0
+8
 5
 Connector_USB
 USB_A_Stewart_SS-52100-001_Horizontal
@@ -47080,6 +47129,20 @@ USB Micro-B, horizontal, https://cdn.amphenol-icc.com/media/wysiwyg/files/drawin
 USB Micro B horizontal
 0
 9
+6
+Connector_USB
+USB_Micro-B_Amphenol_10118193-0001LF_Horizontal
+USB Micro-B receptacle, horizontal, SMD, 10118193, with flange, https://cdn.amphenol-icc.com/media/wysiwyg/files/drawing/10118193.pdf
+USB Micro-B horizontal SMD
+0
+11
+6
+Connector_USB
+USB_Micro-B_Amphenol_10118193-0002LF_Horizontal
+USB Micro-B receptacle, horizontal, SMD, 10118193, without flange, https://cdn.amphenol-icc.com/media/wysiwyg/files/drawing/10118193.pdf
+USB Micro-B horizontal SMD
+0
+11
 6
 Connector_USB
 USB_Micro-B_Amphenol_10118194_Horizontal
@@ -54082,6 +54145,20 @@ Fuse Nano2
 2
 2
 Fuse
+Fuse_Littelfuse-NANO2-462
+Littelfuse NANO2, 250VAC/VDC, 350VAC/VDC, 10.5 x 4.5 x 4.5mm, https://www.littelfuse.com/media?resourcetype=datasheets&itemid=6201db33-6e55-43f2-b41f-15e38bdd2c99&filename=littelfuse-fuse-462-datasheet
+Fuse Nano2 462
+0
+2
+2
+Fuse
+Fuse_Littelfuse-NANO2-885
+Littelfuse NANO2, 350VAC, 450/500VDC, 10.86 x 4.78 x 4.78mm, https://www.littelfuse.com/media?resourcetype=datasheets&itemid=888f12ed-ed3b-4b45-b910-06af8854ad76&filename=littelfuse-fuse-885-datasheet
+Fuse Nano2 885
+0
+2
+2
+Fuse
 Fuse_Littelfuse_372_D8.50mm
 Fuse, Littelfuse, 372, 8.5x8mm, https://www.littelfuse.com/~/media/electronics/datasheets/fuses/littelfuse_fuse_372_datasheet.pdf.pdf
 fuse tht radial
@@ -54537,12 +54614,40 @@ Heatsink sheet
 2
 1
 Heatsink
+Heatsink_Stonecold_HS-130_30x12mm_2xFixation2.5mm
+Heatsink, StoneCold HS, https://www.tme.eu/Document/da20d9b42617e16f6777c881dc9e3434/hs-130.pdf
+heatsink
+0
+2
+1
+Heatsink
 Heatsink_Stonecold_HS-132_32x14mm_2xFixation1.5mm
 Heatsink, StoneCold HS
 heatsink
 0
 2
 1
+Heatsink
+Heatsink_Stonecold_HS-S01_13.21x6.35mm
+Heatsink, Stonecold, HS, https://www.tme.eu/Document/f7f93f538b934e0b08e09747396fb95f/hs-s.pdf
+heatsink
+0
+0
+0
+Heatsink
+Heatsink_Stonecold_HS-S02_13.21x9.53mm
+Heatsink, Stonecold, HS, https://www.tme.eu/Document/f7f93f538b934e0b08e09747396fb95f/hs-s.pdf
+heatsink
+0
+0
+0
+Heatsink
+Heatsink_Stonecold_HS-S03_13.21x12.7mm
+Heatsink, Stonecold, HS, https://www.tme.eu/Document/f7f93f538b934e0b08e09747396fb95f/hs-s.pdf
+heatsink
+0
+0
+0
 Inductor_SMD
 L_6.3x6.3_H3
 Choke, SMD, 6.3x6.3mm 3mm height
@@ -55786,6 +55891,13 @@ Inductor_SMD
 L_CommonMode_Wuerth_WE-SL2
 http://katalog.we-online.de/en/pbs/WE-SL2?sid=5fbec16187#vs_t1:c1_ct:1
 Wuerth WE-SL2
+0
+4
+4
+Inductor_SMD
+L_CommonMode_Wurth_WE-CNSW-1206
+WE-CNSW SMT Common Mode Line Filter, https://www.we-online.com/components/products/datasheet/744232090.pdf
+common mode choke 1206 cnsw
 0
 4
 4
@@ -57634,6 +57746,20 @@ Inductor_SMD
 L_Wuerth_WE-TPC-3816
 L_Wuerth_WE-TPC-3816 StepUp generated footprint, http://katalog.we-online.de/pbs/datasheet/7440310047.pdf
 wurth wuerth smd inductor
+0
+2
+2
+Inductor_SMD
+L_Wuerth_WE-XHMI-8080
+Inductor, Wuerth, WE-XHMI 8080, 8.3mmx8.8mm (Script generated with StandardBox.py) (https://www.we-online.com/components/products/datasheet/74439358068.pdf)
+Inductor Wuerth WE-XHMI 8080
+0
+2
+2
+Inductor_SMD
+L_Wurth_WE-CAIR-5910
+WE-CAIR Air coil, https://www.we-online.com/components/products/datasheet/744918254.pdf
+air coil inductor wurth we cair
 0
 2
 2
@@ -59688,6 +59814,13 @@ solder jumper open
 0
 5
 3
+KiCad
+714393164
+71439-3164
+Connector
+0
+64
+64
 LED_SMD
 LED-APA102-2020
 http://www.led-color.com/upload/201604/APA102-2020%20SMD%20LED.pdf
@@ -63987,6 +64120,13 @@ Resistor LDR
 2
 2
 OptoDevice
+Renesas_DFN-6_1.5x1.6mm_P0.5mm
+DFN, 6 Pin (https://www.renesas.com/us/en/document/psc/package-drawing-hodfn-6pin-l615x16?language=en&r=568376)
+DFN NoLead
+0
+6
+6
+OptoDevice
 ST_VL53L0X
 https://www.st.com/resource/en/datasheet/vl53l1x.pdf
 laser-ranging sensor
@@ -65117,6 +65257,20 @@ Package_BGA
 Texas_DSBGA-6_0.704x1.054mm_Layout2x3_P0.35mm
 Texas Instruments, DSBGA-6, 0.704x1.054mm, NSMD, YKA pad definition, 0.704x1.054mm, 6 Ball, 2x3 Layout, 0.35mm Pitch, https://www.ti.com/lit/ml/mxbg383/mxbg383.pdf, https://www.ti.com/lit/ds/symlink/tps62800.pdf
 BGA 6 0.35
+0
+6
+6
+Package_BGA
+Texas_DSBGA-6_0.855x1.255mm_Layout2x3_P0.4mm_LevelB
+Texas Instruments, DSBGA, area grid, YBG pad definition, 0.95x1.488mm, 6 Ball, 2x3 Layout, 0.4mm Pitch, YFF0006, NSMD pad definition,  https://www.ti.com/lit/ds/symlink/lmg1020.pdf, https://www.ti.com/lit/ml/mxbg078z/mxbg078z.pdf
+BGA 6 0.4 YFF0006
+0
+6
+6
+Package_BGA
+Texas_DSBGA-6_0.855x1.255mm_Layout2x3_P0.4mm_LevelC
+Texas Instruments, DSBGA, area grid, YBG pad definition, 0.95x1.488mm, 6 Ball, 2x3 Layout, 0.4mm Pitch, YFF0006, NSMD pad definition,  https://www.ti.com/lit/ds/symlink/lmg1020.pdf, https://www.ti.com/lit/ml/mxbg078z/mxbg078z.pdf
+BGA 6 0.4 YFF0006
 0
 6
 6
@@ -67284,25 +67438,18 @@ mlpq 32 7x7mm
 76
 33
 Package_DFN_QFN
+Infineon_MLPQ-48-1EP_7x7mm_P0.5mm_EP5.15x5.15mm
+MLPQ 48 leads, 7x7mm (https://www.infineon.com/dgdl/irs2052mpbf.pdf?fileId=5546d462533600a401535675d3b32788)
+mlpq 32 7x7mm
+0
+115
+49
+Package_DFN_QFN
 Infineon_MLPQ-48-1EP_7x7mm_P0.5mm_EP5.55x5.55mm
 MLPQ 48 leads, 7x7mm (https://www.infineon.com/dgdl/irs2093mpbf.pdf?fileId=5546d462533600a401535675fb892793)
 mlpq 32 7x7mm
 0
 113
-49
-Package_DFN_QFN
-Infineon_MLPQ-48-1EP_7x7mm_P0.5mm_Pad5.15x5.15mm
-MLPQ 48 leads, 7x7mm (https://www.infineon.com/dgdl/irs2052mpbf.pdf?fileId=5546d462533600a401535675d3b32788)
-mlpq 32 7x7mm
-0
-117
-49
-Package_DFN_QFN
-Infineon_MLPQ-48-1EP_7x7mm_P0.5mm_Pad5.55x5.55mm
-MLPQ 48 leads, 7x7mm (https://www.infineon.com/dgdl/irs2093mpbf.pdf?fileId=5546d462533600a401535675fb892793)
-mlpq 32 7x7mm
-0
-117
 49
 Package_DFN_QFN
 Infineon_PQFN-22-15-4EP_6x5mm_P0.65mm
@@ -68047,6 +68194,20 @@ QFN NoLead
 67
 25
 Package_DFN_QFN
+QFN-24-1EP_5x5mm_P0.65mm_EP3.25x3.25mm
+QFN, 24 Pin (https://semtech.my.salesforce.com/sfc/p/#E0000000JelG/a/44000000MDkO/lWPNMeJClEs8Zvyu7AlDlKSyZqhYdVpQzFLVfUp.EXs), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+29
+25
+Package_DFN_QFN
+QFN-24-1EP_5x5mm_P0.65mm_EP3.25x3.25mm_ThermalVias
+QFN, 24 Pin (https://semtech.my.salesforce.com/sfc/p/#E0000000JelG/a/44000000MDkO/lWPNMeJClEs8Zvyu7AlDlKSyZqhYdVpQzFLVfUp.EXs), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+51
+25
+Package_DFN_QFN
 QFN-28-1EP_3x6mm_P0.5mm_EP1.7x4.75mm
 QFN, 28 Pin (http://www.analog.com/media/en/package-pcb-resources/package/pkg_pdf/ltc-legacy-qfn/05081926_0_UDE28.pdf), generated with kicad-footprint-generator ipc_noLead_generator.py
 QFN NoLead
@@ -68628,6 +68789,34 @@ QFN NoLead
 91
 49
 Package_DFN_QFN
+QFN-48-1EP_7x7mm_P0.5mm_EP3.5x3.5mm
+QFN, 48 Pin (http://ww1.microchip.com/downloads/en/devicedoc/00002117f.pdf#page=69), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+58
+49
+Package_DFN_QFN
+QFN-48-1EP_7x7mm_P0.5mm_EP3.5x3.5mm_ThermalVias
+QFN, 48 Pin (http://ww1.microchip.com/downloads/en/devicedoc/00002117f.pdf#page=69), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+75
+49
+Package_DFN_QFN
+QFN-48-1EP_7x7mm_P0.5mm_EP5.1x5.1mm
+QFN, 48 Pin (http://ww1.microchip.com/downloads/en/devicedoc/00002117f.pdf#page=70), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+65
+49
+Package_DFN_QFN
+QFN-48-1EP_7x7mm_P0.5mm_EP5.1x5.1mm_ThermalVias
+QFN, 48 Pin (http://ww1.microchip.com/downloads/en/devicedoc/00002117f.pdf#page=70), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+91
+49
+Package_DFN_QFN
 QFN-48-1EP_7x7mm_P0.5mm_EP5.3x5.3mm
 QFN, 48 Pin (https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC2041_datasheet.pdf#page=62), generated with kicad-footprint-generator ipc_noLead_generator.py
 QFN NoLead
@@ -68812,6 +69001,20 @@ QFN NoLead
 Package_DFN_QFN
 QFN-56-1EP_8x8mm_P0.5mm_EP5.9x5.9mm_ThermalVias
 QFN, 56 Pin (http://ww1.microchip.com/downloads/en/DeviceDoc/00001734B.pdf#page=50), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+99
+57
+Package_DFN_QFN
+QFN-56-1EP_8x8mm_P0.5mm_EP6.1x6.1mm
+QFN, 56 Pin (http://intantech.com/files/Intan_RHD2000_series_datasheet.pdf#page=38), generated with kicad-footprint-generator ipc_noLead_generator.py
+QFN NoLead
+0
+73
+57
+Package_DFN_QFN
+QFN-56-1EP_8x8mm_P0.5mm_EP6.1x6.1mm_ThermalVias
+QFN, 56 Pin (http://intantech.com/files/Intan_RHD2000_series_datasheet.pdf#page=38), generated with kicad-footprint-generator ipc_noLead_generator.py
 QFN NoLead
 0
 99
@@ -69104,7 +69307,7 @@ UFQFPN 0.5
 20
 20
 Package_DFN_QFN
-ST_UQFN-6L_1.5x1.7mm_Pitch0.5mm
+ST_UQFN-6L_1.5x1.7mm_P0.5mm
 ST UQFN 6 pin 0.5mm Pitch http://www.st.com/resource/en/datasheet/ecmf02-2amx6.pdf
 UQFN DFN 0.5 ST
 0
@@ -69278,6 +69481,20 @@ TQFN NoLead
 0
 31
 17
+Package_DFN_QFN
+TQFN-20-1EP_4x4mm_P0.5mm_EP2.1x2.1mm
+TQFN, 20 Pin (https://pdfserv.maximintegrated.com/package_dwgs/21-0139.PDF (T2044-2)), generated with kicad-footprint-generator ipc_noLead_generator.py
+TQFN NoLead
+0
+25
+21
+Package_DFN_QFN
+TQFN-20-1EP_4x4mm_P0.5mm_EP2.1x2.1mm_ThermalVias
+TQFN, 20 Pin (https://pdfserv.maximintegrated.com/package_dwgs/21-0139.PDF (T2044-2)), generated with kicad-footprint-generator ipc_noLead_generator.py
+TQFN NoLead
+0
+30
+21
 Package_DFN_QFN
 TQFN-20-1EP_4x4mm_P0.5mm_EP2.7x2.7mm
 TQFN, 20 Pin (https://pdfserv.maximintegrated.com/package_dwgs/21-0139.PDF (T2044-5C)), generated with kicad-footprint-generator ipc_noLead_generator.py
@@ -69593,6 +69810,20 @@ QFN NoLead
 0
 27
 18
+Package_DFN_QFN
+Texas_RGY_R-PVQFN-N20_EP2.05x3.05mm
+QFN, 20 Pin, RGY0020A (https://www.ti.com/lit/ds/symlink/txb0108.pdf#page=33)
+QFN NoLead
+0
+25
+21
+Package_DFN_QFN
+Texas_RGY_R-PVQFN-N20_EP2.05x3.05mm_ThermalVias
+QFN, 20 Pin, RGY0020A (https://www.ti.com/lit/ds/symlink/txb0108.pdf#page=33)
+QFN NoLead
+0
+29
+21
 Package_DFN_QFN
 Texas_RGY_R-PVQFN-N24_EP2.05x3.1mm
 QFN, 24 Pin (http://www.ti.com/lit/ds/symlink/bq24133.pdf#page=40)
@@ -70448,6 +70679,20 @@ VQFN NoLead
 91
 65
 Package_DFN_QFN
+Vishay_PowerPAK_MLP44-24L
+PowerPAK PowerPAK MLP44-24L (https://www.vishay.com/docs/78231/mlp44-24l.pdf)
+powerpak mlp44-24l
+0
+28
+28
+Package_DFN_QFN
+Vishay_PowerPAK_MLP44-24L_ThermalVias
+PowerPAK PowerPAK MLP44-24L (https://www.vishay.com/docs/78231/mlp44-24l.pdf)
+powerpak mlp44-24l
+0
+35
+28
+Package_DFN_QFN
 W-PDFN-8-1EP_6x5mm_P1.27mm_EP3x3mm
 W-PDFN, 8 Pin (https://media-www.micron.com/-/media/client/global/documents/products/data-sheet/nor-flash/serial-nor/mt25q/die-rev-a/mt25q_qljs_u_256_aba_0.pdf#page=22), generated with kicad-footprint-generator ipc_noLead_generator.py
 W-PDFN NoLead
@@ -70545,6 +70790,20 @@ WQFN NoLead
 0
 24
 15
+Package_DFN_QFN
+WQFN-16-1EP_3x3mm_P0.5mm_EP0.8x1.2mm
+WQFN, 16 Pin (https://www.ti.com/lit/ds/symlink/tps43060.pdf#page=40), generated with kicad-footprint-generator ipc_noLead_generator.py
+WQFN NoLead
+0
+21
+17
+Package_DFN_QFN
+WQFN-16-1EP_3x3mm_P0.5mm_EP0.8x1.2mm_ThermalVias
+WQFN, 16 Pin (https://www.ti.com/lit/ds/symlink/tps43060.pdf#page=40), generated with kicad-footprint-generator ipc_noLead_generator.py
+WQFN NoLead
+0
+23
+17
 Package_DFN_QFN
 WQFN-16-1EP_3x3mm_P0.5mm_EP1.6x1.6mm
 WQFN, 16 Pin (https://www.ti.com/lit/ds/symlink/tpa6132a2.pdf#page=24), generated with kicad-footprint-generator ipc_noLead_generator.py
@@ -76251,6 +76510,20 @@ USON-20 2x4mm Pitch 0.4mm
 20
 20
 Package_SON
+VSON-8-1EP_3x3mm_P0.65mm_EP1.65x2.4mm
+VSON, 8 Pin (https://www.ti.com/lit/pdf/qfnd619), generated with kicad-footprint-generator ipc_noLead_generator.py
+VSON NoLead
+0
+10
+9
+Package_SON
+VSON-8-1EP_3x3mm_P0.65mm_EP1.65x2.4mm_ThermalVias
+VSON, 8 Pin (https://www.ti.com/lit/pdf/qfnd619), generated with kicad-footprint-generator ipc_noLead_generator.py
+VSON NoLead
+0
+16
+9
+Package_SON
 VSON-8_1.5x2mm_P0.5mm
 VSON, 8 Pin (http://www.ti.com/lit/ds/symlink/tps62840.pdf#page=37), generated with kicad-footprint-generator ipc_noLead_generator.py
 VSON NoLead
@@ -80108,6 +80381,13 @@ Antenna ProAnt OnBoard 868Mhz 915Mhz 2400Mhz
 6
 6
 RF_Antenna
+Antenova_SR4G013_GPS
+GPS/GLONASS/Galileo/BeiDou antenna, 1559-1609Mhz, SMD, https://www.application-datasheet.com/pdf/antenova/sr4g013.pdf
+antenna GPS Antenova Beltii
+0
+5
+2
+RF_Antenna
 Astrocast_AST50127-00
 L-band patch antenna, https://docs.astrocast.com/dl/0534-DOC-M2M-ASTRO-Patch_Antenna-Datasheet.pdf
 L-band antenna astrocast Patch Antenna
@@ -80134,6 +80414,13 @@ Johanson 2450AT43F0100 SMD antenna 2400-2500Mhz, 1dBi, https://www.johansontechn
 antenna
 0
 2
+2
+RF_Antenna
+Molex_47948-0001_2.4Ghz
+SMD antenna 2400-2500Mhz, 3.7dBi, https://www.molex.com/content/dam/molex/molex-dot-com/products/automated/en-us/productspecificationpdf/479/47948/PS-47948-001-001.pdf?inline
+rf antenna
+0
+4
 2
 RF_Antenna
 Pulse_W3011
@@ -81522,6 +81809,13 @@ Relay DPDT Finder 40.51 Pitch 5mm
 5
 5
 Relay_THT
+Relay_SPDT_Fujitsu_FTR-LYCA005x_FormC_Vertical
+Relay, SPDT Form C, vertical mount, 6A, 5-60V, https://www.fujitsu.com/sg/imagesgig5/ftr-ly.pdf
+relay SPDT form c vertical
+0
+5
+5
+Relay_THT
 Relay_SPDT_HJR-4102
 IM Signal Relay SPDT HJR-4102
 Relay SPDT IM-relay HJR-4102
@@ -81669,6 +81963,13 @@ Standex Meder SIL reed relais
 5
 5
 Relay_THT
+Relay_SPST-NO_Fujitsu_FTR-LYAA005x_FormA_Vertical
+Relay, SPST-NO Form A, vertical mount, 6A, 5-60V, https://www.fujitsu.com/sg/imagesgig5/ftr-ly.pdf
+relay SPST-NO form A vertical
+0
+4
+4
+Relay_THT
 Relay_SPST_Finder_32.21-x300
 Finder 32.21-x300 Relay, SPST, https://gfinder.findernet.com/assets/Series/355/S32EN.pdf
 Finder 32.21-x300 Relay SPST
@@ -81695,6 +81996,20 @@ Omron Relay, SPST, High Capacity,  https://omronfs.omron.com/en_US/ecb/products/
 Omron Relay SPST High Capacity
 0
 6
+4
+Relay_THT
+Relay_SPST_Panasonic_ALFG_FormA
+Panasonic Relay SPST, https://www3.panasonic.biz/ac/e_download/control/relay/power/catalog/mech_eng_lfg.pdf
+Panasonic Relay SPST
+0
+4
+4
+Relay_THT
+Relay_SPST_Panasonic_ALFG_FormA_CircularHoles
+Panasonic Relay SPST, https://www3.panasonic.biz/ac/e_download/control/relay/power/catalog/mech_eng_lfg.pdf
+Panasonic Relay SPST
+0
+4
 4
 Relay_THT
 Relay_SPST_Panasonic_JW1_FormA
@@ -88963,6 +89278,13 @@ RF Transformer
 5
 5
 Transformer_SMD
+Transformer_MiniCircuits_AT224-1A
+SMD RF transformer, 50 ohm, 4.5 to 3000Mhz, https://www.minicircuits.com/pdfs/TC1-1-13M+.pdf
+RF Transformer
+0
+5
+5
+Transformer_SMD
 Transformer_Murata_78250JC
 Murata 78250JC https://www.murata-ps.com/datasheet?/data/magnetics/kmp_78250j.pdf
 Murata transformer
@@ -90307,6 +90629,13 @@ varistor
 2
 2
 Z3660_v02
+CP_Elec_6.3x3.9
+SMD capacitor, aluminum electrolytic, Nichicon, 6.3x3.9mm
+capacitor electrolytic
+0
+2
+2
+Z3660_v02
 C_0805_2012Metric_Pad1.18x1.45mm_HandSolder
 Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing), generated with kicad-footprint-generator
 capacitor handsolder
@@ -90324,13 +90653,6 @@ Z3660_v02
 C_1812_4532Metric_Pad1.57x3.40mm_HandSolder
 Capacitor SMD 1812 (4532 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator
 capacitor handsolder
-0
-2
-2
-Z3660_v02
-C_Elec_5x5.4
-SMD capacitor, aluminum electrolytic nonpolar, 5.0x5.4mm
-capacitor electrolyic nonpolar
 0
 2
 2
@@ -90426,12 +90748,12 @@ resistor handsolder
 2
 2
 Z3660_v02
-R_Array_Convex_8x0602
-Chip Resistor Network, ROHM MNR18 (see mnr_g.pdf)
+R_Array_Convex_4x0603
+Chip Resistor Network, ROHM MNR14 (see mnr_g.pdf)
 resistor array
 0
-16
-16
+8
+8
 Z3660_v02
 Regulador_DCDC
 TO-220-3, Vertical, RM 2.54mm, see https://www.vishay.com/docs/66542/to-220-1.pdf
@@ -90475,13 +90797,6 @@ net tie solder jumper bridged
 3
 3
 Z3660_v02
-SolderJumper-3_P1.3mm_Open_RoundedPad1.0x1.5mm_NumberLabels
-SMD Solder 3-pad Jumper, 1x1.5mm rounded Pads, 0.3mm gap, open, labeled with numbers
-solder jumper open
-0
-3
-3
-Z3660_v02
 TQFP-144_20x20mm_P0.5mm
 TQFP, 144 Pin (http://www.microsemi.com/index.php?option=com_docman&task=doc_download&gid=131095), generated with kicad-footprint-generator ipc_gullwing_generator.py
 TQFP QFP
@@ -90502,13 +90817,6 @@ TSSOP SO
 0
 20
 20
-Z3660_v02
-TestPoint_Pad_1.0x1.0mm
-SMD rectangular pad as test Point, square 1.0mm side length
-test point SMD pad rectangle square
-0
-1
-1
 Z3660_v02
 TestPoint_THTPad_2.0x2.0mm_Drill1.0mm
 THT rectangular pad as test Point, square 2.0mm_Drill1.0mm  side length, hole diameter 1.0mm
