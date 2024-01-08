@@ -15,3 +15,5 @@ v0.21
 v0.21a
  * 01/07/2024: Updated resistor network footprints to 4x (instead of 8x).
  * 01/07/2024: Updated electrolytic capacitor footprints to bigger ones.
+ * 01/08/2024: Updated led values to differentiate green and red.
+ * 01/08/2024: Uploaded BOM and CPL files for JLCPCB (thanks to @kavanoz).
