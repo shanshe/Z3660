@@ -5678,7 +5678,7 @@
     (property "Reference" "D1" (at 257.048 69.9516 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Value" "LED_Small" (at 257.048 72.263 90)
+    (property "Value" "LED_Small_Green" (at 247.65 60.96 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
     (property "Footprint" "Z3660_v02:LED_1206_3216Metric_Pad1.42x1.75mm_HandSolder" (at 255.27 71.12 90)
@@ -5687,8 +5687,8 @@
     (property "Datasheet" "~" (at 255.27 71.12 90)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 4bd59a69-895d-4a59-afcc-490e1576e356))
-    (pin "2" (uuid 19d71e5a-9053-4ba3-a677-b3eae359e567))
+    (pin "1" (uuid b38bb641-3491-403f-9dd6-9b8374e6f661))
+    (pin "2" (uuid 10c703e8-9f3e-4c60-b52f-c6bb98d215e7))
     (instances
       (project "Z3660_v021a"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-00006350b937"
@@ -5730,7 +5730,7 @@
     (property "Reference" "D2" (at 272.288 69.9516 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Value" "LED_Small" (at 272.288 72.263 90)
+    (property "Value" "LED_Small_Red" (at 269.24 60.96 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
     (property "Footprint" "Z3660_v02:LED_1206_3216Metric_Pad1.42x1.75mm_HandSolder" (at 270.51 71.12 90)
