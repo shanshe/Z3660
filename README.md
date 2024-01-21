@@ -6,7 +6,7 @@
 <br><p style="margin-left:1em;">
 <br><b>1</b>. Z3660 accelerator board can only use 060 CPUs. This could be changed in the future, but at this time, only 060 is supported.
 <br>
-<br><b>2</b>. If Z-turn FPGA board is <b>NOT</b> used, then you get a simple A3660. The only difference is that all A3660 PLDs are replaced by a XC95144XL-TQ144 CPLD. It could be possible to use 060 up to 100MHz, but only 50 MHz and 64 MHz has been tested. A board with 128 MB of CPU RAM is in the works (to be connected at Z-turn sockets).
+<br><b>2</b>. If Z-turn FPGA board is <b>NOT</b> used, then you get a simple A3660. The only difference is that all A3660 PLDs are replaced by a XC95144XL-10TQ144 CPLD. It could be possible to use 060 up to 100MHz, but only 50 MHz and 64 MHz has been tested. A board with 128 MB of CPU RAM is in the works (to be connected at Z-turn sockets).
 <br>
 <br><b>3</b>. If you <b>use a Z-turn FPGA board</b>, then you can add 128 MB of CPU RAM (DMA compatible), 256 MB of Z3 RAM (not DMA compatible), RTG 16bit, Ethernet, AHI and MHI. Also there is a SD to SCSI emulation for using raw RDB disk images (USB storage maybe in the future). And of course, you can use a 68060 rev6 at 100 MHz.
 <br><p style="margin-left:0em;">
