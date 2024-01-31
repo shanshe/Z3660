@@ -73,12 +73,12 @@ struct GFXBase {
 #define DEVICE_DATE "(27.09.2023)"
 
 enum SwitchType {
-    NONE = 0,
+	NONE = 0,
 	ZZ9000,
-    CTS,
-    RTS,
-    DTR,
-    SEL,
+	CTS,
+	RTS,
+	DTR,
+	SEL,
 	DPMS
 };
 
