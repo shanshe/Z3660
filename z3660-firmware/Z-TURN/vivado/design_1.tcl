@@ -546,36 +546,37 @@ proc create_hier_cell_clock_generation { parentCell nameHier } {
   set clk_wiz_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0 ]
   set_property -dict [list \
     CONFIG.CLKIN1_JITTER_PS {50.0} \
-    CONFIG.CLKOUT1_JITTER {98.146} \
-    CONFIG.CLKOUT1_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {200} \
-    CONFIG.CLKOUT2_JITTER {112.316} \
-    CONFIG.CLKOUT2_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {100} \
+    CONFIG.CLKOUT1_JITTER {110.105} \
+    CONFIG.CLKOUT1_PHASE_ERROR {87.375} \
+    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {100} \
+    CONFIG.CLKOUT2_JITTER {126.626} \
+    CONFIG.CLKOUT2_PHASE_ERROR {87.375} \
+    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {50} \
+    CONFIG.CLKOUT2_REQUESTED_PHASE {30.000} \
     CONFIG.CLKOUT2_USED {true} \
-    CONFIG.CLKOUT3_JITTER {148.629} \
-    CONFIG.CLKOUT3_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT3_REQUESTED_DUTY_CYCLE {75} \
+    CONFIG.CLKOUT3_JITTER {145.800} \
+    CONFIG.CLKOUT3_PHASE_ERROR {87.375} \
+    CONFIG.CLKOUT3_REQUESTED_DUTY_CYCLE {50.000} \
     CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {25} \
-    CONFIG.CLKOUT3_REQUESTED_PHASE {45} \
+    CONFIG.CLKOUT3_REQUESTED_PHASE {60.000} \
     CONFIG.CLKOUT3_USED {true} \
-    CONFIG.CLKOUT4_JITTER {148.629} \
-    CONFIG.CLKOUT4_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {100.000} \
-    CONFIG.CLKOUT4_REQUESTED_PHASE {0.000} \
-    CONFIG.CLKOUT4_USED {false} \
-    CONFIG.CLKOUT5_JITTER {148.629} \
-    CONFIG.CLKOUT5_PHASE_ERROR {89.971} \
+    CONFIG.CLKOUT4_JITTER {145.800} \
+    CONFIG.CLKOUT4_PHASE_ERROR {87.375} \
+    CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {25} \
+    CONFIG.CLKOUT4_REQUESTED_PHASE {20.000} \
+    CONFIG.CLKOUT4_USED {true} \
+    CONFIG.CLKOUT5_JITTER {145.800} \
+    CONFIG.CLKOUT5_PHASE_ERROR {87.375} \
     CONFIG.CLKOUT5_REQUESTED_DUTY_CYCLE {50.000} \
-    CONFIG.CLKOUT5_REQUESTED_OUT_FREQ {100.000} \
-    CONFIG.CLKOUT5_REQUESTED_PHASE {0.000} \
-    CONFIG.CLKOUT5_USED {false} \
-    CONFIG.CLKOUT6_JITTER {148.629} \
-    CONFIG.CLKOUT6_PHASE_ERROR {89.971} \
+    CONFIG.CLKOUT5_REQUESTED_OUT_FREQ {25} \
+    CONFIG.CLKOUT5_REQUESTED_PHASE {275.000} \
+    CONFIG.CLKOUT5_USED {true} \
+    CONFIG.CLKOUT6_JITTER {145.800} \
+    CONFIG.CLKOUT6_PHASE_ERROR {87.375} \
     CONFIG.CLKOUT6_REQUESTED_DUTY_CYCLE {50.000} \
-    CONFIG.CLKOUT6_REQUESTED_OUT_FREQ {100.000} \
-    CONFIG.CLKOUT6_REQUESTED_PHASE {0.000} \
-    CONFIG.CLKOUT6_USED {false} \
+    CONFIG.CLKOUT6_REQUESTED_OUT_FREQ {25} \
+    CONFIG.CLKOUT6_REQUESTED_PHASE {140.000} \
+    CONFIG.CLKOUT6_USED {true} \
     CONFIG.CLKOUT7_JITTER {98.146} \
     CONFIG.CLKOUT7_PHASE_ERROR {89.971} \
     CONFIG.CLKOUT7_REQUESTED_OUT_FREQ {100.000} \
@@ -583,109 +584,39 @@ proc create_hier_cell_clock_generation { parentCell nameHier } {
     CONFIG.CLK_OUT1_PORT {AXI_clk} \
     CONFIG.CLK_OUT2_PORT {PCLK_clk} \
     CONFIG.CLK_OUT3_PORT {nCLKEN_clk} \
-    CONFIG.CLK_OUT4_PORT {clk_out4} \
-    CONFIG.CLK_OUT5_PORT {clk_out5} \
-    CONFIG.CLK_OUT6_PORT {clk_out6} \
+    CONFIG.CLK_OUT4_PORT {BCLK_clk} \
+    CONFIG.CLK_OUT5_PORT {CLK90_clk} \
+    CONFIG.CLK_OUT6_PORT {CPUCLK_clk} \
     CONFIG.ENABLE_CLOCK_MONITOR {false} \
     CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
-    CONFIG.MMCM_CLKFBOUT_MULT_F {5.000} \
+    CONFIG.JITTER_SEL {Min_O_Jitter} \
+    CONFIG.MMCM_BANDWIDTH {HIGH} \
+    CONFIG.MMCM_CLKFBOUT_MULT_F {5.250} \
     CONFIG.MMCM_CLKIN1_PERIOD {5.000} \
     CONFIG.MMCM_CLKIN2_PERIOD {10.0} \
-    CONFIG.MMCM_CLKOUT0_DIVIDE_F {5.000} \
-    CONFIG.MMCM_CLKOUT1_DIVIDE {10} \
-    CONFIG.MMCM_CLKOUT2_DIVIDE {40} \
-    CONFIG.MMCM_CLKOUT2_DUTY_CYCLE {0.750} \
-    CONFIG.MMCM_CLKOUT2_PHASE {45.000} \
-    CONFIG.MMCM_CLKOUT3_DIVIDE {1} \
-    CONFIG.MMCM_CLKOUT3_PHASE {0.000} \
-    CONFIG.MMCM_CLKOUT4_DIVIDE {1} \
+    CONFIG.MMCM_CLKOUT0_DIVIDE_F {10.500} \
+    CONFIG.MMCM_CLKOUT1_DIVIDE {21} \
+    CONFIG.MMCM_CLKOUT1_PHASE {30.000} \
+    CONFIG.MMCM_CLKOUT2_DIVIDE {42} \
+    CONFIG.MMCM_CLKOUT2_DUTY_CYCLE {0.500} \
+    CONFIG.MMCM_CLKOUT2_PHASE {60.000} \
+    CONFIG.MMCM_CLKOUT3_DIVIDE {42} \
+    CONFIG.MMCM_CLKOUT3_PHASE {20.357} \
+    CONFIG.MMCM_CLKOUT4_DIVIDE {42} \
     CONFIG.MMCM_CLKOUT4_DUTY_CYCLE {0.500} \
-    CONFIG.MMCM_CLKOUT4_PHASE {0.000} \
-    CONFIG.MMCM_CLKOUT5_DIVIDE {1} \
+    CONFIG.MMCM_CLKOUT4_PHASE {275.357} \
+    CONFIG.MMCM_CLKOUT5_DIVIDE {42} \
     CONFIG.MMCM_CLKOUT5_DUTY_CYCLE {0.500} \
-    CONFIG.MMCM_CLKOUT5_PHASE {0.000} \
+    CONFIG.MMCM_CLKOUT5_PHASE {140.357} \
     CONFIG.MMCM_CLKOUT6_DIVIDE {1} \
     CONFIG.MMCM_COMPENSATION {ZHOLD} \
     CONFIG.MMCM_DIVCLK_DIVIDE {1} \
-    CONFIG.NUM_OUT_CLKS {3} \
+    CONFIG.NUM_OUT_CLKS {6} \
     CONFIG.PHASE_DUTY_CONFIG {true} \
     CONFIG.PRIMITIVE {MMCM} \
     CONFIG.USE_DYN_PHASE_SHIFT {false} \
     CONFIG.USE_DYN_RECONFIG {true} \
   ] $clk_wiz_0
-
-
-  # Create instance: clk_wiz_1, and set properties
-  set clk_wiz_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_1 ]
-  set_property -dict [list \
-    CONFIG.CLKIN1_JITTER_PS {50.0} \
-    CONFIG.CLKOUT1_JITTER {148.629} \
-    CONFIG.CLKOUT1_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {25} \
-    CONFIG.CLKOUT2_JITTER {148.629} \
-    CONFIG.CLKOUT2_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {25} \
-    CONFIG.CLKOUT2_REQUESTED_PHASE {0} \
-    CONFIG.CLKOUT2_USED {true} \
-    CONFIG.CLKOUT3_JITTER {148.629} \
-    CONFIG.CLKOUT3_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {25} \
-    CONFIG.CLKOUT3_REQUESTED_PHASE {270} \
-    CONFIG.CLKOUT3_USED {true} \
-    CONFIG.CLKOUT4_JITTER {148.629} \
-    CONFIG.CLKOUT4_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {25} \
-    CONFIG.CLKOUT4_REQUESTED_PHASE {180} \
-    CONFIG.CLKOUT4_USED {true} \
-    CONFIG.CLKOUT5_JITTER {148.629} \
-    CONFIG.CLKOUT5_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT5_REQUESTED_DUTY_CYCLE {50.000} \
-    CONFIG.CLKOUT5_REQUESTED_OUT_FREQ {100.000} \
-    CONFIG.CLKOUT5_REQUESTED_PHASE {0.000} \
-    CONFIG.CLKOUT5_USED {false} \
-    CONFIG.CLKOUT6_JITTER {148.629} \
-    CONFIG.CLKOUT6_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT6_REQUESTED_DUTY_CYCLE {50.000} \
-    CONFIG.CLKOUT6_REQUESTED_OUT_FREQ {100.000} \
-    CONFIG.CLKOUT6_REQUESTED_PHASE {0.000} \
-    CONFIG.CLKOUT6_USED {false} \
-    CONFIG.CLKOUT7_JITTER {98.146} \
-    CONFIG.CLKOUT7_PHASE_ERROR {89.971} \
-    CONFIG.CLKOUT7_REQUESTED_OUT_FREQ {100.000} \
-    CONFIG.CLKOUT7_USED {false} \
-    CONFIG.CLK_OUT1_PORT {BCLK_clk} \
-    CONFIG.CLK_OUT2_PORT {BCLK2} \
-    CONFIG.CLK_OUT3_PORT {CLK90_clk} \
-    CONFIG.CLK_OUT4_PORT {CPUCLK_clk} \
-    CONFIG.CLK_OUT5_PORT {clk_out5} \
-    CONFIG.CLK_OUT6_PORT {clk_out6} \
-    CONFIG.ENABLE_CLOCK_MONITOR {false} \
-    CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
-    CONFIG.MMCM_CLKFBOUT_MULT_F {5.000} \
-    CONFIG.MMCM_CLKIN1_PERIOD {5.000} \
-    CONFIG.MMCM_CLKIN2_PERIOD {10.0} \
-    CONFIG.MMCM_CLKOUT0_DIVIDE_F {40.000} \
-    CONFIG.MMCM_CLKOUT1_DIVIDE {40} \
-    CONFIG.MMCM_CLKOUT1_PHASE {0.000} \
-    CONFIG.MMCM_CLKOUT2_DIVIDE {40} \
-    CONFIG.MMCM_CLKOUT2_PHASE {270.000} \
-    CONFIG.MMCM_CLKOUT3_DIVIDE {40} \
-    CONFIG.MMCM_CLKOUT3_PHASE {180.000} \
-    CONFIG.MMCM_CLKOUT4_DIVIDE {1} \
-    CONFIG.MMCM_CLKOUT4_DUTY_CYCLE {0.500} \
-    CONFIG.MMCM_CLKOUT4_PHASE {0.000} \
-    CONFIG.MMCM_CLKOUT5_DIVIDE {1} \
-    CONFIG.MMCM_CLKOUT5_DUTY_CYCLE {0.500} \
-    CONFIG.MMCM_CLKOUT5_PHASE {0.000} \
-    CONFIG.MMCM_CLKOUT6_DIVIDE {1} \
-    CONFIG.MMCM_COMPENSATION {ZHOLD} \
-    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
-    CONFIG.NUM_OUT_CLKS {4} \
-    CONFIG.PHASE_DUTY_CONFIG {true} \
-    CONFIG.PRIMITIVE {MMCM} \
-    CONFIG.USE_DYN_PHASE_SHIFT {false} \
-    CONFIG.USE_DYN_RECONFIG {true} \
-  ] $clk_wiz_1
 
 
   # Create instance: clk_wiz_2, and set properties
@@ -751,20 +682,19 @@ proc create_hier_cell_clock_generation { parentCell nameHier } {
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_lite] [get_bd_intf_pins clk_wiz_2/s_axi_lite]
   connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins s_axi_lite1] [get_bd_intf_pins clk_wiz_0/s_axi_lite]
-  connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins s_axi_lite2] [get_bd_intf_pins clk_wiz_1/s_axi_lite]
 
   # Create port connections
-  connect_bd_net -net clk_in1_1 [get_bd_pins clk_in1] [get_bd_pins clk_wiz_0/clk_in1] [get_bd_pins clk_wiz_1/clk_in1] [get_bd_pins clk_wiz_2/clk_in1] [get_bd_pins clk_wiz_3/clk_in1]
+  connect_bd_net -net clk_in1_1 [get_bd_pins clk_in1] [get_bd_pins clk_wiz_0/clk_in1] [get_bd_pins clk_wiz_2/clk_in1] [get_bd_pins clk_wiz_3/clk_in1]
   connect_bd_net -net clk_wiz_0_AXI_clk [get_bd_pins clk_wiz_0/AXI_clk] [get_bd_pins AXI_clk]
+  connect_bd_net -net clk_wiz_0_BCLK_clk [get_bd_pins clk_wiz_0/BCLK_clk] [get_bd_pins BCLK_clk]
+  connect_bd_net -net clk_wiz_0_CLK90_clk [get_bd_pins clk_wiz_0/CLK90_clk] [get_bd_pins CLK90_clk]
+  connect_bd_net -net clk_wiz_0_CPUCLK_clk [get_bd_pins clk_wiz_0/CPUCLK_clk] [get_bd_pins CPUCLK_clk]
   connect_bd_net -net clk_wiz_0_PCLK_clk [get_bd_pins clk_wiz_0/PCLK_clk] [get_bd_pins PCLK_clk]
   connect_bd_net -net clk_wiz_0_nCLKEN_clk [get_bd_pins clk_wiz_0/nCLKEN_clk] [get_bd_pins nCLKEN_clk]
-  connect_bd_net -net clk_wiz_1_BCLK_clk [get_bd_pins clk_wiz_1/BCLK_clk] [get_bd_pins BCLK_clk]
-  connect_bd_net -net clk_wiz_1_CLK90_clk [get_bd_pins clk_wiz_1/CLK90_clk] [get_bd_pins CLK90_clk]
-  connect_bd_net -net clk_wiz_1_CPUCLK_clk [get_bd_pins clk_wiz_1/CPUCLK_clk] [get_bd_pins CPUCLK_clk]
   connect_bd_net -net clk_wiz_2_clk_out1 [get_bd_pins clk_wiz_2/clk_out1] [get_bd_pins clk_out1]
   connect_bd_net -net clk_wiz_3_clk_out1 [get_bd_pins clk_wiz_3/clk_out1] [get_bd_pins clk_out2]
-  connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins clk_wiz_0/s_axi_aclk] [get_bd_pins clk_wiz_1/s_axi_aclk] [get_bd_pins clk_wiz_2/s_axi_aclk]
-  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins clk_wiz_0/s_axi_aresetn] [get_bd_pins clk_wiz_1/s_axi_aresetn] [get_bd_pins clk_wiz_2/s_axi_aresetn]
+  connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins clk_wiz_0/s_axi_aclk] [get_bd_pins clk_wiz_2/s_axi_aclk]
+  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins clk_wiz_0/s_axi_aresetn] [get_bd_pins clk_wiz_2/s_axi_aresetn]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1713,10 +1643,10 @@ proc create_root_design { parentCell } {
   set I2S_SCLK [ create_bd_port -dir O I2S_SCLK ]
   set A060 [ create_bd_port -dir IO -from 31 -to 0 -type data A060 ]
   set R_W040 [ create_bd_port -dir IO R_W040 ]
-  set nTS [ create_bd_port -dir IO nTS ]
   set SIZ40 [ create_bd_port -dir IO -from 1 -to 0 SIZ40 ]
   set nTA [ create_bd_port -dir IO nTA ]
   set INT6_ARM [ create_bd_port -dir O -type intr INT6_ARM ]
+  set nTS [ create_bd_port -dir I nTS ]
 
   # Create instance: processing_av_system
   create_hier_cell_processing_av_system [current_bd_instance .] processing_av_system
@@ -1744,15 +1674,15 @@ proc create_root_design { parentCell } {
   connect_bd_net -net Net1 [get_bd_ports D040] [get_bd_pins z3660_0/D040]
   connect_bd_net -net Net2 [get_bd_ports A060] [get_bd_pins z3660_0/A060]
   connect_bd_net -net Net3 [get_bd_ports R_W040] [get_bd_pins z3660_0/R_W040]
-  connect_bd_net -net Net4 [get_bd_ports nTS] [get_bd_pins z3660_0/nTS]
   connect_bd_net -net Net5 [get_bd_ports SIZ40] [get_bd_pins z3660_0/SIZ40]
   connect_bd_net -net Net6 [get_bd_ports nTA] [get_bd_pins z3660_0/nTA]
   connect_bd_net -net clk_wiz_0_PCLK_clk [get_bd_pins processing_av_system/PCLK_clk] [get_bd_ports PCLK_clk] [get_bd_pins z3660_0/PCLK_clk]
   connect_bd_net -net clk_wiz_0_nCLKEN_clk [get_bd_pins processing_av_system/nCLKEN_clk] [get_bd_ports nCLKEN_clk] [get_bd_pins z3660_0/nCLKEN_clk]
-  connect_bd_net -net clk_wiz_1_BCLK_clk [get_bd_pins processing_av_system/BCLK_clk] [get_bd_ports BCLK_clk] [get_bd_pins z3660_0/BCLK_clk]
+  connect_bd_net -net clk_wiz_1_BCLK_clk [get_bd_pins processing_av_system/BCLK_clk] [get_bd_ports BCLK_clk]
   connect_bd_net -net hdmi_intn_1 [get_bd_ports hdmi_intn] [get_bd_pins processing_av_system/hdmi_intn]
   connect_bd_net -net nTCI_1 [get_bd_ports nTCI] [get_bd_pins z3660_0/nTCI]
   connect_bd_net -net nTEA_1 [get_bd_ports nTEA] [get_bd_pins z3660_0/nTEA]
+  connect_bd_net -net nTS_1 [get_bd_ports nTS] [get_bd_pins z3660_0/nTS]
   connect_bd_net -net processing_av_system_AXI1_clk [get_bd_pins processing_av_system/AXI1_clk] [get_bd_pins z3660_0/m00_axi_aclk] [get_bd_pins z3660_0/S00_AXI_ACLK]
   connect_bd_net -net processing_av_system_AXI_clk [get_bd_pins processing_av_system/AXI_clk] [get_bd_pins z3660_0/S01_AXI_ACLK]
   connect_bd_net -net processing_av_system_CLK90_clk [get_bd_pins processing_av_system/CLK90_clk] [get_bd_ports CLK90_clk]
@@ -1782,7 +1712,6 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x7FC00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_av_system/processing_system7_0/Data] [get_bd_addr_segs processing_av_system/audio_video_engine/audio_formatter_0/s_axi_lite/reg0] -force
   assign_bd_address -offset 0x7FC80000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_av_system/processing_system7_0/Data] [get_bd_addr_segs processing_av_system/audio_video_engine/video/axi_vdma_0/S_AXI_LITE/Reg] -force
   assign_bd_address -offset 0x7FC30000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_av_system/processing_system7_0/Data] [get_bd_addr_segs processing_av_system/clock_generation/clk_wiz_0/s_axi_lite/Reg] -force
-  assign_bd_address -offset 0x7FC40000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_av_system/processing_system7_0/Data] [get_bd_addr_segs processing_av_system/clock_generation/clk_wiz_1/s_axi_lite/Reg] -force
   assign_bd_address -offset 0x7FC50000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_av_system/processing_system7_0/Data] [get_bd_addr_segs processing_av_system/clock_generation/clk_wiz_2/s_axi_lite/Reg] -force
   assign_bd_address -offset 0x7FC10000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_av_system/processing_system7_0/Data] [get_bd_addr_segs processing_av_system/audio_video_engine/i2s_transmitter_0/s_axi_ctrl/Reg] -force
   assign_bd_address -offset 0x7FC20000 -range 0x00010000 -target_address_space [get_bd_addr_spaces processing_av_system/processing_system7_0/Data] [get_bd_addr_segs processing_av_system/audio_video_engine/video/video_formatter_0/S_AXI/reg0] -force

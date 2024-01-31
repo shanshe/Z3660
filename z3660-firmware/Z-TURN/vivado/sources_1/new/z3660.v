@@ -173,8 +173,12 @@ reg nTA1;
   wire [31:0] GPIO_IN;
   wire [31:0] GPIO_READ_IN;
   reg [31:0] GPIO_OUT;
+//  reg [31:0] GPIO_DATA;
+//  reg [31:0] GPIO_ADD;
+localparam GPIO_DATA  = 32'h0;
+localparam GPIO_ADD   = 32'h0;
 
-
+`include "version.vh"
  
 reg [31:0] data;
 reg [31:0] data_burst1;
@@ -184,10 +188,11 @@ reg [31:0] data_burst4;
 //assign DDIR=(~RW) & DDIR_no;
 //assign DOE = 1'd0;
 
-localparam REG_ZZ_VBLANK_STATUS  = 19'h0007C;
-localparam REG_ZZ_INT_STATUS  = 19'h000A8;
+localparam REG_ZZ_VBLANK_STATUS  = 21'h00017C;
+localparam REG_ZZ_INT_STATUS  = 21'h0001A8;
 localparam Z3_RAM_DDR_OFFSET  = 32'h2000_0000;
 localparam CPU_RAM_DDR_OFFSET = 32'h0000_0000;
+localparam MAPROM_DDR_OFFSET  = 32'h0000_0000;
 localparam RTG_RAM_DDR_OFFSET = 32'h1800_0000;
 
 localparam nTS_idle = 6'd0;
@@ -250,17 +255,29 @@ reg [15:0] autoConfigBaseRTG = 16'h0000;
 
 reg [1:0] enabled = 2'b11;
 reg cpu_ram_enable = 1'b1;
+reg maprom_enable = 1'b1;
+//reg ovl = 1'b1;
 wire AUTOCONFIG_RANGE = ({A060[31:16]} == {16'hFF00}) && ~&shutup[1:0] && ~&({configured[1]|~enabled[1],configured[0]|~enabled[0]});
-
+wire MAPROM_RANGE1 = 0;//ovl==1'b1 && (A060[31:19] == 13'b0000_0000_0000_0) && maprom_enable;
+wire MAPROM_RANGE0 = (A060[31:19] == 13'b0000000011111) && maprom_enable;
 wire CPU_RAM_RANGE = (A060[31:27] == 5'b00001) && cpu_ram_enable;
-//wire FASTRAM_CONFIGURED_RANGE = (A060[31:16] >= autoConfigBaseFastRam[15:0]) && (A060[31:16] < (autoConfigBaseFastRam[15:0]+16'h1000)) && configured[0] && enabled[0];
-//wire RTG_CONFIGURED_RANGE = (A060[31:16] >= autoConfigBaseRTG[15:0]) && (A060[31:16] < (autoConfigBaseRTG[15:0]+16'h0800)) && configured[1] && enabled[1];
 wire FASTRAM_CONFIGURED_RANGE = (A060[31:28] == autoConfigBaseFastRam[15:12]) && configured[0] && enabled[0];
 wire RTG_CONFIGURED_RANGE = (A060[31:27] == {autoConfigBaseRTG[15:12],1'b0}) && configured[1] && enabled[1];
 
+wire PCLK2_clk = PCLK_clk;
+/*
+reg PCLK2_clk = 1;
+    always @(negedge m00_axi_aclk) begin
+        if((RESET_IN==1'b1) || (GPIO_s[31]==1)) begin
+            PCLK2_clk <= 1'b0;
+        end
+        else begin
+            PCLK2_clk <= !PCLK2_clk;
+        end
+    end
+ */
     always @(posedge m00_axi_aclk) begin
         nTS_d <= {nTS_d[2:0],nTS};
-
         GPIO_m<=GPIO_IN;
         GPIO_s<=GPIO_m;
 
@@ -280,13 +297,13 @@ wire RTG_CONFIGURED_RANGE = (A060[31:27] == {autoConfigBaseRTG[15:12],1'b0}) && 
     always @(negedge m00_axi_aclk) begin
 //    always @(*) begin // this is a bad idea, ENcondition becomes a combinational gated clock...
         if(GPIO_c[9:8]==2'b00)
-            ENcondition<=(nCLKEN_clk==1'b0)&&(PCLK_clk==1'b0)?1'b1:1'b0;
+            ENcondition<=(nCLKEN_clk==1'b0)&&(PCLK2_clk==1'b0)?1'b1:1'b0;
         else if(GPIO_c[9:8]==2'b01)
-            ENcondition<=(nCLKEN_clk==1'b0)&&(PCLK_clk==1'b1)?1'b1:1'b0;
+            ENcondition<=(nCLKEN_clk==1'b0)&&(PCLK2_clk==1'b1)?1'b1:1'b0;
         else if(GPIO_c[9:8]==2'b10)
-            ENcondition<=(PCLK_clk==1'b0)?1'b1:1'b0;
+            ENcondition<=(PCLK2_clk==1'b0)?1'b1:1'b0;
         else if(GPIO_c[9:8]==2'b11)
-            ENcondition<=(PCLK_clk==1'b1)?1'b1:1'b0;
+            ENcondition<=(PCLK2_clk==1'b1)?1'b1:1'b0;
     end
 
 assign D040[31:0]= (ARM_BG==1'b0) ? ( (RAM_state == RAM_read2)||(RAM_state == RAM_read3)||(RAM_state == RAM_read31) ||
@@ -296,6 +313,7 @@ assign D040[31:0]= (ARM_BG==1'b0) ? ( (RAM_state == RAM_read2)||(RAM_state == RA
                    ? data[31:0] : 32'bz) : ((ARM_RnW==1'b0) ? D040_out[31:0] : 32'bz);
 
 reg CPURAM_start_cycle=0;
+reg MAPROM_start_cycle=0;
 reg FASTRAM_start_cycle=0;
 reg RTG_start_cycle=0;
 reg AUTOCONFIG_start_cycle=0;
@@ -312,14 +330,15 @@ wire  AUTOCONFIG_BOOT_ROM_ENABLE = GPIO_s[27];
 // | RESET | R-W |      |    |  BOOT ROM  |    |    |    |    |    |    |    |    |    |    |    |
 // -----------------------------------------------------------------------------------------------
 //
-// -------------------------------------------------------------------------------------
-// | 15 | 14 |   13-12    | 11 | 10 |   9-8     |  7 |   6-5-4    |  3 |  2-1  |   0     |
-// -------------------------------------------------------------------------------------
-// |    |    |  RTG-RAM   |    |    |    EN     |    |     TS     |    |  W-R  | CPU RAM |
-// |    |    | AUTOC. EN  |    |    | CONDITION |    |  CONDITION |    | BURST | ENABLE  |
-// -------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------
+// | 15 | 14 |   13-12    | 11 | 10 |   9-8     |    7    |   6-5-4    |   3    |  2-1  |   0     |
+// ------------------------------------------------------------------------------------------
+// |    |    |  RTG-RAM   |    |    |    EN     |    |     TS     | MAPROM |  W-R  | CPU RAM |
+// |    |    | AUTOC. EN  |    |    | CONDITION |    |  CONDITION | ENABLE | BURST | ENABLE  |
+// ------------------------------------------------------------------------------------------
 
 always @(posedge m00_axi_aclk) begin
+    nTA1 <= 1'bz;
     if((RESET_IN==1'b1) || (GPIO_s[31]==1)) begin
         m00_axi_arlen <= 'h0;
         m00_axi_arburst <= 'h0;
@@ -330,7 +349,6 @@ always @(posedge m00_axi_aclk) begin
         m00_axi_awvalid <= 1'b0;
         m00_axi_arvalid <= 1'b0;
         m00_axi_wvalid <= 1'b0;
-        nTA1<= 1'b1;
         nTBI <= 1'b1;
         nTS_FPGA <= 1'b1;
         RAM_state <= RAM_idle;
@@ -342,14 +360,15 @@ always @(posedge m00_axi_aclk) begin
         GPIO_OUT[31:0] <= 32'h0;
         wait_finish_ARM_cycle <= 0;
         enabled[1:0] <={GPIO_s[13],GPIO_s[12]};
-        cpu_ram_enable<=GPIO_s[0];    
-
+        cpu_ram_enable<=GPIO_s[0];
+        maprom_enable<=GPIO_s[3];
+//        ovl<=1'b1;
         CPURAM_start_cycle<=0;
+        MAPROM_start_cycle<=0;
         FASTRAM_start_cycle<=0;
         RTG_start_cycle<=0;
         AUTOCONFIG_start_cycle<=0;
     end else begin
-        nTA1<= 1'b1;
         case (nTS_state)
             nTS_idle: begin
                 nTS_FPGA <= 1'b1;
@@ -357,6 +376,9 @@ always @(posedge m00_axi_aclk) begin
                     GPIO_c<=GPIO_s;
                     if (CPU_RAM_RANGE==1'b1 ) begin                 // CPU-RAM  128Mb
                         CPURAM_start_cycle<=1;
+                    end
+                    else if (MAPROM_RANGE1==1'b1 || MAPROM_RANGE0==1'b1 ) begin             // MAPROM   512kb
+                        MAPROM_start_cycle<=1;
                     end
                     else if (FASTRAM_CONFIGURED_RANGE==1'b1) begin  // Z3 RAM   256Mb
                         FASTRAM_start_cycle<=1;
@@ -368,10 +390,18 @@ always @(posedge m00_axi_aclk) begin
                         AUTOCONFIG_start_cycle<=1;
                     end
                     else begin
+                    //  OVL write detection is not working...
+//                        if(A060[31:0]==32'h00BFE001
+//                        && SIZ40[1:0]==2'b01 
+//                        && R_W040==0) begin // CIA byte write
+//                            ovl<=D040[16];
+//                        end
                         // address is not used by FPGA code, so send TS to CPLD
                         nTS_FPGA <= 1'b0;
                         nTS_state <= nTS_TS0;
                     end
+//                    GPIO_DATA <= D040;
+//                    GPIO_ADD  <= {1'b1,A060[30:0]};
                 end
             end
             nTS_TS0: begin
@@ -395,10 +425,11 @@ always @(posedge m00_axi_aclk) begin
                 m00_axi_awvalid  <= 1'b0;
                 m00_axi_arvalid  <= 1'b0;
                 if (CPURAM_start_cycle==1) begin
-                    nTBI<=1'b1;
+                nTBI<=1'b1;
                     CPURAM_start_cycle<=0;
                     wait_finish_ARM_cycle<=0;
-                    if (R_W040==0) begin                   // Write cycle
+                    ack<=0;
+                    if (R_W040==0) begin  // CPURAM Write cycle
                         RAM_state <= RAM_write1b;
                         m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; //BS
                         m00_axi_awvalid  <= 1'b1;
@@ -441,12 +472,12 @@ always @(posedge m00_axi_aclk) begin
 //                                m00_axi_wstrb   <= 4'b0001;
                                 m00_axi_wstrb   <= 4'b1000; //BS
                         end
-                        m00_axi_awaddr[31:0] <= {A060[31:2],2'b00} + {CPU_RAM_DDR_OFFSET};
+                        m00_axi_awaddr[31:0] <= {A060[31:2],2'b00};// + {CPU_RAM_DDR_OFFSET};
 //                        m00_axi_wdata[31:0] <= D040[31:0];
                     end
-                    else begin  // Read Cycle
+                    else begin  // CPURAM Read Cycle
                         RAM_state <= RAM_read1b;
-                        m00_axi_araddr[31:0]  <= {A060[31:2],2'b00} + {CPU_RAM_DDR_OFFSET};
+                        m00_axi_araddr[31:0]  <= {A060[31:2],2'b00};// + {CPU_RAM_DDR_OFFSET};
                         m00_axi_arvalid  <= 1'b1;
                         if((SIZ40[1:0]==2'b11) && (GPIO_c[1]==1)) begin // BURST READ ENABLE
                             nTBI<=1'b0;
@@ -459,12 +490,40 @@ always @(posedge m00_axi_aclk) begin
                         end
                     end
                 end
-                if (FASTRAM_start_cycle==1) begin
+                else if (MAPROM_start_cycle==1) begin
+                    nTBI<=1'b1;
+                    MAPROM_start_cycle<=0;
+                    wait_finish_ARM_cycle<=0;
+                    ack<=0;
+                    if (R_W040==0) begin  // MAPROM Write cycle
+                        wait_finish_ARM_cycle<=1;
+                        GPIO_OUT[31:0] <= {2'b10,SIZ40[1:0],A060[27:0]};
+                        RAM_state <= RAM_write3;
+                    end
+                    else begin  // MAPROM Read Cycle
+                        RAM_state <= RAM_read1b;
+                        m00_axi_araddr[31:0]  <= {A060[31:2],2'b00};// + {MAPROM_DDR_OFFSET};
+                        m00_axi_arvalid  <= 1'b1;
+                        if((SIZ40[1:0]==2'b11) && (GPIO_c[1]==1)) begin // BURST READ ENABLE
+                            nTBI<=1'b0;
+                            m00_axi_arlen <= 'h3;
+                            m00_axi_arburst <= 'h2; // 0=fixed, 1=inc, 2=wrap (060 makes address wrap)
+                        end else begin
+                            nTBI<=1'b1;
+                            m00_axi_arlen <= 'h0;
+                            m00_axi_arburst <= 'h0;
+                        end
+//                        wait_finish_ARM_cycle<=1;
+//                        GPIO_OUT[31:0] <= {2'b01,SIZ40[1:0],A060[27:0]};
+//                        RAM_state <= RAM_read3;
+                    end
+                end
+                else if (FASTRAM_start_cycle==1) begin
                     nTBI<=1'b1;
                     FASTRAM_start_cycle<=0;
                     wait_finish_ARM_cycle<=0;
                     ack<=0;
-                    if (R_W040==0) begin                   // Write cycle
+                    if (R_W040==0) begin  // FASTRAM Write cycle
                         RAM_state <= RAM_write1b;
                         m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; //BS
                         m00_axi_awvalid  <= 1'b1;
@@ -507,13 +566,11 @@ always @(posedge m00_axi_aclk) begin
 //                                m00_axi_wstrb   <= 4'b0001;
                                 m00_axi_wstrb   <= 4'b1000; //BS
                         end
-                        m00_axi_awaddr[31:0] <= {A060[31:2],2'b00}-{autoConfigBaseFastRam[15:0],16'h0000}+{Z3_RAM_DDR_OFFSET};
-//                        m00_axi_awaddr[31:0] <= {4'b0001,A060[27:2],2'b00};
+                        m00_axi_awaddr[31:0] <= {Z3_RAM_DDR_OFFSET[31:28],A060[27:2],2'b00};
                     end
-                    else begin  // Read Cycle
+                    else begin  // FASTRAM Read Cycle
                         RAM_state <= RAM_read1b;
-                        m00_axi_araddr[31:0] <= {A060[31:2],2'b00}-{autoConfigBaseFastRam[15:0],16'h0000}+{Z3_RAM_DDR_OFFSET};
-//                        m00_axi_araddr[31:0] <= {4'b0001,A060[27:2],2'b00};
+                        m00_axi_araddr[31:0] <= {Z3_RAM_DDR_OFFSET[31:28],A060[27:2],2'b00};
                         m00_axi_arvalid  <= 1'b1;
                         if((SIZ40[1:0]==2'b11) && (GPIO_c[1]==1)) begin // BURST READ ENABLE
                             nTBI<=1'b0;
@@ -526,12 +583,12 @@ always @(posedge m00_axi_aclk) begin
                         end
                     end
                 end
-                if (RTG_start_cycle==1) begin
+                else if (RTG_start_cycle==1) begin
                     nTBI<=1'b1;
                     RTG_start_cycle<=0;
                     wait_finish_ARM_cycle<=0;
                     ack<=0;
-                    if (R_W040==0) begin                   // Write cycle
+                    if (R_W040==0) begin  // RTG Write cycle
                         RAM_state <= RAM_write1b;
                         m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; //BS
                         m00_axi_awvalid  <= 1'b1;
@@ -574,17 +631,20 @@ always @(posedge m00_axi_aclk) begin
 //                                m00_axi_wstrb   <= 4'b0001;
                                 m00_axi_wstrb   <= 4'b1000; //BS
                         end
-                        if( A060[26:19] == 8'b00000000 ) begin // register memory zone: 0 .. 0x7FFFF
+                        if( A060[26:21] == 6'b000000 ) begin // register memory zone: 0 .. 0x1FFFFF
                             wait_finish_ARM_cycle<=1;
-                            m00_axi_awaddr[31:0] <= {5'b00000,A060[26:2],2'b00} + {RTG_RAM_DDR_OFFSET};
-                            GPIO_OUT[31:0] <= {1'b1,1'b0,SIZ40[1:0],A060[1:0],7'h00,A060[18:2],2'b00};
+                            m00_axi_awaddr[31:0] <= {RTG_RAM_DDR_OFFSET[31:27],A060[26:2],2'b00};
+                            GPIO_OUT[31:0] <= {1'b1,1'b0,SIZ40[1:0],7'h00,A060[20:0]};
                             nTBI<=1'b1;
+                            m00_axi_awlen <= 'h0;
+                            m00_axi_awburst <= 'h0;
+                            m00_axi_wlast <= 'h0;
                         end
                         else begin
-                            m00_axi_awaddr[31:0] <= {5'b00000,A060[26:2],2'b00} + {RTG_RAM_DDR_OFFSET};
+                            m00_axi_awaddr[31:0] <= {RTG_RAM_DDR_OFFSET[31:27],A060[26:2],2'b00};
+                            end
                         end
-                    end
-                    else begin  // Read Cycle
+                    else begin  // RTG Read Cycle
                         RAM_state <= RAM_read1b;
                         if((SIZ40[1:0]==2'b11) && (GPIO_c[1]==1)) begin // BURST READ ENABLE
                             nTBI<=1'b0;
@@ -595,10 +655,13 @@ always @(posedge m00_axi_aclk) begin
                             m00_axi_arlen <= 'h0;
                             m00_axi_arburst <= 'h0;
                         end
-                        if( A060[26:19] == 8'b00000000 ) begin // register memory zone: 0 .. 0x7FFFF
-                            if( {A060[18:2],2'b00} == REG_ZZ_VBLANK_STATUS ) begin // vblank register is directly read here
+                        if( A060[26:21] == 6'b000000 ) begin // register memory zone: 0 .. 0x1FFFFF
+                            if( {A060[20:2],2'b00} == REG_ZZ_VBLANK_STATUS ) begin // vblank register is directly read here
                                 data[31:0]<={31'h0,control_vblank[0]};
                                 ack<=0;
+                                nTBI<=1'b1;
+                                m00_axi_arlen <= 'h0;
+                                m00_axi_arburst <= 'h0;
                                 RAM_state <= RAM_read3;
                             end
 //                            else if( {A060[15:2],2'b00} == REG_ZZ_INT_STATUS ) begin // vblank register is directly read here
@@ -616,14 +679,17 @@ always @(posedge m00_axi_aclk) begin
 // direct read registers from RAM
 //                                m00_axi_araddr[31:0] <= {16'h0000,A060[15:2],2'b00} + {RTG_RAM_DDR_OFFSET};
 //                                m00_axi_arvalid  <= 1'b1;
-                               wait_finish_ARM_cycle<=1;
-                               m00_axi_araddr[31:0] <= {5'b00000,A060[26:2],2'b00} + {RTG_RAM_DDR_OFFSET};
-                               GPIO_OUT[31:0] <= {1'b0,1'b1,SIZ40[1:0],A060[1:0],7'h00,A060[18:2],2'b00};
-                               RAM_state <= RAM_read3;
-                               nTBI<=1'b1;
+                                wait_finish_ARM_cycle<=1;
+                                m00_axi_araddr[31:0] <= {RTG_RAM_DDR_OFFSET[31:27],A060[26:2],2'b00};
+                                GPIO_OUT[31:0] <= {1'b0,1'b1,SIZ40[1:0],7'h00,A060[20:0]};
+                                RAM_state <= RAM_read3;
+                                nTBI<=1'b1;
+                                m00_axi_arlen <= 'h0;
+                                m00_axi_arburst <= 'h0;
+                                ack<=0;
                             end
                         end else begin
-                            m00_axi_araddr[31:0] <= {5'b00000,A060[26:2],2'b00} + {RTG_RAM_DDR_OFFSET};
+                            m00_axi_araddr[31:0] <= {RTG_RAM_DDR_OFFSET[31:27],A060[26:2],2'b00};
                             m00_axi_arvalid  <= 1'b1;
                         end
                     end
@@ -633,7 +699,8 @@ always @(posedge m00_axi_aclk) begin
                     AUTOCONFIG_start_cycle<=0;
                     wait_finish_ARM_cycle<=0;
                     ack<=0;
-                    if (R_W040==0) begin                    // Write cycle
+                    nTBI<=1'b1;
+                    if (R_W040==0) begin  // Autoconfig Write cycle
                         RAM_state <= RAM_write3;
                         casex (A060[15:0])
                             16'hXX44: begin
@@ -655,7 +722,7 @@ always @(posedge m00_axi_aclk) begin
                             end
                         endcase
                     end
-                    else  begin // Read Cycle
+                    else  begin // Autoconfig Read Cycle
                         RAM_state <= RAM_read3;
             
                         case (A060[15:0])
@@ -706,10 +773,14 @@ always @(posedge m00_axi_aclk) begin
             end
             RAM_read1b: begin
                 if (m00_axi_arready) begin
-                    if((SIZ40[1:0]==2'b11)&& (GPIO_c[1]==1))  // BURST READ ENABLE
-                        RAM_state <= RAM_read_burst1;
-                    else
+                    if(wait_finish_ARM_cycle==0) begin
+                        if((SIZ40[1:0]==2'b11)&& (GPIO_c[1]==1))  // BURST READ ENABLE
+                            RAM_state <= RAM_read_burst1;
+                        else
+                            RAM_state <= RAM_read2;
+                    end else begin
                         RAM_state <= RAM_read2;
+                    end
                 end
             end
             RAM_read2: begin
@@ -733,13 +804,13 @@ always @(posedge m00_axi_aclk) begin
                 else begin
                     if((GPIO_IN[30]==1) && (ack==0)) begin // ack read/write
                         GPIO_OUT[31:0] <=32'h0000_0000;
-                        data[31:0] <=GPIO_READ_IN[31:0];
+                        data[31:0] <= GPIO_READ_IN[31:0];
                         ack<=1;
                     end
                     else begin
                         if((GPIO_IN[30]==0) && (ack==1)) begin // ack read/write
                             GPIO_OUT[31:0] <=32'h0000_0000;
-                            data[31:0] <=GPIO_READ_IN[31:0];
+                            data[31:0] <= GPIO_READ_IN[31:0];
                             if(ENcondition==1'b1) begin
                                 RAM_state <= RAM_read31;
                                 nTA1 <= 1'b0;
@@ -758,10 +829,10 @@ always @(posedge m00_axi_aclk) begin
                  end
             end
             RAM_read_burst1: begin
-                m00_axi_arvalid <= 1'b0; 
-                if (m00_axi_rvalid) begin
+                m00_axi_arvalid <= 1'b0;
+                    if (m00_axi_rvalid) begin
 //                    data_burst1[31:0]<=m00_axi_rdata[31:0];
-                    data_burst1[31:0] <= {m00_axi_rdata[7:0],m00_axi_rdata[15:8],m00_axi_rdata[23:16],m00_axi_rdata[31:24]}; // BS
+                        data_burst1[31:0] <= {m00_axi_rdata[7:0],m00_axi_rdata[15:8],m00_axi_rdata[23:16],m00_axi_rdata[31:24]}; // BS
                     RAM_state <= RAM_read_burst2;
                 end
             end
@@ -801,22 +872,22 @@ always @(posedge m00_axi_aclk) begin
                 nTA1 <= 1'b0;
                 data[31:0] <= data_burst1[31:0];
                 if(ENcondition==1'b1) begin
-                    RAM_state <= RAM_read42;
+                RAM_state <= RAM_read42;
                 end
             end
             RAM_read42: begin
                 nTA1 <= 1'b0;
                 data[31:0] <= data_burst2[31:0];
                 if(ENcondition==1'b1) begin
-                    RAM_state <= RAM_read43;
+                RAM_state <= RAM_read43;
                 end
             end
             RAM_read43: begin
                 nTA1 <= 1'b0;
                 data[31:0] <= data_burst3[31:0];
                 if(ENcondition==1'b1) begin
-                    RAM_state <= RAM_read44;
-                end
+                RAM_state <= RAM_read44;
+            end
            end
             RAM_read44: begin
                 nTA1 <= 1'b0;
@@ -824,17 +895,21 @@ always @(posedge m00_axi_aclk) begin
                 if(ENcondition==1'b1) begin
                     RAM_state <= RAM_idle;
                     nTA1 <= 1'b1;
-                    nTBI<=1'b1;
+                    nTBI <= 1'b1;
                 end
             end
             RAM_write1b: begin
 //                m00_axi_wdata[31:0] <= D040[31:0];
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 if (m00_axi_awready) begin
-                    if((SIZ40[1:0]==2'b11) && (GPIO_c[2]==1))  //line // BURST WRITE ENABLE
-                        RAM_state <= RAM_write_burst1;
-                    else
+                    if(wait_finish_ARM_cycle==0) begin
+                        if((SIZ40[1:0]==2'b11) && (GPIO_c[2]==1))  //line // BURST WRITE ENABLE
+                            RAM_state <= RAM_write_burst1;
+                        else
+                            RAM_state <= RAM_write2;
+                    end else begin
                         RAM_state <= RAM_write2;
+                    end
                 end
             end
             RAM_write_burst1: begin
@@ -868,8 +943,8 @@ always @(posedge m00_axi_aclk) begin
 //                m00_axi_wdata[31:0] <= D040[31:0];
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 if (m00_axi_wready) begin
-                    RAM_state <=RAM_write_burst1d;
-                    nTA1 <= 1'b0;
+                RAM_state <=RAM_write_burst1d;
+                nTA1 <= 1'b0;
                 end
             end
             RAM_write_burst1d: begin
@@ -878,8 +953,8 @@ always @(posedge m00_axi_aclk) begin
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 m00_axi_wvalid <= 0;
                 if(ENcondition==1'b1) begin
-                    RAM_state <= RAM_write_burst2;
-                end
+                RAM_state <= RAM_write_burst2;
+            end
             end
             RAM_write_burst2: begin
                 nTA1 <= 1'b1;
@@ -887,8 +962,8 @@ always @(posedge m00_axi_aclk) begin
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 m00_axi_wvalid <= 1;
                 if (m00_axi_wready) begin
-                    RAM_state <= RAM_write_burst21;
-                    nTA1 <= 1'b0;
+                RAM_state <= RAM_write_burst21;
+                nTA1 <= 1'b0;
                 end
             end
             RAM_write_burst21: begin
@@ -897,8 +972,8 @@ always @(posedge m00_axi_aclk) begin
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 m00_axi_wvalid <= 0;
                 if(ENcondition==1'b1) begin
-                    RAM_state <= RAM_write_burst3;
-                end
+                RAM_state <= RAM_write_burst3;
+            end
             end
             RAM_write_burst3: begin
                 nTA1 <= 1'b1;
@@ -906,8 +981,8 @@ always @(posedge m00_axi_aclk) begin
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 m00_axi_wvalid <= 1;
                 if (m00_axi_wready) begin
-                    RAM_state <=RAM_write_burst31;
-                    nTA1 <= 1'b0;
+                RAM_state <=RAM_write_burst31;
+                nTA1 <= 1'b0;
                 end
             end
             RAM_write_burst31: begin
@@ -916,17 +991,17 @@ always @(posedge m00_axi_aclk) begin
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 m00_axi_wvalid <= 0;
                 if(ENcondition==1'b1) begin
-                    RAM_state <= RAM_write_burst4;
-                end
+                RAM_state <= RAM_write_burst4;
+            end
             end
             RAM_write_burst4: begin
-                nTA1 <= 1'b1;
+                nTA1 <= 1'b0;
 //                m00_axi_wdata[31:0] <= D040[31:0];
                 m00_axi_wdata[31:0] <= {D040[7:0],D040[15:8],D040[23:16],D040[31:24]}; // BS
                 m00_axi_wvalid <= 1;
                 m00_axi_wlast <= 1;
                 if (m00_axi_wready) begin
-                    RAM_state <=RAM_write_burst41;
+                RAM_state <=RAM_write_burst41;
                     nTA1 <= 1'b1;
                     nTBI<=1'b1;
                 end
@@ -953,8 +1028,8 @@ always @(posedge m00_axi_aclk) begin
                 ack<=0;
             end
             RAM_write21: begin
-                m00_axi_wvalid <= 0;
-                m00_axi_wlast <= 'h0;
+                    m00_axi_wvalid <= 0;
+                    m00_axi_wlast <= 'h0;
                 if (m00_axi_bvalid) begin
                     RAM_state <= RAM_write3;
                 end
@@ -1023,15 +1098,6 @@ end
   wire       s01_slv_reg_wren;
   reg [31:0] s01_reg_data_out;
   reg        s01_aw_en;
-
-  reg [31:0] s01_out_reg0;
-  reg [31:0] s01_out_reg1;
-  reg [31:0] s01_out_reg2;
-  reg [31:0] s01_out_reg3;
-  reg [31:0] s01_out_reg4;
-  reg [31:0] s01_out_reg5;
-  reg [31:0] s01_out_reg6;
-  reg [31:0] s01_out_reg7;
 
   // I/O Connections assignments
 
@@ -1150,12 +1216,12 @@ end
         if (s01_slv_reg_wren)
           begin
             case ( s01_axi_awaddr[4:2] )
-              3'h0: s01_slv_reg0 <= S01_AXI_WDATA; // was GPIO_IN
-              3'h1: s01_slv_reg1 <= S01_AXI_WDATA; // was GPIO_OUT
-              3'h2: s01_slv_reg2 <= S01_AXI_WDATA; // address
-              3'h3: s01_slv_reg3 <= S01_AXI_WDATA; // dataout
-              3'h4: s01_slv_reg4 <= S01_AXI_WDATA; // control
-              3'h5: s01_slv_reg5 <= S01_AXI_WDATA; // read_in
+              3'h0: s01_slv_reg0 <= S01_AXI_WDATA; // GPIO_IN
+              3'h1: s01_slv_reg1 <= S01_AXI_WDATA; // GPIO_OUT
+              3'h2: s01_slv_reg2 <= S01_AXI_WDATA; // 
+              3'h3: s01_slv_reg3 <= S01_AXI_WDATA; // 
+              3'h4: s01_slv_reg4 <= S01_AXI_WDATA; // 
+              3'h5: s01_slv_reg5 <= S01_AXI_WDATA; // GPIO_READ_IN
               default : begin
                 s01_slv_reg0 <= s01_slv_reg0;
                 s01_slv_reg1 <= s01_slv_reg1;
@@ -1287,18 +1353,19 @@ end
 
   assign GPIO_IN  = s01_slv_reg0;
   assign GPIO_READ_IN  = s01_slv_reg5;
+
   assign s01_slv_reg_rden = s01_axi_arready & S01_AXI_ARVALID & ~s01_axi_rvalid;
   always @(*)
   begin
       case (s01_axi_araddr[4:2])
-        3'h0 : s01_reg_data_out <= s01_slv_reg0;
+        3'h0 : s01_reg_data_out <= GPIO_IN;
         3'h1 : s01_reg_data_out <= GPIO_OUT;
-        3'h2 : s01_reg_data_out <= s01_slv_reg2;
+        3'h2 : s01_reg_data_out <= GPIO_VERS;
         3'h3 : s01_reg_data_out <= s01_slv_reg3;
         3'h4 : s01_reg_data_out <= s01_slv_reg4;
-        3'h5 : s01_reg_data_out <= s01_slv_reg5;
-        3'h6 : s01_reg_data_out <= s01_out_reg6;
-        3'h7 : s01_reg_data_out <= s01_out_reg7;
+        3'h5 : s01_reg_data_out <= GPIO_READ_IN;
+        3'h6 : s01_reg_data_out <= GPIO_DATA; // debug 060 data bus
+        3'h7 : s01_reg_data_out <= GPIO_ADD;  // debug 060 address bus
         default: s01_reg_data_out <= 'h0;
       endcase
   end
@@ -1458,13 +1525,13 @@ end
           if (s00_slv_reg_wren) begin
               if(s00_axi_awaddr[27:26]==2'b00) begin
                   case ( s00_axi_awaddr[4:2] )
-                      3'h0: s00_slv_reg0 <= S00_AXI_WDATA; // was GPIO_IN
-                      3'h1: s00_slv_reg1 <= S00_AXI_WDATA; // was GPIO_OUT
+                      3'h0: s00_slv_reg0 <= S00_AXI_WDATA; // was GPIO_IN, not used now
+                      3'h1: s00_slv_reg1 <= S00_AXI_WDATA; // was GPIO_OUT, not used now
                       3'h2: s00_slv_reg2 <= S00_AXI_WDATA; // address
                       3'h3: s00_slv_reg3 <= S00_AXI_WDATA; // dataout
                       3'h4: s00_slv_reg4 <= S00_AXI_WDATA; // control
-                      3'h5: s00_slv_reg5 <= S00_AXI_WDATA;
-                      3'h6: s00_slv_reg6 <= S00_AXI_WDATA;
+                      3'h5: s00_slv_reg5 <= S00_AXI_WDATA; // command
+                      3'h6: s00_slv_reg6 <= S00_AXI_WDATA; // bank
                       default : begin
                           s00_slv_reg0 <= s00_slv_reg0;
                           s00_slv_reg1 <= s00_slv_reg1;
@@ -1507,7 +1574,8 @@ assign A060   = ARM_BG == 1'b1 ? A060_out   : 32'bz;
 assign R_W040 = ARM_BG == 1'b1 ? RW040_out  :  1'bz;
 assign SIZ40  = ARM_BG == 1'b1 ? SIZ40_out  :  2'bz;
 //assign nTS    = ARM_BG == 1'b1 ? nTS_out    :  1'bz;
-assign nTA    = nTA1 == 1'b0 ? 1'b0 : 1'bz;
+//assign nTA    = nTA1 == 1'b0 ? 1'b0 : 1'bz;
+assign nTA    = nTA1;
 
 assign nTS_FPGA_out = ARM_BG == 1'b1 ? nTS_out : nTS_FPGA;
 
@@ -1527,7 +1595,7 @@ localparam ARM_STATE_read2 = 5'd9;
   reg [5:0] ARM_state=ARM_STATE_idle;
   assign clean_arm_command = ARM_state == ARM_STATE_read || ARM_state == ARM_STATE_write;
 
-  always @( posedge m00_axi_aclk )
+  always @( posedge S00_AXI_ACLK )
     begin
         if((RESET_IN==1'b1) ) begin
             ARM_state<= ARM_STATE_idle;
@@ -1561,20 +1629,21 @@ localparam ARM_STATE_read2 = 5'd9;
                 ARM_STATE_read: begin
                     s00_out_reg5 <= 32'h0;
                     nTS_out <= 1'b0;
-                    if(PCLK_clk==1'b1)
-                        ARM_state <= ARM_STATE_read1;
-//                    ARM_state <= ARM_STATE_read0;
-//                end
-//                ARM_STATE_read0: begin
-//                    s00_out_reg5 <= 32'h0;
-//                    nTS_out <= 1'b0;
-//                    if(PCLK_clk==1'b1)
+                    if(ENcondition==1'b1)
 //                        ARM_state <= ARM_STATE_read1;
+                    ARM_state <= ARM_STATE_read0;
+                end
+                ARM_STATE_read0: begin
+                    s00_out_reg5 <= 32'h0;
+                    nTS_out <= 1'b0;
+                    if(ENcondition==1'b0)
+                        ARM_state <= ARM_STATE_read1;
                 end
                 ARM_STATE_read1: begin
                     s00_out_reg5 <= 32'h0;
                     nTS_out <= 1'b0;
-                    ARM_state <= ARM_STATE_read2;
+                    if(ENcondition==1'b1)
+                        ARM_state <= ARM_STATE_read2;
                 end
                 ARM_STATE_read2: begin
                     nTS_out <= 1'b1;
@@ -1600,22 +1669,23 @@ localparam ARM_STATE_read2 = 5'd9;
                     D040_out <= ARM_DATA;
                     s00_out_reg5 <= 32'h0;
                     nTS_out <= 1'b0;
-                    if(PCLK_clk==1'b1)
-                        ARM_state <= ARM_STATE_write1;
-//                    ARM_state <= ARM_STATE_write0;
-//                end
-//                ARM_STATE_write0: begin
-//                    D040_out <= ARM_DATA;
-//                    s00_out_reg5 <= 32'h0;
-//                    nTS_out <= 1'b0;
-//                    if(PCLK_clk==1'b1)
+                     if(ENcondition==1'b1)
 //                        ARM_state <= ARM_STATE_write1;
+                    ARM_state <= ARM_STATE_write0;
+                end
+                ARM_STATE_write0: begin
+                    D040_out <= ARM_DATA;
+                    s00_out_reg5 <= 32'h0;
+                    nTS_out <= 1'b0;
+                     if(ENcondition==1'b0)
+                        ARM_state <= ARM_STATE_write1;
                 end
                 ARM_STATE_write1: begin
                     D040_out <= ARM_DATA;
                     s00_out_reg5 <= 32'h0;
                     nTS_out <= 1'b0;
-                    ARM_state <= ARM_STATE_write2;
+                    if(ENcondition==1'b1)
+                        ARM_state <= ARM_STATE_write2;
                 end
                 ARM_STATE_write2: begin
                     D040_out <= ARM_DATA;

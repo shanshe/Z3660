@@ -1,6 +1,6 @@
 /******************************************************************************
 * Copyright (c) 2010 - 2021 Xilinx, Inc.  All rights reserved.
-* Copyright (c) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
+* Copyright (c) 2022 - 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -27,8 +27,9 @@
 * 7.00  mus  01/07/19 Add cpp extern macro
 * 7.1   aru  08/19/19 Shift the value in UPPER_32_BITS only if it
 *                     is 64-bit processor
-* 8.1    dp  12/23/22 Updated UINTPTR and INTPTR to point to 64bit data types
+* 8.1   dp   12/23/22 Updated UINTPTR and INTPTR to point to 64bit data types
 *                     incase of microblaze 32-bit with extended address enabled
+* 9.0   ml   14/04/23 Add parenthesis on sub-expression to fix misra-c violation.
 * </pre>
 *
 ******************************************************************************/
@@ -45,7 +46,10 @@ extern "C" {
 
 #include <stdint.h>
 #include <stddef.h>
+#include "bspconfig.h"
+#ifndef SDT
 #include "xparameters.h"
+#endif
 
 /************************** Constant Definitions *****************************/
 
@@ -162,6 +166,10 @@ typedef void (*XInterruptHandler) (void *InstancePtr);
  * The argument points to the instance of the component
  */
 typedef void (*XExceptionHandler) (void *InstancePtr);
+
+#if defined (__riscv_xlen) && (__riscv_xlen == 64)
+#define __arch64__
+#endif
 
 /**
  * @brief  Returns 32-63 bits of a number.

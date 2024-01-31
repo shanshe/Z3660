@@ -9,8 +9,8 @@ set_property PACKAGE_PIN P15 [get_ports IIC_0_sda_io]
 set_property PACKAGE_PIN P16 [get_ports IIC_0_scl_io]
 set_property IOSTANDARD LVCMOS33 [get_ports IIC_0_sda_io]
 set_property IOSTANDARD LVCMOS33 [get_ports IIC_0_scl_io]
-set_property PULLUP true [get_ports IIC_0_sda_io]
-set_property PULLUP true [get_ports IIC_0_scl_io]
+set_property PULLTYPE PULLUP [get_ports IIC_0_sda_io]
+set_property PULLTYPE PULLUP [get_ports IIC_0_scl_io]
 
 set_property PACKAGE_PIN V18 [get_ports INT6_ARM]
 
@@ -261,5 +261,6 @@ create_clock -period 80.000 -name i2s_mclk -add [get_ports I2S_SCLK]
 set_property PACKAGE_PIN T17 [get_ports I2S_SCLK]
 set_property PACKAGE_PIN R18 [get_ports I2S_FSYNC_OUT]
 set_property PACKAGE_PIN V17 [get_ports I2SO_D0]
+
 
 

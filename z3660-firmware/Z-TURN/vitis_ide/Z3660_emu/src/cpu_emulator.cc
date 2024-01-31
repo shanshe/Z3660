@@ -355,8 +355,9 @@ unsigned int read_long(unsigned int address)
    }
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured&2))
    {
+#define REG_ZZ_VBLANK_STATUS 0x17C
       uint32_t add=address-autoConfigBaseRTG;
-      if(add==0x7c)
+      if(add==REG_ZZ_VBLANK_STATUS)
       {
 //         return(video_formatter_read(0));
 #define VIDEO_FORMATTER_BASEADDR XPAR_PROCESSING_AV_SYSTEM_AUDIO_VIDEO_ENGINE_VIDEO_VIDEO_FORMATTER_0_BASEADDR
@@ -370,7 +371,7 @@ unsigned int read_long(unsigned int address)
             return(read_rtg_register(add));
       }
       if(add>=0x80000)
-    	  data=swap32(*(uint32_t*)(Z3660_RTG_BASE+add));
+    	  data=swap32(*(uint32_t *)(Z3660_RTG_BASE+add));
       else
     	  data=read_scsi_register(add-0x2000,2);
       return(data);
@@ -786,12 +787,12 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*2.03*/NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*2.12*///NOP;NOP;NOP;NOP;NOP;\
-/*2.10*/NOP;NOP;NOP;NOP;NOP;\
-/*2.10*/NOP;NOP;NOP;NOP;NOP;\
+/*860ns*/NOP;NOP;NOP;NOP;NOP;\
+/*860ns*/NOP;NOP;NOP;NOP;NOP;\
+/*860ns*/NOP;NOP;NOP;NOP;NOP;\
+/**/NOP;NOP;NOP;NOP;NOP;\
+/**///NOP;NOP;NOP;NOP;NOP;\
+/**/NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
@@ -800,64 +801,28 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
 
 uint32_t nop_read_max=24;
 uint32_t nop_write_max=0;
-// 0 1.61
-// 1 1.61
-// 2 1.62
-// 3 1.61
-// 4 1.70
-// 5 1.59
-// 6 1.51
-// 7 1.61
-// 8 1.54
-// 9 1.54
-//10 1.59
-//11 1.60
-//12 1.66
-//13 1.61
-//14 1.55
-//15 1.55
-//16 1.73
-//17 1.59
 
 #define NOP asm(" nop")
 
 #define NOPX_READ2 do {for(int i=nop_read_max;i>0;i--) NOP;}while(0)
 #define NOPX_WRITE2 do {for(int i=nop_write_max;i>0;i--) NOP;}while(0)
-#define NOPX_READ_WORD \
+#define NOPX_READ \
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*2.03*/NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*2.12*///NOP;NOP;NOP;NOP;NOP;\
-/*2.10*/NOP;NOP;NOP;NOP;NOP;\
-/*2.10*/NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;
-
-#define NOPX_READ_LONG \
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*2.03*/NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*2.12*///NOP;NOP;NOP;NOP;NOP;\
-/*2.10*/NOP;NOP;NOP;NOP;NOP;\
-/*2.10*/NOP;NOP;NOP;NOP;NOP;\
+/*890ns*/NOP;NOP;NOP;NOP;NOP;\
+/*870ns*/NOP;NOP;NOP;NOP;NOP;\
+/*880ns*/NOP;NOP;NOP;NOP;NOP;\
+/**/NOP;NOP;NOP;NOP;NOP;\
+/**///NOP;NOP;NOP;NOP;NOP;\
+/**/NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;\
       NOP;NOP;NOP;NOP;NOP;
 
-#define NOPX_READ_BYTE NOPX_READ_WORD
 // max 1.70 ???
 // # of NOPS in NOPX   Sysinfo Chip Speed vs A600
 // 55                   -> 1.66
@@ -892,14 +857,20 @@ int write_pending=0;
 uint32_t last_bank=-1;
 inline void arm_write_amiga_long(uint32_t address, uint32_t data)
 {
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+	  write_reg(0x18,bank);
+	  last_bank=bank;
+   }
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
-      do {
+      while(read_reg(0x14)==0) // read ack
+      {
          NOPX_WRITE;
       }
-      while(read_reg(0x14)==0);        // read ack
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -912,12 +883,6 @@ inline void arm_write_amiga_long(uint32_t address, uint32_t data)
    write_reg(0x10,0x11|WRITE_|LONG_); // command write
    NOP;
 #else
-   uint32_t bank=(address>>24)&0xFF;
-   if(bank!=last_bank)
-   {
-      write_reg(0x18,bank);
-      last_bank=bank;
-   }
    NOP;
    write_mem32(address,data);
    NOP;
@@ -937,14 +902,20 @@ inline void arm_write_amiga_long(uint32_t address, uint32_t data)
 }
 inline void arm_write_amiga_word(uint32_t address, uint32_t data)
 {
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+	  write_reg(0x18,bank);
+	  last_bank=bank;
+   }
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
-      do {
+      while(read_reg(0x14)==0) // read ack
+      {
          NOPX_WRITE;
       }
-      while(read_reg(0x14)==0);        // read ack
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -957,12 +928,6 @@ inline void arm_write_amiga_word(uint32_t address, uint32_t data)
    write_reg(0x10,0x11|WRITE_|WORD_); // command write
    NOP;
 #else
-   uint32_t bank=(address>>24)&0xFF;
-   if(bank!=last_bank)
-   {
-      write_reg(0x18,bank);
-      last_bank=bank;
-   }
    NOP;
    write_mem16(address,data);
    NOP;
@@ -982,14 +947,20 @@ inline void arm_write_amiga_word(uint32_t address, uint32_t data)
 }
 inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
 {
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+	  write_reg(0x18,bank);
+	  last_bank=bank;
+   }
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
-      do {
+      while(read_reg(0x14)==0) // read ack
+      {
          NOPX_WRITE;
       }
-      while(read_reg(0x14)==0);       // read ack
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1002,12 +973,6 @@ inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
    write_reg(0x10,0x11|WRITE_|BYTE_); // command write
    NOP;
 #else
-   uint32_t bank=(address>>24)&0xFF;
-   if(bank!=last_bank)
-   {
-      write_reg(0x18,bank);
-      last_bank=bank;
-   }
    NOP;
    write_mem8(address,data);
    NOP;
@@ -1027,23 +992,22 @@ inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
 }
 inline uint32_t arm_read_amiga_long(uint32_t address)
 {
+   write_reg(0x08,address);           // address
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
-      do {
+      while(read_reg(0x14)==0) // read ack
+      {
          NOPX_WRITE;
       }
-      while(read_reg(0x14)==0);       // read ack
       check_bus_error(read_reg(0x14),address);
    }
 #endif
    NOP;
-   write_reg(0x08,address);           // address
-   NOP;
    write_reg(0x10,0x11|READ_|LONG_);  // command read
    do {
-      NOPX_READ_LONG;
+      NOPX_READ;
    }
    while(read_reg(0x14)==0);          // read ack
    check_bus_error(read_reg(0x14),address);
@@ -1052,23 +1016,22 @@ inline uint32_t arm_read_amiga_long(uint32_t address)
 }
 inline uint32_t arm_read_amiga_word(uint32_t address)
 {
+   write_reg(0x08,address);           // address
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
-      do {
+      while(read_reg(0x14)==0) // read ack
+      {
          NOPX_WRITE;
       }
-      while(read_reg(0x14)==0);       // read ack
       check_bus_error(read_reg(0x14),address);
    }
 #endif
    NOP;
-   write_reg(0x08,address);           // address
-   NOP;
    write_reg(0x10,0x11|READ_|WORD_);  // command read
    do {
-      NOPX_READ_WORD;
+      NOPX_READ;
    }
    while(read_reg(0x14)==0);          // read ack
    check_bus_error(read_reg(0x14),address);
@@ -1077,23 +1040,22 @@ inline uint32_t arm_read_amiga_word(uint32_t address)
 }
 inline uint32_t arm_read_amiga_byte(uint32_t address)
 {
+   write_reg(0x08,address);           // address
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
-      do {
+      while(read_reg(0x14)==0) // read ack
+      {
          NOPX_WRITE;
       }
-      while(read_reg(0x14)==0);       // read ack
       check_bus_error(read_reg(0x14),address);
    }
 #endif
    NOP;
-   write_reg(0x08,address);           // address
-   NOP;
    write_reg(0x10,0x11|READ_|BYTE_);  // command read
    do {
-      NOPX_READ_BYTE;
+      NOPX_READ;
    }
    while(read_reg(0x14)==0);          // read ack
    check_bus_error(read_reg(0x14),address);

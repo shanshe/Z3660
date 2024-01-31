@@ -218,6 +218,9 @@
 * 18.00a ka  10/29/18   Fix for CR# 1006294 Added macro for FORCE_USE_AES_EXCLUDE
 * 19.0   vns 03/18/22   Fixed CR#1125470, added FsblPrintArray() prototype
 * 20.0   ng  12/08/22   Updated SDK release version
+* 21.0   skd 02/10/22   SDK release version updated
+* 21.1   ng  07/13/23   Add SDT support
+* 21.2   ng  07/25/23   Fixed DDR address support in SDT
 *
 * </pre>
 *
@@ -306,7 +309,11 @@ extern "C" {
 #include "fsbl_debug.h"
 #include "ps7_init.h"
 #ifdef FSBL_PERF
+#ifndef SDT
 #include "xtime_l.h"
+#else
+#include "xiltimer.h"
+#endif
 #include <stdio.h>
 #endif
 
@@ -316,7 +323,7 @@ extern "C" {
  * SDK release version
  */
 #define SDK_RELEASE_YEAR	2023
-#define SDK_RELEASE_QUARTER	1
+#define SDK_RELEASE_QUARTER	2
 
 #define WORD_LENGTH_SHIFT	2
 
@@ -442,18 +449,27 @@ extern "C" {
 #define SILICON_VERSION_3_1 3
 
 /*
- * DDR start address for storing the data temporarily(1M)
- * Need to finalize correct logic
- */
-#ifdef XPAR_PS7_DDR_0_S_AXI_BASEADDR
-#define DDR_START_ADDR 	XPAR_PS7_DDR_0_S_AXI_BASEADDR
-#define DDR_END_ADDR	XPAR_PS7_DDR_0_S_AXI_HIGHADDR
+* In case of PL DDR, this macros defined based PL DDR address
+*/
+#if !defined(XPAR_PS7_DDR_0_S_AXI_BASEADDR) && !defined(XPAR_PS7_DDR_0_BASEADDRESS)
+	#define DDR_START_ADDR 	0x00
+	#define DDR_END_ADDR	0x00
 #else
-/*
- * In case of PL DDR, this macros defined based PL DDR address
- */
-#define DDR_START_ADDR 	0x00
-#define DDR_END_ADDR	0x00
+	/*
+	* DDR start address for storing the data temporarily(1M)
+	* Need to finalize correct logic
+	*/
+	#ifndef SDT
+		#if defined(XPAR_PS7_DDR_0_S_AXI_BASEADDR)
+			#define DDR_START_ADDR 	XPAR_PS7_DDR_0_S_AXI_BASEADDR
+			#define DDR_END_ADDR	XPAR_PS7_DDR_0_S_AXI_HIGHADDR
+		#endif
+	#else
+		#if defined(XPAR_PS7_DDR_0_BASEADDRESS)
+			#define DDR_START_ADDR 	XPAR_PS7_DDR_0_BASEADDRESS
+			#define DDR_END_ADDR	XPAR_PS7_DDR_0_HIGHADDRESS
+		#endif
+	#endif
 #endif
 
 #define DDR_TEMP_START_ADDR 	DDR_START_ADDR

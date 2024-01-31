@@ -13,29 +13,6 @@
 #define be32toh(val) __builtin_bswap32(val)
 
 #define MAX_NUM_MAPPED_ITEMS 8
-struct emulator_config {
-  unsigned int cpu_type;
-
-//  unsigned char map_type[MAX_NUM_MAPPED_ITEMS];
-//  unsigned long map_offset[MAX_NUM_MAPPED_ITEMS];
-//  unsigned long map_high[MAX_NUM_MAPPED_ITEMS];
-//  unsigned int map_size[MAX_NUM_MAPPED_ITEMS];
-//  unsigned int rom_size[MAX_NUM_MAPPED_ITEMS];
-//  unsigned char *map_data[MAX_NUM_MAPPED_ITEMS];
-//  unsigned int map_mirror[MAX_NUM_MAPPED_ITEMS];
-//  char *map_id[MAX_NUM_MAPPED_ITEMS];
-
-  struct platform_config *platform;
-
-  char *mouse_file, *keyboard_file;
-
-  char mouse_toggle_key, keyboard_toggle_key;
-  unsigned char mouse_enabled, mouse_autoconnect, keyboard_enabled, keyboard_grab, keyboard_autoconnect;
-
-  unsigned int loop_cycles;
-  unsigned int mapped_low, mapped_high;
-  unsigned int custom_low, custom_high;
-};
 
 #define	TDF_EXTCOM (1<<15)
 
@@ -100,14 +77,15 @@ struct emulator_config {
 struct piscsi_dev {
     uint32_t c;
     uint16_t h, s;
-    uint64_t fs;
+    FSIZE_t fs;
     FIL *fd;
     uint32_t lba;
     uint32_t num_partitions;
-    uint64_t fshd_offs;
+    FSIZE_t fshd_offs;
     uint32_t block_size;
     struct PartitionBlock *pb[16];
     struct RigidDiskBlock *rdb;
+    DWORD SeekTbl[64];
 };
 
 struct piscsi_fs {
@@ -301,7 +279,7 @@ void piscsi_map_drive(char *filename, uint8_t index);
 void piscsi_unmap_drive(uint8_t index);
 struct piscsi_dev *piscsi_get_dev(uint8_t index);
 
-void handle_piscsi_write(uint32_t addr, uint32_t val, uint8_t type);
+void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type);
 uint32_t handle_piscsi_read(uint32_t addr, uint8_t type);
 
 void piscsi_find_filesystems(struct piscsi_dev *d);

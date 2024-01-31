@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (c) 2009 - 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (c) 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -20,6 +21,7 @@
 * Ver   Who      Date     Changes
 * ----- -------- -------- -----------------------------------------------
 * 1.00a ecm/sdm  10/20/09 First release
+* 9.0   mus      07/29/23 Added definitions for processor affinity register.
 * </pre>
 *
 ******************************************************************************/
@@ -489,7 +491,10 @@ extern "C" {
 #define XREG_CP15_MAIN_TLB_ATTR			"cp15:5:c15:c7:2"
 #endif
 
-
+/* Affinity register bits */
+#define XREG_MPIDR_MASK				0xFFFFFFFFU
+#define XREG_MPIDR_AFFINITY0_MASK		0x3U
+#define XREG_MPIDR_AFFINITY0_SHIFT		0x0U
 /* MPE register definitions */
 #define XREG_FPSID				c0
 #define XREG_FPSCR				c1

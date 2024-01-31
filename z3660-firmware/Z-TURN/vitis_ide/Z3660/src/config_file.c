@@ -30,6 +30,7 @@ const char *config_item_names[CONFITEM_NUM] = {
       "autoconfig_ram",
       "resistor",
       "temperature",
+	  "cpufreq",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
       "CPU",
@@ -61,6 +62,7 @@ void load_default_config(void)
    config.autoconfig_ram=0;
    config.resistor=800.0;
    config.temperature=27.0;
+   config.cpufreq=100;
 }
 void write_config_file(char *filename)
 {
@@ -76,6 +78,9 @@ void write_config_file(char *filename)
    print_line(&fil,"#bootmode MUSASHI\n");
    print_line(&fil,"#bootmode UAE\n");
    print_line(&fil,"bootmode UAEJIT\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Select 060 CPU frequency in MHz\n");
+   print_line(&fil,"cpufreq 80\n");
    print_line(&fil,"\n");
    print_line(&fil,"## Emulation Configuration\n");
    print_line(&fil,"\n");
@@ -190,6 +195,9 @@ int get_yesno_type(char *cmd) {
 float get_float_type(char *cmd) {
   return atof(cmd);
 }
+float get_int_type(char *cmd) {
+  return atoi(cmd);
+}
 
 void read_config_file(void)
 {
@@ -299,6 +307,12 @@ retry:
          printf("[CFG] Calibrated Temperature %.1f.\n", config.temperature);
          break;
 
+      case CONFITEM_CPUFREQ:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.cpufreq=(get_int_type(cur_cmd)/10)*10; // 10 MHz steps for now
+         printf("[CFG] 060 CPU Frequency %d MHz\n", config.cpufreq);
+         break;
+
       case CONFITEM_NONE:
       default:
          printf("[CFG] Unknown config item %s on line %d.\n", cur_cmd, cur_line);
@@ -344,46 +358,78 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_OPEN_EXISTING | FA_READ);
    if(ret==0)
    {
-//      int cur_line = 1;
-      char parse_line[512];
-      char cur_cmd[128];
-      int str_pos = 0;
-      memset(parse_line, 0x00, 512);
-      f_gets(parse_line, (s32)512, &fil);
-      get_next_string(parse_line, cur_cmd, &str_pos, '\n');
-      config.boot_mode=get_bootmode_type(cur_cmd);
-      printf("[ENV] Boot mode %s.\n", bootmode_names[config.boot_mode]);
-      shared->cfg_emu=config.boot_mode;
-      shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.boot_mode=get_bootmode_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] Boot mode %s.\e[0m\n", bootmode_names[config.boot_mode]);
+		  shared->cfg_emu=config.boot_mode;
+		  shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
+	  }
+	  else
+		  printf("[ENV] Warning!!! Boot mode file is empty\n");
    }
    f_close(&fil);
 
    ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_OPEN_EXISTING | FA_READ);
    if(ret==0)
    {
-//      int cur_line = 1;
-      char parse_line[512];
-      char cur_cmd[128];
-      int str_pos = 0;
-      memset(parse_line, 0x00, 512);
-      f_gets(parse_line, (s32)512, &fil);
-      get_next_string(parse_line, cur_cmd, &str_pos, '\n');
-      config.scsiboot=get_yesno_type(cur_cmd);
-      printf("[ENV] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.scsiboot=get_yesno_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] SCSI Boot %s.\e[0m\n", yesno_names[config.scsiboot]);
+	  }
+	  else
+		  printf("[ENV] Warning!!! SCSI Boot file is empty\n");
    }
+   f_close(&fil);
 
    ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_OPEN_EXISTING | FA_READ);
    if(ret==0)
    {
-//      int cur_line = 1;
-      char parse_line[512];
-      char cur_cmd[128];
-      int str_pos = 0;
-      memset(parse_line, 0x00, 512);
-      f_gets(parse_line, (s32)512, &fil);
-      get_next_string(parse_line, cur_cmd, &str_pos, '\n');
-      config.autoconfig_ram=get_yesno_type(cur_cmd);
-      printf("[ENV] AutoConfig Ram %s.\n", yesno_names[config.autoconfig_ram]);
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.autoconfig_ram=get_yesno_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] AutoConfig Ram %s.\e[0m\n", yesno_names[config.autoconfig_ram]);
+	  }
+	  else
+		  printf("[ENV] Warning!!! AutoConfig Ram file is empty\n");
+   }
+   f_close(&fil);
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/cpufreq", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.cpufreq=(get_int_type(cur_cmd)/10)*10;
+		  printf("\e[30m\e[103m[ENV] 060 CPU Frequency %d MHz\e[0m\n", config.cpufreq);
+	  }
+	  else
+		  printf("[ENV] Warning!!! CPU Frequency file is empty\n");
    }
    f_close(&fil);
 
@@ -447,6 +493,20 @@ retry:
    else
    {
       xil_printf("[Config] ERROR Write file env/autoconfig_ram\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/cpufreq", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/cpufreq with %d\r\n",config.cpufreq);
+      f_printf(&fil,"%d\n",config.cpufreq);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/cpufreq\r\n");
       Xil_ExceptionEnable();
       return(0);
    }

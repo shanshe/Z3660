@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2010 - 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -7,7 +8,7 @@
 /**
  *
  * @file xusbps_endpoint.h
-* @addtogroup usbps_v2_7
+* @addtogroup usbps Overview
 * @{
  *
  * This is an internal file containung the definitions for endpoints. It is
@@ -67,9 +68,9 @@ extern "C" {
  *  @{
  */
 #define XUSBPS_dTDNLP_T_MASK		0x00000001
-				/**< USB dTD Next Link Pointer Terminate Bit */
+/**< USB dTD Next Link Pointer Terminate Bit */
 #define XUSBPS_dTDNLP_ADDR_MASK	0xFFFFFFE0
-				/**< USB dTD Next Link Pointer Address [31:5] */
+/**< USB dTD Next Link Pointer Address [31:5] */
 /* @} */
 
 
@@ -108,16 +109,16 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDInvalidateCache(dTDPtr) \
-		Xil_DCacheInvalidateRange((unsigned int)dTDPtr, sizeof(XUsbPs_dTD))
+	Xil_DCacheInvalidateRange((unsigned int)dTDPtr, sizeof(XUsbPs_dTD))
 
 #define XUsbPs_dTDFlushCache(dTDPtr) \
-		Xil_DCacheFlushRange((unsigned int)dTDPtr, sizeof(XUsbPs_dTD))
+	Xil_DCacheFlushRange((unsigned int)dTDPtr, sizeof(XUsbPs_dTD))
 
 #define XUsbPs_dQHInvalidateCache(dQHPtr) \
-		Xil_DCacheInvalidateRange((unsigned int)dQHPtr, sizeof(XUsbPs_dQH))
+	Xil_DCacheInvalidateRange((unsigned int)dQHPtr, sizeof(XUsbPs_dQH))
 
 #define XUsbPs_dQHFlushCache(dQHPtr) \
-		Xil_DCacheFlushRange((unsigned int)dQHPtr, sizeof(XUsbPs_dQH))
+	Xil_DCacheFlushRange((unsigned int)dQHPtr, sizeof(XUsbPs_dQH))
 
 /*****************************************************************************/
 /**
@@ -132,9 +133,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDSetTransferLen(dTDPtr, Len)				\
-		XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
+	XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
 			(XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) &	\
-				~XUSBPS_dTDTOKEN_LEN_MASK) | ((Len) << 16))
+			 ~XUSBPS_dTDTOKEN_LEN_MASK) | ((Len) << 16))
 
 
 /*****************************************************************************/
@@ -151,8 +152,8 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDGetNLP(dTDPtr)					\
-		(XUsbPs_dTD *) ((XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDNLP)\
-					& XUSBPS_dTDNLP_ADDR_MASK))
+	(XUsbPs_dTD *) ((XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDNLP)\
+			 & XUSBPS_dTDNLP_ADDR_MASK))
 
 
 /*****************************************************************************/
@@ -168,10 +169,10 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDSetNLP(dTDPtr, NLP)					\
-		XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDNLP, 		\
+	XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDNLP, 		\
 			(XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDNLP) &	\
-				~XUSBPS_dTDNLP_ADDR_MASK) |		\
-					((NLP) & XUSBPS_dTDNLP_ADDR_MASK))
+			 ~XUSBPS_dTDNLP_ADDR_MASK) |		\
+			((NLP) & XUSBPS_dTDNLP_ADDR_MASK))
 
 
 /*****************************************************************************/
@@ -188,8 +189,8 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDGetTransferLen(dTDPtr)				\
-		(u32) ((XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) 	\
-				& XUSBPS_dTDTOKEN_LEN_MASK) >> 16)
+	(u32) ((XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) 	\
+		& XUSBPS_dTDTOKEN_LEN_MASK) >> 16)
 
 
 /*****************************************************************************/
@@ -205,9 +206,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDSetIOC(dTDPtr)					\
-		XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
+	XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
 			XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) |	\
-						XUSBPS_dTDTOKEN_IOC_MASK)
+			XUSBPS_dTDTOKEN_IOC_MASK)
 
 
 /*****************************************************************************/
@@ -222,9 +223,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDSetTerminate(dTDPtr)				\
-		XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDNLP, 		\
+	XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDNLP, 		\
 			XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDNLP) |	\
-						XUSBPS_dTDNLP_T_MASK)
+			XUSBPS_dTDNLP_T_MASK)
 
 
 /*****************************************************************************/
@@ -239,9 +240,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDClrTerminate(dTDPtr)				\
-		XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDNLP, 		\
+	XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDNLP, 		\
 			XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDNLP) &	\
-						~XUSBPS_dTDNLP_T_MASK)
+			~XUSBPS_dTDNLP_T_MASK)
 
 
 /*****************************************************************************/
@@ -260,8 +261,8 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDIsActive(dTDPtr)					\
-		((XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) &		\
-				XUSBPS_dTDTOKEN_ACTIVE_MASK) ? TRUE : FALSE)
+	((XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) &		\
+	  XUSBPS_dTDTOKEN_ACTIVE_MASK) ? TRUE : FALSE)
 
 
 /*****************************************************************************/
@@ -276,9 +277,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDSetActive(dTDPtr)					\
-		XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
+	XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
 			XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) |	\
-						XUSBPS_dTDTOKEN_ACTIVE_MASK)
+			XUSBPS_dTDTOKEN_ACTIVE_MASK)
 
 /*****************************************************************************/
 /**
@@ -293,9 +294,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dTDSetMultO(dTDPtr, val)					\
-		XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
+	XUsbPs_WritedTD(dTDPtr, XUSBPS_dTDTOKEN, 		\
 			(XUsbPs_ReaddTD(dTDPtr, XUSBPS_dTDTOKEN) &	\
-			(~XUSBPS_dTDTOKEN_MULTO_MASK)) | val)
+			 (~XUSBPS_dTDTOKEN_MULTO_MASK)) | val)
 
 
 /*****************************************************************************/
@@ -326,7 +327,7 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_WritedTD(dTDPtr, Id, Val)	\
-			(*(u32 *) ((u32)(dTDPtr) + (u32)(Id)) = (u32)(Val))
+	(*(u32 *) ((u32)(dTDPtr) + (u32)(Id)) = (u32)(Val))
 
 
 /******************************************************************************/
@@ -368,17 +369,17 @@ extern "C" {
  *  @{
  */
 #define XUSBPS_dQHCFG_IOS_MASK		0x00008000
-					/**< USB dQH Interrupt on Setup Bit */
+/**< USB dQH Interrupt on Setup Bit */
 #define XUSBPS_dQHCFG_MPL_MASK		0x07FF0000
-					/**< USB dQH Maximum Packet Length
-					 * Field [10:0] */
+/**< USB dQH Maximum Packet Length
+ * Field [10:0] */
 #define XUSBPS_dQHCFG_MPL_SHIFT    16
 #define XUSBPS_dQHCFG_ZLT_MASK		0x20000000
-					/**< USB dQH Zero Length Termination
-					 * Select Bit */
+/**< USB dQH Zero Length Termination
+ * Select Bit */
 #define XUSBPS_dQHCFG_MULT_MASK		0xC0000000
-					/* USB dQH Number of Transactions Field
-					 * [1:0] */
+/* USB dQH Number of Transactions Field
+ * [1:0] */
 #define XUSBPS_dQHCFG_MULT_SHIFT       30
 /* @} */
 
@@ -396,9 +397,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dQHSetMaxPacketLen(dQHPtr, Len)			\
-		XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
+	XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
 			(XUsbPs_ReaddQH(dQHPtr, XUSBPS_dQHCFG) &	\
-				~XUSBPS_dQHCFG_MPL_MASK) | ((Len) << 16))
+			 ~XUSBPS_dQHCFG_MPL_MASK) | ((Len) << 16))
 
 /*****************************************************************************/
 /**
@@ -412,9 +413,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dQHSetIOS(dQHPtr)					\
-		XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
+	XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
 			XUsbPs_ReaddQH(dQHPtr, XUSBPS_dQHCFG) |	\
-						XUSBPS_dQHCFG_IOS_MASK)
+			XUSBPS_dQHCFG_IOS_MASK)
 
 /*****************************************************************************/
 /**
@@ -428,9 +429,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dQHClrIOS(dQHPtr)					\
-		XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
+	XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
 			XUsbPs_ReaddQH(dQHPtr, XUSBPS_dQHCFG) &	\
-						~XUSBPS_dQHCFG_IOS_MASK)
+			~XUSBPS_dQHCFG_IOS_MASK)
 
 /*****************************************************************************/
 /**
@@ -445,9 +446,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dQHEnableZLT(dQHPtr)					\
-		XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
+	XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
 			XUsbPs_ReaddQH(dQHPtr, XUSBPS_dQHCFG) &	\
-						~XUSBPS_dQHCFG_ZLT_MASK)
+			~XUSBPS_dQHCFG_ZLT_MASK)
 
 
 /*****************************************************************************/
@@ -463,9 +464,9 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_dQHDisableZLT(dQHPtr)					\
-		XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
+	XUsbPs_WritedQH(dQHPtr, XUSBPS_dQHCFG, 		\
 			XUsbPs_ReaddQH(dQHPtr, XUSBPS_dQHCFG) |	\
-						XUSBPS_dQHCFG_ZLT_MASK)
+			XUSBPS_dQHCFG_ZLT_MASK)
 
 /*****************************************************************************/
 /**
@@ -495,7 +496,7 @@ extern "C" {
  *
  ******************************************************************************/
 #define XUsbPs_WritedQH(dQHPtr, Id, Val)	\
-			(*(u32 *) ((u32)(dQHPtr) + (u32)(Id)) = (u32)(Val))
+	(*(u32 *) ((u32)(dQHPtr) + (u32)(Id)) = (u32)(Val))
 
 
 

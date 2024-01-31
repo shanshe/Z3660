@@ -36,6 +36,11 @@
 *		       misra_c_2012_rule_10_4 violation.
 * 8.1    mus  02/13/23 Added new API's XGetCoreId and XGetClusterId. As of now
 *                      they are supported only for VERSAL_NET APU and RPU.
+* 9.0    mus 03/28/23 Added new API XGetBootStatus for VERSAL_NET. It can be
+*                     used to identify type of boot (cold/warm).
+* 9.0    mus 07/27/23 Updated XGetCoreId API to support A9, R5 and A53 processor
+* 9.0    ml  09/14/23 Added U to numerical to fix MISRA-C violation for Rule
+*                     10.1 and 10.4
 * </pre>
 *
 ******************************************************************************/
@@ -60,12 +65,12 @@ extern "C" {
 #define XPAR_PMC_TAP_BASEADDR 0xF11A0000U
 #define XPAR_PMC_TAP_VERSION_OFFSET 0x00000004U
 #define XPLAT_PS_VERSION_ADDRESS (XPAR_PMC_TAP_BASEADDR + \
-									XPAR_PMC_TAP_VERSION_OFFSET)
+				  XPAR_PMC_TAP_VERSION_OFFSET)
 #else
 #define XPAR_CSU_BASEADDR 0xFFCA0000U
 #define	XPAR_CSU_VER_OFFSET 0x00000044U
 #define XPLAT_PS_VERSION_ADDRESS (XPAR_CSU_BASEADDR + \
-									XPAR_CSU_VER_OFFSET)
+				  XPAR_CSU_VER_OFFSET)
 #endif
 #define XPLAT_ZYNQ_ULTRA_MP_SILICON 0x0
 #define XPLAT_ZYNQ_ULTRA_MP 0x1
@@ -84,11 +89,37 @@ extern "C" {
 #define XPS_VERSION_INFO_SHIFT 0x8U
 #define XPLAT_INFO_SHIFT 0x18U
 #else
-#define XPS_VERSION_INFO_MASK (0xF)
+#define XPS_VERSION_INFO_MASK  0xFU
 #define XPS_VERSION_INFO_SHIFT 0x0U
 #define XPLAT_INFO_SHIFT 0xCU
 #endif
 
+#if defined (VERSAL_NET)
+#if defined (ARMR52)
+#define XPS_NUM_OF_CORES_PER_CLUSTER	2U
+#define XPS_RPU_PCIL_A0_PWRDWN		0xEB4200C0U
+/*
+ * Offset between RPU_PCIL_X_PWRDWN registers of consecutive
+ * CPU cores in given cluster
+ */
+#define XPS_RPU_PCIL_CORE_OFFSET	0x100U
+
+/*
+ * Offset between RPU_PCIL_A0_PWRDWN registers of 2 clusters
+ */
+#define XPS_RPU_PCIL_CLUSTER_OFFSET	0x1000U
+#define XPS_RPU_PCIL_X_PWRDWN_EN_MASK	1U
+#else
+#define XPS_NUM_OF_CORES_PER_CLUSTER	4U
+#define XPS_CORE_X_PWRDWN_BASEADDR	0xECB10000U
+/*
+ * Offset between CORE_X_PWRDWN registers of consecutive
+ * CPU cores
+ */
+#define XPS_CORE_X_PWRDWN_OFFSET	48U
+#define XPS_CORE_X_PWRDWN_EN_MASK	1U
+#endif
+#endif
 /**************************** Type Definitions *******************************/
 /**
  *@endcond
@@ -97,6 +128,9 @@ extern "C" {
 
 
 u32 XGetPlatform_Info(void);
+#if ! defined(__microblaze__) && ! defined(__riscv)
+u8 XGetCoreId(void);
+#endif
 
 #if defined (ARMR5) || defined (__aarch64__) || defined (ARMA53_32) || defined (PSU_PMU) || defined (versal)
 u32 XGetPSVersion_Info(void);
@@ -109,6 +143,7 @@ u32 XGet_Zynq_UltraMp_Platform_info(void);
 #if (defined (__aarch64__) && defined (VERSAL_NET)) || defined (ARMR52)
 u8 XGetClusterId(void);
 u8 XGetCoreId(void);
+u8 XGetBootStatus(void);
 #endif
 
 /************************** Function Prototypes ******************************/

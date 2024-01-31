@@ -3,7 +3,6 @@
 	<name>Z3660_emu</name>
 	<comment>Created by Vitis v2023.1</comment>
 	<projects>
-		<project>design_1_wrapper</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

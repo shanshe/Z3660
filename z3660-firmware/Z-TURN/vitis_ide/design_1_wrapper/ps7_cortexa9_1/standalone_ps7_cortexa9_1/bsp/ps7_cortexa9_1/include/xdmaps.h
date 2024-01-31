@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2009 - 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2009 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022 - 2023 Advanced Micro Devices, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -7,7 +8,7 @@
 /**
 *
 * @file xdmaps.h
-* @addtogroup dmaps_v2_8
+* @addtogroup dmaps Overview
 * @{
 * @details
 *
@@ -60,6 +61,7 @@
 * 2.4   adk    13/08/18 Fixed armcc compiler warnings in the driver CR-1008310.
 * 2.8	sk     05/18/21 Modify all inline functions declarations from extern inline
 *			to static inline to avoid the linkage conflict for IAR compiler.
+* 2.9   aj     11/07/23 Added support for system device tree
 * </pre>
 *
 *****************************************************************************/
@@ -88,8 +90,19 @@ extern "C" {
  * This typedef contains configuration information for the device.
  */
 typedef struct {
+#ifndef SDT
 	u16 DeviceId;	 /**< Unique ID  of device */
+#else
+	char *Name;
+#endif
 	u32 BaseAddress; /**< Base address of device (IPIF) */
+
+#ifdef SDT
+	u32 IntrId[9];		/** Bits[11:0] Interrupt-id Bits[15:12]
+				* trigger type and level flags */
+	UINTPTR IntrParent;	/** Bit[0] Interrupt parent type Bit[64/32:1]
+				 * Parent base address */
+#endif
 } XDmaPs_Config;
 
 
@@ -169,15 +182,15 @@ typedef struct {
  * It's the done handler a user can set for a channel
  */
 typedef void (*XDmaPsDoneHandler) (unsigned int Channel,
-				    XDmaPs_Cmd *DmaCmd,
-				    void *CallbackRef);
+				   XDmaPs_Cmd *DmaCmd,
+				   void *CallbackRef);
 
 /**
  * It's the fault handler a user can set for a channel
  */
 typedef void (*XDmaPsFaultHandler) (unsigned int Channel,
-				     XDmaPs_Cmd *DmaCmd,
-				     void *CallbackRef);
+				    XDmaPs_Cmd *DmaCmd,
+				    void *CallbackRef);
 
 #define XDMAPS_MAX_CHAN_BUFS	2
 #define XDMAPS_CHAN_BUF_LEN	128
@@ -236,18 +249,18 @@ typedef struct {
  * Functions implemented in xdmaps.c
  */
 int XDmaPs_CfgInitialize(XDmaPs *InstPtr,
-			  XDmaPs_Config *Config,
-			  u32 EffectiveAddr);
+			 XDmaPs_Config *Config,
+			 u32 EffectiveAddr);
 
 int XDmaPs_Start(XDmaPs *InstPtr, unsigned int Channel,
-		  XDmaPs_Cmd *Cmd,
-		  int HoldDmaProg);
+		 XDmaPs_Cmd *Cmd,
+		 int HoldDmaProg);
 
 int XDmaPs_IsActive(XDmaPs *InstPtr, unsigned int Channel);
 int XDmaPs_GenDmaProg(XDmaPs *InstPtr, unsigned int Channel,
-		       XDmaPs_Cmd *Cmd);
+		      XDmaPs_Cmd *Cmd);
 int XDmaPs_FreeDmaProg(XDmaPs *InstPtr, unsigned int Channel,
-			XDmaPs_Cmd *Cmd);
+		       XDmaPs_Cmd *Cmd);
 void XDmaPs_Print_DmaProg(XDmaPs_Cmd *Cmd);
 
 
@@ -256,13 +269,13 @@ int XDmaPs_ResetChannel(XDmaPs *InstPtr, unsigned int Channel);
 
 
 int XDmaPs_SetDoneHandler(XDmaPs *InstPtr,
-			   unsigned Channel,
-			   XDmaPsDoneHandler DoneHandler,
-			   void *CallbackRef);
+			  unsigned Channel,
+			  XDmaPsDoneHandler DoneHandler,
+			  void *CallbackRef);
 
 int XDmaPs_SetFaultHandler(XDmaPs *InstPtr,
-			    XDmaPsFaultHandler FaultHandler,
-			    void *CallbackRef);
+			   XDmaPsFaultHandler FaultHandler,
+			   void *CallbackRef);
 
 void XDmaPs_Print_DmaProg(XDmaPs_Cmd *Cmd);
 int XDmaPs_Instr_DMARMB(char *DmaProg);
@@ -276,10 +289,10 @@ int XDmaPs_Instr_DMAWMB(char *DmaProg);
 static INLINE int XDmaPs_Instr_DMAEND(char *DmaProg);
 static INLINE void XDmaPs_Memcpy4(char *Dst, char *Src);
 static INLINE int XDmaPs_Instr_DMAGO(char *DmaProg, unsigned int Cn,
-			       u32 Imm, unsigned int Ns);
+				     u32 Imm, unsigned int Ns);
 static INLINE int XDmaPs_Instr_DMALD(char *DmaProg);
 static INLINE int XDmaPs_Instr_DMALP(char *DmaProg, unsigned Lc,
-	       unsigned LoopIterations);
+				     unsigned LoopIterations);
 static INLINE int XDmaPs_Instr_DMALPEND(char *DmaProg, char *BodyStart, unsigned Lc);
 static INLINE int XDmaPs_Instr_DMAMOV(char *DmaProg, unsigned Rd, u32 Imm);
 static INLINE int XDmaPs_Instr_DMANOP(char *DmaProg);
@@ -312,7 +325,12 @@ void XDmaPs_FaultISR(XDmaPs *InstPtr);
 /*
  * Static loopup function implemented in xdmaps_sinit.c
  */
+#ifndef SDT
 XDmaPs_Config *XDmaPs_LookupConfig(u16 DeviceId);
+#else
+XDmaPs_Config *XDmaPs_LookupConfig(UINTPTR BaseAddress);
+u32 XDmaPs_GetDrvIndex(XDmaPs *InstancePtr, UINTPTR BaseAddress);
+#endif
 
 
 /*

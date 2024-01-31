@@ -7,7 +7,7 @@
 /*****************************************************************************/
 /**
  *  @file xaxivdma_hw.h
-* @addtogroup axivdma_v6_12
+* @addtogroup axivdma Overview
 * @{
  *
  * Hardware definition file. It defines the register interface and Buffer
@@ -323,7 +323,7 @@ extern "C" {
 *
 ******************************************************************************/
 #define XAxiVdma_ReadReg(BaseAddress, RegOffset)             \
-    XAxiVdma_In32((BaseAddress) + (RegOffset))
+	XAxiVdma_In32((BaseAddress) + (RegOffset))
 
 /*****************************************************************************/
 /**
@@ -342,7 +342,7 @@ extern "C" {
 *
 ******************************************************************************/
 #define XAxiVdma_WriteReg(BaseAddress, RegOffset, Data)          \
-    XAxiVdma_Out32((BaseAddress) + (RegOffset), (Data))
+	XAxiVdma_Out32((BaseAddress) + (RegOffset), (Data))
 
 #ifdef __cplusplus
 }

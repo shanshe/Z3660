@@ -1913,7 +1913,8 @@ static void calc_checksum(blockinfo* bi, uae_u32* c1, uae_u32* c2)
         pos = (uae_u32*)tmp;
 
        	if (len >= 0 && len <= MAX_CHECKSUM_LEN) {
-       		if(get_mem_bank(pos).baseaddr_direct_r!=0)
+       		if(get_mem_bank(pos).baseaddr_direct_r!=0 &&
+               get_mem_bank(pos+len).baseaddr_direct_r!=0)
             {
                 while (len > 0) {
                     k1 += *pos;
@@ -1924,14 +1925,29 @@ static void calc_checksum(blockinfo* bi, uae_u32* c1, uae_u32* c2)
             }
             else
             {
-            	addrbank ab=get_mem_bank(pos);
-                while (len > 0) {
-                    uint32_t data=call_mem_get_func(ab.lget, (uae_u32)pos);
-                    k1 += data;
-                    k2 ^= data;
-                    pos++;
-                    len -= 4;
-                }
+            	if((int)(((uaecptr)pos)>>16) == (int)(((uaecptr)pos+len)>>16))
+            	{
+                	addrbank ab=get_mem_bank(pos);
+					while (len > 0) {
+						uint32_t data=call_mem_get_func(ab.lget, (uae_u32)pos);
+						k1 += data;
+						k2 ^= data;
+						pos++;
+						len -= 4;
+					}
+            	}
+            	else
+            	{
+//					printf("Checksum Xbanking ab = 0x%04X ab2 = 0x%04X\n",(int)(((uaecptr)pos)>>16),(int)(((uaecptr)pos+len)>>16));
+					while (len > 0) {
+		            	addrbank ab=get_mem_bank(pos);
+						uint32_t data=call_mem_get_func(ab.lget, (uae_u32)pos);
+						k1 += data;
+						k2 ^= data;
+						pos++;
+						len -= 4;
+					}
+            	}
             }
         }
         csi = csi->next;

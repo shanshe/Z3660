@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (c) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 /*****************************************************************************/
@@ -18,19 +19,25 @@
 * 7.2   mus  22/11/21 First release of xil interrupt support
 * 8.0	sk   03/17/22 Update XINTC_BASEADDR_MASK macro to unsigned to
 * 		      fix misra_c_2012_rule_7_2 violation.
+* 9.0   ml   03/03/23 Add description to fix doxygen warnings.
 * </pre>
 *
 ******************************************************************************/
 
-#ifndef XINTERRUPT_WRAP_H		/* prevent circular inclusions */
-#define XINTERRUPT_WRAP_H		/* by using protection macros */
+#ifndef XINTERRUPT_WRAP_H		/**< prevent circular inclusions */
+#define XINTERRUPT_WRAP_H		/**< by using protection macros */
 
 #include "xil_types.h"
 #include "xstatus.h"
-#include "xparameters.h"
-#include "xil_exception.h"
 
 #ifdef XIL_INTERRUPT
+#ifdef SDT
+#include "xcommon_drv_config.h"
+#else
+#include "xparameters.h"
+#endif
+#include "xil_exception.h"
+
 #if defined(XPAR_AXI_INTC)
 #include "xintc.h"
 #endif
@@ -70,7 +77,8 @@ extern void XSetPriorityTriggerType( u32 IntrId, u8 Priority, UINTPTR IntcParent
 extern void XGetPriorityTriggerType( u32 IntrId, u8 *Priority, u8 *Trigger, UINTPTR IntcParent);
 extern void XStopInterruptCntrl( UINTPTR IntcParent);
 extern void XRegisterInterruptHandler( void *IntrHandler, UINTPTR IntcParent);
-extern int XSetupInterruptSystem(void *DriverInstance, void *IntrHandler, u32 IntrId,  UINTPTR IntcParent, u16 Priority);
+extern int XSetupInterruptSystem(void *DriverInstance, void *IntrHandler, u32 IntrId,  UINTPTR IntcParent,
+				 u16 Priority);
 #endif
 
 #endif  /* end of protection macro */

@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (c) 2012 - 2020 Xilinx, Inc.  All rights reserved.
+* Copyright (c) 2022 - 2023, Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -82,6 +83,9 @@
 * 											of failure.
 * 16.00a bsv 03/26/18	Fix for CR# 996973  Add code under JTAG_ENABLE_LEVEL_SHIFTERS macro
 * 											to enable level shifters in jtag boot mode.
+* 21.1   ng  07/13/23   Add SDT support
+* 21.2   ng  07/25/23   Fixed DDR, WDT, NAND and QSPI addresses support in SDT
+*
 * </pre>
 *
 * @note
@@ -112,7 +116,11 @@
 #include "xil_exception.h"
 #include "xstatus.h"
 #include "fsbl_hooks.h"
+#ifndef SDT
 #include "xtime_l.h"
+#else
+#include "xiltimer.h"
+#endif
 
 #ifdef XPAR_XWDTPS_0_BASEADDR
 #include "xwdtps.h"
@@ -131,9 +139,15 @@
 /************************** Constant Definitions *****************************/
 
 #ifdef XPAR_XWDTPS_0_BASEADDR
-#define WDT_DEVICE_ID		XPAR_XWDTPS_0_DEVICE_ID
-#define WDT_EXPIRE_TIME		100
-#define WDT_CRV_SHIFT		12
+	#ifndef SDT
+		#define WDT_DEVICE		XPAR_XWDTPS_0_DEVICE_ID
+		#define WDT_CLK_FREQ	XPAR_PS7_WDT_0_WDT_CLK_FREQ_HZ
+	#else
+		#define WDT_DEVICE		XPAR_XWDTPS_0_BASEADDR
+		#define WDT_CLK_FREQ	XPAR_XWDTPS_0_WDT_CLK_FREQ_HZ
+	#endif
+	#define WDT_EXPIRE_TIME		100
+	#define WDT_CRV_SHIFT		12
 #endif
 
 /**************************** Type Definitions *******************************/
@@ -193,7 +207,7 @@ u8 SystemInitFlag;
 extern ImageMoverType MoveImage;
 extern XDcfg *DcfgInstPtr;
 extern u8 BitstreamFlag;
-#ifdef XPAR_PS7_QSPI_LINEAR_0_S_AXI_BASEADDR
+#if defined(XPAR_PS7_QSPI_LINEAR_0_S_AXI_BASEADDR) || defined(XPAR_PS7_QSPI_LINEAR_0_BASEADDR)
 extern u32 QspiFlashSize;
 #endif
 /*****************************************************************************/
@@ -271,7 +285,7 @@ int main(void)
 			SDK_RELEASE_YEAR, SDK_RELEASE_QUARTER,
 			__DATE__,__TIME__);
 
-#ifdef XPAR_PS7_DDR_0_S_AXI_BASEADDR
+#if defined(XPAR_PS7_DDR_0_S_AXI_BASEADDR) || defined(XPAR_PS7_DDR_0_BASEADDRESS)
 
     /*
      * DDR Read/write test 
@@ -363,7 +377,7 @@ int main(void)
 	/*
 	 * QSPI BOOT MODE
 	 */
-#ifdef XPAR_PS7_QSPI_LINEAR_0_S_AXI_BASEADDR
+#if defined(XPAR_PS7_QSPI_LINEAR_0_S_AXI_BASEADDR) || defined(XPAR_PS7_QSPI_LINEAR_0_BASEADDR)
 
 #ifdef MMC_SUPPORT
 	/*
@@ -386,7 +400,7 @@ int main(void)
 	/*
 	 * NAND BOOT MODE
 	 */
-#ifdef XPAR_PS7_NAND_0_BASEADDR
+#if defined(XPAR_PS7_NAND_0_BASEADDR) || defined(XPAR_XNANDPS_0_FLASHBASE)
 	if (BootModeRegister == NAND_FLASH_MODE) {
 		/*
 	 	* Boot ROM always initialize the nand at lower speed
@@ -596,7 +610,6 @@ void FsblFallback(void)
 	 */
 	BootModeRegister = Xil_In32(BOOT_MODE_REG);
 	BootModeRegister &= BOOT_MODES_MASK;
-
 	/*
 	 * Fallback support check
 	 */
@@ -1140,7 +1153,7 @@ int InitWatchDog(void)
 	XWdtPs_Config *ConfigPtr; 	/* Config structure of the WatchDog Timer */
 	u32 CounterValue = 1;
 
-	ConfigPtr = XWdtPs_LookupConfig(WDT_DEVICE_ID);
+	ConfigPtr = XWdtPs_LookupConfig(WDT_DEVICE);
 	Status = XWdtPs_CfgInitialize(&Watchdog,
 				ConfigPtr,
 				ConfigPtr->BaseAddress);
@@ -1269,7 +1282,7 @@ u32 ConvertTime_WdtCounter(u32 seconds)
 	if (Prescaler == XWDTPS_CCR_PSCALE_4096)
 		PrescalerValue = 4096;
 
-	time = (double)(PrescalerValue) / (double)XPAR_PS7_WDT_0_WDT_CLK_FREQ_HZ;
+	time = (double)(PrescalerValue) / (double)WDT_CLK_FREQ;
 
 	CounterValue = seconds / time;
 
@@ -1413,7 +1426,7 @@ u32 NextValidImageCheck(void)
 	/*
 	 * Setting variable with maximum flash size based on boot mode
 	 */
-#ifdef XPAR_PS7_QSPI_LINEAR_0_S_AXI_BASEADDR
+#if defined(XPAR_PS7_QSPI_LINEAR_0_S_AXI_BASEADDR) || defined(XPAR_PS7_QSPI_LINEAR_0_BASEADDR)
 	if (FlashReadBaseAddress == XPS_QSPI_LINEAR_BASEADDR) {
 		BootDevMaxSize = QspiFlashSize;
 	}

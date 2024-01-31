@@ -161,6 +161,8 @@
 * 4.1   sa     01/03/23 Report error if Transfer size is greater than 2MB.
 * 4.1	sa     12/19/22 Enable eMMC HS400 mode for Versal Net.
 * 	sa     01/25/23	Use instance structure to store DMA descriptor tables.
+* 4.2   ro     06/12/23 Added support for system device-tree flow.
+* 4.2   ap     08/09/23 Reordered XSdPs_FrameCmd XSdPs_Identify_UhsMode functions
 *
 * </pre>
 *
@@ -243,8 +245,12 @@ extern "C" {
  * This typedef contains configuration information for the device.
  */
 typedef struct {
+#ifndef SDT
 	u16 DeviceId;			/**< Unique ID  of device */
-	u32 BaseAddress;		/**< Base address of the device */
+#else
+	char *Name;
+#endif
+	UINTPTR BaseAddress;		/**< Base address of the device */
 	u32 InputClockHz;		/**< Input clock frequency */
 	u32 CardDetect;			/**< Card Detect */
 	u32 WriteProtect;			/**< Write Protect */
@@ -253,7 +259,7 @@ typedef struct {
 	u32 HasEMIO;			/**< If SD is connected to EMIO */
 	u8 SlotType;			/**< Slot type */
 	u8 IsCacheCoherent; 		/**< If SD is Cache Coherent or not */
-#if defined  (XCLOCKING)
+#if defined  (XCLOCKING) || defined (SDT)
 	u32 RefClk;			/**< Input clocks */
 #endif
 	u32 ITapDly_SDR_Clk50;	/**< Input Tap delay for HSD/SDR25 modes */
@@ -275,7 +281,8 @@ typedef struct {
 #pragma data_alignment = 32
 } XSdPs_Adma2Descriptor32;
 #else
-}  __attribute__((__packed__))XSdPs_Adma2Descriptor32;
+}
+__attribute__((__packed__))XSdPs_Adma2Descriptor32;
 #endif
 
 /**
@@ -325,11 +332,11 @@ typedef struct {
 	u8  IsTuningDone;	/**< Flag to indicate HS200 tuning complete */
 #ifdef __ICCARM__
 #pragma data_alignment = 32
-	XSdPs_Adma2Descriptor32 Adma2_DescrTbl32[32];
-	XSdPs_Adma2Descriptor64 Adma2_DescrTbl64[32];
+	XSdPs_Adma2Descriptor32 Adma2_DescrTbl32[32];		/**< ADMA descriptor table 32 Bit */
+	XSdPs_Adma2Descriptor64 Adma2_DescrTbl64[32];		/**< ADMA descriptor table 64 Bit */
 #else
-	XSdPs_Adma2Descriptor32 Adma2_DescrTbl32[32] __attribute__ ((aligned(32)));
-	XSdPs_Adma2Descriptor64 Adma2_DescrTbl64[32] __attribute__ ((aligned(32)));
+	XSdPs_Adma2Descriptor32 Adma2_DescrTbl32[32] __attribute__ ((aligned(32)));	/**< ADMA descriptor table 32 Bit */
+	XSdPs_Adma2Descriptor64 Adma2_DescrTbl64[32] __attribute__ ((aligned(32)));	/**< ADMA descriptor table 64 Bit */
 #endif
 } XSdPs;
 
@@ -355,10 +362,24 @@ typedef struct {
  */
 #define ENABLE_HS400_MODE
 
+/************************** Variable Definitions *****************************/
+/**
+ * XSdPs Configuration Table
+ */
+#ifndef SDT
+extern XSdPs_Config XSdPs_ConfigTable[XPAR_XSDPS_NUM_INSTANCES];
+#else
+extern XSdPs_Config XSdPs_ConfigTable[];
+#endif
+
 /************************** Function Prototypes ******************************/
+#ifndef SDT
 XSdPs_Config *XSdPs_LookupConfig(u16 DeviceId);
+#else
+XSdPs_Config *XSdPs_LookupConfig(u32 BaseAddress);
+#endif
 s32 XSdPs_CfgInitialize(XSdPs *InstancePtr, XSdPs_Config *ConfigPtr,
-				u32 EffectiveAddr);
+			UINTPTR EffectiveAddr);
 s32 XSdPs_CardInitialize(XSdPs *InstancePtr);
 s32 XSdPs_ReadPolled(XSdPs *InstancePtr, u32 Arg, u32 BlkCnt, u8 *Buff);
 s32 XSdPs_WritePolled(XSdPs *InstancePtr, u32 Arg, u32 BlkCnt, const u8 *Buff);

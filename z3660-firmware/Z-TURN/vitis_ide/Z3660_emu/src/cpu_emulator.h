@@ -14,11 +14,12 @@
 #include <inttypes.h>
 
 extern "C" void cpu_emulator(void);
+/*
 #define be16toh(A) (A)
 #define htobe16(A) (A)
 #define be32toh(A) (A)
 #define htobe32(A) (A)
-
+*/
 extern "C" void ps_write_32(unsigned int address, unsigned int value);
 extern "C" void ps_write_16(unsigned int address, unsigned int value);
 extern "C" void ps_write_8(unsigned int address, unsigned int value);

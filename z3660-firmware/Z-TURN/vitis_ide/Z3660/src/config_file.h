@@ -30,6 +30,7 @@ typedef struct {
 	int autoconfig_ram;
 	float resistor;
 	float temperature;
+	int cpufreq;
 } CONFIG;
 
 enum CONFITEM {
@@ -47,6 +48,7 @@ enum CONFITEM {
 	CONFITEM_AUTOCONFIG_RAM_ENABLE,
 	CONFITEM_RESISTOR,
 	CONFITEM_TEMPERATURE,
+	CONFITEM_CPUFREQ,
 	CONFITEM_NUM
 };
 

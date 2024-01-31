@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include "main.h"
+#include "config_clk.h"
 #include "sleep.h"
 #include "xil_misc_psreset_api.h"
 #include "config_file.h"
@@ -63,12 +64,26 @@ XGpioPs_Config *GpioPsConfigPtr;
 //XGpio Gpio;
 //XGpio_Config *GpioConfigPtr;
 
-
-#define ENABLE_TSCONDITION1 do{   DiscreteSet(REG0, FPGA_TSCONDITION1);\
+extern uint32_t clken;
+#define ENABLE_TSCONDITION(A) do{   DiscreteSet(REG0, A);\
                   }while(0)
+
+#define ENABLE_ENCONDITION_PCLK0_CLKEN0 do{   DiscreteSet(REG0, FPGA_ENCONDITION_PCLK0_CLKEN0);\
+                  }while(0)
+#define ENABLE_ENCONDITION_PCLK1_CLKEN0 do{   DiscreteSet(REG0, FPGA_ENCONDITION_PCLK1_CLKEN0);\
+                  }while(0)
+#define ENABLE_ENCONDITION_PCLK0 do{   clken=0;DiscreteSet(REG0, FPGA_ENCONDITION_PCLK0);\
+                  }while(0)
+#define ENABLE_ENCONDITION_PCLK1 do{   clken=0;DiscreteSet(REG0, FPGA_ENCONDITION_PCLK1);\
+                  }while(0)
+
 #define ENABLE_CPU_RAM_FPGA do{   DiscreteSet(REG0, FPGA_RAM_EN);\
                   }while(0)
 #define DISABLE_CPU_RAM_FPGA do{ DiscreteClear(REG0, FPGA_RAM_EN);\
+                  }while(0)
+#define ENABLE_MAPROM_FPGA do{   DiscreteSet(REG0, FPGA_MAPROM_EN);\
+                  }while(0)
+#define DISABLE_MAPROM_FPGA do{ DiscreteClear(REG0, FPGA_MAPROM_EN);\
                   }while(0)
 #define ENABLE_BURST_READ_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_READ_EN);\
                   }while(0)
@@ -240,144 +255,10 @@ void PrepareHdf(void)
 */
 ZZ_VIDEO_STATE vs;
 XAxiVdma vdma;
-XClk_Wiz clkwiz0,clkwiz1;
 XClk_Wiz clkwiz;
-XClk_Wiz_Config conf0,conf1;
 XClk_Wiz_Config conf;
 XAxiVdma_DmaSetup ReadCfg;
 XAxiVdma_Config *Config=NULL;
-
-void print_clkinfo(char * str,uint32_t base,uint32_t address)
-{
-   int temp=XClk_Wiz_ReadReg(base, 0x200);
-   float divider=((temp>>8)&0xff)*200/(temp&0xff);
-   temp=XClk_Wiz_ReadReg(base, address);
-   float clk=divider/temp;
-   temp=XClk_Wiz_ReadReg(base, address+4);
-   float clk_phase=temp/1000.;
-   temp=XClk_Wiz_ReadReg(base, address+8);
-   float clk_dc=temp/1000.;
-   printf("%s %06.2f MHz, PHASE %06.2f degrees, DC %06.2f%c\n\r",str,clk,clk_phase,clk_dc,'%');
-
-}
-int cpu_freq=100;
-void configure_clk(int clk, int busclk, int verbose, int nbr)
-{
-   int clken=1;
-   int bclk_mul=1;
-   int bclk;
-   int clk_remainder;
-   int bclk_remainder;
-   XClk_Wiz_CfgInitialize(&clkwiz0, &conf0, XPAR_CLK_WIZ_0_BASEADDR);
-   XClk_Wiz_CfgInitialize(&clkwiz1, &conf1, XPAR_CLK_WIZ_1_BASEADDR);
-
-   if(clk>100)
-      clk=100;
-   else if(clk<50)
-      clk=50;
-
-   clk&=~1;
-// unstable frequencies: mapped to stable ones
-   if(clk==92) clk=88;
-   if(clk==72) clk=76;
-
-   cpu_freq=clk;
-
-   clk_remainder=clk%2;
-   clk=clk&~1;
-
-   if(clk<60)
-      bclk_mul=2;
-   bclk=(clk*bclk_mul)/4;
-   bclk_remainder=(clk*bclk_mul)%4;
-
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, ((clk_remainder*500)<<16)+(clk<<7) + 10); // 64h=100 100*100 / 10 -> 1000MHz VCO
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(uint32_t)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(uint32_t)(     0*1000)); //                    PHASE 0
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(uint32_t)( 0x0000000A)); //   Ah=10 -> 100 MHz PCLK
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(uint32_t)(    30*1000)); //                    PHASE 30
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(uint32_t)( 0x00000014)); //  14h=20 ->  50 MHz CLKEN
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(uint32_t)(    60*1000)); //                    PHASE 60
-   if(clken)
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(uint32_t)(50*1000)); //                    DC 50%
-   else
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(uint32_t)( 0*1000)); //                    DC 0%
-
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, ((bclk_remainder*250)<<16)+((bclk*4)<<7)+10); // 64h=100 100*100 / 10 -> 1000MHz VCO
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(uint32_t)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(uint32_t)(    40*1000)); //                        PHASE 40
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(uint32_t)(         80)); //  28h=40 ->  25 MHz BCLK2
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(uint32_t)(     0*1000)); //                    PHASE 0
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(uint32_t)( 0x00000028/bclk_mul)); //   Ah=10 -> 100 MHz CLK90
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(uint32_t)(   290*1000)); //                    PHASE 290
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(uint32_t)(    50*1000)); //                    DC 50%
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(uint32_t)( 0x00000028/bclk_mul)); //  14h=20 ->  50 MHz CPUCLK
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(uint32_t)(   200*1000)); //                    PHASE 200
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(uint32_t)(    50*1000)); //                    DC 50%
-
-   if(nbr)
-      NBR_ARM(0);
-   usleep(100000);
-
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
-   XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
-
-   usleep(100000);
-   if(nbr)
-      NBR_ARM(1);
-
-/*
-   if((clk==100)&&(busclk==50))
-   {
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, 0x0000320A); // 32h=50 50*200 / 10 -> 1000MHz VCO
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(uint32_t)( 0x00000005)); //   5h= 5 -> 200 MHz AXI
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x20C,(uint32_t)(     0*1000)); //                    PHASE 0
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x214,(uint32_t)( 0x0000000A)); //   Ah=10 -> 100 MHz PCLK
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x218,(uint32_t)(    30*1000)); //                    PHASE 30
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x220,(uint32_t)( 0x00000014)); //  14h=20 ->  50 MHz CLKEN
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x224,(uint32_t)(    60*1000)); //                    PHASE 60
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x228,(uint32_t)(    50*1000)); //                    DC 50%
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
-      int offset=10;
-      int frec_bclk=25;
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x200, frec_bclk*2*256+10); // 32h=50 50*200 / 10 -> 1000MHz VCO
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x208,(uint32_t)( 0x00000028)); //  28h=40 ->  25 MHz BCLK
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x20C,(uint32_t)(   (30+offset)*frec_bclk/25*1000)); //                        PHASE 40
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x210,(uint32_t)(    50*1000)); //                    DC 50%
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x214,(uint32_t)( 80)); //  28h=40 ->  25 MHz BCLK2
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x218,(uint32_t)(     0*1000)); //                    PHASE 0
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x21C,(uint32_t)(    50*1000)); //                    DC 50%
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x220,(uint32_t)( 0x00000028)); //   Ah=10 -> 100 MHz CLK90
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x224,(uint32_t)(   (270+10+offset)*frec_bclk/25*1000)); //                    PHASE 290
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x228,(uint32_t)(    50*1000)); //                    DC 50%
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x22C,(uint32_t)( 0x00000028)); //  14h=20 ->  50 MHz CPUCLK
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x230,(uint32_t)(   (180+10+offset)*frec_bclk/25*1000)); //                    PHASE 200
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x234,(uint32_t)(    50*1000)); //                    DC 50%
-      XClk_Wiz_WriteReg(XPAR_CLK_WIZ_1_BASEADDR, 0x25C, 0x00000003);
-   }
-*/
-   if(verbose)
-   {
-      print_clkinfo("AXICLK",XPAR_CLK_WIZ_0_BASEADDR,0x208);
-      print_clkinfo("  PCLK",XPAR_CLK_WIZ_0_BASEADDR,0x214);
-      print_clkinfo("_CLKEN",XPAR_CLK_WIZ_0_BASEADDR,0x220);
-
-      print_clkinfo("  BCLK",XPAR_CLK_WIZ_1_BASEADDR,0x208);
-      print_clkinfo("CPUCLK",XPAR_CLK_WIZ_1_BASEADDR,0x220);
-      print_clkinfo(" CLK90",XPAR_CLK_WIZ_1_BASEADDR,0x22C);
-   }
-   //   int32_t a,b,c;
-//   a=XClk_Wiz_ReadReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200);
-//   b=XClk_Wiz_ReadReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208);
-//   c=XClk_Wiz_ReadReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C);
-//   printf("Clk config ... %lx %lx %lx\n\r",a,b,c);
-}
 
 void configure_gpio(void)
 {
@@ -396,7 +277,7 @@ void configure_gpio(void)
 
    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_13, 1);
    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_13, 1);
-   XGpioPs_WritePin(&GpioPs, PS_MIO_13, 1);
+   XGpioPs_WritePin(&GpioPs, PS_MIO_13, 0);
    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_8, 1);
    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_8, 1);
    XGpioPs_WritePin(&GpioPs, PS_MIO_8, 1);
@@ -421,6 +302,7 @@ void configure_gpio(void)
 
 
    DiscreteClear(REG0, FPGA_RAM_EN);
+   DiscreteClear(REG0, FPGA_MAPROM_EN);
    DiscreteClear(REG0, FPGA_RAM_BURST_READ_EN);
    DiscreteClear(REG0, FPGA_RAM_BURST_WRITE_EN);
    DiscreteSet(REG0, FPGA_RESET);
@@ -428,7 +310,7 @@ void configure_gpio(void)
    DiscreteClear(REG0, FPGA_RESET);
    printf("Configured GPIO...\n\r");
 }
-void fpga_feature_enable(int en_ram,int en_rtg,int en_z3ram)
+void fpga_feature_enable(int en_ram,int en_rtg,int en_z3ram,int en_maprom)
 {
    if(en_ram)
    {
@@ -464,6 +346,16 @@ void fpga_feature_enable(int en_ram,int en_rtg,int en_z3ram)
       DISABLE_256MB_AUTOCONFIG;
       printf("FPGA Z3 RAM DISABLED\n\r");
    }
+   if(en_maprom)
+   {
+      ENABLE_MAPROM_FPGA;
+      printf("FPGA MAPROM ENABLED\n\r");
+   }
+   else
+   {
+      DISABLE_MAPROM_FPGA;
+      printf("FPGA MAPROM DISABLED\n\r");
+   }
 }
 char Filename[]=DEFAULT_ROOT "Z3660.bin";
 //extern uint32_t *frameBuf;
@@ -477,11 +369,13 @@ int stateARM=ARM_NO_BUS_MASTER;
 int arm_command=0;
 int arm_request_bus_master=0;
 #include "xil_mmu.h"
-void reset_run(void);
+void reset_run(int cpu_boot_mode,int counter, int counter_max);
 void reset_init(void);
+void load_rom(void);
 
 #define AMR1_STARTADDR 0xFFFFFFF0
 #define ARM1_BASEADDR 0x30000000
+#define NOP __asm(" nop")
 
 int enables=0;
 uint32_t data=0;
@@ -489,12 +383,14 @@ void arm_write_amiga(uint32_t address, uint32_t data, uint32_t size)
 {
    uint32_t bank=(address>>24)&0xFF;
    write_reg_s00(0x18,bank);
+   NOP;
    if(size==LONG_)
       write_mem32(address,data);
    else if(size==WORD_)
       write_mem16(address,data);
    else
       write_mem8(address,data);
+   NOP;
    while(read_reg_s00(0x14)==0) // read ack
    {}
 ////   write_reg_s00(0x08,address);         // address
@@ -504,6 +400,17 @@ void arm_write_amiga(uint32_t address, uint32_t data, uint32_t size)
 //   while(read_reg_s00(0x14)==0) // read ack
 //   {}
 //   write_reg_s00(0x10,0x01); // confirm ack
+}
+void arm_write_nowait(uint32_t address, uint32_t data)
+{
+   uint32_t bank=(address>>24)&0xFF;
+   write_reg_s00(0x18,bank);
+   NOP;
+   write_mem32(address,data);
+   NOP;
+//   while(read_reg_s00(0x14)==0) // read ack
+//   {}
+   write_reg(0x10,0x0); // Bus Hi-Z
 }
 uint32_t arm_read_amiga(uint32_t address, uint32_t size)
 {
@@ -522,13 +429,10 @@ void flash_colors(void)
 #ifdef FLASH_COLORS
    NBR_ARM(0);
    CPLD_RESET_ARM(1);
-//   XGpioPs_WritePin(&GpioPs, nBR_ARM, 0);
-//   XGpioPs_WritePin(&GpioPs, CPLD_RESET, 1);
 
    usleep(100);
    {
       NBR_ARM(0);
-//      XGpioPs_WritePin(&GpioPs, nBR_ARM, 0);
       int a,c;
       for(c=0;c<20;c++)
          for(a=2047;a>=1024;a--)
@@ -536,7 +440,6 @@ void flash_colors(void)
       arm_write_amiga(0xDFF180,0,WORD_);
       write_reg(0x10,0x0); // Bus Hi-Z
       NBR_ARM(1);
-//      XGpioPs_WritePin(&GpioPs, nBR_ARM, 1);
    }
 #endif
 
@@ -550,13 +453,17 @@ unsigned int READ_NBG_ARM(void)
 }
 void DataAbortHandler(void *data)
 {
-   // Do nothing??? :)
+	printf("[Core0] DataAbortHandler()!!!!\n");
+	usleep(10000);
+	hard_reboot();
+	while(1);
 }
 extern CONFIG config;
+extern int no_init;
 
 int main()
 {
-   init_platform();
+    init_platform();
     Xil_ICacheEnable();
 #ifdef L1_CACHE_ENABLED
     Xil_L1DCacheEnable();
@@ -570,12 +477,16 @@ int main()
 #endif
     //   Xil_DisableMMU();
     Xil_SetTlbAttributes(0xFFFF0000UL,NORM_NONCACHE);//0x14DE2);//STRONG_ORDERED|SHAREABLE);//NORM_WT_CACHE);//0x14de2);//NORM_NONCACHE);
+//   for(int i=0x000;i<0x010;i++)
+//      Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
    for(int i=0x080;i<0x180;i++)
       Xil_SetTlbAttributes(i*0x100000UL,NORM_WB_CACHE);
    for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, fb is at 0x200000)
-      Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
-   for(int i=0x182;i<0x200;i++) // RTG RAM
+      Xil_SetTlbAttributes(i*0x100000UL,0x14DE2);//NORM_NONCACHE);
+   for(int i=0x182;i<0x1FE;i++) // RTG RAM
       Xil_SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//NORM_WT_CACHE);// NORM_WB_CACHE);//0x14de2);
+   for(int i=0x1FE;i<0x200;i++) // RTG RAM
+      Xil_SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//NORM_NONCACHE);// NORM_WB_CACHE);//0x14de2);
    for(int i=0x400;i<0x780;i++)
       Xil_SetTlbAttributes(i*0x100000UL,RESERVED);
    for(int i=0xE00;i<0xE03;i++) //
@@ -586,16 +497,63 @@ int main()
 
    configure_gpio();
 
-   configure_clk(100,50,0,0);
-
-   XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
    DiscreteSet(REG0, FPGA_RESET);
    CPLD_RESET_ARM(0);
+
+   ENABLE_TSCONDITION(FPGA_TSCONDITION0);
+
+   ENABLE_ENCONDITION_PCLK0_CLKEN0;
+//   ENABLE_ENCONDITION_PCLK1_CLKEN0;
+//   ENABLE_ENCONDITION_PCLK0;
+//   ENABLE_ENCONDITION_PCLK1;
+
+   int clk_config=10; // 50 MHz
+   int verbose=0;
+   int nbr=0;
+   switch(clk_config)
+   {
+      case 0:
+         configure_clk(100,0,verbose,nbr);
+         break;
+      case 1:
+         configure_clk(95,0,verbose,nbr);
+         break;
+      case 2:
+         configure_clk(90,0,verbose,nbr);
+         break;
+      case 3:
+         configure_clk(85,0,verbose,nbr);
+         break;
+      case 4:
+         configure_clk(80,0,verbose,nbr);
+         break;
+      case 5:
+         configure_clk(75,0,verbose,nbr);
+         break;
+      case 6:
+         configure_clk(70,0,verbose,nbr);
+         break;
+      case 7:
+         configure_clk(65,0,verbose,nbr);
+         break;
+      case 8:
+         configure_clk(60,0,verbose,nbr);
+         break;
+      case 9:
+         configure_clk(55,0,verbose,nbr);
+         break;
+      case 10:
+         configure_clk(50,0,verbose,nbr);
+         break;
+   }
+
+   XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
    NBR_ARM(0);
    while(READ_NBG_ARM()==0);
    DiscreteClear(REG0,FPGA_INT6); // set int6 to 0 (active high)
 
-   long int reset_time_counter=0;
+   int reset_time_counter=0;
+   int reset_time_counter_max=60*4;
 
 //   printf("\033[2J");
    printf("Z3660 starting...\n\r\n\r");
@@ -606,20 +564,13 @@ int main()
    printf("  /  /___   ____| | | |__| | | |__| | | |__| |\n\r");
    printf(" /_______| |______| |______| |______| |______|\n\r");
    printf("\n\r");
-
-//   configure_clk( 60,0);
-//   configure_clk( 50,25);
-//   configure_clk(100,25);
-//   configure_clk(100,50);
-
-//   int cpu_speed=3;
-
-   int clk_config=3;     // CPU initial state: 0 50/25, 1 50/50, 2 100/25, 3 100/50, 4 ...
+   printf("FPGA version number 0x%08lX\n",read_reg_s01(REG2));
    int enable_ram=1;     // RAM initial state
    int enable_rtg=1;     // RTG initial state
    int enable_z3ram=1;   // Z3 RAM initial state
+   int enable_maprom=0;  // MAPROM initial state
 
-   fpga_feature_enable(enable_ram,enable_rtg,enable_z3ram);
+   fpga_feature_enable(enable_ram,enable_rtg,enable_z3ram,enable_maprom);
 
    init_shared();
 
@@ -650,6 +601,7 @@ int main()
    {
       //the autoconfig and CPU RAM are emulated in cpu_emulator(), so we don't need hardware autoconfig
       DISABLE_CPU_RAM_FPGA;
+      DISABLE_MAPROM_FPGA;
       DISABLE_BURST_READ_FPGA;
       DISABLE_BURST_WRITE_FPGA;
       DISABLE_256MB_AUTOCONFIG;
@@ -667,6 +619,32 @@ int main()
 //         ENABLE_256MB_AUTOCONFIG;
 //      ENABLE_RTG_AUTOCONFIG;
    }
+//   DISABLE_CPU_RAM_FPGA;
+//   DISABLE_MAPROM_FPGA;
+//   DISABLE_BURST_READ_FPGA;
+//   DISABLE_BURST_WRITE_FPGA;
+//   DISABLE_256MB_AUTOCONFIG;
+//   DISABLE_RTG_AUTOCONFIG;
+//#define DISABLE_SCSI
+//#define DISABLE_MAPROM
+
+#ifndef DISABLE_MAPROM
+   if(config.boot_mode==CPU)
+   {
+	   if(config.kickstart[0]!=0)
+	   {
+		   shared->load_rom_addr=(uint32_t)0x00F80000;
+		   load_rom();
+		   ENABLE_MAPROM_FPGA;
+	   }
+	   else
+	   {
+		   DISABLE_MAPROM_FPGA;
+	   }
+// Force to disable maprom
+//	   DISABLE_MAPROM_FPGA;
+   }
+#endif
 /*
    if((read_reg_s01(REG0)&2)==0)
       printf("Read Bursts DISABLED\n\r");
@@ -677,27 +655,9 @@ int main()
    else
       printf("Write Bursts ENABLED\n\r");
 */
-   int verbose=1;
-   int nbr=0;
-   switch(clk_config)
-   {
-      case 0:
-//         cpu_speed=0;
-         configure_clk(50,25,verbose,nbr);
-         break;
-      case 1:
-//         cpu_speed=1;
-         configure_clk(50,50,verbose,nbr);
-         break;
-      case 2:
-//         cpu_speed=2;
-         configure_clk(100,25,verbose,nbr);
-         break;
-      case 3:
-//         cpu_speed=3;
-         configure_clk(100,50,verbose,nbr);
-         break;
-   }
+
+   // configure CPU frequency with verbose = 1, nbr = 0
+   configure_clk(config.cpufreq,0,1,0);
 
    video_state=video_init();
 
@@ -733,7 +693,6 @@ int main()
 
    XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
    DiscreteSet(REG0, FPGA_RESET);
-   CPLD_RESET_ARM(0);
    usleep(2500);
 
    XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
@@ -752,22 +711,22 @@ int main()
 
    ethernet_init();
 
-#define INT_IPL_ON_THIS_CORE 0
    fpga_interrupt_connect(isr_video,isr_audio_tx,INT_IPL_ON_THIS_CORE);
 
    flash_colors();
 
-    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_DATA_ABORT_INT, DataAbortHandler,0);
+   Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_DATA_ABORT_INT, DataAbortHandler,0);
 //    *((volatile uint32_t*)0xF8F01834)&=~0x00000001; // FIXME: disable interrupt for core 0
 
-   Xil_ExceptionEnable();
    if(config.boot_mode==MUSASHI || config.boot_mode==UAE || config.boot_mode==UAEJIT)
    {
+	   Xil_ExceptionEnable();
        // Esto hay que repetirlo mas adelante...
        *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
        state68k=-1; // don't use cache flush when using emulator
        cpu_emulator(); // infinite loop inside
    }
+#ifndef DISABLE_SCSI
    piscsi_init();
 
    for(int i=0;i<7;i++)
@@ -775,14 +734,29 @@ int main()
       if(config.scsi[i][0]!=0)
          piscsi_map_drive(config.scsi[i], i);
    }
-//   piscsi_map_drive("hdf/ZDH0.hdf", 0);
+#endif
+   Xil_DCacheFlush();
+   Xil_ExceptionEnable();
+/*
+   if(config.cpufreq <= 66)
+   {
+      arm_write_nowait(0xFEA00000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 2
+   }
+   else
+   {
+      arm_write_nowait(0xFE500000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 4
+   }
+*/
+   usleep(10000);
+   NBR_ARM(1);        // relinquish bus
 
-   CPLD_RESET_ARM(1); // CPLD RUN
-   NBR_ARM(1);        // 060 RUN
+   usleep(1000);
+   CPLD_RESET_ARM(1); // CPLD RUN -> 060 RUN
 
    while(1)
    {
-      switch(stateARM)
+/*
+	   switch(stateARM)
       {
       case ARM_NO_BUS_MASTER:
          if(arm_request_bus_master)
@@ -862,6 +836,7 @@ int main()
          }
          break;
       }
+*/
       switch(state68k)
       {
       case M68K_RUNNING:
@@ -870,6 +845,7 @@ int main()
          {
             printf("Reset active (DOWN)...\n\r");
             state68k=M68K_RESET;
+            reset_time_counter_max=60*4; // 4 seconds
             reset_time_counter=0;
             reset_init();
             piscsi_shutdown();
@@ -880,29 +856,6 @@ int main()
          }
          else
          {
-/*
-            int delay;
-      //      DiscreteClear(REG0, FPGA_RESET);
-            delay=(5-cpu_speed)*(5-cpu_speed)*20000;
-            if(timer_counter_update_led<=2*delay)
-            {
-               timer_counter_update_led++;
-            }
-            if(timer_counter_update_led==delay)
-            {
-               XGpioPs_WritePin(&GpioPs, LED1, 0);
-            }
-            if(timer_counter_update_led==2*delay)
-            {
-               timer_counter_update_led=0;
-               XGpioPs_WritePin(&GpioPs, LED1, 1);
-            }
-*/
-/*
-            static int toggle=0;
-            toggle^=1;
-            XGpioPs_WritePin(&GpioPs, LED1, toggle);
-*/
 //#define USER_SWITCH1
 #ifdef USER_SWITCH1
             if(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
@@ -912,22 +865,18 @@ int main()
                switch(clk_config)
                {
                   case 0:
-//                     cpu_speed=0;
                      configure_clk(50,25,verbose);
                      XGpioPs_WritePin(&GpioPs, LED2, 1);
                      break;
                   case 1:
-//                     cpu_speed=1;
                      configure_clk(50,50,verbose);
                      XGpioPs_WritePin(&GpioPs, LED2, 0);
                      break;
                   case 2:
-//                     cpu_speed=2;
                      configure_clk(100,25,verbose);
                      XGpioPs_WritePin(&GpioPs, LED2, 1);
                      break;
                   case 3:
-//                     cpu_speed=3;
                      configure_clk(100,50,verbose);
                      XGpioPs_WritePin(&GpioPs, LED2, 0);
                      break;
@@ -939,20 +888,23 @@ int main()
          }
          break;
       case M68K_RESET:
-         reset_run();
+         reset_run(bm,reset_time_counter,reset_time_counter_max);
          ret=XGpioPs_ReadPin(&GpioPs, n040RSTI);
-//         usleep(1000); // reset_run waits for vblank, so this runs at 1/60 s
+#ifndef NO_ARM_RESET_ON_AMIGA_RESET
          reset_time_counter++;
-         if(reset_time_counter==60) // 60 -> reset_run waits for vblank;
+         if(reset_time_counter==60) // 60 -> 1 sec
+        	 no_init=1;
+         if(reset_time_counter==reset_time_counter_max) // 60 -> reset_run waits for vblank;
          {
             reset_time_counter=0;
+            reset_time_counter_max=60*4; // 4 seconds
             bm++;
             if(bm>=BOOTMODE_NUM)
                bm=0;
             write_env_files(bm,sb,ar);
             for(int i=0;i<bm+1;i++)
             {
-               DiscreteSet(REG0,FPGA_BP);
+               DiscreteSet(REG0,FPGA_BP); // beep
                usleep(10000);
                DiscreteClear(REG0,FPGA_BP);
                usleep(100000);
@@ -960,10 +912,15 @@ int main()
          }
          if(ret!=0)
          {
+            audio_set_interrupt_enabled(0);
+		    CPLD_RESET_ARM(0);
+            hard_reboot(); //
+         }
+#else
+         if(ret!=0)
+         {
             CPLD_RESET_ARM(0);
-            hard_reboot();
             state68k=M68K_RUNNING;
-//            DiscreteSet(REG0, FPGA_RESET);
             DiscreteSet(REG0, FPGA_RESET);
             int reset_counter=10;
             while(reset_counter>0)
@@ -983,10 +940,11 @@ int main()
             CPLD_RESET_ARM(0);
             usleep(100);
             CPLD_RESET_ARM(1);
-//            printf("Reset inactive (UP)...\n\r");
+            printf("Reset inactive (UP)...\n\r");
             video_reset();
             audio_reset();
          }
+#endif
          break;
       }
 

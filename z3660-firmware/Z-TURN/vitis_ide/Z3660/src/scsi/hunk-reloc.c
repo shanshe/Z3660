@@ -16,6 +16,8 @@
 
 #define DEBUG_SPAMMY(...)
 #define DEBUG(...)
+#define DEBUGME(...)
+//#define DEBUGME printf
 //#define DEBUG_SPAMMY printf
 //#define DEBUG printf
 
@@ -69,7 +71,7 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
                     f_read(f,info->libnames[info->num_libs], discard * 4, &n_bytes);
                     info->num_libs++;
                 }
-            } while (discard);
+            } while (discard && !f_eof(f));
 
             READLW(info->table_size, f);
             DEBUG("[HUNK_RELOC] [HEADER] Table size: %d\n", info->table_size);
@@ -100,7 +102,7 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
             READLW(discard, f);
             info->hunk_offsets[info->current_hunk] = f_tell(f) - file_offset;
             DEBUG("[HUNK_RELOC] [CODE] Code hunk size: %d (%.8X)\n", discard * 4, discard * 4);
-            f_lseek(f, discard * 4 + f->fptr);
+            f_lseek(f, ((uint64_t)discard) * 4 + f->fptr);
             return 0;
             break;
         case HUNKTYPE_HUNK_RELOC32:
@@ -110,9 +112,11 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
                 READLW(discard, f);
                 if (discard && discard != 0xFFFFFFFF) {
                     READLW(cur_hunk, f);
-                    DEBUG("[HUNK_RELOC] [RELOC32] Relocating %d offsets pointing to hunk %d.\n", discard, cur_hunk);
-                    if(discard>2048)
-                    	printf("Warning!!!!! Relocating %ld offsets > 2048\n",discard);
+                    DEBUG("[HUNK_RELOC] [RELOC32] Relocating %ld offsets pointing to hunk %ld.\n", discard, cur_hunk);
+                    if(discard>4096)
+                    {
+                    	printf("Warning!!!!! Relocating %ld offsets > 4096 pointing to hunk %ld.\n",discard, cur_hunk);
+                    }
                     for(uint32_t i = 0; i < discard; i++) {
                         READLW(offs32, f);
                         DEBUG_SPAMMY("[HUNK_RELOC] [RELOC32] #%d: @%.8X in hunk %d\n", i + 1, offs32, cur_hunk);
@@ -122,7 +126,7 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
                         info->reloc_hunks++;
                     }
                 }
-            } while(discard);
+            } while(discard && !f_eof(f));
             return 0;
             break;
         case HUNKTYPE_SYMBOL:
@@ -138,7 +142,7 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
                     DEBUG("[HUNK_RELOC] [SYMBOL] Symbol: %s - %.8X\n", sstr, discard);
                 }
                 READLW(discard, f);
-            } while (discard);
+            } while (discard && !f_eof(f));
             return 0;
             break;
         case HUNKTYPE_BSS:
@@ -153,7 +157,7 @@ int process_hunk(uint32_t index, struct hunk_info *info, FIL *f, struct hunk_rel
             READLW(discard, f);
             info->hunk_offsets[info->current_hunk] = f_tell(f) - file_offset;
             DEBUG("[HUNK_RELOC] [DATA] Skipping data hunk. Size: %d.\n", discard * 4);
-            f_lseek(f, discard * 4 + f->fptr);
+            f_lseek(f, ((uint64_t)discard) * 4 + f->fptr);
             return 0;
             break;
         case HUNKTYPE_END:
@@ -176,6 +180,7 @@ void reloc_hunk(struct hunk_reloc *h, uint8_t *buf, struct hunk_info *i) {
     uint32_t src = be32toh(*src_ptr);
     uint32_t dst = src + i->base_offset + rel;
     DEBUG_SPAMMY("[HUNK-RELOC] %.8X -> %.8X\n", src, dst);
+    DEBUGME("[HUNK-RELOC] %.8lX -> %.8lX\n", src, dst);
     *src_ptr = htobe32(dst);
 }
 
@@ -198,12 +203,12 @@ void process_hunks(FIL *in, struct hunk_info *h_info, struct hunk_reloc *r, uint
 }
 
 void reloc_hunks(struct hunk_reloc *r, uint8_t *buf, struct hunk_info *h_info) {
-    DEBUG("[HUNK-RELOC] Relocating %d offsets.\n", h_info->reloc_hunks);
+    DEBUGME("[HUNK-RELOC] Relocating %ld offsets.\n", h_info->reloc_hunks);
     for (uint32_t i = 0; i < h_info->reloc_hunks; i++) {
         DEBUG_SPAMMY("[HUNK-RELOC] Relocating offset %d.\n", i);
         reloc_hunk(&r[i], buf, h_info);
     }
-    DEBUG("[HUNK-RELOC] Done relocating offsets.\n");
+    DEBUGME("[HUNK-RELOC] Done relocating offsets.\n");
 }
 
 struct LoadSegBlock {
@@ -217,7 +222,7 @@ struct LoadSegBlock {
 #define	LOADSEG_IDENTIFIER 0x4C534547
 
 int load_lseg(FIL* fd, uint8_t **buf_p, struct hunk_info *i, struct hunk_reloc *relocs, uint32_t block_size) {
-    if (fd == 0)
+	if (fd == 0)
         return -1;
 
     if (block_size == 0)
@@ -233,22 +238,25 @@ int load_lseg(FIL* fd, uint8_t **buf_p, struct hunk_info *i, struct hunk_reloc *
         goto fail;
     }
 
-    char *filename = "data/lsegout.bin";
+    char *filename = DEFAULT_ROOT "data/lsegout.bin";
     FIL out;
     f_open(&out,filename, FA_READ|FA_WRITE|FA_CREATE_ALWAYS);
+//    f_open(&out,filename, FA_READ|FA_WRITE|FA_OPEN_APPEND);
 
     DEBUG("[LOAD_LSEG] LSEG data:\n");
     DEBUG("[LOAD_LSEG] Longs: %d HostID: %d\n", BE(lsb->lsb_SummedLongs), BE(lsb->lsb_HostID));
     DEBUG("[LOAD_LSEG] Next: %d LoadData: %p\n", BE(lsb->lsb_Next), (void *)lsb->lsb_LoadData);
     next_blk = BE(lsb->lsb_Next);
-    do {
-        next_blk = BE(lsb->lsb_Next);
-        f_write(&out,lsb->lsb_LoadData, block_size - 20, &n_bytes);
-        f_lseek(fd, next_blk * block_size);
-        f_read(fd, block, block_size,&n_bytes);
-    } while (next_blk != 0xFFFFFFFF);
+	next_blk = BE(lsb->lsb_Next);
 
-    uint32_t file_size = out.fptr;//ftell(out);
+//	while ((next_blk != 0xFFFFFFFF) && (!f_eof(fd))) {
+	while ((next_blk != 0xFFFFFFFF) && (fd->fptr < fd->obj.objsize - (block_size - 20))) {
+        f_write(&out,lsb->lsb_LoadData, block_size - 20, &n_bytes);
+        f_lseek(fd, ((uint64_t)next_blk) * block_size);
+        f_read(fd, block, block_size,&n_bytes);
+    	next_blk = BE(lsb->lsb_Next);
+    }
+    uint32_t file_size = f_tell(&out);
     f_lseek(&out, 0);
     uint8_t *buf = malloc(file_size + 1024);
     f_read(&out,buf, file_size, &n_bytes);
@@ -272,7 +280,7 @@ fail:;
 int load_fs(struct piscsi_fs *fs, char *dosID) {
     char filename[256];
     memset(filename, 0x00, 256);
-    sprintf(filename, "data/fs/%c%c%c.%d", dosID[0], dosID[1], dosID[2], dosID[3]);
+    sprintf(filename, DEFAULT_ROOT "data/fs/%c%c%c.%d", dosID[0], dosID[1], dosID[2], dosID[3]);
 
     FIL in;
     int ret = f_open(&in,filename, FA_READ|FA_WRITE);
@@ -280,7 +288,7 @@ int load_fs(struct piscsi_fs *fs, char *dosID) {
         return -1;
 
 //    fseek(in, 0, SEEK_END);
-    uint32_t file_size = in.obj.objsize;//ftell(in);
+    uint32_t file_size = f_size(&in);//f_tell(in);
     f_lseek(&in, 0);
 
     fs->binary_data = malloc(file_size);

@@ -18,7 +18,7 @@
 //#define NO_L1_CACHE_FLUSH
 //#define NO_L2_CACHE_FLUSH
 
-void handle_cache_flush(void);
+void handle_cache_flush(uint32_t address,uint32_t size);
 
 typedef struct {
 	uint32_t* framebuffer;

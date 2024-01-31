@@ -21,7 +21,7 @@ GENERATE_BIF = ::scw::generate_bif
 
 XPFM_PATH = C:/Users/shanshe/workspace/design_1_wrapper/export/design_1_wrapper/design_1_wrapper.xpfm
 SYS_CONFIG = design_1_wrapper
-DOMAINS = standalone_ps7_cortexa9_0,standalone_ps7_cortexa9_1
+DOMAINS = standalone_domain,standalone_ps7_cortexa9_1
 BIF_PATH = C:/Users/shanshe/workspace/Z3660_system/Debug/system.bif
 
 BITSTREAM_PATH = C:/Users/shanshe/workspace/Z3660/_ide/bitstream/design_1_wrapper.bit
@@ -33,7 +33,7 @@ SD_FILES = --elf C:/Users/shanshe/workspace/Z3660/Debug/Z3660.elf,ps7_cortexa9_0
 
 package:
 	-@echo Generating bif file for the system project
-	generate_system_bif.bat 57005 ${XPFM_PATH} ${DOMAINS} ${BIF_PATH}
+	generate_system_bif.bat 56422 ${XPFM_PATH} ${DOMAINS} ${BIF_PATH}
 	${SDCARD_GEN} --xpfm ${XPFM_PATH} --sys_config ${SYS_CONFIG} --bif ${BIF_PATH} --bitstream ${BITSTREAM_PATH} ${SD_FILES}
 
 clean:

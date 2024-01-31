@@ -262,6 +262,7 @@ int ethernet_init() {
 	 */
 
 	Xil_SetTlbAttributes(RTG_BASE+TX_BD_LIST_START_ADDRESS, STRONG_ORDERED);
+	Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, STRONG_ORDERED);
 //	Xil_SetTlbAttributes(RTG_BASE+RX_BACKLOG_ADDRESS, STRONG_ORDERED);
 	//Xil_SetTlbAttributes(RTG_BASE+RX_FRAME_ADDRESS, 0xc02);
 	//Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, 0xc02);

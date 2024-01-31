@@ -161,7 +161,7 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="src/mpg|_ide" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        <entry excluding="_ide" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
                         					
                     </sourceEntries>
                     				
@@ -232,6 +232,8 @@
                                 <option id="xilinx.gnu.compiler.misc.other.2097701635" name="Other flags" superClass="xilinx.gnu.compiler.misc.other" value="-c -fmessage-length=0 -MT&quot;$@&quot; -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard" valueType="string"/>
                                 								
                                 <option id="xilinx.gnu.compiler.inferred.swplatform.flags.414339666" name="Software Platform Inferred Flags" superClass="xilinx.gnu.compiler.inferred.swplatform.flags" value=" " valueType="string"/>
+                                								
+                                <option id="xilinx.gnu.compiler.symbols.defined.1053124774" name="Defined symbols (-D)" superClass="xilinx.gnu.compiler.symbols.defined" valueType="definedSymbols"/>
                                 								
                                 <inputType id="xilinx.gnu.armv7.c.compiler.input.1912824493" name="C source files" superClass="xilinx.gnu.armv7.c.compiler.input"/>
                                 							

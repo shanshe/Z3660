@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2009 - 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2009 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022 - 2023 Advanced Micro Devices, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -7,7 +8,7 @@
 /**
 *
 * @file xdmaps_hw.h
-* @addtogroup dmaps_v2_8
+* @addtogroup dmaps Overview
 * @{
 *
 * This header file contains the hardware interface of an XDmaPs device.
@@ -233,7 +234,7 @@ extern "C" {
 #define XDMAPS_INTCLR_ALL_MASK		0xFF
 
 #define XDmaPs_ReadReg(BaseAddress, RegOffset) \
-    Xil_In32((BaseAddress) + (RegOffset))
+	Xil_In32((BaseAddress) + (RegOffset))
 
 /***************************************************************************/
 /**
@@ -251,7 +252,7 @@ extern "C" {
 *                          u32 RegisterValue)
 ******************************************************************************/
 #define XDmaPs_WriteReg(BaseAddress, RegOffset, RegisterValue) \
-    Xil_Out32((BaseAddress) + (RegOffset), (RegisterValue))
+	Xil_Out32((BaseAddress) + (RegOffset), (RegisterValue))
 /************************** Variable Definitions *****************************/
 
 /************************** Function Prototypes *****************************/

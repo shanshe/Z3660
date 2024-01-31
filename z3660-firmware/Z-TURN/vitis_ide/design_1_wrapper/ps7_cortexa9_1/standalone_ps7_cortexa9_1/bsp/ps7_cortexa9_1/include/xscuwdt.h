@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2010 - 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2010 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022 - 2023 Advanced Micro Devices, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -7,7 +8,7 @@
 /**
 *
 * @file xscuwdt.h
-* @addtogroup scuwdt_v2_4
+* @addtogroup Overview
 * @{
 * @details
 *
@@ -106,6 +107,8 @@
 *                    time.
 * 2.3	sne 09/16/20 Fixed MISRA-C violations.
 * 2.4	sne 02/04/21 Fixed Doxygen warnings.
+* 2.5   asa 07/18/23 Added support for system device tree based workflow
+*                    decoupling flow.
 * </pre>
 *
 ******************************************************************************/
@@ -129,8 +132,18 @@ extern "C" {
  * This typedef contains configuration information for the device.
  */
 typedef struct {
+#ifndef SDT
 	u16 DeviceId;		/**< Unique ID of device */
-	u32 BaseAddr;		/**< Base address of the device */
+#else
+	char *Name;		/**< Unique name of the device */
+#endif
+	UINTPTR BaseAddr;	/**< Register base address */
+#ifdef SDT
+	u32 IntrId;             /** Bits[11:0] Interrupt-id Bits[15:12]
+				  * trigger type and level flags */
+	UINTPTR IntrParent;     /** Bit[0] Interrupt parent type Bit[64/32:1]
+				  * Parent base address */
+#endif
 } XScuWdt_Config;
 
 /**
@@ -168,7 +181,7 @@ extern XScuWdt_Config XScuWdt_ConfigTable[];
 #define XScuWdt_IsWdtExpired(InstancePtr)				\
 	((XScuWdt_ReadReg((InstancePtr)->Config.BaseAddr,		\
 			  XSCUWDT_RST_STS_OFFSET) &			\
-	 XSCUWDT_RST_STS_RESET_FLAG_MASK) == XSCUWDT_RST_STS_RESET_FLAG_MASK)
+	  XSCUWDT_RST_STS_RESET_FLAG_MASK) == XSCUWDT_RST_STS_RESET_FLAG_MASK)
 
 /****************************************************************************/
 /**
@@ -189,7 +202,7 @@ extern XScuWdt_Config XScuWdt_ConfigTable[];
 #define XScuWdt_IsTimerExpired(InstancePtr)				\
 	((XScuWdt_ReadReg((InstancePtr)->Config.BaseAddr,		\
 			  XSCUWDT_ISR_OFFSET) &				\
-	 XSCUWDT_ISR_EVENT_FLAG_MASK) == XSCUWDT_ISR_EVENT_FLAG_MASK)
+	  XSCUWDT_ISR_EVENT_FLAG_MASK) == XSCUWDT_ISR_EVENT_FLAG_MASK)
 
 /****************************************************************************/
 /**
@@ -230,7 +243,7 @@ extern XScuWdt_Config XScuWdt_ConfigTable[];
 ******************************************************************************/
 #define XScuWdt_LoadWdt(InstancePtr, Value)				\
 	XScuWdt_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUWDT_LOAD_OFFSET, (Value))
+			 XSCUWDT_LOAD_OFFSET, (Value))
 
 /****************************************************************************/
 /**
@@ -250,7 +263,7 @@ extern XScuWdt_Config XScuWdt_ConfigTable[];
 	XScuWdt_WriteReg((InstancePtr)->Config.BaseAddr,		  \
 			 XSCUWDT_CONTROL_OFFSET,			  \
 			 (XScuWdt_ReadReg((InstancePtr)->Config.BaseAddr, \
-			  XSCUWDT_CONTROL_OFFSET) |			  \
+					  XSCUWDT_CONTROL_OFFSET) |			  \
 			  (XSCUWDT_CONTROL_WD_MODE_MASK)))
 
 /****************************************************************************/
@@ -271,14 +284,14 @@ extern XScuWdt_Config XScuWdt_ConfigTable[];
 *
 ******************************************************************************/
 #define XScuWdt_SetTimerMode(InstancePtr)				\
-{									\
-	XScuWdt_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUWDT_DISABLE_OFFSET,				\
-			XSCUWDT_DISABLE_VALUE1);			\
-	XScuWdt_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUWDT_DISABLE_OFFSET,				\
-			XSCUWDT_DISABLE_VALUE2);			\
-}
+	{									\
+		XScuWdt_WriteReg((InstancePtr)->Config.BaseAddr,		\
+				 XSCUWDT_DISABLE_OFFSET,				\
+				 XSCUWDT_DISABLE_VALUE1);			\
+		XScuWdt_WriteReg((InstancePtr)->Config.BaseAddr,		\
+				 XSCUWDT_DISABLE_OFFSET,				\
+				 XSCUWDT_DISABLE_VALUE2);			\
+	}
 
 /****************************************************************************/
 /**
@@ -332,14 +345,18 @@ extern XScuWdt_Config XScuWdt_ConfigTable[];
 #define XScuWdt_EnableAutoReload(InstancePtr)				\
 	XScuWdt_SetControlReg((InstancePtr),				\
 			      (XScuWdt_GetControlReg(InstancePtr) |	\
-			      XSCUWDT_CONTROL_AUTO_RELOAD_MASK))
+			       XSCUWDT_CONTROL_AUTO_RELOAD_MASK))
 
 /************************** Function Prototypes ******************************/
 
 /*
  * Lookup configuration in xscuwdt_sinit.c.
  */
+#ifndef SDT
 XScuWdt_Config *XScuWdt_LookupConfig(u16 DeviceId);
+#else
+XScuWdt_Config *XScuWdt_LookupConfig(UINTPTR BaseAddress);
+#endif
 
 /*
  * Selftest function in xscuwdt_selftest.c

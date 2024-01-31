@@ -2105,6 +2105,7 @@ void m68k_reset_newcpu(bool hardreset)
 #endif
    regs.s = 1;
    v = get_long (4);
+   printf("Read PC from address 4 : 0x%08X\n",v);
    m68k_areg (regs, 7) = get_long (0);
 
    m68k_setpc_normal(v);

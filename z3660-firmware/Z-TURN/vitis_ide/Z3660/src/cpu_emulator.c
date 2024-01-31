@@ -17,6 +17,7 @@
 
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
+void reset_run(int cpu_boot_mode,int counter, int counter_max);
 void reset_init(void);
 
 SHARED *shared;
@@ -37,7 +38,7 @@ void load_rom(void)
    static FIL fil;      /* File object */
    static FATFS fatfs;
    uint8_t *ROM=(uint8_t *)shared->load_rom_addr;
-   printf("Loading Kickstart on address: 0x%08lX\n",(uint32_t)ROM);
+   printf("Loading Kickstart at address: 0x%08lX\n",(uint32_t)ROM);
    TCHAR *Path = DEFAULT_ROOT;
    Xil_ExceptionDisable();
    int ret;
@@ -156,6 +157,7 @@ void hard_reboot(void)
    XScuWdt_SetWdMode(&instance);
    while(1);
 }
+extern int no_init;
 void cpu_emulator(void)
 {
    shared->load_rom_emu=0;
@@ -189,6 +191,12 @@ void cpu_emulator(void)
    }
 
    CPLD_RESET_ARM(1); // CPLD RUN
+
+   if(config.cpufreq <= 66)
+	   arm_write_nowait(0xFEA00000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 2
+   else
+	   arm_write_nowait(0xFE500000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 4
+
    NBR_ARM(0);
    while(READ_NBG_ARM()==1); // make sure that we have bus control
 
@@ -219,7 +227,7 @@ void cpu_emulator(void)
             int type=shared->write_scsi_type;
             uint32_t addr=shared->write_scsi_addr;
             uint32_t data=shared->write_scsi_data;
-            handle_piscsi_write(addr,data,type);
+            handle_piscsi_reg_write(addr,data,type);
             shared->write_scsi=0;
 //            shared->write_scsi_in_progress=1;
 //            handle_piscsi_write(addr,data,type);
@@ -274,14 +282,19 @@ void cpu_emulator(void)
                printf("[Core1] Reset active (DOWN)...\n\r");
                reset_init();
                piscsi_shutdown();
-               long int reset_time_counter=0;
+               int reset_time_counter=0;
+               int reset_time_counter_max=60*4; // 4 seconds
                while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
                {
-                  usleep(1000);
+                  reset_run(bm,reset_time_counter,reset_time_counter_max);
                   reset_time_counter++;
-                  if(reset_time_counter==1000)
+                  if(reset_time_counter==60) // 60 -> 1 sec
+                 	 no_init=1;
+                  if(reset_time_counter==reset_time_counter_max) // 60 -> reset_run waits for vblank;
                   {
+                     no_init=1;
                      reset_time_counter=0;
+                     reset_time_counter_max=60*4; // 4 seconds
                      bm++;
                      if(bm>=BOOTMODE_NUM)
                         bm=0;

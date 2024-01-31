@@ -1,7 +1,7 @@
 /*
  * sii9022_init.c
  *
- *  Created on: 2017/8/24
+ *  Created on: 2017Äê8ÔÂ24ÈÕ
  *      Author: pgsimple
  */
 

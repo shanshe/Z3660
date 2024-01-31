@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2007 - 2020 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -7,7 +8,7 @@
 /**
 *
 * @file xsysmon_hw.h
-* @addtogroup sysmon_v7_7
+* @addtogroup Overview
 * @{
 *
 * This header file contains identifiers and basic driver functions (or
@@ -41,6 +42,7 @@
 *			8 and 9.
 * 7.2   asa     03/11/16 Made changes so that XSM_CFR3_OFFSET is
 *             visible only for Ultrasacle. Fix for CR#910905.
+* 7.8   cog     07/20/23 Added support for SDT flow
 *
 * </pre>
 *
@@ -58,20 +60,30 @@ extern "C" {
 #include "xil_types.h"
 #include "xil_assert.h"
 #include "xil_io.h"
+#ifndef SDT
 #include "xparameters.h"
+#endif
 
 /************************** Constant Definitions ****************************/
 
 #define SYSTEM_MANAGEMENT	1	/* Ultrascale */
 #define XADC			0	/* 7 Series, Zynq */
 
+#ifndef SDT
+#define XSM_IP_TYPE XPAR_SYSMON_0_IP_TYPE
+#else
+#ifdef XSM_ZYNQMP
+#define XSM_IP_TYPE SYSTEM_MANAGEMENT
+#else
+#define XSM_IP_TYPE XADC
+#endif
+#endif
 
-#if XPAR_SYSMON_0_IP_TYPE == SYSTEM_MANAGEMENT
+#if XSM_IP_TYPE == SYSTEM_MANAGEMENT
 #define XSM_IP_OFFSET	0x200
 #else
 #define XSM_IP_OFFSET	0x00
 #endif
-
 
 /**@name Register offsets
  *
@@ -232,7 +244,7 @@ extern "C" {
 #define XSM_CFR2_OFFSET		(XSM_IP_OFFSET + 0x308)
 					/**< Configuration Register 2 */
 
-#if XPAR_SYSMON_0_IP_TYPE == SYSTEM_MANAGEMENT
+#if XSM_IP_TYPE == SYSTEM_MANAGEMENT
 #define XSM_CFR3_OFFSET		(XSM_IP_OFFSET + 0x30C)
 					/**< Configuration Register 3 */
 #endif

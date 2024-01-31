@@ -862,7 +862,7 @@ void comp_fpp_opp (uae_u32 opcode, uae_u16 extra)
 			  case 0x25: /* FREM */
 			    frem1_rr (dreg, sreg);
 			    break;
-        case 0x27: /* FSGLMUL */
+              case 0x27: /* FSGLMUL */
 			    fsglmul_rr (dreg, sreg);
 			    break;
 			  case 0x63: /* FSMUL */
@@ -874,21 +874,21 @@ void comp_fpp_opp (uae_u32 opcode, uae_u16 extra)
 			  case 0x28: /* FSUB */
 			    fsub_rr (dreg, sreg);
 			    break;
-			  case 0x30: /* FSINCOS */
-			  case 0x31:
-			  case 0x32:
-			  case 0x33:
-			  case 0x34:
-			  case 0x35:
-			  case 0x36:
-			  case 0x37:
+			case 0x30: /* FSINCOS */
+			case 0x31:
+			case 0x32:
+			case 0x33:
+			case 0x34:
+			case 0x35:
+			case 0x36:
+			case 0x37:
 				  FAIL (1);
 				  return;
-			  case 0x38: /* FCMP */
+			case 0x38: /* FCMP */
 			    fmov_rr (FP_RESULT, dreg);
 			    fsub_rr (FP_RESULT, sreg);
 			    return;
-			  case 0x3a: /* FTST */
+			case 0x3a: /* FTST */
 			    fmov_rr (FP_RESULT, sreg);
 			    return;
 		    case 0x40: /* FSMOVE */
@@ -897,60 +897,60 @@ void comp_fpp_opp (uae_u32 opcode, uae_u16 extra)
 					    fmov_rr (dreg, sreg);
 			    }
 			    else {
-  			    fmovs_rr (dreg, sreg);
+  			        fmovs_rr (dreg, sreg);
 			    }
-          break;
-			  case 0x44: /* FDMOVE */
-          if (sreg != dreg) /* no <EA> */
-  			    fmov_rr (dreg, sreg);
-          break;
-			  case 0x41: /* FSSQRT */
+                break;
+			case 0x44: /* FDMOVE */
+                if (sreg != dreg) /* no <EA> */
+  			        fmov_rr (dreg, sreg);
+              break;
+	        case 0x41: /* FSSQRT */
 			    fsqrt_rr (dreg, sreg);
 			    if (!currprefs.fpu_strict) /* faster, but less strict rounding */
 				    break;
 			    fcuts_r (dreg);
 			    break;
-			  case 0x45: /* FDSQRT */
-          fsqrt_rr (dreg, sreg);
-          break;
-			  case 0x58: /* FSABS */
+            case 0x45: /* FDSQRT */
+                fsqrt_rr (dreg, sreg);
+                break;
+		    case 0x58: /* FSABS */
 			    fabs_rr (dreg, sreg);
 			    if (prec != 1 && currprefs.fpu_strict)
 			      fcuts_r (dreg);
 			    break;
-			  case 0x5a: /* FSNEG */
+			case 0x5a: /* FSNEG */
 			    fneg_rr (dreg, sreg);
 			    if (prec != 1 && currprefs.fpu_strict)
 			      fcuts_r (dreg);
 			    break;
-			  case 0x5c: /* FDABS */
+			case 0x5c: /* FDABS */
 			    fabs_rr (dreg, sreg);
 			    break;
-			  case 0x5e: /* FDNEG */
+			case 0x5e: /* FDNEG */
 			    fneg_rr (dreg, sreg);
 			    break;
-			  case 0x62: /* FSADD */
+			case 0x62: /* FSADD */
 			    fadd_rr (dreg, sreg);
 			    if (!currprefs.fpu_strict) /* faster, but less strict rounding */
 				    break;
 			    fcuts_r (dreg);
 			    break;
-			  case 0x64: /* FDDIV */
+			case 0x64: /* FDDIV */
 			    fdiv_rr (dreg, sreg);
 			    break;
-			  case 0x66: /* FDADD */
+			case 0x66: /* FDADD */
 			    fadd_rr (dreg, sreg);
 			    break;
-			  case 0x67: /* FDMUL */
+			case 0x67: /* FDMUL */
 			    fmul_rr (dreg, sreg);
 			    break;
-			  case 0x68: /* FSSUB */
+			case 0x68: /* FSSUB */
 			    fsub_rr (dreg, sreg);
 			    if (!currprefs.fpu_strict) /* faster, but less strict rounding */
 				    break;
 			    fcuts_r (dreg);
 			    break;
-			  case 0x6c: /* FDSUB */
+			case 0x6c: /* FDSUB */
 			    fsub_rr (dreg, sreg);
 			    break;
 		    default:

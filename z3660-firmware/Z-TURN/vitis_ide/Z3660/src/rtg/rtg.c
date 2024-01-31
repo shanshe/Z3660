@@ -23,6 +23,7 @@
 #include "../config_file.h"
 #include "../scsi/scsi.h"
 #include "../ltc2990/ltc2990.h"
+#include "../config_clk.h"
 
 #define inline
 
@@ -283,134 +284,113 @@ void rtg_loop(void)
    gpio=read_reg_s01(REG1);
    if((gpio&0x80000000)!=0) //write
    {
-      address=(uint32_t *)((gpio&0x1FFFFF) + RTG_BASE);
-      zaddr=gpio&0x1FFFFF;
-
-      if(zaddr<0x2000)
+      if((gpio&0xF80000)==0xF80000)
       {
-         zdata=swap32(*address);
-         write_rtg_register(zaddr,zdata);
+    	  //write to ROM!!!!
+          address=(uint32_t *)(gpio&0xFFFFFC);
+          printf("Write ROM 0x%08lX gpio 0x%08lX\n",(uint32_t)address,gpio);
       }
       else
       {
-#define SCSI_ADDR_MAX 0x6000 //0x80000 //0x6000
-         if(zaddr<SCSI_ADDR_MAX)
+         address=(uint32_t *)((gpio&0x1FFFFF) + RTG_BASE);
+         zaddr=gpio&0x1FFFFF;
+
+         if(zaddr<0x2000)
          {
-            zaddr-=0x2000;
-            int offset=(gpio>>26)&3;
-            zaddr+=offset;
-            address+=offset;
-            int type=OP_TYPE_BYTE;
-            if(((gpio&0x30000000)==0x00000000)
-             ||((gpio&0x30000000)==0x30000000))
-            {
-               type=OP_TYPE_LONGWORD;
-               zdata=swap32(*address);
-            }
-            else if((gpio&0x30000000)==0x20000000)
-            {
-               type=OP_TYPE_WORD;
-               zdata=swap16(*(uint16_t*)address);
-            }
-            else
-               zdata=*(uint8_t*)address;
-            handle_piscsi_write(zaddr, zdata, type);
+            zdata=swap32(*address);
+            int add_bits=gpio&0x3;
+            if(add_bits)
+               printf("write RTG regs add 0x%08lX\n",zaddr);
+            write_rtg_register(zaddr,zdata);
          }
          else
          {
-            printf("Write to zaddr= 0x%08lX\n",zaddr);
+#define SCSI_ADDR_MAX 0x6000 //0x80000 //0x6000
+            if(zaddr<SCSI_ADDR_MAX)
+            {
+                int add_bits=gpio&0x3;
+                if(add_bits)
+                   printf("write SCSI add 0x%08lX\n",zaddr);
+               zaddr-=0x2000;
+               int type=OP_TYPE_BYTE;
+               if(((gpio&0x30000000)==0x00000000)  //long
+                ||((gpio&0x30000000)==0x30000000)) //line
+               {
+                  type=OP_TYPE_LONGWORD;
+                  zdata=swap32(*address);
+               }
+               else if((gpio&0x30000000)==0x20000000) //word
+               {
+                  type=OP_TYPE_WORD;
+                  zdata=swap16(*(uint16_t*)address);
+               }
+               else // byte
+               {
+            	  zdata=*(uint8_t*)address;
+               }
+               handle_piscsi_reg_write(zaddr, zdata, type);
+            }
+#define SCSI_ROM_MAX (SCSI_NO_DMA_ADDRESS-RTG_BASE)
+            else if(zaddr>=SCSI_ROM_MAX)
+            {
+               int add_bits=gpio&0x3;
+               if(add_bits)
+                  printf("write SCSI add 0x%08lX\n",zaddr);
+//               printf("Write to zaddr= 0x%08lX\n",zaddr);
+               zdata=swap32(*address);
+            }
+            else
+            {
+                printf("write SCSI ROM add 0x%08lX\n",zaddr);
+            }
          }
       }
       ack_request=1;
    }
    else if((gpio&0x40000000)!=0) //read
    {
-      address=(uint32_t *)((gpio&0x1FFFFF) + RTG_BASE);
-      zaddr=gpio&0x1FFFFF;
-      if(zaddr<0x2000)
+      if((gpio&0xF80000)==0xF80000)
       {
-         zdata=read_rtg_register(zaddr);
-//         zdata=swap32(*address);
+         address=(uint32_t *)(gpio&0xFFFFFC);
+         zdata=swap32(*address);
          write_reg_s01(REG5,zdata);
       }
       else
       {
-         if(zaddr<SCSI_ADDR_MAX)
+         zaddr=gpio&0x1FFFFF;
+         if(zaddr<0x2000)
          {
-            zaddr-=0x2000;
-            zdata=handle_piscsi_read(zaddr&0x1FFFFC, 2);
+            zdata=read_rtg_register(zaddr);
+//            zdata=swap32(*address);
 /*
-            int offset=(gpio>>26)&3;
-            zaddr+=offset;
-            if((gpio&0x30000000)==0x00000000)
-            {
-               zdata=handle_piscsi_read(zaddr, 2);
-            }
-            else if((gpio&0x30000000)==0x20000000)
-            {
-               if(offset&2)
-                  zdata=handle_piscsi_read(zaddr, 1)&0x0000FFFF;
-               else
-                  zdata=(handle_piscsi_read(zaddr, 1)<<16)&0xFFFF0000;
-            }
-            else
-            {
-               switch(offset)
-               {
-               	   case 0:
-                       zdata=handle_piscsi_read(zaddr, 0)<<24;
-               		   break;
-               	   case 1:
-                       zdata=handle_piscsi_read(zaddr, 0)<<16;
-               		   break;
-               	   case 2:
-                       zdata=handle_piscsi_read(zaddr, 0)<<8;
-               		   break;
-               	   case 3:
-                       zdata=handle_piscsi_read(zaddr, 0);
-               		   break;
-               }
-            }
+            int add_bits=gpio&0x3;
+            if(add_bits)
+               printf("read RTG add 0x%08lX\n",zaddr);
 */
             write_reg_s01(REG5,zdata);
          }
          else
          {
-        	zdata=swap32(*((uint32_t *)(RTG_BASE+(zaddr&0x1FFFFC))));
+            if(zaddr<SCSI_ADDR_MAX)
+            {
+               zaddr-=0x2000;
+               zdata=handle_piscsi_read(zaddr&0x1FFFFC, 2);
+               int add_bits=gpio&0x3;
+               if(add_bits)
+                  printf("read SCSI add 0x%08lX\n",zaddr);
+               write_reg_s01(REG5,zdata);
+            }
+            else
+            {
+//               int size_bits=(gpio>>28)&0x3;
 /*
-            int offset=(gpio>>26)&3;
-             zaddr+=offset;
-             if((gpio&0x30000000)==0x00000000)
-             {
-                zdata=swap32(*((uint32_t *)(RTG_BASE+zaddr)));
-             }
-             else if((gpio&0x30000000)==0x20000000)
-             {
-                if(offset&2)
-                   zdata=swap16(*((uint16_t *)(RTG_BASE+zaddr)))&0x0000FFFF;
-                else
-                   zdata=(swap16(*((uint16_t *)(RTG_BASE+zaddr)))<<16)&0xFFFF0000;
-             }
-             else
-             {
-                switch(offset)
-                {
-                	   case 0:
-                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)))<<24;
-                		   break;
-                	   case 1:
-                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)))<<16;
-                		   break;
-                	   case 2:
-                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)))<<8;
-                		   break;
-                	   case 3:
-                        zdata=(*((uint8_t *)(RTG_BASE+zaddr)));
-                		   break;
-                }
-             }
+               int add_bits=gpio&0x3;
+               if(add_bits)
+                  printf("read add 0x%08lX\n",zaddr);
 */
-             write_reg_s01(REG5,zdata);
+               zdata=swap32(*((uint32_t *)(RTG_BASE+(zaddr&0x1FFFFC))));
+               write_reg_s01(REG5,zdata);
+            }
          }
       }
       ack_request=1;
@@ -433,8 +413,10 @@ void rtg_loop(void)
 uint32_t read_rtg_register(uint16_t zaddr)
 {
    uint32_t data=0;
+/*
    if(zaddr&3)
       printf("read unaligned to 0x%08X\n",zaddr);
+*/
    switch (zaddr&0x1FFFFC)
    {
    case REG_ZZ_INT_STATUS:
@@ -590,11 +572,17 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
       //printf("mode change: %lx\n", zdata);
 
       int mode = zdata & 0xff;
-      int colormode = (zdata & 0xf00) >> 8;
-      int scalemode = (zdata & 0xf000) >> 12;
-      printf("mode: %d color: %d scale: %d\n", mode, colormode, scalemode);
-      video_mode_init(mode, scalemode, colormode);
-
+      if(mode < ZZVMODE_NUM)
+      {
+		  int colormode = (zdata & 0xf00) >> 8;
+		  int scalemode = (zdata & 0xf000) >> 12;
+		  printf("mode: %d color: %d scale: %d\n", mode, colormode, scalemode);
+		  video_mode_init(mode, scalemode, colormode);
+      }
+      else
+      {
+		  printf("[RTG] Error mode: %d\n", mode);
+      }
       // FIXME
       // remember selected video mode
       // video_mode = zdata;
@@ -1208,8 +1196,9 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
       }
       case REG_ZZ_CPU_FREQ:
          printf("[REG_ZZ_CPU_FREQ] %ld MHz\n", zdata);
-         if((zdata>50) && (zdata<100))
-            configure_clk(zdata, 0, 1, 1);
+         if((zdata>=50) && (zdata<=100))
+//            configure_clk(zdata, 0, 1, 0);
+        	 config.cpufreq=zdata;
          break;
          /*
             // ARM core 2 execution
@@ -1357,7 +1346,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          printf("AUTOCONFIG RAM %s\r\n",zdata?"enabled":"disabled");
          break;
       default:
-         printf("W %02x\r\n",zaddr); // write to an unknown RTG register
+         printf("W %08x\r\n",zaddr); // write to an unknown RTG register
          break;
    }
 }

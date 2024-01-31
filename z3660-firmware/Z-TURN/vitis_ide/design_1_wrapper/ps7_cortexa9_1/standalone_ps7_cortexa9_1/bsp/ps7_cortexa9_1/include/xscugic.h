@@ -1,6 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2010 - 2022 Xilinx, Inc.  All rights reserved.
-* Copyright (c) 2022 - 2023 Advanced Micro Devices, Inc. All Rights Reserved.
+* Copyright (C) 2022 - 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -190,12 +190,14 @@
 *                     executed, redistributor address will be stored in newly
 *                     added member of XScuGic data structure "RedistBaseAddr".
 *                     It fixes CR#1150432.
+* 5.2   ml   03/02/23 Add description to fix Doxygen warnings.
+* 5.2   adk  04/14/23 Added support for system device-tree flow.
 * </pre>
 *
 ******************************************************************************/
 
-#ifndef XSCUGIC_H /* prevent circular inclusions */
-#define XSCUGIC_H /* by using protection macros */
+#ifndef XSCUGIC_H /**< prevent circular inclusions */
+#define XSCUGIC_H /**< by using protection macros */
 
 #ifdef __cplusplus
 extern "C" {
@@ -212,13 +214,23 @@ extern "C" {
 
 /************************** Constant Definitions *****************************/
 
+/**
+ * @name EFUSE status Register information
+ * EFUSE Status Register
+ * @{
+ */
 #define EFUSE_STATUS_OFFSET   0x10
 #define EFUSE_STATUS_CPU_MASK 0x80
 
 #if !defined (ARMR5) && !defined (__aarch64__) && !defined (ARMA53_32)
-#define ARMA9
+#define ARMA9 /**< ARMA9 macro to identify cortexA9 */
 #endif
 
+/**
+ * @name GICD_CTLR Register information
+ * GICD_CTLR Status Register
+ * @{
+ */
 #define XSCUGIC500_DCTLR_ARE_NS_ENABLE  0x20
 #define XSCUGIC500_DCTLR_ARE_S_ENABLE  0x10
 
@@ -245,8 +257,12 @@ extern "C" {
  */
 typedef struct
 {
-	Xil_InterruptHandler Handler;
-	void *CallBackRef;
+       Xil_InterruptHandler Handler; /**< Interrupt Handler */
+       void *CallBackRef; /**< CallBackRef is the callback reference passed in
+                               by the upper layer when setting the Interrupt
+                               handler for specific interrupt ID, and it will
+                               passed back to Interrupt handler when it is
+                               invoked. */
 } XScuGic_VectorTableEntry;
 
 /**
@@ -254,9 +270,15 @@ typedef struct
  */
 typedef struct
 {
+#ifndef SDT
 	u16 DeviceId;		/**< Unique ID  of device */
 	u32 CpuBaseAddress;	/**< CPU Interface Register base address */
 	u32 DistBaseAddress;	/**< Distributor Register base address */
+#else
+	char *Name;		/**< Compatible string */
+	u32 DistBaseAddress;	/**< Distributor Register base address */
+	u32 CpuBaseAddress;	/**< CPU Interface Register base address */
+#endif
 	XScuGic_VectorTableEntry HandlerTable[XSCUGIC_MAX_NUM_INTR_INPUTS];/**<
 				 Vector table of interrupt handlers */
 } XScuGic_Config;
@@ -443,9 +465,12 @@ extern XScuGic_Config XScuGic_ConfigTable[];	/**< Config table */
 #define XREG_ICC_SGI1R_EL1	"p15, 0, %0,  %1,  c12"
 #define XREG_ICC_PMR_EL1	"p15, 0, %0,  c4,  c6, 0"
 #define XREG_ICC_IAR0_EL1	"p15, 0, %0,  c12,  c8, 0"
+#define XREG_ICC_IAR1_EL1	"p15, 0, %0,  c12,  c12, 0"
 #define XREG_ICC_EOIR0_EL1	"p15, 0, %0,  c12,  c8, 1"
+#define XREG_ICC_EOIR1_EL1	"p15, 0, %0,  c12,  c12, 1"
 #define XREG_IMP_CBAR		"p15, 1, %0, c15, c3, 0"
 #define XREG_ICC_BPR0_EL1	"p15, 0, %0, c12, c8, 3"
+#define XREG_ICC_BPR1_EL1	"p15, 0, %0, c12, c12, 3"
 #define XREG_ICC_RPR_EL1	"p15, 0, %0, c12, c11, 3"
 #else
 #define XREG_ICC_SRE_EL1	"S3_0_C12_C12_5"
@@ -594,7 +619,7 @@ extern XScuGic_Config XScuGic_ConfigTable[];	/**< Config table */
 *
 *****************************************************************************/
 #if defined(ARMR52)
-#define XScuGic_get_IntID()  mfcp(XREG_ICC_IAR0_EL1)
+#define XScuGic_get_IntID()  mfcp(XREG_ICC_IAR1_EL1)
 #elif EL3
 #define XScuGic_get_IntID()  mfcpnotoken(XREG_ICC_IAR0_EL1)
 #else
@@ -612,7 +637,7 @@ extern XScuGic_Config XScuGic_ConfigTable[];	/**< Config table */
 *
 *****************************************************************************/
 #if defined(ARMR52)
-#define XScuGic_ack_Int(val)   mtcp(XREG_ICC_EOIR0_EL1,val)
+#define XScuGic_ack_Int(val)   mtcp(XREG_ICC_EOIR1_EL1,val)
 #elif EL3
 #define XScuGic_ack_Int(val)   mtcpnotoken(XREG_ICC_EOIR0_EL1,val)
 #else
@@ -660,12 +685,23 @@ void XScuGic_UnmapAllInterruptsFromCpu(XScuGic *InstancePtr, u8 Cpu_Identifier);
 void XScuGic_Stop(XScuGic *InstancePtr);
 void XScuGic_SetCpuID(u32 CpuCoreId);
 u32 XScuGic_GetCpuID(void);
+#ifndef SDT
 u8 XScuGic_IsInitialized(u32 DeviceId);
+#else
+u8 XScuGic_IsInitialized(u32 BaseAddress);
+#endif
+#ifndef SDT
 /*
- * Initialization functions in xscugic_sinit.c
+ * Lookup configuration by using DeviceId
  */
 XScuGic_Config *XScuGic_LookupConfig(u16 DeviceId);
+/*
+ * Lookup configuration by using BaseAddress
+ */
 XScuGic_Config *XScuGic_LookupConfigBaseAddr(UINTPTR BaseAddress);
+#else
+XScuGic_Config *XScuGic_LookupConfig(UINTPTR BaseAddr);
+#endif
 
 /*
  * Interrupt functions in xscugic_intr.c

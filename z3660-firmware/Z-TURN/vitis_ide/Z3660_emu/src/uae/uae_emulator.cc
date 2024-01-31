@@ -547,8 +547,8 @@ void uae_emulator(int enable_jit)
    currprefs.fpu_no_unimplemented   = changed_prefs.fpu_no_unimplemented=false;
 //   currprefs.blitter_cycle_exact    = changed_prefs.blitter_cycle_exact=false;
    currprefs.m68k_speed             = changed_prefs.m68k_speed=-1;//M68K_SPEED_25MHZ_CYCLES;
-      currprefs.comptrustbyte          = changed_prefs.comptrustbyte=true;
-if(enable_jit)
+   currprefs.comptrustbyte          = changed_prefs.comptrustbyte=true;
+   if(enable_jit)
    {
       currprefs.cachesize              = changed_prefs.cachesize=32*1024;
       currprefs.compfpu                = changed_prefs.compfpu=true;

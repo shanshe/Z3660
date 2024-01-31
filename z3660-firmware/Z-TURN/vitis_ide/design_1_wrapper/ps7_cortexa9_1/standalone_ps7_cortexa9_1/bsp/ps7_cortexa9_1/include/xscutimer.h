@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2010 - 2020 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -7,7 +8,7 @@
 /**
 *
 * @file xscutimer.h
-* @addtogroup scutimer_v2_4
+* @addtogroup scutimer Overview
 * @{
 * @details
 *
@@ -82,6 +83,7 @@
 * 2.3   mus 08/31/20 Updated makefile to support parallel make and
 *                    incremental builds, it would help to reduce compilation
 *                    time.
+* 2.5   dp   07/11/23 Add support for system device tree flow
 * </pre>
 *
 ******************************************************************************/
@@ -106,7 +108,11 @@ extern "C" {
  * This typedef contains configuration information for the device.
  */
 typedef struct {
+#ifndef SDT
 	u16 DeviceId;	/**< Unique ID of device */
+#else
+	char *Name;
+#endif
 	u32 BaseAddr;	/**< Base address of the device */
 #ifdef XIL_INTERRUPT
 	u32 IntrId;
@@ -145,9 +151,9 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_IsExpired(InstancePtr) \
 	((XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
-				XSCUTIMER_ISR_OFFSET) & \
-				XSCUTIMER_ISR_EVENT_FLAG_MASK) == \
-				XSCUTIMER_ISR_EVENT_FLAG_MASK)
+			    XSCUTIMER_ISR_OFFSET) & \
+	  XSCUTIMER_ISR_EVENT_FLAG_MASK) == \
+	 XSCUTIMER_ISR_EVENT_FLAG_MASK)
 
 /****************************************************************************/
 /**
@@ -165,8 +171,8 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_RestartTimer(InstancePtr)				\
 	XScuTimer_LoadTimer((InstancePtr),				\
-		XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
-					XSCUTIMER_LOAD_OFFSET))
+			    XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
+					      XSCUTIMER_LOAD_OFFSET))
 
 /****************************************************************************/
 /**
@@ -186,7 +192,7 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_LoadTimer(InstancePtr, Value)				\
 	XScuTimer_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUTIMER_LOAD_OFFSET, (Value))
+			   XSCUTIMER_LOAD_OFFSET, (Value))
 
 /****************************************************************************/
 /**
@@ -204,7 +210,7 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_GetCounterValue(InstancePtr)				\
 	XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr,		\
-				XSCUTIMER_COUNTER_OFFSET)
+			  XSCUTIMER_COUNTER_OFFSET)
 
 /****************************************************************************/
 /**
@@ -221,10 +227,10 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_EnableAutoReload(InstancePtr)				\
 	XScuTimer_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUTIMER_CONTROL_OFFSET,			\
-			(XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
-				XSCUTIMER_CONTROL_OFFSET) |		 \
-				XSCUTIMER_CONTROL_AUTO_RELOAD_MASK))
+			   XSCUTIMER_CONTROL_OFFSET,			\
+			   (XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
+					      XSCUTIMER_CONTROL_OFFSET) |		 \
+			    XSCUTIMER_CONTROL_AUTO_RELOAD_MASK))
 
 /****************************************************************************/
 /**
@@ -241,10 +247,10 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_DisableAutoReload(InstancePtr)			\
 	XScuTimer_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUTIMER_CONTROL_OFFSET,			\
-			(XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
-				XSCUTIMER_CONTROL_OFFSET) &		\
-				~(XSCUTIMER_CONTROL_AUTO_RELOAD_MASK)))
+			   XSCUTIMER_CONTROL_OFFSET,			\
+			   (XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
+					      XSCUTIMER_CONTROL_OFFSET) &		\
+			    ~(XSCUTIMER_CONTROL_AUTO_RELOAD_MASK)))
 
 /****************************************************************************/
 /**
@@ -261,10 +267,10 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_EnableInterrupt(InstancePtr)				\
 	XScuTimer_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUTIMER_CONTROL_OFFSET,			\
-			(XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
-					XSCUTIMER_CONTROL_OFFSET) |	\
-					XSCUTIMER_CONTROL_IRQ_ENABLE_MASK))
+			   XSCUTIMER_CONTROL_OFFSET,			\
+			   (XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
+					      XSCUTIMER_CONTROL_OFFSET) |	\
+			    XSCUTIMER_CONTROL_IRQ_ENABLE_MASK))
 
 /****************************************************************************/
 /**
@@ -281,10 +287,10 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_DisableInterrupt(InstancePtr)				\
 	XScuTimer_WriteReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUTIMER_CONTROL_OFFSET,			\
-			(XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
-				XSCUTIMER_CONTROL_OFFSET) &		\
-				~(XSCUTIMER_CONTROL_IRQ_ENABLE_MASK)))
+			   XSCUTIMER_CONTROL_OFFSET,			\
+			   (XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr, \
+					      XSCUTIMER_CONTROL_OFFSET) &		\
+			    ~(XSCUTIMER_CONTROL_IRQ_ENABLE_MASK)))
 
 /*****************************************************************************/
 /**
@@ -301,7 +307,7 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_GetInterruptStatus(InstancePtr)			\
 	XScuTimer_ReadReg((InstancePtr)->Config.BaseAddr,		\
-			XSCUTIMER_ISR_OFFSET)
+			  XSCUTIMER_ISR_OFFSET)
 
 /*****************************************************************************/
 /**
@@ -318,14 +324,18 @@ typedef struct {
 ******************************************************************************/
 #define XScuTimer_ClearInterruptStatus(InstancePtr)			\
 	XScuTimer_WriteReg((InstancePtr)->Config.BaseAddr,		\
-		XSCUTIMER_ISR_OFFSET, XSCUTIMER_ISR_EVENT_FLAG_MASK)
+			   XSCUTIMER_ISR_OFFSET, XSCUTIMER_ISR_EVENT_FLAG_MASK)
 
 /************************** Function Prototypes ******************************/
 
 /*
  * Lookup configuration in xscutimer_sinit.c
  */
+#ifndef SDT
 XScuTimer_Config *XScuTimer_LookupConfig(u16 DeviceId);
+#else
+XScuTimer_Config *XScuTimer_LookupConfig(UINTPTR BaseAddr);
+#endif
 
 /*
  * Selftest function in xscutimer_selftest.c

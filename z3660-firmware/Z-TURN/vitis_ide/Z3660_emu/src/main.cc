@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <xil_cache.h>
+#include <xil_cache_l.h>
 #include <xil_mmu.h>
 #include <inttypes.h>
 #include "xgpiops.h"
@@ -129,15 +130,16 @@ enum piscsi_cmds {
     PISCSI_CMD_DRVNUMX      = 0x90,
     PISCSI_CMD_LOADFS       = 0x94,
     PISCSI_CMD_GET_FS_INFO  = 0x98,
-    PISCSI_DBG_MSG          = 0x1000,
-    PISCSI_DBG_VAL1         = 0x1010,
-    PISCSI_DBG_VAL2         = 0x1014,
-    PISCSI_DBG_VAL3         = 0x1018,
-    PISCSI_DBG_VAL4         = 0x101C,
-    PISCSI_DBG_VAL5         = 0x1020,
-    PISCSI_DBG_VAL6         = 0x1024,
-    PISCSI_DBG_VAL7         = 0x1028,
-    PISCSI_DBG_VAL8         = 0x102C,
+	PISCSI_CMD_USED_DMA     = 0x9C,
+    PISCSI_DBG_MSG          = 0x100,
+    PISCSI_DBG_VAL1         = 0x110,
+    PISCSI_DBG_VAL2         = 0x114,
+    PISCSI_DBG_VAL3         = 0x118,
+    PISCSI_DBG_VAL4         = 0x11C,
+    PISCSI_DBG_VAL5         = 0x120,
+    PISCSI_DBG_VAL6         = 0x124,
+    PISCSI_DBG_VAL7         = 0x128,
+    PISCSI_DBG_VAL8         = 0x12C,
     PISCSI_CMD_ROM          = 0x4000,
 };
 uint32_t addr2=0;
@@ -169,6 +171,31 @@ extern "C" uint32_t read_scsi_register(uint16_t zaddr,int type)
     shared->read_scsi=1;
 	dsb();
     shared->shared_data=1;
+    if(zaddr < PISCSI_DBG_MSG)
+    {
+    	switch(zaddr)
+    	{
+    		case PISCSI_CMD_BLOCKSIZE:
+    		case PISCSI_CMD_USED_DMA:
+    		case PISCSI_CMD_BLOCKS:
+    		case PISCSI_CMD_GETPART:
+    		case PISCSI_CMD_CYLS:
+    		case PISCSI_CMD_DRVTYPE:
+    		case PISCSI_CMD_GETPRIO:
+    		case PISCSI_CMD_FSSIZE:
+    		case PISCSI_CMD_HEADS:
+    		case PISCSI_CMD_SECS:
+    		case PISCSI_CMD_CHECKFS:
+    		case PISCSI_CMD_ADDR1:
+    			Xil_L1DCacheFlush();
+//    			Xil_DCacheFlush();
+    			break;
+    		case PISCSI_CMD_ADDR2:
+    			break;
+    		default:
+    			printf("HHH %02x\n",zaddr);
+    	}
+    }
     while(shared->read_scsi==1){NOP;}
     return(shared->read_scsi_data);
 }
@@ -254,10 +281,12 @@ void SWInterruptHandler(void *data)
 void UndefinedExceptionHandler(void *data)
 {
     z3660_printf("[Core1] Undefined Exception!!! (Unrecoverable Error)\n");
+    while(1);
 }
 void PrefetchAbortHandler(void* data)
 {
     z3660_printf("[Core1] Prefetch Abort!!! (Unrecoverable Error)\n");
+    while(1);
 }
 void DataAbortHandler(void *data)
 {
@@ -416,7 +445,7 @@ int main()
     for(int i=0x080;i<0x180;i++) // extended CPU RAM
         SetTlbAttributes(i*0x100000UL,NORM_WB_CACHE);
     for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, framebuffer is at 0x200000)
-        SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
+        SetTlbAttributes(i*0x100000UL,0x14DE2);//NORM_NONCACHE);
     for(int i=0x182;i<0x200;i++) // RTG RAM
         SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//0x14de2);//NORM_NONCACHE);
 //    for(int i=0x200;i<0x300;i++) // Z3 RAM
