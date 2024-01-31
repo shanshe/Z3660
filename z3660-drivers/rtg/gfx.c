@@ -391,8 +391,8 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 		KPrintF((CONST_STRPTR)"Z3660.card: FW Revision Major: %ld.\n", fwrev_major);
 		KPrintF((CONST_STRPTR)"Z3660.card: FW Revision Minor: %ld.\n", fwrev_minor);
 
-		if (fwrev_major <= 1 && fwrev_minor < 1) {
-			char *alert = "\x00\x14\x14 vX.XX: Z3660.card v1.01 needs at least firmware (BOOT.bin) v1.01.\x00\x00";
+		if (fwrev_major <= 1 && fwrev_minor < 2) {
+			char *alert = "\x00\x14\x14 vX.XX: Z3660.card v1.02 needs at least firmware (BOOT.bin) v1.02.\x00\x00";
 			alert[5]='0'+fwrev_major;
 			alert[7]='0'+(fwrev_minor/10);
 			alert[8]='0'+(fwrev_minor%10);
@@ -630,7 +630,7 @@ void SetGC(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __
 
 	colormode = rtg_to_mnt[b->RGBFormat];
 
-	if (mode_info->Height >= 480 || mode_info->Width >= 640) {
+	if (mode_info->Height >= 400 || mode_info->Width >= 640) {
 		scale = 0;
 
 		w = mode_info->Width;

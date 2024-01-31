@@ -50,8 +50,8 @@
 
 #define DEVICE_NAME "z3660ax.audio"
 #define DEVICE_DATE "(27 Sep 2023)"
-#define DEVICE_VERSION 1
-#define DEVICE_REVISION 01
+#define DEVICE_VERSION 4
+#define DEVICE_REVISION 19
 #define DEVICE_ID_STRING "Z3660AX " XSTR(DEVICE_VERSION) "." XSTR(DEVICE_REVISION) " " DEVICE_DATE
 #define DEVICE_PRIORITY 0
 
@@ -101,9 +101,9 @@ inline uint32_t read_reg(uint32_t base, uint16_t reg)
 
 inline void write_audio_param(uint32_t base, uint16_t param, uint32_t val)
 {
-  *((volatile uint32_t*)(base+REG_ZZ_AUDIO_PARAM)) = param;
-  *((volatile uint32_t*)(base+REG_ZZ_AUDIO_VAL))   = val;
-//  *((volatile uint16_t*)(base+REG_ZZ_AUDIO_PARAM)) = 0;
+  write_reg(base,REG_ZZ_AUDIO_PARAM, param);
+  write_reg(base,REG_ZZ_AUDIO_VAL, val);
+//  write_reg(base,REG_ZZ_AUDIO_PARAM, 0);
 }
 
 const char device_name[] = DEVICE_NAME;
@@ -142,7 +142,7 @@ static uint32_t __attribute__((used)) init(BPTR seg_list asm("a0"), struct Libra
     return 0;
 
   // TW: Zorro2/3 detection during early init phase.
-  // Find Z2 or Z3 model of Z3660... should be ZORRO 3 ID: 0x144B,0x1 (there is no ZORRO 2 version)
+  // Find Z3660... should be ZORRO 3 ID: 0x144B,0x1 (there is no ZORRO 2 version)
   if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1))) {
     // ZORRO 3
     Z9AXBase->zorro_version = 3;
@@ -298,12 +298,12 @@ void WorkerProcess() {
 
 // TW: C interrupt service routine called by ASM wrapper.
 void cdev_isr(struct z9ax* data asm("a1")) {
-  ULONG status = *(volatile ULONG*)(data->hw_addr+REG_ZZ_INT_STATUS);
+  ULONG status = read_reg(data->hw_addr,REG_ZZ_INT_STATUS);
 
   // audio interrupt signal set?
   if (status & 2) {
     // ack/clear audio interrupt
-    *(volatile ULONG*)(data->hw_addr+REG_ZZ_CONFIG) = 8|32;
+    write_reg(data->hw_addr,REG_ZZ_CONFIG, 8|32);
 
     if(data->disable_cnt) return;
     if(data->worker_process && !data->disable_cnt) {

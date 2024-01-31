@@ -238,7 +238,7 @@ static uint32_t __attribute__((used)) abort_io(struct Library *dev asm("a6"), st
 
     return IOERR_ABORTED;
 }
-
+//static unsigned char last_unit_num=-1;
 uint8_t piscsi_rw(struct piscsi_unit *u, struct IORequest *io) {
     struct IOStdReq *iostd = (struct IOStdReq *)io;
     struct IOExtTD *iotd = (struct IOExtTD *)io;
@@ -252,8 +252,12 @@ uint8_t piscsi_rw(struct piscsi_unit *u, struct IORequest *io) {
     data = iotd->iotd_Req.io_Data;
     len = iotd->iotd_Req.io_Length;
 
+//    if(last_unit_num!=u->unit_num)
+//    {
     WRITELONG(PISCSI_CMD_DRVNUMX, u->unit_num);
     READLONG(PISCSI_CMD_BLOCKSIZE, block_size);
+//        last_unit_num=u->unit_num;
+//    }
 
     if (data == 0) {
         return IOERR_BADADDRESS;
@@ -390,6 +394,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
                         break;
                     case 1: // RMB = 1
                         val = (1 << 7);
+//                        val = 0;
                         break;
                     case 2: // VERSION = 0
                         val = 0;
@@ -409,7 +414,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
                 }
                 data[i] = val;
             }
-            scsi->scsi_Actual = i;
+            scsi->scsi_Actual = scsi->scsi_Length;
             err = 0;
             break;
         
@@ -442,7 +447,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
 scsireadwrite:;
             WRITELONG(PISCSI_CMD_DRVNUM, (u->scsi_num));
             READLONG(PISCSI_CMD_BLOCKS, maxblocks);
-            if (block + blocks > maxblocks || blocks == 0) {
+            if (block > maxblocks || (block + blocks) > maxblocks) {
                 err = IOERR_BADADDRESS;
                 break;
             }
@@ -450,9 +455,13 @@ scsireadwrite:;
                 err = IOERR_BADADDRESS;
                 break;
             }
+            uint32_t len=blocks << 9;
+            if (scsi->scsi_Length < len) {
+                err = IOERR_BADLENGTH;
+                break;
+            }
 
             if (write == 0) {
-                uint32_t len=blocks << 9;
                 WRITELONG(PISCSI_CMD_ADDR1, block);
                 WRITELONG(PISCSI_CMD_ADDR2, len);
                 WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
@@ -463,7 +472,6 @@ scsireadwrite:;
                     memcpy((uint8_t *)data,(uint8_t *)(ZZ9K_REGS + 0x80000), len);
             }
             else {
-                uint32_t len=blocks << 9;
                 if((ULONG)data<0x08000000)
                     memcpy((uint8_t *)(ZZ9K_REGS + 0x80000), data, len);
                 WRITELONG(PISCSI_CMD_ADDR1, block);
@@ -481,7 +489,12 @@ scsireadwrite:;
                 err = HFERR_BadStatus;
                 break;
             }
-
+/*            if (scsi->scsi_Command[2] != 0 || scsi->scsi_Command[3] != 0 || scsi->scsi_Command[4] != 0 || scsi->scsi_Command[5] != 0 || (scsi->scsi_Command[8] & 1))
+            {
+                err = HFERR_BadStatus;
+                break;
+            }
+*/
             if (scsi->scsi_Length < 8) {
                 err = IOERR_BADLENGTH;
                 break;
@@ -508,7 +521,11 @@ scsireadwrite:;
             WRITELONG(PISCSI_CMD_DRVNUM, (u->scsi_num));
             READLONG(PISCSI_CMD_BLOCKS, maxblocks);
             (blocks = (maxblocks - 1) & 0xFFFFFF);
-
+/*            if (maxblocks > (1 << 24))
+                blocks = 0xffffff;
+            else
+                blocks = maxblocks;
+*/
             *((uint32_t *)&data[4]) = blocks;
             *((uint32_t *)&data[8]) = block_size;
 
@@ -520,14 +537,17 @@ scsireadwrite:;
                     datext[1] = 0x16; // page length
                     datext[2] = 0x00;
                     datext[3] = 0x01; // tracks per zone (heads)
+//                    *((uint16_t *)&datext[2]) = u->h;// tracks per zone (heads)
                     *((uint32_t *)&datext[4]) = 0;
                     *((uint32_t *)&datext[8]) = 0;
                     *((uint16_t *)&datext[10]) = u->s; // sectors per track
                     *((uint16_t *)&datext[12]) = block_size; // data bytes per physical sector
                     datext[14] = 0x00;
                     datext[15] = 0x01;
+//                    datext[15] = 0x00;
                     *((uint32_t *)&datext[16]) = 0;
                     datext[20] = 0x80;
+//                    datext[20] = (1 << 6) | (1 << 5);
 
                     scsi->scsi_Actual = data[0] + 1;
                     err = 0;
