@@ -25,6 +25,8 @@
 
 #define CLOCK_HZ 100000000
 
+#define MonitorSwitchType   CardData[13]
+
 #include "rtg.h"
 
 /* library functions -------------------- */
@@ -37,14 +39,14 @@ struct MNTGFXBase {
 };
 
 int FindCard(__REGA0(struct BoardInfo *b));
-int InitCard(__REGA0(struct BoardInfo *b));
+int InitCard(__REGA0(struct BoardInfo* b), __REGA1(char **ToolTypes), __REGA6(struct CardBase *cb));
 
 /* rtg functions ------------------------ */
 
 void nop();
 
-int FindCard(__REGA0(struct BoardInfo* b));
-int InitCard(__REGA0(struct BoardInfo* b));
+/*int FindCard(__REGA0(struct BoardInfo* b));
+int InitCard(__REGA0(struct BoardInfo* b));*/
 
 void SetDAC (__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format));
 void SetGC (__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __REGD0(BOOL border));
