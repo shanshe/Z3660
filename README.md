@@ -38,4 +38,4 @@ It has the same band-pass filters as the AX module, but made in software by one 
 <br>You can even switch between the real 060 CPU and the emulation by clicking on an app (and rebooting).
 <br>
 <br><b>Discord channel link:</b>
-<br><br>https://discord.gg/EQUTeMb8
+<br><br>https://discord.gg/BCbx3MAe
