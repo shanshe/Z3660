@@ -1,15 +1,15 @@
-# Z3660 config file
+### Z3660 config file
 
-#General Configuration
-
-# Select the default boot mode: "CPU" for 060 CPU, "MUSASHI" "UAE" or "UAEJIT" for emulator
+# Select the default boot mode: "CPU" for 060 CPU, "MUSASHI" / "UAE" / "UAEJIT" for emulator
 # This selection can be overriden by env/bootmode file on SD root
 bootmode UAEJIT
 #bootmode MUSASHI
 #bootmode UAE
 #bootmode UAEJIT
 
-# Emulation Configuration
+# Select 060 CPU frequency in MHz
+# This value can be overriden by env/cpufreq file on SD root
+cpufreq 50
 
 # Select your kickstart file to map it on ARM's internal RAM, or comment lines to use installed Kickstart on your Amiga
 #kickstart kicks/DiagROM.rom
@@ -19,8 +19,9 @@ kickstart kicks/A4kOS322.rom
 
 # Load scsi ROM on boot (boot from SCSI hdf files on SD)
 # (YES or NO, in capitals)
+# This selection can be overriden by env/scsiboot file on SD root
 #scsiboot YES
-#scsiboot NO
+scsiboot NO
 
 # Select your hdf files (from scsi0 to scsi6)\n");
 #scsi0 hdf/A4000.hdf
@@ -28,8 +29,9 @@ kickstart kicks/A4kOS322.rom
 #scsi2 hdf/Programs.hdf
 #scsi3 hdf/cputester_rdb.hdf
 
-# Autoconfig RAM Enable (256 MB Zorro III RAM
-# (YES or NO, in capitals
+# Autoconfig RAM Enable (256 MB Zorro III RAM)
+# (YES or NO, in capitals)
+# This selection can be overriden by env/autoconfig_ram file on SD root
 #autoconfig_ram NO
 autoconfig_ram YES
 
