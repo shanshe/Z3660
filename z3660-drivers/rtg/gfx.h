@@ -25,7 +25,7 @@
 
 #define CLOCK_HZ 100000000
 
-#define MonitorSwitchType   CardData[13]
+#define MonitorSwitchType   CardData[16]
 
 #include "rtg.h"
 
