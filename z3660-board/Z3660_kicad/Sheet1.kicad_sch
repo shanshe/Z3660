@@ -6,9 +6,10 @@
 
   (title_block
     (title "Z3660 by sHaNsHe (Double H Tech)")
-    (date "2023-08-06")
-    (rev "v0.21a")
+    (date "2024-02-09")
+    (rev "v0.21b")
     (comment 1 "v0.21a Changed Array Networks")
+    (comment 2 "v0.21b Changed the 060 socket")
   )
 
   (lib_symbols
@@ -6367,7 +6368,7 @@
     (pin "1" (uuid 281af95a-9c1f-4062-a760-1a90042a8772))
     (pin "2" (uuid b2a07961-6920-4ad7-bdfc-63a5300b93c8))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C16") (unit 1)
         )
@@ -6393,7 +6394,7 @@
     (pin "1" (uuid a19d6755-e466-477d-8223-6d92901916c1))
     (pin "2" (uuid 0a9b9ccc-5008-49a9-88e9-79b5ab109a0e))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C17") (unit 1)
         )
@@ -6418,7 +6419,7 @@
     )
     (pin "1" (uuid 496d0b83-529a-451c-b911-88a12891f913))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR019") (unit 1)
         )
@@ -6444,7 +6445,7 @@
     (pin "1" (uuid 4d41a658-e531-4dc2-a4e7-92055534928a))
     (pin "2" (uuid ffe6a6cf-a44e-4a96-904d-c6416261fb2e))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C15") (unit 1)
         )
@@ -6470,7 +6471,7 @@
     (pin "1" (uuid eceec907-e494-49e6-b51d-8be5df9251a2))
     (pin "2" (uuid 0e45aa0a-52e3-457b-8114-f0a0c490f352))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C18") (unit 1)
         )
@@ -6496,7 +6497,7 @@
     (pin "1" (uuid 062fb426-2e17-4145-a762-1f8c033a15ac))
     (pin "2" (uuid 7934d28a-e879-47f7-818a-6f29def725e0))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C19") (unit 1)
         )
@@ -6522,7 +6523,7 @@
     (pin "1" (uuid e93be426-24b5-49b1-ba2c-1bcd7fd59a7b))
     (pin "2" (uuid 3feffedd-8f1b-4038-87f6-f108b7a9e25e))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C20") (unit 1)
         )
@@ -6548,7 +6549,7 @@
     (pin "1" (uuid b4f266b5-2382-4189-8998-9c343633f28d))
     (pin "2" (uuid d5f55242-cee6-4aa8-833b-6416d3cf88fd))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C21") (unit 1)
         )
@@ -6574,7 +6575,7 @@
     (pin "1" (uuid d371452f-e596-4bd1-8a41-00bfc1d912eb))
     (pin "2" (uuid 5d984356-7c9e-4e8d-bfff-e46873421519))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C22") (unit 1)
         )
@@ -6600,7 +6601,7 @@
     (pin "1" (uuid 93a90d8f-1341-4d2a-9f21-3c2082f348af))
     (pin "2" (uuid 8bf78793-491b-4f7a-940a-9b22b1800dc5))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C23") (unit 1)
         )
@@ -6625,7 +6626,7 @@
     )
     (pin "1" (uuid 73b046d9-2f89-429e-8631-3e2969504967))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR016") (unit 1)
         )
@@ -6651,7 +6652,7 @@
     (pin "1" (uuid 50e63e79-95ea-45d3-9948-295a8700a8cd))
     (pin "2" (uuid 85845731-b21c-4087-996c-3bb49fb0e4eb))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP2") (unit 1)
         )
@@ -6675,7 +6676,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H1") (unit 1)
         )
@@ -6699,7 +6700,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H4") (unit 1)
         )
@@ -6723,7 +6724,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H2") (unit 1)
         )
@@ -6747,7 +6748,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H5") (unit 1)
         )
@@ -6771,7 +6772,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H3") (unit 1)
         )
@@ -6795,7 +6796,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H6") (unit 1)
         )
@@ -6821,7 +6822,7 @@
     (pin "1" (uuid 0300b8f8-5b6c-468a-99b5-c7d4891470e0))
     (pin "2" (uuid d8eb3349-0983-4e22-b0ed-5a4df4f20902))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R8") (unit 1)
         )
@@ -6847,7 +6848,7 @@
     (pin "1" (uuid 341dfc37-1fdd-45aa-a2ac-1e3a916ed88a))
     (pin "2" (uuid 4c40a365-5c85-499a-97b8-71715aa5730a))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R7") (unit 1)
         )
@@ -6873,7 +6874,7 @@
     (pin "1" (uuid 73f4b2be-ca84-4368-82ae-77a9b122991f))
     (pin "2" (uuid 3f803ed9-7414-4f12-9f3b-f85a9891973c))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R6") (unit 1)
         )
@@ -6898,7 +6899,7 @@
     )
     (pin "1" (uuid 9c9aa7fa-4bba-4877-abcc-3f5e0b806b54))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR018") (unit 1)
         )
@@ -6924,7 +6925,7 @@
     (pin "1" (uuid 8fb0b698-1fd2-4a49-a2eb-b78063f81872))
     (pin "2" (uuid a1061b1f-1a94-407c-a79a-21cdcad04679))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R5") (unit 1)
         )
@@ -6949,7 +6950,7 @@
     )
     (pin "1" (uuid 9650970d-a3e7-4fb4-be45-1c86afcbe12b))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR023") (unit 1)
         )
@@ -6975,7 +6976,7 @@
     (pin "1" (uuid ccd5a4d4-dec9-40da-82b0-c806603703a7))
     (pin "2" (uuid 04ae15ba-d585-4798-8563-9a8c11501ff5))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C25") (unit 1)
         )
@@ -7000,7 +7001,7 @@
     )
     (pin "1" (uuid 682be038-f138-4f16-be1b-84401ade96ff))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR026") (unit 1)
         )
@@ -7025,7 +7026,7 @@
     )
     (pin "1" (uuid 0263fd7b-6cf2-4d2f-81c7-cf3ee0f6f802))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR029") (unit 1)
         )
@@ -7063,7 +7064,7 @@
     (pin "14" (uuid 90b27258-7fae-4625-ab6d-d5639674332e))
     (pin "7" (uuid 3a7e470f-3901-4eef-8519-c8cd966891e9))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 3)
         )
@@ -7101,7 +7102,7 @@
     (pin "14" (uuid ad407585-25c9-4089-a795-a2fe654205d3))
     (pin "7" (uuid 9f5d0606-7560-4f4c-b2d2-0ba7fde71f70))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 7)
         )
@@ -7127,7 +7128,7 @@
     (pin "1" (uuid e9d55a68-3d99-4d56-bf2c-ae5eab7d5c47))
     (pin "2" (uuid 077bcfae-17f0-417c-a38c-b7ddc5524b15))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C24") (unit 1)
         )
@@ -7152,7 +7153,7 @@
     )
     (pin "1" (uuid 1b58e067-cb68-4fd4-ae97-7c69e4e4660a))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR021") (unit 1)
         )
@@ -7177,7 +7178,7 @@
     )
     (pin "1" (uuid a66c67fd-1564-4f7f-88b0-ee33bf3dd5dd))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR022") (unit 1)
         )
@@ -7203,7 +7204,7 @@
     (pin "1" (uuid 3e506dde-3365-4d34-8f3c-efd0c4ef3d54))
     (pin "2" (uuid 89c218e3-4d13-40d0-8bff-436611f45b98))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R12") (unit 1)
         )
@@ -7228,7 +7229,7 @@
     )
     (pin "1" (uuid de9c1f41-4b89-46a7-86d3-eeaa5d09c91f))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR030") (unit 1)
         )
@@ -7252,7 +7253,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H7") (unit 1)
         )
@@ -7290,7 +7291,7 @@
     (pin "14" (uuid b141b017-5b6e-4d56-860b-b0dbf9f796bc))
     (pin "7" (uuid f910a6c5-1f43-4e1c-8022-a82a1b17af49))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 1)
         )
@@ -7328,7 +7329,7 @@
     (pin "14" (uuid 54c44201-c404-4df0-b726-be9e5af35a80))
     (pin "7" (uuid 6209ca22-88fc-4329-83f6-5e864166d17d))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 2)
         )
@@ -7366,7 +7367,7 @@
     (pin "14" (uuid 334a7f50-0f43-4652-9205-47c8aad653da))
     (pin "7" (uuid 01a4dee4-11dc-4ed6-bd0f-12952b21c618))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 4)
         )
@@ -7404,7 +7405,7 @@
     (pin "14" (uuid f1ab7644-44a5-45e6-ae34-89900daba471))
     (pin "7" (uuid 5646194b-0f2a-49f3-b08e-c2a39a8652db))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 5)
         )
@@ -7442,7 +7443,7 @@
     (pin "14" (uuid 976efafd-a7cf-4c81-9a5d-86b918caac99))
     (pin "7" (uuid 240e8145-ba6c-4f0d-afc4-8ceff95395d6))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U5") (unit 6)
         )
@@ -7470,7 +7471,7 @@
     (pin "3" (uuid aefa89f2-4e33-4167-8ae0-0242645996fe))
     (pin "4" (uuid 58802be5-c6ae-4c4f-85e6-728b88076996))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "X1") (unit 1)
         )
@@ -7495,7 +7496,7 @@
     )
     (pin "1" (uuid 4170f56b-6851-4823-9a34-72982b9f72d8))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR025") (unit 1)
         )
@@ -7521,7 +7522,7 @@
     (pin "1" (uuid 9b54147d-7c20-4900-b328-769683f0f0b7))
     (pin "2" (uuid e84b7dce-446f-4ce6-aa7a-32ee10127045))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "FB1") (unit 1)
         )
@@ -7546,7 +7547,7 @@
     )
     (pin "1" (uuid 5e9d1b1b-9f4e-47ae-9fef-f62a59941c42))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR033") (unit 1)
         )
@@ -7571,7 +7572,7 @@
     )
     (pin "1" (uuid 60b0f879-22df-4c12-8d7b-9d62c0650af0))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR028") (unit 1)
         )
@@ -7597,7 +7598,7 @@
     (pin "1" (uuid 25a00f1e-88dc-42b0-907f-4f8a9e561b87))
     (pin "2" (uuid 1843108c-016f-4de3-8283-2f185e09276b))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C11") (unit 1)
         )
@@ -7623,7 +7624,7 @@
     (pin "1" (uuid 68299487-470d-4ccf-97ce-f39708a207bc))
     (pin "2" (uuid 6ab79fcf-1227-4ff9-a271-a9cc969603d0))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C12") (unit 1)
         )
@@ -7649,7 +7650,7 @@
     (pin "1" (uuid 213a2f75-ba32-493e-90a9-eb96c76d620c))
     (pin "2" (uuid db433b7e-1a58-40ee-81f7-9c46e3f8dd01))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C61") (unit 1)
         )
@@ -7674,7 +7675,7 @@
     )
     (pin "1" (uuid 4a323359-cd67-4fca-b5cb-91a30cc564f5))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR017") (unit 1)
         )
@@ -7700,7 +7701,7 @@
     (pin "1" (uuid b1f29380-86a1-4ddb-9f4e-4b5948738334))
     (pin "2" (uuid 42c21dd6-41ec-4261-b88e-0c2441361b0d))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C13") (unit 1)
         )
@@ -7726,7 +7727,7 @@
     (pin "1" (uuid 7f89a16e-1031-4ff2-859e-9ec390f18ad4))
     (pin "2" (uuid f3ff9329-4e4e-4c0c-ad39-e7a855913f25))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C62") (unit 1)
         )
@@ -7752,7 +7753,7 @@
     (pin "1" (uuid de844bfa-d12a-4bde-a6d4-4e0ea5119a44))
     (pin "2" (uuid a1eb3cf9-2967-4fa3-8651-3c148e69dcb7))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C14") (unit 1)
         )
@@ -7778,7 +7779,7 @@
     (pin "1" (uuid a786f0f1-0c8a-4a65-b23d-6182e5cfbcb5))
     (pin "2" (uuid d3e18f68-f284-4a79-8200-2883a92c2e5a))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C26") (unit 1)
         )
@@ -7804,7 +7805,7 @@
     (pin "1" (uuid 26a284f1-4c34-48c6-af74-6a7921547860))
     (pin "2" (uuid 4048b8c2-e4c5-47d1-b98e-8d1e7968cacf))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C27") (unit 1)
         )
@@ -7830,7 +7831,7 @@
     (pin "1" (uuid cfe589e0-7a65-44ca-ab38-5c0978094d0a))
     (pin "2" (uuid 85f09218-940b-4bcc-a088-2c7ca9925490))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "C28") (unit 1)
         )
@@ -7855,7 +7856,7 @@
     )
     (pin "1" (uuid 8cbb9563-9adc-44d2-96c7-c14d2b0a4ccd))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR015") (unit 1)
         )
@@ -7880,7 +7881,7 @@
     )
     (pin "1" (uuid 6e27d124-e83a-4285-b780-2addcc16ecc4))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR031") (unit 1)
         )
@@ -7905,7 +7906,7 @@
     )
     (pin "1" (uuid c039bdd0-259e-4098-a7aa-6c7b135e1783))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR032") (unit 1)
         )
@@ -7931,7 +7932,7 @@
     (pin "1" (uuid ec9fde3e-96ff-4859-b7d4-bf84497ccf4e))
     (pin "2" (uuid 4949aa27-19ae-4970-9276-dc1239c86da4))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R9") (unit 1)
         )
@@ -7957,7 +7958,7 @@
     (pin "1" (uuid d2252915-c585-468d-9185-d2d40c50fe22))
     (pin "2" (uuid fbf3bec8-a6b6-4bfe-8b71-645b203122e0))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R10") (unit 1)
         )
@@ -7983,7 +7984,7 @@
     (pin "1" (uuid 1f96237e-964d-487f-bce9-5b0880e39096))
     (pin "2" (uuid 6181483b-a0a5-41d9-8127-095105b79e6d))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R11") (unit 1)
         )
@@ -8008,7 +8009,7 @@
     )
     (pin "1" (uuid 1cb3abab-f084-4c3c-a42d-5a0445cfb3fc))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR027") (unit 1)
         )
@@ -8244,7 +8245,7 @@
     (pin "98" (uuid 23f3d242-5248-485b-a0ea-5a1a8a6ecb25))
     (pin "99" (uuid 5300e8f0-2f5f-4337-8def-fbe93851603a))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "U4") (unit 1)
         )
@@ -8269,7 +8270,7 @@
     )
     (pin "1" (uuid ec3f3b83-6f6a-45ca-9040-8d1fd377236b))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR020") (unit 1)
         )
@@ -8295,7 +8296,7 @@
     (pin "1" (uuid bfeb4acf-4d7a-43f3-854a-45231573dff0))
     (pin "2" (uuid 349c5b80-fece-40b7-8988-f1c7b3dc3437))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP1") (unit 1)
         )
@@ -8320,7 +8321,7 @@
     )
     (pin "1" (uuid 465e339a-006d-4513-8607-dbe19d2ae1a1))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR024") (unit 1)
         )
@@ -8352,7 +8353,7 @@
     (pin "7" (uuid 336dcd73-ddfe-4bdf-8df1-98bf8d7eebdd))
     (pin "8" (uuid 1814be32-cb31-44e4-ab54-40e423a3bc68))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN9") (unit 1)
         )
@@ -8379,7 +8380,7 @@
     (pin "2" (uuid 5b0e417d-aa70-4be7-9d6c-86dcf6772c6a))
     (pin "3" (uuid ba0eee5d-2f62-4252-bc1f-376679388040))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP11") (unit 1)
         )
@@ -8406,7 +8407,7 @@
     (pin "2" (uuid 91de5f4d-8f36-4442-bf57-8ad32c9067d5))
     (pin "3" (uuid e13c4d87-3224-4a9f-b182-0e0e1e5a983c))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP8") (unit 1)
         )
@@ -8438,7 +8439,7 @@
     (pin "7" (uuid e039e083-b614-4fac-8781-9c6b293f6311))
     (pin "8" (uuid d7519089-a2dd-418f-bda3-2eab6d53145b))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN10") (unit 1)
         )
@@ -8470,7 +8471,7 @@
     (pin "7" (uuid a46ad12c-b4fb-4de9-ac48-9b2fca4bf569))
     (pin "8" (uuid 850d4fbd-8b3c-4d8c-bb2a-f4c88a530d86))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN4") (unit 1)
         )
@@ -8502,7 +8503,7 @@
     (pin "7" (uuid ee72033a-5e2c-4f29-9a52-c8039acb62ac))
     (pin "8" (uuid 4fb51a7b-cb29-44cc-b2e1-fc7551ed8538))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN8") (unit 1)
         )
@@ -8534,7 +8535,7 @@
     (pin "7" (uuid d2d49675-4ad6-4731-adb7-9afd9d92c0dd))
     (pin "8" (uuid 0992b36d-70ad-43a4-a353-a26158286b9d))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN5") (unit 1)
         )
@@ -8558,7 +8559,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "H8") (unit 1)
         )
@@ -8590,7 +8591,7 @@
     (pin "7" (uuid ae53b0ee-5be0-4556-a016-f0ce54900dd4))
     (pin "8" (uuid 4e296519-e980-45fe-8e70-c75c1cf490cf))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN2") (unit 1)
         )
@@ -8615,7 +8616,7 @@
     )
     (pin "1" (uuid a0b1093f-2859-421d-bc1d-d8c24eaf9ad0))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR079") (unit 1)
         )
@@ -8641,7 +8642,7 @@
     (pin "1" (uuid 85b80061-ad23-495a-b311-d535e31da02e))
     (pin "2" (uuid 9a2c341f-5ee5-4de4-821e-53203c25dde8))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R19") (unit 1)
         )
@@ -8673,7 +8674,7 @@
     (pin "7" (uuid 31893e58-2170-4530-8a46-e480576d6fb2))
     (pin "8" (uuid 08cc6c2e-f19f-487a-889f-233798003c15))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN3") (unit 1)
         )
@@ -8705,7 +8706,7 @@
     (pin "7" (uuid 3dad02a6-d986-419c-ac17-495b14384123))
     (pin "8" (uuid 6b2ffc38-422b-4f79-be46-467cb120f819))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN6") (unit 1)
         )
@@ -8737,7 +8738,7 @@
     (pin "7" (uuid a377dd52-c77d-47a0-b6d8-3cfff37eb105))
     (pin "8" (uuid 405adf8f-b8fc-41dc-b943-71fe163383da))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN1") (unit 1)
         )
@@ -8763,7 +8764,7 @@
     (pin "1" (uuid 1d4e41f2-5626-4f65-9fba-6111ce8fca17))
     (pin "2" (uuid cf0a1515-129e-46f7-ae99-ff1fe633193f))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP3") (unit 1)
         )
@@ -8788,7 +8789,7 @@
     )
     (pin "1" (uuid f2819209-b432-47e9-a418-5fe0a250fc51))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR094") (unit 1)
         )
@@ -8820,7 +8821,7 @@
     (pin "7" (uuid b401cfb6-4a14-4b20-8d25-717f42ba57a0))
     (pin "8" (uuid 047ac2b3-c413-4d23-99ae-5db958cda8fe))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "RN7") (unit 1)
         )
@@ -8847,7 +8848,7 @@
     (pin "2" (uuid 498ba7a8-bb57-4010-8468-24753dbacbfe))
     (pin "3" (uuid 1126c680-d62a-4933-837c-de044a4113cc))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP7") (unit 1)
         )
@@ -8872,7 +8873,7 @@
     )
     (pin "1" (uuid 28020e8e-438e-4f8d-b2a3-8a9b5ac7b3f8))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "#PWR095") (unit 1)
         )
@@ -8898,7 +8899,7 @@
     (pin "1" (uuid 6bfe2652-b759-4082-82eb-9952d6d3e682))
     (pin "2" (uuid b03c945f-ead9-4999-b956-7cfb7673e495))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "R20") (unit 1)
         )
@@ -8925,7 +8926,7 @@
     (pin "2" (uuid 330c1068-2a52-442f-a722-7c60d43d17e8))
     (pin "3" (uuid d3141a9e-355b-4c0f-93a3-9a49d5834423))
     (instances
-      (project "Z3660_v021a"
+      (project "Z3660_v021b"
         (path "/72366acb-6c86-4134-89df-01ed6e4dc8e0/00000000-0000-0000-0000-000061513069"
           (reference "JP6") (unit 1)
         )

@@ -17,3 +17,7 @@ v0.21a
  * 01/07/2024: Updated electrolytic capacitor footprints to bigger ones.
  * 01/08/2024: Updated led values to differentiate green and red.
  * 01/08/2024: Uploaded BOM and CPL files for JLCPCB (thanks to @kavanoz64).
+ 
+ v0.21b
+ * 02/09/2024: Updated 060 footprint to 18x18 array pins (full 4 rows and columns).
+ 
