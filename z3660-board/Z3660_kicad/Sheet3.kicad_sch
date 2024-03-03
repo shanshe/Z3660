@@ -6,8 +6,8 @@
 
   (title_block
     (title "Z3660 by sHaNsHe (Double H Tech)")
-    (date "2024-02-09")
-    (rev "v0.21b")
+    (date "2024-03-03")
+    (rev "v0.21d")
     (comment 1 "v0.21a Changed Array Networks")
     (comment 2 "v0.21b Changed the 060 socket")
   )

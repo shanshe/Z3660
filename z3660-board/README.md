@@ -21,3 +21,8 @@ v0.21a
  v0.21b
  * 02/09/2024: Updated 060 footprint to 18x18 array pins (full 4 rows and columns).
  
+ v0.21c
+ * A wrongly named version when uploading files to v0.21a. So, this version number skipped.
+ 
+ v.021d
+ * Changed the footprints for two fan to 3 pin and right angle.
