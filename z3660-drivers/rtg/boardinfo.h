@@ -532,7 +532,7 @@ struct BoardInfo{
         UBYTE                                              *MouseSaveBuffer;
 
         ULONG                                               ChipData[16];                           /* for chip driver needs */
-        ULONG                                               CardData[16];                           /* for card driver needs */
+        ULONG                                               CardData[17];                           /* for card driver needs */
 
         APTR                                                MemorySpaceBase;                        /* the base address of the board memory address space */
         ULONG                                               MemorySpaceSize;                        /* size of that area */
