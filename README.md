@@ -39,3 +39,6 @@ It has the same band-pass filters as the AX module, but made in software by one 
 <br>
 <br><b>Discord channel link:</b>
 <br><br>https://discord.gg/ua4u6SzyHf
+<br>
+<br><b>Documents to read before using your Z3660</b><br>
+<br> You should read the "KNOWN_ISSUES.md" and "CHANGES.md" files to know the latest news.

@@ -25,4 +25,4 @@ v0.21a
  * A wrongly named version when uploading files to v0.21a. So, this version number skipped.
  
  v.021d
- * Changed the footprints for two fan to 3 pin and right angle.
+ * Changed the footprints for two fans to 3 pin and right angle.
