@@ -33,7 +33,7 @@ DEVICEDATE=31.07.2019
 #
 ###############################################################################
 
-DEVICEID=ZZ9000Net.device
+DEVICEID=Z3660Net.device
 DEFINES = #
 ASMDEFS = #
 CPU = 68060
