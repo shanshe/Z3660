@@ -42,11 +42,8 @@
                     ((struct List *)l)->lh_Tail = 0, \
 	            ((struct List *)l)->lh_Head = (struct Node *)&(((struct List *)l)->lh_Tail))
 
-
 #define min(_a_,_b_) ( (_a_) > (_b_) ) ? _b_ : _a_
 #define max(_a_,_b_) ( (_a_) < (_b_) ) ? _b_ : _a_
 #define BOUNDS(_val_,_min_,_max_) ( (_val_) < (_min_) ) ? _min_ : ( (_val_) > (_max_) ) ? _max_ : _val_
 
-
-#endif /* _INC_MACROS_H */
-
+#endif				/* _INC_MACROS_H */

@@ -21,7 +21,7 @@
 #include "compiler.h"
 #include "device.h"
 
-ASM LONG LibNull( void )
+ASM LONG LibNull(void)
 {
 	return 0;
 }
@@ -32,13 +32,13 @@ extern const APTR DeviceInitTab[];
 
 static const struct Resident _00RomTag = {
 	RTC_MATCHWORD,
-	( struct Resident* ) &_00RomTag,
-	( struct Resident* ) &_00RomTag + 1,
+	(struct Resident *)&_00RomTag,
+	(struct Resident *)&_00RomTag + 1,
 	RTF_AUTOINIT,
 	DEVICEVERSION,
 	NT_DEVICE,
 	0,
-	(char*)DeviceName,
-	(char*)DeviceVersionString+6,
-	(APTR)DeviceInitTab
+	(char *)DeviceName,
+	(char *)DeviceVersionString + 6,
+	(APTR) DeviceInitTab
 };
