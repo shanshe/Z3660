@@ -16,7 +16,7 @@
 #  see Common.mk
 #
 ###############################################################################
-VBCC=/opt/vbcc
+VBCC=/opt/amiga/m68k-amigaos/vbcc
 #VBCC=/usr/local/opt/vbcc
 
 ###############################################################################
@@ -37,14 +37,14 @@ DEFINES = #
 ASMDEFS = #
 CPU = 68060
 
-DEVICEID2= #test.device_68000
-DEFINES2 = # -DPROTO_V2EXPNET
-ASMDEFS2 = # -DPROTO_V2EXPNET
-CPU2 = #68000
+DEVICEID2= #Z3660Net.device_68000
+DEFINES2 = #
+ASMDEFS2 = #
+CPU2 = # 68000
 
 ###############################################################################
 # import generic ruleset
-# 
+#
 ###############################################################################
 include Common.mk
 

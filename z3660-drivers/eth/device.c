@@ -71,12 +71,12 @@ static ULONG ZZ9K_REGS = 0;
 struct Sana2DeviceStats global_stats;
 BOOL is_online;
 
-__saveds void frame_proc();
+SAVEDS void frame_proc();
 char *frame_proc_name = "Z3660NetFramer";
 
 // Z3660 Interrupt Handler (INT6)
-__saveds void dev_isr(__reg("a1")
-		      struct devbase *db)
+SAVEDS void dev_isr(ASMR(a1)
+		      struct devbase *db ASMREG(a1))
 {
 	ULONG status = *(volatile ULONG *)(ZZ9K_REGS + REG_ZZ_INT_STATUS);
 
@@ -131,7 +131,7 @@ struct ProcInit {
 	UBYTE pad[2];
 };
 
-__saveds struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
+SAVEDS struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
 				ASMR(a0) BPTR seglist ASMREG(a0), ASMR(a6)
 				struct Library *_SysBase ASMREG(a6))
 {
@@ -154,7 +154,7 @@ __saveds struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
 			ok = 0;
 
 			struct ConfigDev *cd = NULL;
-			USHORT fwrev = 0;
+			//USHORT fwrev = 0;
 
 			if ((ExpansionBase =
 			     OpenLibrary("expansion.library", 0))) {
@@ -232,7 +232,7 @@ __saveds struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
 	return (ok > 0) ? (struct Device *)db : (0);
 }
 
-__saveds LONG DevOpen(ASMR(a1)
+SAVEDS LONG DevOpen(ASMR(a1)
 		      struct IOSana2Req *ioreq ASMREG(a1),
 		      ASMR(d0) ULONG unit ASMREG(d0),
 		      ASMR(d1) ULONG flags ASMREG(d1),
@@ -268,7 +268,7 @@ __saveds LONG DevOpen(ASMR(a1)
 			if ((port = CreateMsgPort())) {
 				D(("Z3660Net: Starting Process\n"));
 				if ((db->db_Proc =
-				     CreateNewProcTags(NP_Entry, frame_proc, NP_Name, frame_proc_name, NP_Priority, 0, TAG_DONE))) {
+				     CreateNewProcTags(NP_Entry, (intptr_t)frame_proc, NP_Name, (intptr_t)frame_proc_name, NP_Priority, 0, TAG_DONE))) {
 					InitSemaphore(&db->db_ProcExitSem);
 
 					init.error = 1;
@@ -353,7 +353,7 @@ __saveds LONG DevOpen(ASMR(a1)
 	return ret;
 }
 
-__saveds BPTR DevClose(ASMR(a1)
+SAVEDS BPTR DevClose(ASMR(a1)
 		       struct IORequest *ioreq ASMREG(a1),
 		       ASMR(a6) DEVBASEP ASMREG(a6))
 {
@@ -401,7 +401,7 @@ __saveds BPTR DevClose(ASMR(a1)
 	return ret;
 }
 
-__saveds BPTR DevExpunge(ASMR(a6) DEVBASEP ASMREG(a6))
+SAVEDS BPTR DevExpunge(ASMR(a6) DEVBASEP ASMREG(a6))
 {
 	BPTR seglist = db->db_SegList;
 
@@ -441,12 +441,14 @@ static void set_last_start()
 ULONG read_frame(struct IOSana2Req *req, volatile UBYTE * frame);
 ULONG write_frame(struct IOSana2Req *req, UBYTE * frame);
 
-__saveds VOID DevBeginIO(ASMR(a1)
+SAVEDS VOID DevBeginIO(ASMR(a1)
 			 struct IOSana2Req *ioreq ASMREG(a1),
 			 ASMR(a6) DEVBASEP ASMREG(a6))
 {
+#ifdef DEBUG
 	ULONG unit = (ULONG) ioreq->ios2_Req.io_Unit;
 	int mtu;
+#endif
 
 	ioreq->ios2_Req.io_Message.mn_Node.ln_Type = NT_MESSAGE;
 	ioreq->ios2_Req.io_Error = S2ERR_NO_ERROR;
@@ -569,7 +571,7 @@ __saveds VOID DevBeginIO(ASMR(a1)
 	}
 }
 
-__saveds LONG DevAbortIO(ASMR(a1)
+SAVEDS LONG DevAbortIO(ASMR(a1)
 			 struct IORequest *ioreq ASMREG(a1),
 			 ASMR(a6) DEVBASEP ASMREG(a6))
 {
@@ -615,7 +617,9 @@ ULONG read_frame(struct IOSana2Req *req, volatile UBYTE *frame)
 
 	UBYTE *frm = (UBYTE *) frame;
 	ULONG sz = ((ULONG) frm[0] << 8) | ((ULONG) frm[1]);
+#ifdef DEBUG
 	ULONG ser = ((ULONG) frm[2] << 8) | ((ULONG) frm[3]);
+#endif
 	USHORT tp = ((USHORT) frm[16] << 8) | ((USHORT) frm[17]);
 
 	if (req->ios2_Req.io_Flags & SANA2IOF_RAW) {
@@ -679,7 +683,9 @@ ULONG write_frame(struct IOSana2Req *req, UBYTE *frame)
 	ULONG rc = 0;
 	struct BufferManagement *bm;
 	USHORT sz = 0;
+#ifdef DEBUG
 	UBYTE *fram = frame;
+#endif
 
 	if (req->ios2_Req.io_Flags & SANA2IOF_RAW) {
 		sz = req->ios2_DataLength;
@@ -690,6 +696,7 @@ ULONG write_frame(struct IOSana2Req *req, UBYTE *frame)
 		memcpy(frame + 6, HW_MAC, HW_ADDRFIELDSIZE);
 		frame += HW_ETH_HDR_SIZE;
 	}
+#ifdef DEBUG
 	char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 	for (int i = 0; i < sz; i++) {
 		KPrintF("%c%c", hex[(fram[i] >> 4) & 0xF]);	// seems there are some bugs in KPrintF...
@@ -702,6 +709,7 @@ ULONG write_frame(struct IOSana2Req *req, UBYTE *frame)
 		}
 	}
 	KPrintF("\n===============================\n");
+#endif
 
 	if (sz > 0) {
 		bm = (struct BufferManagement *)req->ios2_BufferManagement;
@@ -726,7 +734,7 @@ ULONG write_frame(struct IOSana2Req *req, UBYTE *frame)
 	return rc;
 }
 
-__saveds void frame_proc()
+SAVEDS void frame_proc()
 {
 	ULONG wmask;
 
@@ -764,7 +772,7 @@ __saveds void frame_proc()
 	while (1) {
 
 		struct IOSana2Req *ior;
-		BOOL receiver_found = 0;
+		//BOOL receiver_found = 0;
 
 		// wait for signal from our interrupt handler
 		// remove this to use polled-IO

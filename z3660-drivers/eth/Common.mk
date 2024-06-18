@@ -21,7 +21,7 @@
 # debug = 1 will include string debugging for terminal/sushi/sashimi
 debug = 0
 # compiler_vcc = 1 will trigger VBCC, else GCC
-compiler_vcc = 1
+compiler_vcc = 0
 
 ###############################################################################
 # prefix for system includes (ASM)
@@ -29,7 +29,7 @@ compiler_vcc = 1
 ###############################################################################
 PREFX  = $(VBCC)/targets/m68k-amigaos
 #PREFX = gg:
-SYSINC = "-I$(PREFX)/include -I/opt/vbcc/NDK_3.9/Include/include_h"
+SYSINC ?= "-I$(PREFX)/include -I$(PREFX)/include2"
 SYSLIB ?= "-L$(PREFX)/lib"
 
 ###############################################################################
@@ -54,7 +54,9 @@ else
 CCX  = m68k-amigaos-gcc
 LINK = $(CCX) -nostartfiles -s
 LINKEXE = $(CCX) -s -noixemul
-CFLAGS  = -O3 -s -m$(CPU) -Wall -noixemul -mregparm=4 -fomit-frame-pointer -msoft-float -noixemul
+#CFLAGS  = -O3 -s -m$(CPU) -Wall -noixemul -mregparm=4 -fomit-frame-pointer -msoft-float -noixemul -Wno-pointer-sign
+CFLAGS  = -Os -fomit-frame-pointer -noixemul -msmall-code -Wall -Wno-pointer-sign -Wno-strict-aliasing -mcpu=68060
+#-O3 -s -m$(CPU) -Wall -noixemul -mregparm=4 -fomit-frame-pointer -msoft-float -noixemul -Wno-pointer-sign
 CFLAGS2 = -O3 -s -m$(CPU2) -Wall -noixemul -mregparm=4 -fomit-frame-pointer -msoft-float -noixemul
 
 endif
@@ -103,7 +105,7 @@ else
 #DEFINES += -D"DEVICEVERSION=$(DEVICEVERSION)" -D"DEVICEREVISION=$(DEVICEREVISION)"
 #DEFINES += -D"DEVICEDATE=$(DEVICEDATE)"
 #DEFINES += -D"DEVICEEXTRA=$(DEVICEEXTRA)"
-DEFINES += -D"DEVICENAME="$(DEVICEID)""
+DEFINES += -DDEVICENAME="$(DEVICEID)"
 DEFINES += -DHAVE_VERSION_H=1
 DEFINES += -DNEWSTYLE
 #ASMDEFS += -DDEVICEVERSION=$(DEVICEVERSION) -DDEVICEREVISION=$(DEVICEREVISION)
@@ -130,7 +132,9 @@ CFLAGS  += -DDEBUG -g
 CFLAGS2 += -DDEBUG -g
 LINKLIBS = -L$(PREFX)/lib -L/opt/vbcc/NDK_3.9/Include/linker_libs -ldebug -lamiga
 else
-LINKLIBS = -L$(PREFX)/lib -L/opt/vbcc/NDK_3.9/Include/linker_libs -lamiga
+#LINKLIBS = #-L$(PREFX)/lib -L/opt/vbcc/NDK_3.9/Include/linker_libs -lamiga
+LINKLIBS = -ldebug -lgcc -lc -lamiga -ramiga-dev
+#-L$(PREFX)/lib -L/opt/vbcc/NDK_3.9/Include/linker_libs -lamiga
 endif
 
 ###############################################################################
@@ -141,7 +145,7 @@ endif
 
 CFLAGS  += -I. -I$(SUBDIR)
 CFLAGS2 += -I. -I$(SUBDIR)
-LDFLAGS =
+LDFLAGS = -nostartfiles -nostdlib
 
 ###############################################################################
 #

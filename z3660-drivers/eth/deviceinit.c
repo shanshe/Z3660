@@ -20,8 +20,8 @@
 #include "macros.h"
 #include <exec/initializers.h>
 
-#define xstr(a) str(a)
 #define str(a) #a
+#define xstr(a) str(a)
 
 #ifndef DEVICEEXTRA
 #define DEVICEEXTRA

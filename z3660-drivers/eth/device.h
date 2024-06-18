@@ -124,8 +124,8 @@ void DevTermIO(DEVBASETYPE *, struct IORequest *);
 #define HW_ETH_HDR_SIZE          14	/* ethernet header: dst, src, type */
 #define HW_ETH_MTU               1500
 
-typedef BOOL(*BMFunc) (__reg("a0") void *a, __reg("a1") void *b,
-		       __reg("d0") long c);
+typedef BOOL(*BMFunc) (ASMR(a0) void *a ASMREG(a0), ASMR(a1) void *b ASMREG(a1),
+		       ASMR(d0) long c ASMREG(d0));
 
 typedef struct BufferManagement {
 	struct MinNode bm_Node;
@@ -142,11 +142,13 @@ struct HWFrame {
 	/*UBYTE    hwf_Data[MTU]; */
 };
 
+#if 0
 const struct InitTable {
 	ULONG LibBaseSize;
 	APTR FunctionTable;
 	APTR DataTable;
 	APTR InitLibTable;
 };
+#endif
 
 #endif				/* _INC_DEVICE_H */

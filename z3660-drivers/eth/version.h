@@ -8,6 +8,7 @@
 #ifndef _INC_VERSION_H
 #define _INC_VERSION_H
 
+#define DEVICENAME Z3660Net.device
 #define DEVICEVERSION  1
 #define DEVICEREVISION 03
 #define DEVICEEXTRA
