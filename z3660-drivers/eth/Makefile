@@ -24,9 +24,8 @@ VBCC=/opt/vbcc
 #
 ###############################################################################
 DEVICEVERSION=1
-DEVICEREVISION=0
-DEVICEDATE=31.07.2019
-#ASMOBJECTS = $(SUBDIR)/enc624j6l.o $(SUBDIR)/intervaltimer.o kprintf.o
+DEVICEREVISION=03
+DEVICEDATE=15.06.2024
 
 ###############################################################################
 # Devices to build (1 or 2, keep DEVICEID2 empty if only one build is desired)
