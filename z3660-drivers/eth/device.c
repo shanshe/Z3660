@@ -23,6 +23,7 @@
 #include <proto/expansion.h>
 #include <clib/exec_protos.h>
 #include <clib/alib_protos.h>
+#include <clib/timer_protos.h>
 #include <dos/dostags.h>
 #include <utility/tagitem.h>
 #include <exec/lists.h>
