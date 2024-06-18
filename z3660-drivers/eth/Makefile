@@ -3,7 +3,7 @@
 # makefile for vbcc or gcc
 #
 # author: Henryk Richter <henryk.richter@gmx.net>
-# 
+#
 # concept:
 #
 # tools required:
@@ -21,7 +21,7 @@ VBCC=/opt/vbcc
 
 ###############################################################################
 # Date, version, extra objects to build
-# 
+#
 ###############################################################################
 DEVICEVERSION=1
 DEVICEREVISION=0

@@ -1,9 +1,9 @@
 ###############################################################################
 #
-# Common.mk 
+# Common.mk
 #
 # author: Henryk Richter <henryk.richter@gmx.net>
-# 
+#
 # note: when switching between different hardware targets, don`t forget
 #       "make clean" in between
 #
@@ -35,7 +35,7 @@ SYSLIB ?= "-L$(PREFX)/lib"
 ###############################################################################
 #
 # compiler executables (choice of gcc or vbcc)
-# 
+#
 ###############################################################################
 ifeq ($(compiler_vcc),1)
 
@@ -52,7 +52,7 @@ else
 
 # GCC
 CCX  = m68k-amigaos-gcc
-LINK = $(CCX) -nostartfiles -s 
+LINK = $(CCX) -nostartfiles -s
 LINKEXE = $(CCX) -s -noixemul
 CFLAGS  = -O3 -s -m$(CPU) -Wall -noixemul -mregparm=4 -fomit-frame-pointer -msoft-float -noixemul
 CFLAGS2 = -O3 -s -m$(CPU2) -Wall -noixemul -mregparm=4 -fomit-frame-pointer -msoft-float -noixemul
@@ -68,8 +68,8 @@ VASMFORMAT2 = -m$(CPU2) -Fhunk -nowarn=2064 -quiet $(SYSINC)
 
 ###############################################################################
 #
-# paths to the local includes 
-# 
+# paths to the local includes
+#
 ###############################################################################
 
 IPATH =
@@ -77,12 +77,12 @@ IPATH =
 ###############################################################################
 #
 # compile-level feature definitions
-# 
+#
 ###############################################################################
 ifeq ($(compiler_vcc),1)
 # skip quotes with VCC, the AmigaOS native version doesn't like them
 #DEFINES += -DDEVICEVERSION=$(DEVICEVERSION) -DDEVICEREVISION=$(DEVICEREVISION)
-#DEFINES += -DDEVICEDATE=$(DEVICEDATE) 
+#DEFINES += -DDEVICEDATE=$(DEVICEDATE)
 #DEFINES += -DDEVICEEXTRA=$(DEVICEEXTRA)
 DEFINES += -DDEVICENAME="$(DEVICEID)"
 DEFINES += -DHAVE_VERSION_H=1
@@ -91,7 +91,7 @@ DEFINES += -DHAVE_VERSION_H=1
 #ASMDEFS += -DDEVICEDATE=$(DEVICEDATE) -DDEVICENAME=$(DEVICEID)
 
 #DEFINES2 += -DDEVICEVERSION=$(DEVICEVERSION) -DDEVICEREVISION=$(DEVICEREVISION)
-#DEFINES2 += -DDEVICEDATE=$(DEVICEDATE) 
+#DEFINES2 += -DDEVICEDATE=$(DEVICEDATE)
 #DEFINES2 += -DDEVICEEXTRA=$(DEVICEEXTRA)
 DEFINES2 += -DDEVICENAME="$(DEVICEID2)"
 DEFINES2 += -DHAVE_VERSION_H=1
@@ -101,7 +101,7 @@ DEFINES2 += -DHAVE_VERSION_H=1
 else
 
 #DEFINES += -D"DEVICEVERSION=$(DEVICEVERSION)" -D"DEVICEREVISION=$(DEVICEREVISION)"
-#DEFINES += -D"DEVICEDATE=$(DEVICEDATE)" 
+#DEFINES += -D"DEVICEDATE=$(DEVICEDATE)"
 #DEFINES += -D"DEVICEEXTRA=$(DEVICEEXTRA)"
 DEFINES += -D"DEVICENAME="$(DEVICEID)""
 DEFINES += -DHAVE_VERSION_H=1
@@ -122,8 +122,8 @@ endif
 
 ###############################################################################
 #
-# debug 
-# 
+# debug
+#
 ###############################################################################
 ifeq ($(debug),1)
 CFLAGS  += -DDEBUG -g
@@ -136,21 +136,21 @@ endif
 ###############################################################################
 #
 # compiler flags and optimization levels
-# 
+#
 ###############################################################################
 
 CFLAGS  += -I. -I$(SUBDIR)
 CFLAGS2 += -I. -I$(SUBDIR)
-LDFLAGS = 
+LDFLAGS =
 
 ###############################################################################
 #
-# objects to build 
-# 
+# objects to build
+#
 ###############################################################################
 # ASM based alternative to deviceheader.o would be romtag.o
 
-OBJECTS = deviceheader.o deviceinit.o device.o 
+OBJECTS = deviceheader.o deviceinit.o device.o
 OBJECTS += $(ASMOBJECTS)
 
 # used for secondary build
@@ -159,7 +159,7 @@ OBJECTS2 = $(patsubst %.o,%.2o,$(OBJECTS))
 ###############################################################################
 #
 # rules and commands
-# 
+#
 ###############################################################################
 
 all:	$(DEVICEID) $(DEVICEID2) $(TESTTOOL) $(TESTTOOL2)
@@ -172,17 +172,13 @@ clean:
 install: $(DEVICEID) $(DEVICEID2)
 	copy $(DEVICEID) $(DEVICEID2) DEVS:
 
-
-#sdnet:	 $(DEVICEID) 
-#expnet: $(DEVICEID2)
-
 $(DEVICEID) : $(OBJECTS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJECTS) $(LINKLIBS) $(LINKOPTS)
 
 
 # separate ruleset for each subdirectory, ./src overrides all other paths for priority
 # of platform-optimized routines
-%.o : %.c 
+%.o : %.c
 	$(CCX) -c $(CFLAGS) $(DEFINES) $(IPATH) $< -o $@
 
 %.o : %.asm
@@ -191,9 +187,9 @@ $(DEVICEID) : $(OBJECTS)
 
 # secondary ruleset (used for expnet, will be ignored if DEVICEID2 is empty)
 $(DEVICEID2) : $(OBJECTS2)
-	$(LINK) $(LDFLAGS) -o $@ $(OBJECTS2) $(LINKLIBS) 
+	$(LINK) $(LDFLAGS) -o $@ $(OBJECTS2) $(LINKLIBS)
 
-%.2o : %.c 
+%.2o : %.c
 	$(CCX) -c $(CFLAGS2) $(DEFINES2) $(IPATH) $< -o $@
 
 %.2o : %.asm

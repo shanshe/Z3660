@@ -64,10 +64,6 @@ const struct NSDeviceQueryResult NSDQueryAnswer = {
 #include "device.h"
 #include "macros.h"
 
-#ifndef DEBUG
-#define KPrintF(...)
-#endif
-
 // FIXME get rid of global var!
 static ULONG ZZ9K_REGS = 0;
 
@@ -81,9 +77,6 @@ char *frame_proc_name = "Z3660NetFramer";
 __saveds void dev_isr(__reg("a1") struct devbase* db) {
   ULONG status = *(volatile ULONG*)(ZZ9K_REGS+REG_ZZ_INT_STATUS);
 
-//if(status!=0)
-//  D(("Z3660Net: status: 0x%lx\n",status));
-
   // ethernet interrupt signal set?
   if (status & 1) {
     // ack/clear ethernet interrupt
@@ -94,13 +87,6 @@ __saveds void dev_isr(__reg("a1") struct devbase* db) {
       Signal((struct Task*)db->db_Proc, SIGBREAKF_CTRL_F);
     }
   }
-/*
-  if (status == 1) {
-    return 1;
-  } else {
-    return 0;
-  }
-*/
 }
 
 static UBYTE HW_MAC[] = {0x00,0x00,0x00,0x00,0x00,0x00};
@@ -304,7 +290,7 @@ __saveds LONG DevOpen( ASMR(a1) struct IOSana2Req *ioreq           ASMREG(a1),
 
               D(("Z3660Net: ZZ interrupt enabled\n"));
             } else {
-              D(("Z3660Net: failed to alloc struct Interrupt\n"));
+              D(("Z3660Net: Failed to allocate struct Interrupt\n"));
               ret = IOERR_OPENFAIL;
               ok = 0;
 
@@ -314,12 +300,12 @@ __saveds LONG DevOpen( ASMR(a1) struct IOSana2Req *ioreq           ASMREG(a1),
               ReleaseSemaphore(&db->db_ProcExitSem);
             }
           } else {
-            D(("Z3660Net:process startup error\n"));
+            D(("Z3660Net: Process startup error\n"));
             ret = IOERR_OPENFAIL;
             ok = 0;
           }
         } else {
-          D(("Z3660Net:couldn't create process\n"));
+          D(("Z3660Net: Couldn't create process\n"));
           ret = IOERR_OPENFAIL;
           ok = 0;
         }

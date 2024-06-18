@@ -5,7 +5,6 @@
 
   Debugging Macros
 
-
 */
 #ifndef _INC_DEBUG_H
 #define _INC_DEBUG_H
@@ -18,8 +17,8 @@ extern void KPrintF(char *, ...), KGetChar(void);
 #else  /* DEBUG */
 
 #define D(x)
+#define KPrintF(...)
 
 #endif /* DEBUG */
-
 
 #endif /* _INC_DEBUG_H */

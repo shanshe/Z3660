@@ -1,5 +1,5 @@
 /*
-  devinit.c 
+  devinit.c
 
   (C) 2018 Henryk Richter <henryk.richter@gmx.net>
 
@@ -31,7 +31,6 @@ static const char _DeviceVersionString[] = "$VER: " xstr(DEVICENAME) " " xstr(DE
 const char *DeviceVersionString = (const char *)_DeviceVersionString;
 const char DeviceName[] = xstr(DEVICENAME);
 
-
 const APTR DeviceFunctions[] = {
 	(APTR) DevOpen,
 	(APTR) DevClose,
@@ -42,16 +41,15 @@ const APTR DeviceFunctions[] = {
 	(APTR) -1
 };
 
-
 #define WORDINIT(_a_) UWORD _a_ ##W1; UWORD _a_ ##W2; UWORD _a_ ##ARG;
 #define LONGINIT(_a_) UBYTE _a_ ##A1; UBYTE _a_ ##A2; ULONG _a_ ##ARG;
 struct DeviceInitData
 {
-	WORDINIT(w1) 
+	WORDINIT(w1)
 	LONGINIT(l1)
-	WORDINIT(w2) 
-	WORDINIT(w3) 
-	WORDINIT(w4) 
+	WORDINIT(w2)
+	WORDINIT(w3)
+	WORDINIT(w4)
 	LONGINIT(l2)
 	ULONG end_initlist;
 } DeviceInitializers =
@@ -65,12 +63,9 @@ struct DeviceInitData
 	(ULONG) 0
 };
 
-
 const APTR DeviceInitTab[] = {
 	(APTR) sizeof( DEVBASETYPE ),
 	(APTR) &DeviceFunctions,
 	(APTR) &DeviceInitializers,
 	(APTR) DevInit
 };
-
-
