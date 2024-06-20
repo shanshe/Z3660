@@ -33,6 +33,7 @@
 #include <proto/dos.h>
 #include <proto/intuition.h>
 #include <proto/input.h>
+#include <proto/utility.h>
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <exec/libraries.h>
@@ -41,6 +42,7 @@
 #include <exec/initializers.h>
 #include <clib/debug_protos.h>
 #include <devices/inputevent.h>
+#include <hardware/cia.h>
 #include <string.h>
 #include <stdint.h>
 
@@ -69,6 +71,16 @@ struct GFXBase {
 #define DEVICE_ID_STRING "$VER Z3660.card " XSTR(DEVICE_VERSION) "." XSTR(DEVICE_REVISION) " " DEVICE_DATE
 #define DEVICE_NAME "Z3660.card"
 #define DEVICE_DATE "(27.09.2023)"
+
+enum SwitchType {
+	NONE = 0,
+	ZZ9000,
+	CTS,
+	RTS,
+	DTR,
+	SEL,
+	DPMS
+};
 
 int __attribute__((no_reorder)) _start()
 {
@@ -117,7 +129,7 @@ char dummies[128];
 #define ZZVMODE_720x576 6
 
 struct ExecBase *SysBase;
-//static LONG scandoubler_800x600 = 0;
+static LONG scandoubler_800x600 = 0;
 static LONG secondary_palette_enabled = 0;
 
 #ifdef DMARTG
@@ -434,9 +446,11 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 	}
 }
 
-int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
+int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b), __REGA1(char **ToolTypes), __REGA6(struct CardBase *cb)) {
 	int i;
-
+    int switch_type = NONE;
+    struct Library* UtilityBase = b->UtilBase;
+	
 	KPrintF((CONST_STRPTR)"InitCard()\n");
 	b->CardBase = (struct CardBase *)_gfxbase;
 	b->ExecBase = SysBase;
@@ -452,6 +466,7 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
 				BIF_PALETTESWITCH |
 				BIF_BLITTER |
 				0;
+
 
 	b->RGBFormats = RTG_COLOR_FORMAT_CLUT |   //  8bit
 					RTG_COLOR_FORMAT_RGB565 | // 16bit
@@ -518,6 +533,7 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
 	//b->ReInitMemory = (void *)NULL;
 	//b->WriteYUVRect = (void *)NULL;
 	b->GetVSyncState = (void *)GetVSyncState;
+
 	//b->GetVBeamPos = (void *)NULL;
 	//b->SetDPMSLevel = (void *)NULL;
 	//b->ResetChip = (void *)NULL;
@@ -531,6 +547,42 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
 	b->SetSpriteImage = (void *)SetSpriteImage;
 	b->SetSpriteColor = (void *)SetSpriteColor;
 
+
+	if (b->GetVSyncState != NULL) { // P96 version with this attribute includes tooltype support
+		// we have tooltypes!
+        char *ToolType;
+        while (ToolType = *ToolTypes++) {
+			if (b->Flags & BIF_INDISPLAYCHAIN) {
+                if ((Stricmp(ToolType, "SWITCHTYPE=JAVOSOFT") == 0) || (Stricmp(ToolType, "SWITCHTYPE=DPMS") == 0))
+				  {
+					switch_type = DPMS;
+				  }	else if (Stricmp(ToolType, "SWITCHTYPE=CTS") == 0)
+				  {
+					switch_type = CTS;
+				  }	else if (Stricmp(ToolType, "SWITCHTYPE=RTS") == 0)
+                  {
+					switch_type = RTS;
+                  }	else if (Stricmp(ToolType, "SWITCHTYPE=DTR") == 0)
+                  {
+					switch_type = DTR;
+                  }	else if (Stricmp(ToolType, "SWITCHTYPE=SEL") == 0)
+                  {
+					switch_type = SEL;
+                  } else if (Stricmp(ToolType, "SWITCHTYPE=ZZ9000") == 0)
+                  {
+					switch_type = ZZ9000;
+                  }
+            }
+		}
+	}
+
+	if (NONE != switch_type) {
+		/* plug in handler for external monitor switch */
+		b->MonitorSwitchType = switch_type;
+		b->SetSwitch = (void *)SetSwitch;
+		/* set startup value */
+		b->MoniSwitch = (UWORD) 0xFFFF;
+	}
 	//b->CreateFeature = (void *)NULL;
 	//b->SetFeatureAttrs = (void *)NULL;
 	//b->DeleteFeature = (void *)NULL;
@@ -647,36 +699,59 @@ void SetGC(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __
 	init_modeline(registers, w, h, colormode, scale, mode_info);
 }
 
-//z3660 -> no scandoubler :(
-#if 0 
-int setswitch = -1;
+//int setswitch = -1;
 UWORD SetSwitch(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
     uint32_t* registers = (uint32_t*)b->RegisterBase;
+	int switch_type = b->MonitorSwitchType;
+	UBYTE cia_bits=0;
+	switch (switch_type)
+	{
+	    case CTS:
+			cia_bits=CIAF_COMCTS;
+			break;
+	    case RTS:
+			cia_bits=CIAF_COMRTS;
+			break;
+	    case DTR:
+			cia_bits=CIAF_COMDTR;
+			break;
+        case SEL:
+			cia_bits=CIAF_PRTRSEL;
+			break;
+		case ZZ9000:
+		default:
+			if (enabled == 0) {
+				// capture 24 bit amiga video to 0xe00000
 
-	if (enabled == 0) {
-		// capture 24 bit amiga video to 0xe00000
+				if (scandoubler_800x600) {
+					// slightly adjusted centering
+					ZZ_REGS_WRITE(REG_ZZ_PAN, 0x00dff2f8);
+				} else {
+					ZZ_REGS_WRITE(REG_ZZ_PAN, 0x00e00000);
+				}
 
-		if (scandoubler_800x600) {
-			// slightly adjusted centering
-			ZZ_REGS_WRITE(REG_ZZ_PAN, 0x00dff2f8);
-		} else {
-			ZZ_REGS_WRITE(REG_ZZ_PAN, 0x00e00000);
-		}
-*/
+				// firmware will detect that we are capturing and viewing the capture area
+				// and switch to the appropriate video mode (VCAP_MODE)
+				ZZ_REGS_WRITE(REG_ZZ_OP_CAPTUREMODE, 1); // capture mode
+			} else {
+				// rtg mode
+				ZZ_REGS_WRITE(REG_ZZ_OP_CAPTUREMODE, 0); // capture mode
 
-		// firmware will detect that we are capturing and viewing the capture area
-		// and switch to the appropriate video mode (VCAP_MODE)
-		ZZ_REGS_WRITE(REG_ZZ_OP_CAPTUREMODE, 1); // capture mode
-	} else {
-		// rtg mode
-		ZZ_REGS_WRITE(REG_ZZ_OP_CAPTUREMODE, 0); // capture mode
-
-		SetGC(b, b->ModeInfo, b->Border);
+				SetGC(b, b->ModeInfo, b->Border);
+			}
 	}
-
+	if (cia_bits!=0) {
+		((volatile struct CIA *)0xbfd000)->ciaddra |= cia_bits;
+		if (enabled)
+		{
+			((volatile struct CIA *)0xbfd000)->ciapra &= ~cia_bits;
+		} else {
+			((volatile struct CIA *)0xbfd000)->ciapra |= cia_bits;
+		}
+		b->MoniSwitch = 1 - enabled;
+  	}
 	return 1 - enabled;
 }
-#endif
 
 void SetPanning(__REGA0(struct BoardInfo *b), __REGA1(UBYTE *addr), __REGD0(UWORD width), __REGD1(WORD x_offset), __REGD2(WORD y_offset), __REGD7(RGBFTYPE format)) {
 	b->XOffset = x_offset;
