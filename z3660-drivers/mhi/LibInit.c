@@ -16,7 +16,7 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 
-#include "Version.h"
+#include "version.h"
 #include "mhilib.h"
 
 ULONG __stdargs L_OpenLibs(struct MHI_LibBase *MhiLibBase);
