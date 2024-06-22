@@ -62,7 +62,7 @@
 #define WORKER_PRIORITY 127 // TW: High priority because this is time-critical for high-level access.
 
 struct ExecBase     *SysBase;
-struct UtilityBase  *UtilityBase;
+struct Library      *UtilityBase;
 struct Library      *AHIsubBase  = NULL;
 struct DosLibrary   *DOSBase     = NULL;
 struct z9ax_base    *Z9AXBase;
@@ -135,7 +135,7 @@ static uint32_t __attribute__((used)) init(BPTR seg_list asm("a0"), struct Libra
   if (!(DOSBase = (struct DosLibrary *)OpenLibrary((STRPTR)"dos.library",0)))
     return 0;
 
-  if (!(UtilityBase = (struct UtilityBase *)OpenLibrary((STRPTR)"utility.library",0)))
+  if (!(UtilityBase = OpenLibrary((STRPTR)"utility.library",0)))
     return 0;
 
   if (!(ExpansionBase = (struct ExpansionBase *)OpenLibrary((STRPTR)"expansion.library",0)))
