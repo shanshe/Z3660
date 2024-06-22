@@ -60,7 +60,7 @@ uint8_t is_open;
 //#define WRITEBYTE(cmd, val) *(unsigned char *)((unsigned long)(ZZ9K_REGS + PISCSI_OFFSET + cmd)) = val;
 
 #define WRITE_CMD(COMMAND,UNIT,DATA,LEN)  do{               \
-            uint32_t len2=LEN;                              \
+            ULONG len2=LEN;                              \
 /*            CacheClearE((APTR)DATA,len,CACRF_ClearD); */  \
             CachePreDMA((APTR)(DATA),&len2,0);              \
             WRITELONG(COMMAND, UNIT);                       \
@@ -211,7 +211,7 @@ static void __attribute__((used)) begin_io(struct Library *dev asm("a6"), struct
 {
     if (dev_base == NULL || io == NULL)
         return;
-    
+
     struct piscsi_unit *u;
     struct Node* node = (struct Node*)io;
     u = (struct piscsi_unit *)io->io_Unit;
@@ -383,7 +383,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
         case SCSICMD_TEST_UNIT_READY:
             err = 0;
             break;
-        
+
         case SCSICMD_INQUIRY:
             for (i = 0; i < scsi->scsi_Length; i++) {
                 uint8_t val = 0;
@@ -417,7 +417,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
             scsi->scsi_Actual = scsi->scsi_Length;
             err = 0;
             break;
-        
+
         case SCSICMD_WRITE_6:
             write = 1;
         case SCSICMD_READ_6:
@@ -483,7 +483,7 @@ scsireadwrite:;
             scsi->scsi_Actual = scsi->scsi_Length;
             err = 0;
             break;
-        
+
         case SCSICMD_READ_CAPACITY_10:
             if (scsi->scsi_CmdLength < 10) {
                 err = HFERR_BadStatus;
@@ -499,7 +499,7 @@ scsireadwrite:;
                 err = IOERR_BADLENGTH;
                 break;
             }
-            
+
             WRITELONG(PISCSI_CMD_DRVNUM, (u->scsi_num));
             READLONG(PISCSI_CMD_BLOCKS, blocks);
             ((uint32_t*)data)[0] = blocks - 1;
@@ -571,7 +571,7 @@ scsireadwrite:;
                     scsi->scsi_Actual = data[0] + 1;
                     err = 0;
                     break;
-                
+
                 default:
                     debugval(PISCSI_DBG_VAL1, (((UWORD)scsi->scsi_Command[2] << 8) | scsi->scsi_Command[3]));
                     debug(PISCSI_DBG_MSG, DBG_SCSI_UNKNOWN_MODESENSE);
@@ -579,7 +579,7 @@ scsireadwrite:;
                     break;
             }
             break;
-        
+
         case SCSICMD_READ_DEFECT_DATA_10:
             break;
         case SCSICMD_CHANGE_DEFINITION:
