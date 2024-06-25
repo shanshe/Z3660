@@ -11,11 +11,12 @@
 #include "xtime_l.h"
 #include <math.h>
 #include "ax.h"
+
+#include "debug_console.h"
 #include "rtg/gfx.h"
 #include "main.h"
-#include "console.h"
 
-extern CONSOLE con;
+extern DEBUG_CONSOLE debug_console;
 void DEBUG_AUDIO(const char *format, ...);
 
 float cut_freq=2.*M_PI*23900.;

@@ -23,6 +23,7 @@ extern "C" {
 #include "cpu_emulator.h"
 #include <xil_mmu.h>
 #include "xil_cache.h"
+#include "defines.h"
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
 void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type);
@@ -176,7 +177,7 @@ extern "C" uint32_t read_autoconfig(uint32_t address)
       case 0x0100:
          if((configured&1) == 0 && (local.z3_enabled&1) == 1) data = 0x4FFFFFFF; // 0b0100 next board unrelated (0), 256MB FastRAM
          else
-         if((configured&2) == 0 && (local.z3_enabled&2) == 2) data = 0xBFFFFFFF; // 0b1011 next board unrelated (0), 128MB RTG
+         if((configured&2) == 0 && (local.z3_enabled&2) == 2) data = 0x3FFFFFFF; // 0b0011 next board unrelated (0), 128MB RTG
          break;
       case 0x0004:
          data = 0xFFFFFFFF; // 0b1111 product number
@@ -238,6 +239,19 @@ void finish_MMU_OP(void)
    dsb(); /* ensure completion of the BP and TLB invalidation */
    isb(); /* synchronize context on this processor */
 }
+void rtg_cache_policy_core1(uint32_t ini, uint32_t policy)
+{
+    // +2 -> don't use RTG registers with MMU (write to RTG registers is emulated)
+    for(unsigned int i=ini+2,j=2;i<ini+0x080;i++,j++)
+    {
+       uint32_t address=(RTG_BASE+j*0x100000UL);
+       setMMU(address,address|policy);
+       setMMU(i*0x100000UL,address|policy);
+    }
+    setMMU(0x1C200000,0x1C200000|NORM_NONCACHE); // RTG registers for soft3d
+    setMMU((0x542)*0x100000UL,0x1C200000|NORM_NONCACHE);
+    finish_MMU_OP();
+}
 extern "C" void write_autoconfig(uint32_t address, uint32_t data)
 {
 #ifdef AUTOCONFIG_ENABLED
@@ -270,23 +284,20 @@ extern "C" void write_autoconfig(uint32_t address, uint32_t data)
             configured|=2;
             unsigned int ini=(autoConfigBaseRTG>>20)&0xFFF;
             z3660_printf("[Core1] Autoconfig RTG to 0x%03X\n",ini);
-            unsigned int end=ini+0x080; // +128 MByte
             // The following MMU operation hangs the access of the core0
             // so we hold here core0
             shared->core0_hold=1;
             shared->shared_data=1;
             while(shared->core0_hold_ack==0);
-            // +2 -> don't use RTG registers with MMU (write to RTG registers is emulated)
-            for(unsigned int i=ini+2,j=2;i<end;i++,j++)
-            {
-               uint32_t address=(RTG_BASE+j*0x100000UL);
-               setMMU(address,address|NORM_WT_CACHE);      // mapped to RTG_BASE
-               setMMU(i*0x100000UL,address|NORM_WT_CACHE); // mapped to RTG_BASE
-            }
+
+            rtg_cache_policy_core1(ini, RTG_CACHE_POLICY_FOR_EMU);
+
             //ETHERNET
-            setMMU((end-2)*0x100000UL,0x1FE00000|NORM_NONCACHE); // mapped to RTG_BASE
-            setMMU((end-1)*0x100000UL,0x1FF00000|NORM_NONCACHE); // mapped to RTG_BASE
-            finish_MMU_OP();
+            setMMU(0x1FE00000,0x1FE00000|NORM_NONCACHE);
+            setMMU((ini+0x080-2)*0x100000UL,0x1FE00000|NORM_NONCACHE);
+            setMMU(0x1FF00000,0x1FF00000|NORM_NONCACHE);
+            setMMU((ini+0x080-1)*0x100000UL,0x1FF00000|NORM_NONCACHE);
+
             init_rtg_bank(ini);
             // core0 continues
             shared->core0_hold=0;

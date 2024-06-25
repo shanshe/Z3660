@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+__author__   = 'shanshe'
+__version___ = '1.0.1'
+__date___    = '06.05.24'
+
+import sys
+import os
+import shutil
+import struct
+
+DST_PATH = "Z:/z3660/"
+SRC_PATH = "Debug/sd_card/"
+BOOT_NAME = "BOOT.BIN"
+SOURCE = "C:/Users/shanshe/workspace/Z3660/src/main.h"
+
+def buscarDefine(clave, archivo):
+    claveCompleta = "#define " + clave
+    for linea in archivo:
+        if claveCompleta in linea:
+            if linea.startswith("//") == False:
+                listaTokens = linea.split()  # Dividimos cada linea en tokens
+                return (listaTokens[2])
+
+
+def limpiarValor(valor):
+    valor = str(valor).replace("+", "")
+    valor = str(valor).replace("L", "")
+    valor = str(valor).replace("0x", "")
+    valor = str(valor).replace('"', "")
+    return (valor)
+
+
+def getValor(clave,archivo):
+    return (limpiarValor(buscarDefine(clave, archivo)))
+
+def delete(src):
+    if os.path.exists(src):
+        os.remove(src)
+
+def swap32(i):
+    return struct.unpack("<i", struct.pack(">i", i))[0]
+
+def crc32():
+    with open(DST_PATH + BOOT_NAME, "rb") as f:
+        while True:
+            data = f.read(4)
+            if len(data) < 4:
+                return
+            data_int = struct.unpack("<i", data)[0]
+            yield swap32(data_int)
+
+def main():
+    
+    shutil.copy2(SRC_PATH + BOOT_NAME,DST_PATH)
+    file = open(SOURCE, 'r', encoding='utf-8')
+    V_MAJOR        = getValor("REVISION_MAJOR", file)
+    V_MINOR        = getValor("REVISION_MINOR", file)
+    BETA           = getValor("REVISION_BETA", file)
+    file.close()
+    
+    # Clean
+    if not os.path.exists(DST_PATH):
+        print("Making DST_PATH ...")
+        os.mkdir(DST_PATH)
+    
+    delete(DST_PATH + "version.txt")
+    text_file = open(DST_PATH + "version.txt", "w")
+    version = "" + V_MAJOR + "."
+    if (int(V_MINOR) < 10):
+        version = version + "0"
+    version = version + V_MINOR
+    if (int(BETA) != 0):
+        version = version + " BETA " + BETA
+    
+    text_file.write("version=" + version + "\r")
+    str_len = "%d" % os.path.getsize(DST_PATH + BOOT_NAME)
+    text_file.write("length=" + str_len + "\r")
+    checksum32=0
+    for eachdata in crc32():
+        checksum32 = eachdata + checksum32
+    str_checksum32 = "%08lX" % (checksum32 & 0xFFFFFFFF)
+    text_file.write("checksum32=" + str_checksum32 + "\r")
+    text_file.close()
+main()
+

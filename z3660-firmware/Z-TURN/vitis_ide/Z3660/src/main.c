@@ -33,19 +33,22 @@
 #include <stdio.h>
 #include "main.h"
 #include "config_clk.h"
+#include "mobotest.h"
 #include "sleep.h"
 #include "xil_misc_psreset_api.h"
 #include "config_file.h"
 #include "scsi/scsi.h"
 #include "LTC2990/ltc2990.h"
-#include "console.h"
-
+#include "../../Z3660_emu/src/defines.h"
+#include "debug_console.h"
 #ifdef CPU_EMULATOR
 #include "cpu_emulator.h"
 #endif
+#include "lwip.h"
 extern SHARED *shared;
 extern int boot_rom_loaded;
-extern int bm,sb,ar,cr,ks,ext_ks,*scsi_num;
+extern ENV_FILE_VARS env_file_vars_temp;
+//extern int bm,sb,ar,cr,ks,ext_ks,*scsi_num;
 void hard_reboot(void);
 void z3660_printf(const TCHAR *format, __VALIST args)
 {
@@ -89,15 +92,6 @@ extern uint32_t clken;
 #define ENABLE_MAPROMEXT_FPGA do{   DiscreteSet(REG0, FPGA_MAPROMEXT_EN);\
                   }while(0)
 #define DISABLE_MAPROMEXT_FPGA do{ DiscreteClear(REG0, FPGA_MAPROMEXT_EN);\
-                  }while(0)
-#define ENABLE_BURST_READ_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_READ_EN);\
-                  }while(0)
-#define DISABLE_BURST_READ_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_READ_EN);\
-                  }while(0)
-
-#define ENABLE_BURST_WRITE_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_WRITE_EN);\
-                  }while(0)
-#define DISABLE_BURST_WRITE_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_WRITE_EN);\
                   }while(0)
 
 #define ENABLE_256MB_AUTOCONFIG do{DiscreteSet(REG0, FPGA_256MB_AUTOCONFIG_EN);\
@@ -278,7 +272,7 @@ void configure_gpio(void)
 
    XGpioPs_SetDirectionPin(&GpioPs, LED1, 1);
    XGpioPs_SetOutputEnablePin(&GpioPs, LED1, 1);
-   XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+   ACTIVITY_LED_OFF; // OFF
 
    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_13, 1);
    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_13, 1);
@@ -469,6 +463,7 @@ unsigned int READ_NBG_ARM(void)
    return(XGpioPs_ReadPin(&GpioPs, PS_MIO_15));
 }
 extern u32 DataAbortAddr;
+extern u32 PrefetchAbortAddr;
 
 void DataAbortHandler(void *data)
 {
@@ -476,9 +471,10 @@ void DataAbortHandler(void *data)
     unsigned int FaultAddress;
     FaultAddress = mfcp(XREG_CP15_DATA_FAULT_ADDRESS);
     FaultStatus = mfcp(XREG_CP15_DATA_FAULT_STATUS);
-	printf("[Core0] DataAbortHandler()!!!!\n");
-    printf("Data abort with Data Fault Status Register 0x%lx\n",FaultStatus);
-    printf("Address of Instruction causing Data abort 0x%lx\n",DataAbortAddr);
+    usleep(100000); // let other printf to finish
+    printf("[Core0] DataAbortHandler()!!!!\n");
+    printf("Data abort with Data Fault Status Register 0x%08lx\n",FaultStatus);
+    printf("Address of Instruction causing Data abort 0x%08lx\n",DataAbortAddr);
     unsigned int write_fault=FaultStatus&(1<<11);
     if(write_fault)
     	printf("Write Fault to 0x%08X\n",FaultAddress);
@@ -489,6 +485,19 @@ void DataAbortHandler(void *data)
 	hard_reboot();
 	while(1);
 }
+void PrefetchAbortHandler(void *CallBackRef){
+	(void) CallBackRef;
+	u32 FaultStatus;
+
+    FaultStatus = mfcp(XREG_CP15_INST_FAULT_STATUS);
+
+	printf("Prefetch abort with Instruction Fault Status Register  0x%08lx\n",FaultStatus);
+	printf("Address of Instruction causing Prefetch abort 0x%08lx\n",PrefetchAbortAddr);
+	usleep(10000);
+	hard_reboot();
+	while(1);
+}
+
 extern CONFIG config;
 extern int no_init;
 extern uint32_t MMUTable;
@@ -544,6 +553,20 @@ void finish_MMU_OP(void)
    isb(); /* synchronize context on this processor */
 }
 
+void rtg_cache_policy_core0(uint32_t policy)
+{
+   for(int i=0x182;i<0x1FE;i++) // RTG
+      Xil_SetTlbAttributes(i*0x100000UL,policy);//NORM_WT_CACHE);// NORM_WB_CACHE);//0x14de2);
+   for(int i=0x1C2;i<0x1C3;i++) // RTG Registers (1 MB for soft3d registers)
+      Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
+   for(int i=0x502,j=2;i<0x580;i++,j++)
+   {
+      uint32_t address=(RTG_BASE+j*0x100000UL);
+      setMMU(i*0x100000UL,address|policy); // mapped to RTG_BASE
+   }
+   finish_MMU_OP();
+}
+
 int main()
 {
     init_platform();
@@ -566,8 +589,6 @@ int main()
       Xil_SetTlbAttributes(i*0x100000UL,NORM_WB_CACHE);
    for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, fb is at 0x200000)
       Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
-   for(int i=0x182;i<0x1FE;i++) // RTG
-      Xil_SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//NORM_WT_CACHE);// NORM_WB_CACHE);//0x14de2);
    for(int i=0x1FE;i<0x200;i++) // ETHERNET
       Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);//NORM_NONCACHE);// NORM_WB_CACHE);//0x14de2);
    for(int i=0x400;i<0x780;i++)
@@ -575,15 +596,8 @@ int main()
    for(int i=0xE00;i<0xE03;i++) //
       Xil_SetTlbAttributes(i*0x100000UL,STRONG_ORDERED);//NORM_NONCACHE);
 
-   for(int i=0x502,j=2;i<0x580;i++,j++)
-   {
-      uint32_t address=(RTG_BASE+j*0x100000UL);
-      setMMU(i*0x100000UL,address|NORM_WB_CACHE); // mapped to RTG_BASE
-   }
-   finish_MMU_OP();
-
    for(int i=0;i<0x1200;i++)
-      *(uint8_t*)(0x18000000+0x06000000+i)=0; // clean audio buffer
+      *(uint8_t*)(RTG_BASE+0x06000000+i)=0; // clean audio buffer
 
    configure_gpio();
 
@@ -603,43 +617,41 @@ int main()
    switch(clk_config)
    {
       case 0:
-         configure_clk(100,0,verbose,nbr);
+         configure_clk(100,verbose,nbr);
          break;
       case 1:
-         configure_clk(95,0,verbose,nbr);
+         configure_clk(95,verbose,nbr);
          break;
       case 2:
-         configure_clk(90,0,verbose,nbr);
+         configure_clk(90,verbose,nbr);
          break;
       case 3:
-         configure_clk(85,0,verbose,nbr);
+         configure_clk(85,verbose,nbr);
          break;
       case 4:
-         configure_clk(80,0,verbose,nbr);
+         configure_clk(80,verbose,nbr);
          break;
       case 5:
-         configure_clk(75,0,verbose,nbr);
+         configure_clk(75,verbose,nbr);
          break;
       case 6:
-         configure_clk(70,0,verbose,nbr);
+         configure_clk(70,verbose,nbr);
          break;
       case 7:
-         configure_clk(65,0,verbose,nbr);
+         configure_clk(65,verbose,nbr);
          break;
       case 8:
-         configure_clk(60,0,verbose,nbr);
+         configure_clk(60,verbose,nbr);
          break;
       case 9:
-         configure_clk(55,0,verbose,nbr);
+         configure_clk(55,verbose,nbr);
          break;
       case 10:
-         configure_clk(50,0,verbose,nbr);
+         configure_clk(50,verbose,nbr);
          break;
    }
 
-   XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
-   NBR_ARM(0);
-   while(READ_NBG_ARM()==0);
+   ACTIVITY_LED_OFF; // OFF
    DiscreteClear(REG0,FPGA_INT6); // set int6 to 0 (active high)
 
    int reset_time_counter=0;
@@ -655,6 +667,11 @@ int main()
    printf(" /_______| |______| |______| |______| |______|\n\r");
    printf("\n\r");
    printf("FPGA version number 0x%08lX\n",read_reg_s01(REG2));
+#ifdef REVISION_BETA
+   printf("BOOT.bin version number %d.%02d (BETA %d)\n",REVISION_MAJOR,REVISION_MINOR,REVISION_BETA);
+#else
+   printf("BOOT.bin version number %d.%02d\n",REVISION_MAJOR,REVISION_MINOR);
+#endif
    int enable_ram=1;       // RAM initial state
    int enable_rtg=1;       // RTG initial state
    int enable_z3ram=1;     // Z3 RAM initial state
@@ -707,27 +724,16 @@ int main()
       DISABLE_BURST_WRITE_FPGA;
       DISABLE_256MB_AUTOCONFIG;
       DISABLE_RTG_AUTOCONFIG;
+      rtg_cache_policy_core0(RTG_CACHE_POLICY_FOR_EMU);
    }
    else
    {
-   //remove me
-//      ENABLE_CPU_RAM_FPGA;
-//      ENABLE_BURST_READ_FPGA;
-//      ENABLE_BURST_WRITE_FPGA;
-//      if(config.autoconfig_ram==0)
-//   DISABLE_256MB_AUTOCONFIG;
-//      else
-//         ENABLE_256MB_AUTOCONFIG;
-//      ENABLE_RTG_AUTOCONFIG;
+      rtg_cache_policy_core0(RTG_CACHE_POLICY_FOR_060);
    }
-//   DISABLE_CPU_RAM_FPGA;
-//   DISABLE_MAPROM_FPGA;
-//   DISABLE_MAPROMEXT_FPGA;
-//   DISABLE_BURST_READ_FPGA;
-//   DISABLE_BURST_WRITE_FPGA;
-//   DISABLE_256MB_AUTOCONFIG;
-//   DISABLE_RTG_AUTOCONFIG;
-//#define DISABLE_SCSI
+
+   video_state=video_init();
+   video_reset();
+   mobotest();
 
    char *kickstart_pointer=0;
    char *ext_kickstart_pointer=0;
@@ -773,9 +779,8 @@ int main()
 */
 
    // configure CPU frequency with verbose = 1, nbr = 0
-   configure_clk(config.cpufreq,0,1,0);
+   configure_clk(config.cpufreq,1,0);
 
-   video_state=video_init();
 
 //    PrepareHdf();
 //    InitGayle();
@@ -807,24 +812,27 @@ int main()
 
    ltc2990_init();
 
-   XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
+   ACTIVITY_LED_ON; // ON
    DiscreteSet(REG0, FPGA_RESET);
    usleep(2500);
 
 //   int ret=0;
 //   int timer_counter_update_led=0;
-
+/*
    // Zturn Patch for Ateros phy
    Xil_Out32(0xE000A000 + 0x244,0x00080000);
    Xil_Out32(0xE000A000 + 0x248,0x00080000);
    Xil_Out32(0xE000A000 +   0xC,0xFFF70008);
+*/
 //   sleep(1);
 
-   console_init();
+   debug_console_init();
 
    xadc_init();
 
    ethernet_init();
+
+//   lwip_init();
 
    fpga_interrupt_connect(isr_video,isr_audio_tx,INT_IPL_ON_THIS_CORE);
 
@@ -881,20 +889,15 @@ int main()
 #ifndef DISABLE_SCSI
    piscsi_init();
 
-   for(int i=0;i<7;i++)
-   {
-      if(config.scsi_num[i]>=0 && config.scsi_num[i]<=19)
-         if(config.hdf[config.scsi_num[i]][0]!=0)
-            piscsi_map_drive(config.hdf[config.scsi_num[i]], i);
-   }
 #endif
    Xil_L1DCacheFlush();
    Xil_L2CacheFlush();
 
    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_DATA_ABORT_INT, DataAbortHandler,0);
+   Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_PREFETCH_ABORT_INT, PrefetchAbortHandler,0);
    Xil_ExceptionEnable();
 
-   XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+   ACTIVITY_LED_OFF; // OFF
    DiscreteClear(REG0, FPGA_RESET);
 
    if(config.boot_mode==MUSASHI || config.boot_mode==UAE || config.boot_mode==UAEJIT)
@@ -1008,7 +1011,7 @@ int main()
       {
       case M68K_RUNNING:
          rtg_loop();
-         console_loop();
+         debug_console_loop();
          if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
          {
             printf("Reset active (DOWN)...\n\r");
@@ -1033,19 +1036,19 @@ int main()
                switch(clk_config)
                {
                   case 0:
-                     configure_clk(50,25,verbose);
+                     configure_clk(50,verbose,0);
                      XGpioPs_WritePin(&GpioPs, LED2, 1);
                      break;
                   case 1:
-                     configure_clk(50,50,verbose);
+                     configure_clk(50,verbose,0);
                      XGpioPs_WritePin(&GpioPs, LED2, 0);
                      break;
                   case 2:
-                     configure_clk(100,25,verbose);
+                     configure_clk(100,verbose,0);
                      XGpioPs_WritePin(&GpioPs, LED2, 1);
                      break;
                   case 3:
-                     configure_clk(100,50,verbose);
+                     configure_clk(100,verbose,0);
                      XGpioPs_WritePin(&GpioPs, LED2, 0);
                      break;
                }
@@ -1056,11 +1059,10 @@ int main()
          }
          break;
       case M68K_RESET:
-#ifndef NO_ARM_RESET_ON_AMIGA_RESET
          int long_reset=0;
          while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
          {
-            reset_run(bm,reset_time_counter,reset_time_counter_max,long_reset);
+            reset_run(env_file_vars_temp.bootmode,reset_time_counter,reset_time_counter_max,long_reset);
             reset_time_counter++;
             if(reset_time_counter==60) // 60 -> 1 sec
        	    no_init=1;
@@ -1072,11 +1074,11 @@ int main()
                   long_reset=1;
                   reset_time_counter=0;
                   reset_time_counter_max=60*4; // 4 seconds
-                  bm++;
-                  if(bm>=BOOTMODE_NUM)
-                     bm=0;
-                  write_env_files(bm,sb,ar,cr,ks,ext_ks);
-                  for(int i=0;i<bm+1;i++)
+                  env_file_vars_temp.bootmode++;
+                  if(env_file_vars_temp.bootmode>=BOOTMODE_NUM)
+                	  env_file_vars_temp.bootmode=0;
+                  write_env_files(env_file_vars_temp);
+                  for(int i=0;i<env_file_vars_temp.bootmode+1;i++)
                   {
                      DiscreteSet(REG0,FPGA_BP); // beep
                      usleep(10000);
@@ -1101,37 +1103,38 @@ int main()
                }
             }
          }
+#ifndef NO_ARM_RESET_ON_AMIGA_RESET
 //         audio_set_interrupt_enabled(0);
 //         CPLD_RESET_ARM(0);
-           hard_reboot(); //
+         hard_reboot(); //
 #else
-         while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
+         if(long_reset)
+        	 hard_reboot();
+
+         CPLD_RESET_ARM(0);
+         state68k=M68K_RUNNING;
+         DiscreteSet(REG0, FPGA_RESET);
+         int reset_counter=10;
+         while(reset_counter>0)
          {
-            CPLD_RESET_ARM(0);
-            state68k=M68K_RUNNING;
-            DiscreteSet(REG0, FPGA_RESET);
-            int reset_counter=10;
-            while(reset_counter>0)
-            {
-               usleep(25000);
-               reset_counter--;
-            }
-            DiscreteClear(REG0, FPGA_RESET);
-            reset_counter=10;
-            while(reset_counter>0)
-            {
-               usleep(25000);
-               reset_counter--;
-            }
-            // Initialize something here... ???
-            flash_colors();
-            CPLD_RESET_ARM(0);
-            usleep(100);
-            CPLD_RESET_ARM(1);
-            printf("Reset inactive (UP)...\n\r");
-            video_reset();
-            audio_reset();
+        	 usleep(25000);
+        	 reset_counter--;
          }
+         DiscreteClear(REG0, FPGA_RESET);
+         reset_counter=10;
+         while(reset_counter>0)
+         {
+        	 usleep(25000);
+        	 reset_counter--;
+         }
+         flash_colors();
+         CPLD_RESET_ARM(0);
+         usleep(100);
+         CPLD_RESET_ARM(1);
+         printf("Reset inactive (UP)...\n\r");
+         video_reset();
+         audio_reset();
+         piscsi_init();
 #endif
          break;
       }

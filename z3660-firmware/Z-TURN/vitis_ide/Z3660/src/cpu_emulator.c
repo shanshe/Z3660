@@ -28,7 +28,8 @@ void init_shared(void)
 
 void other_tasks(void);
 extern CONFIG config;
-extern int bm,sb,ar,cr,ks,ext_ks,*scsi_num;
+extern ENV_FILE_VARS env_file_vars_temp;
+//extern int bm,sb,ar,cr,ks,ext_ks,*scsi_num;
 
 int load_rom(void)
 {
@@ -282,7 +283,7 @@ void cpu_emulator(void)
 
    usleep(1000);
    CPLD_RESET_ARM(1); // CPLD RUN
-   while(READ_NBG_ARM()==1); // make sure that we have bus control
+   while(READ_NBG_ARM()==1); // make sure that we have the bus control
 /*
    if(config.cpufreq <= 66)
 	   arm_write_nowait(0xFEA00000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 2
@@ -377,7 +378,7 @@ void cpu_emulator(void)
                int long_reset=0;
                while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
                {
-                  reset_run(bm,reset_time_counter,reset_time_counter_max,long_reset);
+                  reset_run(env_file_vars_temp.bootmode,reset_time_counter,reset_time_counter_max,long_reset);
                   reset_time_counter++;
                   if(reset_time_counter==60) // 60 -> 1 sec
                  	 no_init=1;
@@ -389,11 +390,11 @@ void cpu_emulator(void)
                         long_reset=1;
                         reset_time_counter=0;
                         reset_time_counter_max=60*4; // 4 seconds
-                        bm++;
-                        if(bm>=BOOTMODE_NUM)
-                           bm=0;
-                        write_env_files(bm,sb,ar,cr,ks,ext_ks);
-                        for(int i=0;i<bm+1;i++)
+                        env_file_vars_temp.bootmode++;
+                        if(env_file_vars_temp.bootmode>=BOOTMODE_NUM)
+                        	env_file_vars_temp.bootmode=0;
+                        write_env_files(env_file_vars_temp);
+                        for(int i=0;i<env_file_vars_temp.bootmode+1;i++)
                         {
                            DiscreteSet(REG0,FPGA_BP);
                            usleep(10000);

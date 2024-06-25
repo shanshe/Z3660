@@ -326,7 +326,7 @@ signal nTA_d: STD_LOGIC_VECTOR(3 downto 0):="0000";
 signal nTEA_d: STD_LOGIC_VECTOR(3 downto 0):="0000";
 
 signal reset_extended: STD_LOGIC:='1';
-signal reset_counter: STD_LOGIC_VECTOR(6 downto 0):="0000000";
+signal reset_counter: STD_LOGIC_VECTOR(4 downto 0):="00000";
 signal nBG_ARM: STD_LOGIC:='1';
 
 signal nBR_ARM : STD_LOGIC:='1';
@@ -445,7 +445,7 @@ begin
    OEBUS     <= "01101010"    when DMA_BUSY='1' else OEBUS_int; -- 32 bit transparent bus
    nDMACOE   <= '1'           when DMA_BUSY='1' else nDMACOE_int;
 
-   nSNOOP <= '0' when DMA_BUSY='1' else 'Z';
+   nSNOOP <= '0' when DMA_BUSY='1' or nBG_ARM='0' else 'Z';
 
    nBB040 <= '0' when DMA_BUSY='1' else 'Z';
 
@@ -662,16 +662,16 @@ nTS_030 <= --nTS_FPGA and
    process(BCLK_int)
    begin
       if(BCLK_int'event and BCLK_int='1') then
-         if (n040RSTO='0' or reset_counter/="0000000") then
-            if (reset_counter(6 downto 0)="1000000") then
+         if (n040RSTO='0' or reset_counter/="00000") then
+            if (reset_counter="11110") then
                reset_extended <= '1';
-               reset_counter(6 downto 0) <= "0000000";
+               reset_counter <= "00000";
             else
                reset_counter <= reset_counter + 1;
                reset_extended <= '0';
             end if;
          else
-            reset_counter(6 downto 0) <= "0000000";
+            reset_counter <= "00000";
          end if;
       end if;
    end process;
@@ -681,7 +681,7 @@ nTS_030 <= --nTS_FPGA and
          nRBERR <= nBERR;
          nRHALT <= nHLT;
          if(nCPURST='0' or RESET_CPLD='0'
---         or n040RSTO='0' -- this needs a board fix
+--         or n040RSTO='0'
          or reset_extended='0'
 --         or nPWRST='0' -- it needs Voltage detector to be soldered...
          ) then

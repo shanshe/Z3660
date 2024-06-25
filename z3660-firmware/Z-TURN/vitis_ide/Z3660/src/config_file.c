@@ -73,6 +73,7 @@ const char *config_item_names[CONFITEM_NUM] = {
       "ext_kickstart7",
       "ext_kickstart8",
       "ext_kickstart9",
+	  "enable_test",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
       "CPU",
@@ -128,6 +129,7 @@ void load_default_config(void)
    config.ext_kickstart7[0]=0;
    config.ext_kickstart8[0]=0;
    config.ext_kickstart9[0]=0;
+   config.enable_test=0;
 }
 void write_config_file(char *filename)
 {
@@ -193,6 +195,10 @@ void write_config_file(char *filename)
    print_line(&fil,"resistor 800.0\n");
    print_line(&fil,"# Room temperature in Celsius\n");
    print_line(&fil,"temperature 27.0\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Select Test Amiga CHIP RAM access on start (it uses the ARM, not the CPU)\n");
+   print_line(&fil,"enable_test YES\n");
+   print_line(&fil,"#enable_test NO\n");
    print_line(&fil,"\n");
    f_close(&fil);
 
@@ -390,6 +396,12 @@ retry:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.scsiboot=get_yesno_type(cur_cmd);
          printf("[CFG] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
+         break;
+
+      case CONFITEM_ENABLE_TEST:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.enable_test=get_yesno_type(cur_cmd);
+         printf("[CFG] Enable Test %s.\n", yesno_names[config.enable_test]);
          break;
 
       case CONFITEM_SCSI0:
@@ -698,10 +710,29 @@ retry:
    }
    f_close(&fil);
 
+   ret=f_open(&fil,DEFAULT_ROOT "env/enabletest", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.enable_test=get_yesno_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] Enable Test %s.\e[0m\n", yesno_names[config.enable_test]);
+	  }
+	  else
+		  printf("[ENV] Warning!!! Enable Test file is empty\n");
+   }
+   f_close(&fil);
+
    f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
    Xil_ExceptionEnable();
 }
-int write_env_files(int bootmode, int scsiboot, int autoconfig_ram, int cpu_ram, int kickstart, int ext_kickstart)
+int write_env_files(ENV_FILE_VARS env_file)
 {
    static FIL fil;      /* File object */
    static FATFS fatfs;
@@ -723,8 +754,8 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/bootmode with %s\r\n",bootmode_names[bootmode]);
-      f_printf(&fil,"%s\n",bootmode_names[bootmode]);
+      xil_printf("[Config] Write file env/bootmode with %s\r\n",bootmode_names[env_file.bootmode]);
+      f_printf(&fil,"%s\n",bootmode_names[env_file.bootmode]);
       f_close(&fil);
    }
    else
@@ -737,8 +768,8 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/scsiboot with %s\r\n",yesno_names[scsiboot]);
-      f_printf(&fil,"%s\n",yesno_names[scsiboot]);
+      xil_printf("[Config] Write file env/scsiboot with %s\r\n",yesno_names[env_file.scsiboot]);
+      f_printf(&fil,"%s\n",yesno_names[env_file.scsiboot]);
       f_close(&fil);
    }
    else
@@ -751,8 +782,8 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/autoconfig_ram with %s\r\n",yesno_names[autoconfig_ram]);
-      f_printf(&fil,"%s\n",yesno_names[autoconfig_ram]);
+      xil_printf("[Config] Write file env/autoconfig_ram with %s\r\n",yesno_names[env_file.autoconfig_ram]);
+      f_printf(&fil,"%s\n",yesno_names[env_file.autoconfig_ram]);
       f_close(&fil);
    }
    else
@@ -765,8 +796,8 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/cpu_ram", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/cpu_ram with %s\r\n",yesno_names[cpu_ram]);
-      f_printf(&fil,"%s\n",yesno_names[cpu_ram]);
+      xil_printf("[Config] Write file env/cpu_ram with %s\r\n",yesno_names[env_file.cpu_ram]);
+      f_printf(&fil,"%s\n",yesno_names[env_file.cpu_ram]);
       f_close(&fil);
    }
    else
@@ -814,6 +845,20 @@ retry:
    else
    {
       xil_printf("[Config] ERROR Write file env/ext_kickstart\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/enabletest", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/enabletest with %s\r\n",yesno_names[env_file.enable_test]);
+      f_printf(&fil,"%s\n",yesno_names[env_file.enable_test]);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/enabletest\r\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -904,6 +949,7 @@ retry:
    DELETE_FILE("env/kickstart");
    DELETE_FILE("env/ext_kickstart");
    DELETE_FILE("env/scsi");
+   DELETE_FILE("env/enabletest");
 
    usleep(10000);
    f_mount(NULL, Path, 1); // NULL unmount, 1 immediately

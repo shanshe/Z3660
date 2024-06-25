@@ -21,7 +21,7 @@
 #define Z3_SCRATCH_ADDR             (RTG_BASE+0x03200000) // FIXME @ _Bnu
 #define ADDR_ADJ                    0x001F0000 // FIXME @ _Bnu
 
-#define Z3_SOFT3D_ADDR              (0x50000000+0x04200000) // FIXME @ _Bnu
+#define Z3_SOFT3D_ADDR              (0x50000000+0x04200000)
 
 
 #define AUDIO_TX_BUFFER_ADDRESS     0x07CE0000 // default, changed by driver

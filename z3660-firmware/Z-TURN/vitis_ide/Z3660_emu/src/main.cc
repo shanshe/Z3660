@@ -30,6 +30,7 @@
 
 #include "newcpu.h"
 #include "custom.h"
+#include "defines.h"
 
 SHARED *shared;
 extern LOCAL local;
@@ -98,6 +99,7 @@ extern "C" void write_rtg_register(uint16_t zaddr,uint32_t zdata)
         shared->write_rtg_data=zdata;
 //    last_zaddr=zaddr;
 //    last_zdata=zdata;
+//    	Xil_L1DCacheFlush();
     shared->write_rtg=1;
     dsb();
     shared->shared_data=1;
@@ -110,6 +112,7 @@ extern "C" uint32_t read_rtg_register(uint16_t zaddr)
 //    last_zaddr3=zaddr;
     shared->read_rtg=1;
     dsb();
+//    Xil_L1DCacheInvalidate();
     shared->shared_data=1;
     while(shared->read_rtg==1){NOP;}
     uint32_t data=shared->read_rtg_data;
@@ -176,6 +179,8 @@ extern "C" void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type)
     shared->write_scsi=1;
 	dsb();
     shared->shared_data=1;
+
+
     while(shared->write_scsi==1){NOP;}
 }
 
@@ -302,11 +307,26 @@ void ipl_interrupt_handler(XGpioPs *InstancePtr)
 */
 void ipl_interrupt_handler(void *CallBackRef, u32 Bank, u32 Status)
 {
+	int read_irq1,read_irq2;
 //    read_irq=XGpioPs_ReadPin(gpio, PS_MIO_0)|(XGpioPs_ReadPin(gpio, PS_MIO_9)<<1)|(XGpioPs_ReadPin(gpio, PS_MIO_12)<<2);
-    uint32_t read=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
-    read_irq =(read>>(PS_MIO_0   ))&1;
-    read_irq|=(read>>(PS_MIO_9 -1))&2;
-    read_irq|=(read>>(PS_MIO_12-2))&4;
+	uint32_t read1=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
+    read_irq1 =(read1>>(PS_MIO_0   ))&1;
+    read_irq1|=(read1>>(PS_MIO_9 -1))&2;
+    read_irq1|=(read1>>(PS_MIO_12-2))&4;
+    dsb();
+
+    do {
+        uint32_t read2=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
+        read_irq2 =(read1>>(PS_MIO_0   ))&1;
+        read_irq2|=(read1>>(PS_MIO_9 -1))&2;
+        read_irq2|=(read1>>(PS_MIO_12-2))&4;
+        if(read_irq1!=read_irq2)
+        {
+        	read_irq1=read_irq2;
+        	read_irq2=0xFFFFFFFF;
+        }
+    }while (read_irq1!=read_irq2);
+    read_irq=read_irq2;
 //    z3660_printf("Interrupt!\n");
 }
 
@@ -472,35 +492,40 @@ void isr_video(void *dummy)
    int vblank=video_formatter_read(0);
    if(vblank)
    {
-/*
+//#define DEBUG_VBLANK
+#ifdef DEBUG_VBLANK
       static int c=0;
       static int s=0;
       c++;
-      if(c==60)
+      if(c==600)
       {
          c=0;
          s++;
          printf("[Core 1] vb %d %08lX\n",s,*((volatile uint32_t*)0xF8F0183C));
       }
-*/
-	   Xil_L1DCacheFlush();
+#endif
+      Xil_L1DCacheFlush();
+//      Xil_L2CacheFlush();
    }
 }
 int fpga_interrupt_connect(void)
 {
+#define ENABLE_VBLANK_INTERRUPT
+#ifdef ENABLE_VBLANK_INTERRUPT
 	XScuGic_SetPriorityTriggerType(&intc,INT_INTERRUPT_ID_2, 0xA0, 0x03); // vblank priority 0xA0 (0xF8-0x00), rising edge 0x03
 	//int result=
 	XScuGic_Connect(&intc, INT_INTERRUPT_ID_2, (Xil_ExceptionHandler)isr_video,NULL);
 
 	XScuGic_Enable(&intc, INT_INTERRUPT_ID_2);
-
+#endif
 	return(XST_SUCCESS);
 }
 
 int main()
 {
     Xil_ICacheEnable();
-    Xil_DCacheEnable();
+    Xil_L1DCacheEnable();
+    Xil_L2CacheEnable();
 
     // This has happend when upgrading to Vitis...
     // This is incredible, MMU 0 position is not updated with the SetTlbAttributes subroutine!!!
@@ -523,7 +548,9 @@ int main()
     for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, framebuffer is at 0x200000)
         SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
     for(int i=0x182;i<0x1FE;i++) // RTG
-        SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//0x14de2);//NORM_NONCACHE);
+        SetTlbAttributes(i*0x100000UL,RTG_CACHE_POLICY_FOR_EMU);//0x14de2);//NORM_NONCACHE);
+    for(int i=0x1C2;i<0x1C3;i++) // RTG Registers (1 MB for soft3d registers)
+       Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
     for(int i=0x1FE;i<0x200;i++) // RTG
         SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);//0x14de2);//NORM_NONCACHE);
 //    for(int i=0x200;i<0x300;i++) // Z3 RAM

@@ -14,9 +14,10 @@
 
 #include "sleep.h"
 #include <stdio.h>
-#include "../console.h"
 
-extern CONSOLE con;
+#include "../debug_console.h"
+
+extern DEBUG_CONSOLE debug_console;
 
 extern XIicPs IicInstance;      /* The instance of the IIC device. */
 
@@ -28,7 +29,7 @@ volatile uint8_t ReadBuffer_ltc2990[2];   /* Read buffer for reading a page. */
 
 void DEBUG_I2C(const char *format, ...)
 {
-	if(con.debug_i2c==0)
+	if(debug_console.debug_i2c==0)
 		return;
 	va_list args;
 	va_start(args, format);
@@ -41,7 +42,7 @@ int iic_write_ltc2990(uint8_t command,uint8_t data)
 {
    static int state=0;
    int Status;
-   if(i2c_ltc2990==100 || con.stop_i2c)
+   if(i2c_ltc2990==100 || debug_console.stop_i2c)
    {
       return(1);
    }
@@ -85,7 +86,7 @@ int iic_read_ltc2990(uint8_t command)
 {
    static int state=0;
    int Status;
-   if(i2c_ltc2990==100 || con.stop_i2c)
+   if(i2c_ltc2990==100 || debug_console.stop_i2c)
    {
       return(1);
    }

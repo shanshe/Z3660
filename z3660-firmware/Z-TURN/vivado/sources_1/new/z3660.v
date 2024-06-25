@@ -53,6 +53,7 @@ module z3660(
     output reg [2:0] m00_axi_awprot,
     //output reg [3:0] m00_axi_awqos,
     output reg m00_axi_awvalid,
+    output reg [4:0] m00_axi_awuser,
    
     // write channel
     input wire m00_axi_wready,
@@ -77,6 +78,7 @@ module z3660(
     output reg [2:0] m00_axi_arprot,
     //output reg [3 : 0] m00_axi_arqos,
     output reg m00_axi_arvalid,
+    output reg [4:0] m00_axi_aruser,
    
     output reg m00_axi_rready,
     input wire [31:0] m00_axi_rdata,
@@ -138,6 +140,7 @@ module z3660(
 //      m00_axi_wlast <= 'h1;
       m00_axi_awsize <= 'h2; // 2^2 == 4 bytes
       m00_axi_awcache <= 'hF; //was 3
+      m00_axi_awuser <= 'h1F;
 //      m00_axi_awcache <= 'h3; //was 3
       m00_axi_awlock <= 'h0;
       m00_axi_awprot <= 'h0;
@@ -148,6 +151,7 @@ module z3660(
 //      m00_axi_arburst <= 'h0;
       m00_axi_arsize <= 'h2;
       m00_axi_arcache <= 'hF; //was 3
+      m00_axi_aruser <= 'h1F;
 //      m00_axi_arcache <= 'h3; //was 3
       m00_axi_arlock <= 'h0;
       m00_axi_arprot <= 'h0;

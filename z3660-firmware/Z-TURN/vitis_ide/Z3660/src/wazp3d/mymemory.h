@@ -133,7 +133,7 @@ void MMfree(void *pt)
 #ifdef WAZP3DDEBUG
                 if(Wazp3D->DebugMemUsage.ON) Libprintf("MMfree() OK for pt: %ld was <%s>\n",ME->pt,ME->name);
 #endif
-                Libprintf("MMfree() OK for pt: %08lx was <%s>\n",(uint32_t)ME->pt,ME->name);
+                DEBUG_SOFT3D("MMfree() OK for pt: %08lx was <%s>\n",(uint32_t)ME->pt,ME->name);
             }
             else
             {

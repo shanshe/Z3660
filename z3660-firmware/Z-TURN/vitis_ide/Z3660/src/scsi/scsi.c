@@ -22,7 +22,7 @@
 #include "z3660_scsi_enums.h"
 #include "scsi.h"
 #include "../config_file.h"
-#include "../console.h"
+#include "../debug_console.h"
 //#include "platforms/amiga/hunk-reloc.h"
 extern CONFIG config;
 #define BE(val) be32toh(val)
@@ -54,10 +54,10 @@ static const char *op_type_names[4] = {
 #ifdef NO_DEBUG_CONSOLE
 #define DEBUG(...)
 #else
-extern CONSOLE con;
+extern DEBUG_CONSOLE debug_console;
 void DEBUG(const char *format, ...)
 {
-	if(con.debug_scsi==0)
+	if(debug_console.debug_scsi==0)
 		return;
 	va_list args;
 	va_start(args, format);
@@ -106,7 +106,12 @@ struct hunk_reloc piscsi_hreloc[2048];
 static FATFS fatfs;
 
 int piscsi_init() {
-	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
+	if(config.scsiboot==0)
+	{
+		ACTIVITY_LED_OFF; // OFF
+		return(0);
+	}
+	ACTIVITY_LED_ON; // ON
 
     for (int i = 0; i < 8; i++) {
         devs[i].fd = 0;
@@ -117,7 +122,8 @@ int piscsi_init() {
 
 	TCHAR *Path = DEFAULT_ROOT;
 	f_mount(&fatfs, Path, 1); // 1 mount immediately
-
+	// force to load piscsi always
+	piscsi_rom_ptr = NULL;
     if (piscsi_rom_ptr == NULL) {
         FIL in;
         int ret = f_open(&in,DEFAULT_ROOT "z3660_scsi.rom", FA_READ | FA_OPEN_EXISTING);
@@ -128,7 +134,7 @@ int piscsi_init() {
 //            ac_piscsi_rom[21] = 0;
 //            ac_piscsi_rom[22] = 0;
 //            ac_piscsi_rom[23] = 0;
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return(0); // Boot ROM disabled
         }
         piscsi_rom_size = f_size(&in);
@@ -152,11 +158,22 @@ int piscsi_init() {
         printf("[PISCSI] Boot ROM already loaded.\n");
     }
 //    fflush(stdout);
-	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+	for(int i=0;i<7;i++)
+	{
+		if(config.scsi_num[i]>=0 && config.scsi_num[i]<=19)
+			if(config.hdf[config.scsi_num[i]][0]!=0)
+				piscsi_map_drive(config.hdf[config.scsi_num[i]], i);
+	}
+	ACTIVITY_LED_OFF; // OFF
     return(1); // Boot ROM loaded
 }
 
 void piscsi_shutdown() {
+	if(config.scsiboot==0)
+	{
+		ACTIVITY_LED_OFF; // OFF
+		return;
+	}
     printf("[PISCSI] Shutting down PiSCSI...");
     for (int i = 0; i < 8; i++) {
         if (devs[i].fd != 0) {
@@ -187,7 +204,7 @@ void piscsi_shutdown() {
 }
 
 void piscsi_find_partitions(struct piscsi_dev *d) {
-	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
+	ACTIVITY_LED_ON; // ON
     FIL *fd = d->fd;
     int cur_partition = 0;
     uint8_t tmp;
@@ -201,7 +218,7 @@ void piscsi_find_partitions(struct piscsi_dev *d) {
 
     if (!d->rdb || d->rdb->rdb_PartitionList == 0) {
         DEBUG("[PISCSI] No partitions on disk.\n");
-    	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+    	ACTIVITY_LED_OFF; // OFF
         return;
     }
 
@@ -215,7 +232,7 @@ next_partition:;
     uint32_t first = be32toh(*((uint32_t *)&block[0]));
     if (first != PART_IDENTIFIER) {
         DEBUG("Entry at block %ld is not a valid partition. Aborting.\n", BE(d->rdb->rdb_PartitionList));
-    	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+    	ACTIVITY_LED_OFF; // OFF
         return;
     }
 
@@ -255,12 +272,12 @@ partition_renamed:
     d->num_partitions = cur_partition + 1;
 //    d->fshd_offs = lseek64(fd, 0, SEEK_CUR);
     d->fshd_offs = fd->fptr;
-	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+	ACTIVITY_LED_OFF; // OFF
     return;
 }
 
 int piscsi_parse_rdb(struct piscsi_dev *d) {
-	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
+	ACTIVITY_LED_ON; // ON
     FIL *fd = d->fd;
     int i = 0;
     uint8_t *block = malloc(PISCSI_MAX_BLOCK_SIZE);
@@ -288,7 +305,7 @@ rdb_found:;
         free(d->rdb);
     d->rdb = rdb;
     sprintf(d->rdb->rdb_DriveInitName, "z3660_scsi.device");
-	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+	ACTIVITY_LED_OFF; // OFF
     return 0;
 
 no_rdb_found:;
@@ -297,7 +314,7 @@ no_rdb_found:;
     	free(block);
     }
 
-	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+	ACTIVITY_LED_OFF; // OFF
     return -1;
 }
 
@@ -730,7 +747,7 @@ void piscsi_debugme(uint32_t index) {
 }
 
 void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
-	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
+	ACTIVITY_LED_ON; // ON
     int32_t r;
     uint32_t map;
 #ifndef PISCSI_DEBUG
@@ -1069,13 +1086,13 @@ fs_found:;
             printf("[!!!PISCSI] WARN: Unhandled register write to %.8lX: %ld\n", addr, val);
             break;
     }
-	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+	ACTIVITY_LED_OFF; // OFF
 }
 
 #define PIB 0x00
 
 uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
-	XGpioPs_WritePin(&GpioPs, LED1, 0); // ON
+	ACTIVITY_LED_ON; // ON
     if (type) {}
 
     if (addr >= PISCSI_CMD_ROM) {
@@ -1102,10 +1119,10 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
             }
             Xil_L1DCacheFlushRange((INTPTR)piscsi_rom_ptr,BOOT_ROM_SIZE);
             Xil_L2CacheFlushRange((INTPTR)piscsi_rom_ptr,BOOT_ROM_SIZE);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return v;
         }
-    	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+    	ACTIVITY_LED_OFF; // OFF
         return 0;
     }
 
@@ -1115,69 +1132,69 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
         case PISCSI_CMD_ADDR3:
         case PISCSI_CMD_ADDR4: {
             int i = (addr - PISCSI_CMD_ADDR1) / 4;
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return piscsi_u32[i];
             break;
         }
         case PISCSI_CMD_DRVTYPE:
             if (devs[piscsi_cur_drive].fd == 0) {
                 DEBUG("[PISCSI] %s Read from DRVTYPE %d, drive not attached.\n", op_type_names[type], piscsi_cur_drive);
-            	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+            	ACTIVITY_LED_OFF; // OFF
                 return 0;
             }
             DEBUG("[PISCSI] %s Read from DRVTYPE %d, drive attached.\n", op_type_names[type], piscsi_cur_drive);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return 1;
             break;
         case PISCSI_CMD_DRVNUM:
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return piscsi_cur_drive;
             break;
         case PISCSI_CMD_CYLS:
             DEBUG("[PISCSI] %s Read from CYLS %d: %ld\n", op_type_names[type], piscsi_cur_drive, devs[piscsi_cur_drive].c);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return devs[piscsi_cur_drive].c;
             break;
         case PISCSI_CMD_HEADS:
             DEBUG("[PISCSI] %s Read from HEADS %d: %d\n", op_type_names[type], piscsi_cur_drive, devs[piscsi_cur_drive].h);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return devs[piscsi_cur_drive].h;
             break;
         case PISCSI_CMD_SECS:
             DEBUG("[PISCSI] %s Read from SECS %d: %d\n", op_type_names[type], piscsi_cur_drive, devs[piscsi_cur_drive].s);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return devs[piscsi_cur_drive].s;
             break;
         case PISCSI_CMD_BLOCKS: {
             uint32_t blox = devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size;
             DEBUG("[PISCSI] %s Read from BLOCKS %d: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
             DEBUG("filesize: %lld (%lld blocks*block_size)\n", devs[piscsi_cur_drive].fs, ((uint64_t)blox)*devs[piscsi_cur_drive].block_size);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return blox;
             break;
         }
         case PISCSI_CMD_GETPART: {
             DEBUG("[PISCSI] Get ROM partition %ld offset: %.8lX\n", rom_cur_partition, rom_partitions[rom_cur_partition]);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return rom_partitions[rom_cur_partition];
             break;
         }
         case PISCSI_CMD_GETPRIO:
             DEBUG("[PISCSI] Get partition %ld boot priority: %ld\n", rom_cur_partition, rom_partition_prio[rom_cur_partition]);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return rom_partition_prio[rom_cur_partition];
             break;
         case PISCSI_CMD_CHECKFS:
             DEBUG("[PISCSI] Get current loaded file system: %.8lX\n", filesystems[rom_cur_fs].FS_ID);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return filesystems[rom_cur_fs].FS_ID;
         case PISCSI_CMD_FSSIZE:
             DEBUG("[PISCSI] Get alloc size of loaded file system: %ld\n", filesystems[rom_cur_fs].h_info.alloc_size);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return filesystems[rom_cur_fs].h_info.alloc_size;
         case PISCSI_CMD_BLOCKSIZE:
             DEBUG("[PISCSI] Get block size of drive %d: %ld\n", piscsi_cur_drive, devs[piscsi_cur_drive].block_size);
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return devs[piscsi_cur_drive].block_size;
         case PISCSI_CMD_GET_FS_INFO: {
             int i = 0;
@@ -1191,16 +1208,16 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
 #endif
                 for (i = 0; i < piscsi_num_fs; i++) {
                     if (rom_partition_dostype[rom_cur_partition] == filesystems[i].FS_ID) {
-                    	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+                    	ACTIVITY_LED_OFF; // OFF
                         return 0;
                     }
                 }
             }
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
             return 1;
         }
         case PISCSI_CMD_USED_DMA: {
-        	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+        	ACTIVITY_LED_OFF; // OFF
         	uint32_t temp=used_dma;
 //        	DEBUG("Read used_dma=%08lX\n",used_dma);
         	used_dma=0;
@@ -1211,6 +1228,6 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
             break;
     }
 
-	XGpioPs_WritePin(&GpioPs, LED1, 1); // OFF
+	ACTIVITY_LED_OFF; // OFF
     return 0;
 }

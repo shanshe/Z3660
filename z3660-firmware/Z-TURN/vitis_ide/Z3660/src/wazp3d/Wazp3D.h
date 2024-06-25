@@ -927,9 +927,9 @@ ULONG LibMilliTimer(void);
 
 #pragma pack(4)
 struct Soft3DData {
-  uint32_t offset[3];
-  uint32_t format[2];
-  uint16_t x[4], y[4];
+  volatile uint32_t offset[4];
+  volatile uint32_t format[2];
+  volatile uint16_t x[2], y[2];
 };
 
 #endif

@@ -5,18 +5,18 @@
 /* LICENSE: GNU General Public License (GNU GPL) for this file                */
 
 /* This file contain the SOFT3D rasterizer that truly draw the pixels            */
+
 #include <stdio.h>
-//#include "gfx.h"
 #include "../video.h"
 #include <xil_types.h>
 #include "xil_printf.h"
-#include "../console.h"
+
+#include "../debug_console.h"
 #include "../memorymap.h"
 #include "str_soft3dop.h"
 #include "heap.h"
-//#include "../wazp3d/Wazp3D.h"
-//int set_framebuffer_address(uint32_t fb);
-extern CONSOLE con;
+
+extern DEBUG_CONSOLE debug_console;
 
 typedef int16_t WORD;
 
@@ -27,8 +27,19 @@ typedef int16_t WORD;
 struct WAZP3D_parameters *Wazp3D;            /* local pointer to the struct in Warp3d.library */
 struct memory3D *firstME=NULL;
 
+void DEBUG_SOFT3D(const char *format, ...)
+{
+	if(debug_console.debug_soft3d==0)
+		return;
+	va_list args;
+	va_start(args, format);
+	vprintf(format,args);
+	va_end(args);
+}
+
 #include "mymemory.h"
 #include <stdlib.h>
+
 void PrintP(struct point3D *P);
 void PrintPoint3D(struct point3D *P);
 
@@ -92,210 +103,212 @@ void Libloadfile(void *filename,void *pt,ULONG size)
 #undef TRUE
 #define TRUE 1
 
+volatile struct Soft3DData *data3d = (volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR);
+struct Soft3DData local_data;
+
 void handle_soft3d_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 {
-    struct Soft3DData *data = (struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR);
 //    if(con.debug_rtg)
 //    printf("soft3d_op 0x%X  %s\n",zdata,soft3d_op_string[zdata]);
 
-    switch(zdata) {
+	switch(zdata) {
     	case OP_START: {
-    		SWAP32(data->offset[0]);
-    		printf("PrefsWazp3D 0x%08lx\n",data->offset[0]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		DEBUG_SOFT3D("PrefsWazp3D 0x%08lx\n",local_data.offset[0]);
     		uint32_t add=(uint32_t)
-    				SOFT3D_Start((uint32_t *)data->offset[0]);
+    				SOFT3D_Start((uint32_t *)local_data.offset[0]);
     		*(uint32_t*)(RTG_BASE+REG_ZZ_SOFT3D_OP)=swap32(add);
     	}
     		break;
     	case OP_END:
-    		SWAP32(data->offset[0]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-    		SOFT3D_End((uint32_t *)data->offset[0]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		SOFT3D_End((uint32_t *)local_data.offset[0]);
     		break;
     	case OP_SETBITMAP:
-    		SWAP32(data->offset[0]);
-    		SWAP32(data->offset[1]);
-    		SWAP32(data->offset[2]);
-    		SWAP32(data->format[0]);
-    		SWAP16(data->x[0]);
-    		SWAP16(data->y[0]);
-    		SWAP16(data->x[1]);
-    		SWAP16(data->y[1]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("BM 0x%08lx\n",data->offset[1]);
-//    		printf("BMDATA 0x%08lx\n",data->offset[2]);
-//    		printf("BMFORMAT 0x%08lx\n",data->format[0]);
-//    		printf("x %d y %d\n",data->x[0],data->y[0]);
-//    		printf("l %d h %d\n",data->x[1],data->y[1]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		local_data.offset[2]=swap32(data3d->offset[2]);
+    		local_data.format[0]=swap32(data3d->format[0]);
+    		local_data.x[0]=swap16(data3d->x[0]);
+    		local_data.y[0]=swap16(data3d->y[0]);
+    		local_data.x[1]=swap16(data3d->x[1]);
+    		local_data.y[1]=swap16(data3d->y[1]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("BM 0x%08lx\n",local_data.offset[1]);
+    		DEBUG_SOFT3D("BMDATA 0x%08lx\n",local_data.offset[2]);
+    		DEBUG_SOFT3D("BMFORMAT 0x%08lx\n",local_data.format[0]);
+    		DEBUG_SOFT3D("x %d y %d\n",local_data.x[0],local_data.y[0]);
+    		DEBUG_SOFT3D("l %d h %d\n",local_data.x[1],local_data.y[1]);
 
-    		SOFT3D_SetBitmap((uint32_t *)data->offset[0],
-    				         (uint32_t *)data->offset[1],
-							 (uint32_t *)data->offset[2],
-							 data->format[0],
-							 data->x[0],data->y[0],
-							 data->x[1],data->y[1]);
+    		SOFT3D_SetBitmap((uint32_t *)local_data.offset[0],
+    				         (uint32_t *)local_data.offset[1],
+							 (uint32_t *)local_data.offset[2],
+							 local_data.format[0],
+							 local_data.x[0],local_data.y[0],
+							 local_data.x[1],local_data.y[1]);
     		break;
     	case OP_SETCLIPPING:
-    		SWAP32(data->offset[0]);
-    		SWAP16(data->x[0]);
-    		SWAP16(data->x[1]);
-    		SWAP16(data->y[0]);
-    		SWAP16(data->y[1]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("xmin %d ymin %d\n",data->x[0],data->y[0]);
-//    		printf("xmax %d ymax %d\n",data->x[1],data->y[1]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.x[0]=swap16(data3d->x[0]);
+    		local_data.x[1]=swap16(data3d->x[1]);
+    		local_data.y[0]=swap16(data3d->y[0]);
+    		local_data.y[1]=swap16(data3d->y[1]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("xmin %d ymin %d\n",local_data.x[0],local_data.y[0]);
+    		DEBUG_SOFT3D("xmax %d ymax %d\n",local_data.x[1],local_data.y[1]);
 
-    		SOFT3D_SetClipping((uint32_t *)data->offset[0],
-							   data->x[0],data->x[1],
-							   data->y[0],data->y[1]);
+    		SOFT3D_SetClipping((uint32_t *)local_data.offset[0],
+							   local_data.x[0],local_data.x[1],
+							   local_data.y[0],local_data.y[1]);
     		break;
     	case OP_SETDRAWSTATE:
-    		SWAP32(data->offset[0]);
-    		SWAP32(data->offset[1]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("STA 0x%08lx\n",data->offset[1]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("STA 0x%08lx\n",local_data.offset[1]);
 
-    		SOFT3D_SetDrawState((uint32_t *)data->offset[0],
-    				            (uint32_t *)data->offset[1]);
+    		SOFT3D_SetDrawState((uint32_t *)local_data.offset[0],
+    				            (uint32_t *)local_data.offset[1]);
     		break;
     	case OP_DRAWPRIMITIVE:
-    		SWAP32(data->offset[0]);
-    		SWAP32(data->offset[1]);
-    		SWAP32(data->format[0]);
-    		SWAP32(data->format[1]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("P 0x%08lx\n",data->offset[1]);
-//    		printf("PNB 0x%08lx\n",data->format[0]);
-//    		printf("PRIMITIVE 0x%08lx\n",data->format[1]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		local_data.format[0]=swap32(data3d->format[0]);
+    		local_data.format[1]=swap32(data3d->format[1]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("P 0x%08lx\n",local_data.offset[1]);
+    		DEBUG_SOFT3D("PNB 0x%08lx\n",local_data.format[0]);
+    		DEBUG_SOFT3D("PRIMITIVE 0x%08lx\n",local_data.format[1]);
 
-    		SOFT3D_DrawPrimitive((uint32_t *)data->offset[0],
-    				             (uint32_t *)data->offset[1],
-								 data->format[0],
-								 data->format[1]);
+    		SOFT3D_DrawPrimitive((uint32_t *)local_data.offset[0],
+    				             (uint32_t *)local_data.offset[1],
+								 local_data.format[0],
+								 local_data.format[1]);
     		break;
     	case OP_DOUPDATE: {
-    		SWAP32(data->offset[0]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		uint32_t dat=swap32((uint32_t)SOFT3D_DoUpdate((uint32_t *)data->offset[0]));
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+//    		uint32_t dat=swap32((uint32_t)SOFT3D_DoUpdate((uint32_t *)local_data.offset[0]));
     		uint32_t dat=0; // why the amiga hangs when this returns true?
     		*(uint32_t*)(RTG_BASE+REG_ZZ_SOFT3D_OP)=dat;
     	}
     		break;
     	case OP_FLUSH:
-    		SWAP32(data->offset[0]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
 
-    		SOFT3D_Flush((uint32_t *)data->offset[0]);
+    		SOFT3D_Flush((uint32_t *)local_data.offset[0]);
     		break;
     	case OP_CREATETEXTURE: {
-    		SWAP32(data->offset[0]);
-    		SWAP32(data->offset[1]);
-    		SWAP16(data->x[0]);
-    		SWAP16(data->y[0]);
-    		SWAP16(data->x[1]);
-    		SWAP16(data->y[1]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("P 0x%08lx\n",data->offset[1]);
-//    		printf("l %d h %d\n",data->x[0],data->y[0]);
-//    		printf("format %d textflags %d\n",data->x[1],data->y[1]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		local_data.x[0]=swap16(data3d->x[0]);
+    		local_data.y[0]=swap16(data3d->y[0]);
+    		local_data.x[1]=swap16(data3d->x[1]);
+    		local_data.y[1]=swap16(data3d->y[1]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("P 0x%08lx\n",local_data.offset[1]);
+    		DEBUG_SOFT3D("l %d h %d\n",local_data.x[0],local_data.y[0]);
+    		DEBUG_SOFT3D("format %d textflags %d\n",local_data.x[1],local_data.y[1]);
 
     		uint32_t add=(uint32_t)
-    		SOFT3D_CreateTexture((uint32_t *)data->offset[0],
-    				             (uint32_t *)data->offset[1],
-								 data->x[0],data->y[0],
-								 data->x[1],data->y[1]);
+    		SOFT3D_CreateTexture((uint32_t *)local_data.offset[0],
+    				             (uint32_t *)local_data.offset[1],
+								 local_data.x[0],local_data.y[0],
+								 local_data.x[1],local_data.y[1]);
             *(uint32_t*)(RTG_BASE+REG_ZZ_SOFT3D_OP)=swap32(add);
     	}
     		break;
     	case OP_FREETEXTURE:
-    		SWAP32(data->offset[0]);
-    		SWAP32(data->offset[1]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("ST 0x%08lx\n",data->offset[1]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("ST 0x%08lx\n",local_data.offset[1]);
 
-    		SOFT3D_FreeTexture((uint32_t *)data->offset[0],
-    				           (uint32_t *)data->offset[1]);
+    		SOFT3D_FreeTexture((uint32_t *)local_data.offset[0],
+    				           (uint32_t *)local_data.offset[1]);
     		break;
     	case OP_UPDATETEXTURE:
-    		SWAP32(data->offset[0]);
-    		SWAP32(data->offset[1]);
-    		SWAP32(data->offset[2]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("ST 0x%08lx\n",data->offset[1]);
-//    		printf("PT 0x%08lx\n",data->offset[2]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		local_data.offset[2]=swap32(data3d->offset[2]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("ST 0x%08lx\n",local_data.offset[1]);
+    		DEBUG_SOFT3D("PT 0x%08lx\n",local_data.offset[2]);
 
-    		SOFT3D_UpdateTexture((uint32_t *)data->offset[0],
-    				             (uint32_t *)data->offset[1],
-								 (uint32_t *)data->offset[2]);
+    		SOFT3D_UpdateTexture((uint32_t *)local_data.offset[0],
+    				             (uint32_t *)local_data.offset[1],
+								 (uint32_t *)local_data.offset[2]);
     		break;
     	case OP_ALLOCZBUFFER: {
-    		SWAP32(data->offset[0]);
-    		SWAP16(data->x[0]);
-    		SWAP16(data->y[0]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("l %d h %d\n",data->x[0],data->y[0]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.x[0]=swap16(data3d->x[0]);
+    		local_data.y[0]=swap16(data3d->y[0]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("l %d h %d\n",local_data.x[0],local_data.y[0]);
 
     		uint32_t add=(uint32_t)
-    				SOFT3D_AllocZbuffer((uint32_t *)data->offset[0],
-								        data->x[0],data->y[0]);
+    				SOFT3D_AllocZbuffer((uint32_t *)local_data.offset[0],
+								        local_data.x[0],local_data.y[0]);
     		*(uint32_t*)(RTG_BASE+REG_ZZ_SOFT3D_OP)=swap32(add);
     	}
     		break;
     	case OP_ALLOCIMAGEBUFFER:
-    		SWAP32(data->offset[0]);
-    		SWAP16(data->x[0]);
-    		SWAP16(data->y[0]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("l %d h %d\n",data->x[0],data->y[0]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.x[0]=swap16(data3d->x[0]);
+    		local_data.y[0]=swap16(data3d->y[0]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("l %d h %d\n",local_data.x[0],local_data.y[0]);
 
-    		SOFT3D_AllocImageBuffer((uint32_t *)data->offset[0],
-								     data->x[0],data->y[0]);
+    		SOFT3D_AllocImageBuffer((uint32_t *)local_data.offset[0],
+								     local_data.x[0],local_data.y[0]);
     		break;
     	case OP_CLEARZBUFFER: {
-    		SWAP32(data->offset[0]);
-    		SWAP32(data->format[0]);
-    		float *fz=(float *)&data->format[0];
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("format %f (0x%08lx)\n",*fz,data->format[0]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.format[0]=swap32(data3d->format[0]);
+    		float *fz=(float *)&local_data.format[0];
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("format %f (0x%08lx)\n",*fz,local_data.format[0]);
 
-    		SOFT3D_ClearZBuffer((uint32_t *)data->offset[0],
+    		SOFT3D_ClearZBuffer((uint32_t *)local_data.offset[0],
 								*fz);
     		}
     		break;
     	case OP_READZSPAN:
-    		SWAP32(data->offset[0]);
-    		SWAP16(data->x[0]);
-    		SWAP16(data->y[0]);
-    		SWAP32(data->format[0]);
-    		SWAP32(data->offset[1]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("x %d y %d\n",data->x[0],data->y[0]);
-//    		printf("N 0x%08lx\n",data->format[0]);
-//    		printf("Z 0x%08lx\n",data->offset[1]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.x[0]=swap16(data3d->x[0]);
+    		local_data.y[0]=swap16(data3d->y[0]);
+    		local_data.format[0]=swap32(data3d->format[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("x %d y %d\n",local_data.x[0],local_data.y[0]);
+    		DEBUG_SOFT3D("N 0x%08lx\n",local_data.format[0]);
+    		DEBUG_SOFT3D("Z 0x%08lx\n",local_data.offset[1]);
 
-    		SOFT3D_ReadZSpan((uint32_t *)data->offset[0],
-    				         data->x[0],data->y[0],
-							 data->format[0],
-							 (uint32_t *)data->offset[1]);
+    		SOFT3D_ReadZSpan((uint32_t *)local_data.offset[0],
+    				         local_data.x[0],local_data.y[0],
+							 local_data.format[0],
+							 (uint32_t *)local_data.offset[1]);
     		break;
     	case OP_WRITEZSPAN:
-    		SWAP32(data->offset[0]);
-    		SWAP16(data->x[0]);
-    		SWAP16(data->y[0]);
-    		SWAP32(data->format[0]);
-    		SWAP32(data->offset[1]);
-    		SWAP32(data->offset[2]);
-//    		printf("SC 0x%08lx\n",data->offset[0]);
-//    		printf("x %d y %d\n",data->x[0],data->y[0]);
-//    		printf("N 0x%08lx\n",data->format[0]);
-//    		printf("Z 0x%08lx\n",data->offset[1]);
-//    		printf("MASK 0x%08lx\n",data->offset[2]);
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		local_data.x[0]=swap16(data3d->x[0]);
+    		local_data.y[0]=swap16(data3d->y[0]);
+    		local_data.format[0]=swap32(data3d->format[0]);
+    		local_data.offset[1]=swap32(data3d->offset[1]);
+    		local_data.offset[2]=swap32(data3d->offset[2]);
+    		DEBUG_SOFT3D("SC 0x%08lx\n",local_data.offset[0]);
+    		DEBUG_SOFT3D("x %d y %d\n",local_data.x[0],local_data.y[0]);
+    		DEBUG_SOFT3D("N 0x%08lx\n",local_data.format[0]);
+    		DEBUG_SOFT3D("Z 0x%08lx\n",local_data.offset[1]);
+    		DEBUG_SOFT3D("MASK 0x%08lx\n",local_data.offset[2]);
 
-    		SOFT3D_WriteZSpan((uint32_t *)data->offset[0],
-    				          data->x[0],data->y[0],
-							  data->format[0],
-							  (uint32_t *)data->offset[1],
-							  (uint32_t *)data->offset[2]);
+    		SOFT3D_WriteZSpan((uint32_t *)local_data.offset[0],
+    				          local_data.x[0],local_data.y[0],
+							  local_data.format[0],
+							  (uint32_t *)local_data.offset[1],
+							  (uint32_t *)local_data.offset[2]);
     		break;
         default:
             break;
@@ -890,8 +903,7 @@ SVAR(SC->Image8)
 /*=============================================================*/
 void SOFT3D_AllocImageBuffer(APTR sc,UWORD large,UWORD high)
 {
-#if 1
-//#ifdef AMIGA
+#ifdef AMIGA
     struct SOFT3D_context *SC=sc;
     ULONG size;
 
@@ -910,8 +922,8 @@ SVAR(high)
     if(size!=0)
         SC->ImageBuffer32=MMmalloc(size,"SOFT3D_ImageBuffer32");
     SetImage(SC,0,0,large,high,32,(UBYTE *)SC->ImageBuffer32);
-    chunk_list_dump(&alloced_chunks, "Alloced");
-    chunk_list_dump(&freed_chunks, "Freed");
+//    chunk_list_dump(&alloced_chunks, "Alloced");
+//    chunk_list_dump(&freed_chunks, "Freed");
 
 #else
     SFUNCTION(SOFT3D_AllocImageBuffer)
@@ -972,8 +984,8 @@ SVAR(high)
     if(high!=0)
     if(large!=0)
         SC->Zbuffer=Zbuffer=MMmalloc(large*high*sizeof(ZBUFF),"Zbuffer");
-    chunk_list_dump(&alloced_chunks, "Alloced");
-    chunk_list_dump(&freed_chunks, "Freed");
+//    chunk_list_dump(&alloced_chunks, "Alloced");
+//    chunk_list_dump(&freed_chunks, "Freed");
 
     if(Zbuffer!=NULL)
     YLOOP(high)
@@ -994,7 +1006,7 @@ void *SOFT3D_Start(APTR PrefsWazp3D)
 struct SOFT3D_context *SC;
 UBYTE ZMode,FillMode;
 ULONG n;
-printf("%s start\n",__FUNCTION__);
+	DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
 #ifdef USEOPENGL
 struct HARD3D_context *HC;
@@ -1038,8 +1050,8 @@ SVAR(PrefsWazp3D)
     if(SC==NULL) return(NULL);
     SC->large=SC->high=0;    /* undefined now */
 
-    chunk_list_dump(&alloced_chunks, "Alloced");
-    chunk_list_dump(&freed_chunks, "Freed");
+//    chunk_list_dump(&alloced_chunks, "Alloced");
+//    chunk_list_dump(&freed_chunks, "Freed");
 
 #ifdef AMIGA
     InitRastPort(&SC->rastport);
@@ -1182,14 +1194,14 @@ SVAR(PrefsWazp3D)
 #endif
 
 SREM(SOFT3D_Start:OK)
-    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
     return(SC);
 }
 /*=================================================================*/
 void  SOFT3D_SetClipping(APTR sc,UWORD xmin,UWORD xmax,UWORD ymin,UWORD ymax)
 {
 struct SOFT3D_context *SC=sc;
-//printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
     LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
@@ -1207,7 +1219,7 @@ SVAR(ymax)
 #ifdef USEOPENGL
     if(SC->UseHard) HARD3D_SetClipping(&SC->HC,xmin,xmax,ymin,ymax);
 #endif
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void SOFT3D_ClearImageBuffer(APTR sc,UWORD x,UWORD y,UWORD large,UWORD high,APTR rgba)
@@ -1219,7 +1231,7 @@ register ULONG RGBA32=ptRGBA32[0];
 register ULONG *I32;
 register LONG  size;
 register LONG  n;
-printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
     LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
@@ -1254,7 +1266,7 @@ SVAR(I32)
         I32+=8;
     }
 
-    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void SOFT3D_ClearZBuffer(APTR sc,float fz)
@@ -1265,7 +1277,7 @@ register ULONG size=SC->high*SC->large/8;
 register ULONG n;
 register ZBUFF z;
 register float zresize=ZRESIZE;
-//printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
     LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
@@ -1291,7 +1303,7 @@ SFUNCTION(SOFT3D_ClearZBuffer)
 #ifdef USEOPENGL
     if(SC->UseHard) HARD3D_ClearZBuffer(&SC->HC,fz);
 #endif
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*==========================================================================*/
 void SOFT3D_ReadZSpan(APTR sc, UWORD x, UWORD y,ULONG n, APTR z)
@@ -1302,7 +1314,7 @@ W3D_Double *dz=z;
 register float fz;
 register float zresize=ZRESIZE;
 register ULONG i;
-//printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
     LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
@@ -1320,7 +1332,7 @@ SFUNCTION(SOFT3D_ReadZSpan)
 #ifdef USEOPENGL
     if(SC->UseHard) HARD3D_ReadZSpan(&SC->HC,x,y,n,z);
 #endif
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*==========================================================================*/
 void SOFT3D_WriteZSpan(APTR sc, UWORD x, UWORD y,ULONG n,APTR z,APTR mask)
@@ -1333,7 +1345,7 @@ register float zresize=ZRESIZE;
 register UBYTE *m=mask;
 register ULONG i;
 
-printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
     LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
 SFUNCTION(SOFT3D_WriteZSpan)
@@ -1352,14 +1364,14 @@ SFUNCTION(SOFT3D_WriteZSpan)
 #ifdef USEOPENGL
     if(SC->UseHard) HARD3D_WriteZSpan(&SC->HC,x,y,n,z,mask);
 #endif
-    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void SOFT3D_End(APTR sc)
 {
     struct SOFT3D_context *SC=sc;
 
-    printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
         LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
 SFUNCTION(SOFT3D_End)
@@ -1367,7 +1379,7 @@ SFUNCTION(SOFT3D_End)
     if(SC->ImageBuffer32!=NULL)
     {
         SREM(Free ImageBuffer32)
-        printf("Free ImageBuffer32 0x%08lx\n",(uint32_t)SC->ImageBuffer32);
+		DEBUG_SOFT3D("Free ImageBuffer32 0x%08lx\n",(uint32_t)SC->ImageBuffer32);
         FREEPTR(SC->ImageBuffer32);
     }
 #ifdef USEOPENGL
@@ -1376,9 +1388,9 @@ SFUNCTION(SOFT3D_End)
 #if defined(OS4COMPOSITING)
     if(SC->UseHard) COMP3D_End(SC);
 #endif
-    printf("Free SC\n");
+    DEBUG_SOFT3D("Free SC\n");
     FREEPTR(SC);
-    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 #ifdef SLOWCPU
@@ -3793,33 +3805,43 @@ register WORD high  =SC->PolyHigh;
 register WORD large;
 
 SREM(Fill_TexPersp2)
+
+//printf("Image8=0x%08lx\n",(uint32_t)Frag->Image8);
+//printf("Tex8  =0x%08lx\n",(uint32_t)Frag->Tex8);
+//printf("ColorRGBA=0x%08lx\n",(uint32_t)Frag->ColorRGBA.L);
     while(0<high--)
     {
-    Image8   = Pix->L.Image8Y + SC->Image8X[Pix->W.x];
-    large       = Pix->W.large;
+        Image8   = Pix->L.Image8Y + SC->Image8X[Pix->W.x];
+        large    = Pix->W.large;
 
-    SC->Pix=Pix; SC->FunctionZtest(SC); Ztest=SC->Ztest;
-    while(0<large--)
-    {
-    if(*Ztest++)
+        SC->Pix=Pix;
+        SC->FunctionZtest(SC);
+        Ztest=SC->Ztest;
+        while(0<large--)
         {
-        Frag->Image8=Image8;
-        Frag->Tex8 =MM->Tex8U   [Pix->W.u ]+MM->Tex8V   [Pix->W.v ];
-        COPYRGBA(Frag->ColorRGBA.L,SC->FlatRGBA.L);
-        Frag++;
+            if(*Ztest++)
+            {
+                Frag->Image8=Image8;
+                Frag->Tex8 =MM->Tex8U   [Pix->W.u ]+MM->Tex8V   [Pix->W.v ];
+                COPYRGBA(Frag->ColorRGBA.L,SC->FlatRGBA.L);
+                Frag++;
+            }
+            Image8=Image8+Pix->L.bpp;
+            Pix->L.u +=Pix->L.du;
+            Pix->L.v +=Pix->L.dv;
+            Pix->L.du+=Pix->L.ddu;
+            Pix->L.dv+=Pix->L.ddv;
         }
-    Image8=Image8+Pix->L.bpp;
-    Pix->L.u +=Pix->L.du;
-    Pix->L.v +=Pix->L.dv;
-    Pix->L.du+=Pix->L.ddu;
-    Pix->L.dv+=Pix->L.ddv;
-    }
 
-    if(Frag > SC->FragBufferMaxi)
-        {SC->FragBufferDone=Frag;  SOFT3D_Flush(SC); Frag=SC->FragBuffer;}
-    Pix++;
+        if(Frag > SC->FragBufferMaxi)
+        {
+            SC->FragBufferDone=Frag;
+            SOFT3D_Flush(SC);
+            Frag=SC->FragBuffer;
+        }
+        Pix++;
     }
-SC->FragBufferDone=Frag;
+	SC->FragBufferDone=Frag;
 }
 /*=============================================================*/
 void Fill_TexMul(struct SOFT3D_context *SC)
@@ -3875,10 +3897,14 @@ register struct SOFT3D_mipmap *MM=SC->MM;
 register struct fragbuffer3D *Frag=SC->FragBufferDone;
 register WORD high  =SC->PolyHigh;
 register WORD large;
-//printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(SC->state.PerspMode==2)
-        {Fill_TexPersp2(SC); return;}
+    {
+        Fill_TexPersp2(SC);
+        DEBUG_SOFT3D("%s end PerspMode=2\n",__FUNCTION__);
+        return;
+    }
 
     if(Wazp3D->DebugDriver.ON)    /* Just a way to test that function speed */
         {Fill_TexMul(SC); return;}
@@ -3909,7 +3935,7 @@ register WORD large;
         Pix++;
     }
     SC->FragBufferDone=Frag;
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void Fill_Flat(struct SOFT3D_context *SC)
@@ -4391,7 +4417,7 @@ void SOFT3D_SetDrawState(APTR sc,APTR sta)
     struct SOFT3D_context *SC=sc;
     struct SOFT3D_texture *ST=(struct SOFT3D_texture *)swap32((uint32_t)state->ST);
 
-//    printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
     LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
@@ -4406,7 +4432,7 @@ void SOFT3D_SetDrawState(APTR sc,APTR sta)
     if(!state->Changed)
     {
         SREM( state unchanged)        /* not changed ==> do nothing */
-//        printf("%s end\n",__FUNCTION__);
+        DEBUG_SOFT3D("%s end\n",__FUNCTION__);
         return;
     }
 
@@ -4433,7 +4459,7 @@ void SOFT3D_SetDrawState(APTR sc,APTR sta)
     {
         SREM( all same states)            /* if nothing truly changed ==> do nothing */
         SC->state.Changed=state->Changed=FALSE;
-//        printf("%s end\n",__FUNCTION__);
+        DEBUG_SOFT3D("%s end\n",__FUNCTION__);
         return;
     }
 
@@ -4474,7 +4500,7 @@ void SOFT3D_SetDrawState(APTR sc,APTR sta)
     if(!SC->UseHard)    SOFT3D_SetDrawFunctions(sc);
 
     SC->state.Changed=state->Changed=FALSE;     /* change treated */
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void SOFT3D_SetDrawFunctions(APTR sc)
@@ -4482,7 +4508,7 @@ void SOFT3D_SetDrawFunctions(APTR sc)
     struct SOFT3D_context *SC=sc;
     struct SOFT3D_texture *ST=(struct SOFT3D_texture *)swap32((uint32_t)SC->state.ST);
     UBYTE FillMode,EdgeMode,TexEnvMode,BlendMode,UseFog,UseGouraud,UseBigTex,UseTex24,UseBuffer;
-//    printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     SFUNCTION(SOFT3D_SetDrawFunctions)
 
@@ -4761,7 +4787,7 @@ void SOFT3D_SetDrawFunctions(APTR sc)
     }
 
     ChangeSoftPoint(SC);
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void SOFT3D_Flush(APTR sc)
@@ -4810,41 +4836,41 @@ SREM(Pass1: FunctionIn)
     SINFO((void *)SC->FunctionIn,(void *)PixelsInBGR)
     SINFO((void *)SC->FunctionIn,(void *)PixelsIn16)
     SINFO((void *)SC->FunctionIn,(void *)PixelsIn8)
-    if(!LockBM(SC))
-        goto DrawFragBufferEnd;        /* if cant read pixels then cancel this drawing */
+		if(!LockBM(SC))
+			goto DrawFragBufferEnd;        /* if cant read pixels then cancel this drawing */
 
-    SC->FunctionIn(SC);            /* convert readed pixels to RGBA format. */
-    UnLockBM(SC);
+		SC->FunctionIn(SC);            /* convert readed pixels to RGBA format. */
+    	UnLockBM(SC);
     }
 
     if(SC->FunctionTexEnv!=NULL)
     {
 SREM(Pass2: FunctionTexEnv (coloring/light) )
-    SC->FunctionTexEnv(SC);
+		SC->FunctionTexEnv(SC);
     }
 
     if(SC->FunctionBlend!=NULL)
     {
 SREM(Pass3: FunctionBlend (transparency) )
-    SC->FunctionBlend(SC);
+		SC->FunctionBlend(SC);
     }
 
     if(SC->FunctionFog!=NULL)
     {
 SREM(Pass4: FunctionFog)
-    SC->FunctionFog(SC);
+		SC->FunctionFog(SC);
     }
 
     if(SC->FunctionFilter!=NULL)
     {
 SREM(Pass 5: FunctionFilter )
-    SC->FunctionFilter(SC);
+		SC->FunctionFilter(SC);
     }
 
     if(SC->FunctionSepia!=NULL)
     {
 SREM(Pass 6: FunctionSepia: debug effect )
-    SC->FunctionSepia(SC);
+		SC->FunctionSepia(SC);
     }
 
     if(SC->FunctionOut!=NULL)
@@ -4868,8 +4894,8 @@ SREM(Pass 7:FunctionOut)
     SINFO((void *)SC->FunctionOut,(void *)PixelsOutARGBfromtex24)
         if(LockBM(SC))
         {
-        SC->FunctionOut(SC);
-        UnLockBM(SC);
+        	SC->FunctionOut(SC);
+        	UnLockBM(SC);
         }
     }
 
@@ -4915,7 +4941,7 @@ void DrawPointPix(struct SOFT3D_context *SC)
     flatstate.FogZmin=0;
     flatstate.FogDensity=0;
 
-    printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
     SFUNCTION(DrawPointPIX)
     SVAR(SC->state.PointSize)
     SC->ColorChange=FALSE;
@@ -4967,7 +4993,7 @@ void DrawPointPix(struct SOFT3D_context *SC)
     if(ST!=NULL)
         SC->MM=&ST->MMs[0];    /* default to biggest mipmap <=> never call FunctionFill with SC->MM=NULL*/
     SC->FunctionFill(SC);
-    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void DoDeltasUV(union pixel3D *P1,union pixel3D *P2)
@@ -5238,13 +5264,13 @@ SFUNCTION(Poly_Persp1_Tex)
 
         if(large!=0)
         {
-        P1->L.dz=(P2->L.z - P1->L.z)/large;
-        P1->L.du=(P2->L.u - P1->L.u)/large;
-        P1->L.dv=(P2->L.v - P1->L.v)/large;
-        P1->L.ddu=0;
-        P1->L.ddv=0;
+        	P1->L.dz=(P2->L.z - P1->L.z)/large;
+        	P1->L.du=(P2->L.u - P1->L.u)/large;
+        	P1->L.dv=(P2->L.v - P1->L.v)/large;
+        	P1->L.ddu=0;
+        	P1->L.ddv=0;
         }
-    P1++,P2++;
+        P1++;P2++;
     }
 
     SC->Pix=SC->P1;
@@ -5264,17 +5290,17 @@ SFUNCTION(Poly_Persp1_Gouraud)
 /* compute a delta per segment */
     NLOOP(high)
     {
-    large=P2->W.x - P1->W.x; P1->W.large=large;
+		large=P2->W.x - P1->W.x; P1->W.large=large;
 
         if(large!=0)
         {
-        P1->L.dz=(P2->L.z - P1->L.z)/large;
-        P1->L.dR=(P2->L.R - P1->L.R)/large;
-        P1->L.dG=(P2->L.G - P1->L.G)/large;
-        P1->L.dB=(P2->L.B - P1->L.B)/large;
-        P1->L.dA=(P2->L.A - P1->L.A)/large;
+        	P1->L.dz=(P2->L.z - P1->L.z)/large;
+        	P1->L.dR=(P2->L.R - P1->L.R)/large;
+        	P1->L.dG=(P2->L.G - P1->L.G)/large;
+        	P1->L.dB=(P2->L.B - P1->L.B)/large;
+        	P1->L.dA=(P2->L.A - P1->L.A)/large;
         }
-    P1++,P2++;
+        P1++;P2++;
     }
 
     SC->Pix=SC->P1;
@@ -5293,13 +5319,13 @@ SFUNCTION(Poly_Persp1_Flat)
 /* compute a delta per segment */
     NLOOP(high)
     {
-    large=P2->W.x - P1->W.x; P1->W.large=large;
+		large=P2->W.x - P1->W.x; P1->W.large=large;
 
         if(large!=0)
         {
-        P1->L.dz=(P2->L.z - P1->L.z)/large;
+        	P1->L.dz=(P2->L.z - P1->L.z)/large;
         }
-    P1++,P2++;
+        P1++;P2++;
     }
 
     SC->Pix=SC->P1;
@@ -5318,22 +5344,22 @@ SFUNCTION(Poly_Persp1_Tex_Gouraud_Fog)
 /* compute a delta per segment */
     NLOOP(high)
     {
-    large=P2->W.x - P1->W.x; P1->W.large=large;
+		large=P2->W.x - P1->W.x; P1->W.large=large;
 
         if(large!=0)
         {
-        P1->L.dz=(P2->L.z - P1->L.z)/large;
-        P1->L.du=(P2->L.u - P1->L.u)/large;
-        P1->L.dv=(P2->L.v - P1->L.v)/large;
-        P1->L.dR=(P2->L.R - P1->L.R)/large;
-        P1->L.dG=(P2->L.G - P1->L.G)/large;
-        P1->L.dB=(P2->L.B - P1->L.B)/large;
-        P1->L.dA=(P2->L.A - P1->L.A)/large;
-        P1->L.dF=(P2->L.F - P1->L.F)/large;
-        P1->L.ddu=0;
-        P1->L.ddv=0;
+        	P1->L.dz=(P2->L.z - P1->L.z)/large;
+        	P1->L.du=(P2->L.u - P1->L.u)/large;
+        	P1->L.dv=(P2->L.v - P1->L.v)/large;
+        	P1->L.dR=(P2->L.R - P1->L.R)/large;
+        	P1->L.dG=(P2->L.G - P1->L.G)/large;
+        	P1->L.dB=(P2->L.B - P1->L.B)/large;
+        	P1->L.dA=(P2->L.A - P1->L.A)/large;
+        	P1->L.dF=(P2->L.F - P1->L.F)/large;
+        	P1->L.ddu=0;
+        	P1->L.ddv=0;
         }
-    P1++,P2++;
+        P1++;P2++;
     }
 
     SC->Pix=SC->P1;
@@ -5352,19 +5378,19 @@ SFUNCTION(Poly_Persp2_Tex_Gouraud_Fog)
 /* compute a delta per segment */
     NLOOP(high)
     {
-    large=P2->W.x - P1->W.x; P1->W.large=large;
+    	large=P2->W.x - P1->W.x; P1->W.large=large;
 
         if(large!=0)
         {
-        P1->L.dz=(P2->L.z - P1->L.z)/large;
-        P1->L.dR=(P2->L.R - P1->L.R)/large;
-        P1->L.dG=(P2->L.G - P1->L.G)/large;
-        P1->L.dB=(P2->L.B - P1->L.B)/large;
-        P1->L.dA=(P2->L.A - P1->L.A)/large;
-        P1->L.dF=(P2->L.F - P1->L.F)/large;
-        DoDeltasUV(P1,P2);
+        	P1->L.dz=(P2->L.z - P1->L.z)/large;
+        	P1->L.dR=(P2->L.R - P1->L.R)/large;
+        	P1->L.dG=(P2->L.G - P1->L.G)/large;
+        	P1->L.dB=(P2->L.B - P1->L.B)/large;
+        	P1->L.dA=(P2->L.A - P1->L.A)/large;
+        	P1->L.dF=(P2->L.F - P1->L.F)/large;
+        	DoDeltasUV(P1,P2);
         }
-    P1++,P2++;
+        P1++;P2++;
     }
     SelectMipMap(SC);
     SC->FunctionFill(SC);
@@ -5443,7 +5469,7 @@ void DrawLinePix(struct SOFT3D_context *SC)
     union pixel3D *P2=&SC->PolyPix[1];
     union pixel3D *temp;
     ULONG n,ordered;
-//    printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     SFUNCTION(DrawLinePIX)
 /* Find min point and max point of the two points P1&P2 of this line */
@@ -5510,7 +5536,7 @@ void DrawLinePix(struct SOFT3D_context *SC)
     SC->PolyHigh++;
     SC->dmin=1024<<16;
     SC->FunctionPoly(SC);
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void DrawPolyPix(struct SOFT3D_context *SC)
@@ -5523,7 +5549,7 @@ void DrawPolyPix(struct SOFT3D_context *SC)
     union pixel3D *Pxmax;
     union pixel3D *Pymin;
     union pixel3D *Pymax;
-//    printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     SFUNCTION(DrawPolyPix)
     SVAR(SC->PolyPnb)
@@ -5582,12 +5608,16 @@ void DrawPolyPix(struct SOFT3D_context *SC)
     if(SC->PolyHigh==0)
     {
         DrawSegmentPix(SC,Pxmin,Pxmax);
+        DEBUG_SOFT3D("%s end\n",__FUNCTION__);
         return;
     }
 
 /* eliminate poly if PolyLarge = 0 */
     if(SC->PolyLarge==0)
-        return;
+    {
+        DEBUG_SOFT3D("%s end PolyLarge=0\n",__FUNCTION__);
+    	return;
+    }
 
 /* patch: for TheVague if last line of screen then dont crop it */
     if(Pymax->W.y==(SC->high-1))
@@ -5610,7 +5640,7 @@ void DrawPolyPix(struct SOFT3D_context *SC)
     SC->FunctionPoly(SC);
 
     SFUNCTION(-----------)
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*==================================================================================*/
 void ChangeSoftFog(APTR sc,UBYTE FogMode,float FogZmin,float FogZmax,float FogDensity,APTR fogrgba)
@@ -5708,7 +5738,7 @@ void DrawPolyP(struct SOFT3D_context *SC)
     BOOL FaceCCW;
     UBYTE ColorChange,ColorTransp,ColorWhite,FlatChange;
 
-//    printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
 #ifdef WAZP3DDEBUG
     if(Wazp3D->DebugSOFT3D.ON) Libprintf("DrawPolyP Pnb %ld  \n",(ULONG)SC->PolyPnb);
@@ -5718,7 +5748,10 @@ void DrawPolyP(struct SOFT3D_context *SC)
 
 
     if(SC->PolyPnb > MAXPOLY )
-        {SREM(Poly has too much Points!); return;}
+        {SREM(Poly has too much Points!);
+        DEBUG_SOFT3D("%s end too much points\n",__FUNCTION__);
+        return;
+    }
 
     P=SC->PolyP;
     Pnb=SC->PolyPnb;
@@ -5776,7 +5809,11 @@ void DrawPolyP(struct SOFT3D_context *SC)
         ClipPoly(SC);
 
     if(SC->PolyPnb==0)
-        {SREM(  clipped away); return;}
+    {
+    	SREM(  clipped away);
+        DEBUG_SOFT3D("%s end clipped away\n",__FUNCTION__);
+        return;
+    }
 
     Pnb=SC->PolyPnb;
     P=SC->PolyP;
@@ -5787,11 +5824,19 @@ void DrawPolyP(struct SOFT3D_context *SC)
 
         if(SC->state.CullingMode==W3D_CCW)
             if(!FaceCCW)
-                {SREM(  hided face); return;}
+            {
+            	SREM(  hided face);
+                DEBUG_SOFT3D("%s end hided face\n",__FUNCTION__);
+            	return;
+            }
 
         if(SC->state.CullingMode==W3D_CW)
             if(FaceCCW)
-                {SREM(  hided face); return;}
+            {
+            	SREM(  hided face);
+                DEBUG_SOFT3D("%s end hided face\n",__FUNCTION__);
+            	return;
+            }
     }
 
     FlatChange=FALSE;
@@ -5905,7 +5950,7 @@ void DrawPolyP(struct SOFT3D_context *SC)
         case 2:  DrawLinePix(SC);  break;
         default: DrawPolyPix(SC);  break;
     }
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 
 }
 /*=============================================================*/
@@ -6027,7 +6072,7 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
     UWORD m,n,nb;
     BOOL DebugState;
     struct SOFT3D_texture *ST=(struct SOFT3D_texture *)swap32((uint32_t)SC->state.ST);
-//printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(Wazp3D->Renderer.ON==0)        /* use Soft to Image */
     if(SC->ImageBuffer32==NULL)        /* but no memory for Image */
@@ -6145,6 +6190,7 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
         NLOOP(Pnb)
         {
             COPYP(&(SC->PolyP[0]),&P[n]);
+            SWAP32_D(SC->PolyP[0]);
             SC->PolyPnb=1;
             DrawPolyP(SC);
         }
@@ -6158,6 +6204,8 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
         {
             COPYP(&(SC->PolyP[0]),&P[2*n]);
             COPYP(&(SC->PolyP[1]),&P[2*n+1]);
+            SWAP32_D(SC->PolyP[0]);
+            SWAP32_D(SC->PolyP[1]);
             SC->PolyPnb=2;
             DrawPolyP(SC);
         }
@@ -6169,6 +6217,7 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
         NLOOP(Pnb)
         {
             COPYP(&(SC->PolyP[n]),&P[n]);
+            SWAP32_D(SC->PolyP[n]);
         }
         SC->PolyPnb=Pnb;
 
@@ -6202,12 +6251,16 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
 //         	printf("PP1 0x%08lx P1 0x%08lx\n",(uint32_t)&(SC->PolyP[1]),(uint32_t)&P[n+1]);
             COPYP(&(SC->PolyP[0]),&P[n]);
             COPYP(&(SC->PolyP[1]),&P[n+1]);
+            SWAP32_D(SC->PolyP[0]);
+            SWAP32_D(SC->PolyP[1]);
             SC->PolyPnb=2;
             DrawPolyP(SC);
         }
 
         COPYP(&(SC->PolyP[0]),&P[nb]);
         COPYP(&(SC->PolyP[1]),&P[0 ]);
+        SWAP32_D(SC->PolyP[0]);
+        SWAP32_D(SC->PolyP[1]);
         SC->PolyPnb=2;
         DrawPolyP(SC);
         goto DrawDone;
@@ -6220,6 +6273,8 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
         {
             COPYP(&(SC->PolyP[0]),&P[n]);
             COPYP(&(SC->PolyP[1]),&P[n+1]);
+            SWAP32_D(SC->PolyP[0]);
+            SWAP32_D(SC->PolyP[1]);
             SC->PolyPnb=2;
             DrawPolyP(SC);
         }
@@ -6228,7 +6283,7 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
 
 DrawDone:
     LibDebug    =DebugState;
-//    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void ChangeSoftPoint(APTR sc)
@@ -6271,8 +6326,8 @@ void *SOFT3D_CreateTexture(APTR sc,APTR pt,UWORD large,UWORD high,UWORD format,U
 SFUNCTION(SOFT3D_CreateTexture)
     ST=MMmalloc(sizeof(struct SOFT3D_texture),"SOFT3D_texture");
     if(ST==NULL) return(NULL);
-    chunk_list_dump(&alloced_chunks, "Alloced");
-    chunk_list_dump(&freed_chunks, "Freed");
+//    chunk_list_dump(&alloced_chunks, "Alloced");
+//    chunk_list_dump(&freed_chunks, "Freed");
 
     if(large!=high)
         UseMip=FALSE;
@@ -6810,8 +6865,8 @@ ULONG size;
     ST->ptmm=MMmalloc(size/3,"mipmaps");         /* size is mathematically false but allways fit */
     if(ST->ptmm==NULL) return;
     ptmm=ST->ptmm;
-    chunk_list_dump(&alloced_chunks, "Alloced");
-    chunk_list_dump(&freed_chunks, "Freed");
+//    chunk_list_dump(&alloced_chunks, "Alloced");
+//    chunk_list_dump(&freed_chunks, "Freed");
 
     reduction=1;
 next_mipmap:
@@ -7051,11 +7106,15 @@ ULONG temp;
 WORD bits;
 BOOL started;
 
-printf("%s start\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s start\n",__FUNCTION__);
 
     if(!Wazp3D->PrefsIsOpened)        /* if the user dont changing debug states */
     LibDebug=Wazp3D->DebugWazp3D.ON;    /* synchronize soft3d's LibDebug with global debug value "DebugWazp3D" setted with Wazp3-Prefs */
-    if(SC==NULL) return;
+    if(SC==NULL)
+    {
+        DEBUG_SOFT3D("%s end SC NULL\n",__FUNCTION__);
+    	return;
+    }
 SFUNCTION(SOFT3D_SetBitmap)
 SVAR(bm)
 SVAR(bmdata)
@@ -7075,6 +7134,7 @@ SVAR(bmformat)
     SC->FunctionBitmapIn =NULL;        /* no need to read/write a bitmap in this case */
     SC->FunctionBitmapOut=NULL;
     SetImage(SC,0,0,large,high,32,(UBYTE *)SC->ImageBuffer32);
+    DEBUG_SOFT3D("%s end ImageBuffer32 0x%08lx\n",__FUNCTION__,(uint32_t)SC->ImageBuffer32);
     return;
     }
 
@@ -7206,6 +7266,7 @@ SVAR(bmformat)
 
     default:
         Libprintf("WAZP3D/SOFT3D: Unknown bitmap format %ld (%d X %d)\n",bmformat,large,high);
+        DEBUG_SOFT3D("%s end Unknown bitmap format\n",__FUNCTION__);
         return;
     }
 
@@ -7283,7 +7344,7 @@ setimageonly:
 #endif
     if(!started)
         SetDefaults(SC);
-    printf("%s end\n",__FUNCTION__);
+    DEBUG_SOFT3D("%s end\n",__FUNCTION__);
 }
 /*=============================================================*/
 void PixelsIn16(struct SOFT3D_context *SC)
@@ -7322,13 +7383,13 @@ register UBYTE *BtoB1=SC->BtoB1;
 
     while(0<size--)
     {
-    RGB=Frag[0].BufferRGBA.b;
-    Frag[0].Image8[0]=RtoB0[RGB[0]]+GtoB0[RGB[1]]+BtoB0[RGB[2]];
-    Frag[0].Image8[1]=RtoB1[RGB[0]]+GtoB1[RGB[1]]+BtoB1[RGB[2]];
-    RGB=Frag[1].BufferRGBA.b;
-    Frag[1].Image8[0]=RtoB0[RGB[0]]+GtoB0[RGB[1]]+BtoB0[RGB[2]];
-    Frag[1].Image8[1]=RtoB1[RGB[0]]+GtoB1[RGB[1]]+BtoB1[RGB[2]];
-    Frag+=2;
+    	RGB=Frag[0].BufferRGBA.b;
+    	Frag[0].Image8[0]=RtoB0[RGB[0]]+GtoB0[RGB[1]]+BtoB0[RGB[2]];
+    	Frag[0].Image8[1]=RtoB1[RGB[0]]+GtoB1[RGB[1]]+BtoB1[RGB[2]];
+    	RGB=Frag[1].BufferRGBA.b;
+    	Frag[1].Image8[0]=RtoB0[RGB[0]]+GtoB0[RGB[1]]+BtoB0[RGB[2]];
+    	Frag[1].Image8[1]=RtoB1[RGB[0]]+GtoB1[RGB[1]]+BtoB1[RGB[2]];
+    	Frag+=2;
     }
 
 }

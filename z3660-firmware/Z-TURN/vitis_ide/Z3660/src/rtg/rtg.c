@@ -24,13 +24,14 @@
 #include "../scsi/scsi.h"
 #include "../ltc2990/ltc2990.h"
 #include "../config_clk.h"
-#include "../console.h"
+#include "../debug_console.h"
 #include "str_zzregs.h"
+#include "../lwip.h"
 
-extern CONSOLE con;
+extern DEBUG_CONSOLE debug_console;
 void DEBUG_AUDIO(const char *format, ...)
 {
-	if(con.debug_audio==0)
+	if(debug_console.debug_audio==0)
 		return;
 	va_list args;
 	va_start(args, format);
@@ -63,10 +64,10 @@ uint16_t ack_request=0;
 extern uint16_t flag_cache_flush;
 uint32_t custom_vmode_param=0;
 uint32_t custom_video_mode=ZZVMODE_CUSTOM;
-int bm=0,sb=0,ar=0,cr=0,ks=0,ext_ks=0, scsi_num[7]={-1,-1,-1,-1,-1,-1,-1};
+ENV_FILE_VARS env_file_vars_temp;
+//int bm=0,sb=0,ar=0,cr=0,ks=0,ext_ks=0;
+int scsi_num[7]={-1,-1,-1,-1,-1,-1,-1};
 void hard_reboot(void);
-int write_env_files(int bootmode, int scsiboot, int autoconfig_ram, int cpuram, int kickstart, int ext_kickstart);
-int write_env_files2(int *scsi_num);
 
 // ethernet state
 uint32_t ethernet_send_result = 0;
@@ -175,12 +176,13 @@ void rtg_init(void)
    for(int i=0;i<10;i++)
       audio_adau_set_eq_gain(i,50);
 
-   bm=config.boot_mode;
-   sb=config.scsiboot;
-   ar=config.autoconfig_ram;
-   cr=config.cpu_ram;
-   ks=config.kickstart;
-   ext_ks=config.ext_kickstart;
+   env_file_vars_temp.bootmode=config.boot_mode;
+   env_file_vars_temp.scsiboot=config.scsiboot;
+   env_file_vars_temp.autoconfig_ram=config.autoconfig_ram;
+   env_file_vars_temp.cpu_ram=config.cpu_ram;
+   env_file_vars_temp.kickstart=config.kickstart;
+   env_file_vars_temp.ext_kickstart=config.ext_kickstart;
+   env_file_vars_temp.enable_test=config.enable_test;
    for(int i=0;i<7;i++)
 	   scsi_num[i]=config.scsi_num[i];
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_KS_TXT)=0;
@@ -321,7 +323,7 @@ void other_tasks(void)
    if (interrupt_enabled_ethernet && ethernet_backlog > 0) {
       eth_backlog_nag_counter++;
    }
-   console_loop();
+   debug_console_loop();
 
 }
 void rtg_loop(void)
@@ -462,7 +464,7 @@ uint32_t read_rtg_register(uint32_t zaddr)
    if(zaddr&3)
       printf("read unaligned to 0x%08X\n",zaddr);
 */
-   if(con.debug_rtg)
+   if(debug_console.debug_rtg)
    {
       printf("READ RTG reg 0x%lX %s\n",zaddr,zz_reg_offsets_string[zaddr]);
    }
@@ -534,6 +536,9 @@ uint32_t read_rtg_register(uint32_t zaddr)
    case REG_ZZ_CPU_RAM_EN:
       data=config.cpu_ram==YES;
       break;
+   case REG_ZZ_TEST_ENABLE:
+      data=config.enable_test==YES;
+      break;
 
    case REG_ZZ_ETH_MAC_HI: {
       uint8_t* mac = ethernet_get_mac_address_ptr();
@@ -602,15 +607,15 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 {
    if(zaddr&3)
       printf("write unaligned to 0x%08lX\n",zaddr);
-   if(con.debug_rtg)
+   if(debug_console.debug_rtg)
    {
       printf("WRITE RTG reg 0x%lX = %ld (0x%lX) %s\n",zaddr,zdata,zdata,zz_reg_offsets_string[zaddr]);
-      if(con.step)
+      if(debug_console.step)
       {
          while(!XUartPs_IsReceiveData(STDIN_BASEADDRESS)){}
          char c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
          if(c=='C' || c=='c')
-            con.step=0;
+            debug_console.step=0;
       }
    }
    uint32_t address=zaddr&0x1FFFFC;
@@ -1421,20 +1426,20 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          if(zdata>=0 && zdata<BOOTMODE_NUM)
          {
             printf("BOOTMODE %ld (%s)\r\n",zdata,bootmode_names[zdata]);
-            bm=zdata;
+            env_file_vars_temp.bootmode=zdata;
          }
          else
          {
             printf("BOOTMODE %ld unknown\r\n",zdata);
-            bm=0;
+            env_file_vars_temp.bootmode=0;
          }
          break;
       case REG_ZZ_APPLY_BOOTMODE:
          if(zdata>=0x55AA)
          {
-            printf("Apply BOOTMODE %d (%s)\r\n",bm,bootmode_names[bm]);
+            printf("Apply BOOTMODE %d (%s)\r\n",env_file_vars_temp.bootmode,bootmode_names[env_file_vars_temp.bootmode]);
             piscsi_shutdown();
-            if(write_env_files(bm,sb,ar,cr,ks,ext_ks)==1)
+            if(write_env_files(env_file_vars_temp)==1)
                hard_reboot();
          }
          else
@@ -1460,7 +1465,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          {
             printf("Apply ALL\r\n");
             piscsi_shutdown();
-            if((write_env_files(bm,sb,ar,cr,ks,ext_ks)==1)&&
+            if((write_env_files(env_file_vars_temp)==1)&&
            	   (write_env_files2(scsi_num)==1))
                hard_reboot();
          }
@@ -1470,11 +1475,11 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          }
          break;
       case REG_ZZ_SCSIBOOT_EN:
-         sb=zdata;
+    	  env_file_vars_temp.scsiboot=zdata;
          printf("SCSI BOOT %s\r\n",zdata?"enabled":"disabled");
          break;
       case REG_ZZ_AUTOC_RAM_EN:
-         ar=zdata;
+    	  env_file_vars_temp.autoconfig_ram=zdata;
          printf("AUTOCONFIG RAM %s\r\n",zdata?"enabled":"disabled");
          break;
       case REG_ZZ_KS_SEL:
@@ -1603,6 +1608,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 				 	 *(char*)(RTG_BASE+REG_ZZ_SEL_SCSI_TXT+j+c)=0;
         	 }
          }
+         break;
+      case REG_ZZ_TEST_ENABLE:
+    	  env_file_vars_temp.enable_test=zdata;
+         printf("TEST ENABLE %s\r\n",zdata?"enabled":"disabled");
          break;
       default:
          printf("W %08lx\r\n",address); // write to an unknown RTG register

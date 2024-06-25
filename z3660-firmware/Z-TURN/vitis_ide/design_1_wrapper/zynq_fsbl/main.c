@@ -135,6 +135,7 @@
 #ifdef RSA_SUPPORT
 #include "rsa.h"
 #endif
+#include <stdio.h>
 
 /************************** Constant Definitions *****************************/
 
@@ -449,14 +450,32 @@ int main(void)
 		/*
 		 * SD initialization returns file open error or success
 		 */
-		Status = InitSD("BOOT.BIN");
+		Status = InitSD("Z3660.BIN");
 		if (Status != XST_SUCCESS) {
-			fsbl_printf(DEBUG_GENERAL,"SD_INIT_FAIL\r\n");
-			OutputStatus(SD_INIT_FAIL);
-			FsblFallback();
+			printf("SD_INIT_FAIL (Z3660.BIN)\r\n");
+			Status = InitSD("FAILSAFE.BIN");
+			if (Status != XST_SUCCESS) {
+				printf("SD_INIT_FAIL (FAILSAFE.BIN)\r\n");
+				Status = InitSD("BOOT.BIN");
+				if (Status != XST_SUCCESS) {
+					printf("SD_INIT_FAIL (BOOT.BIN)\r\n");
+					printf("SOS, I can't boot!!!\r\n");
+					while(1)
+					{
+
+					}
+//					OutputStatus(SD_INIT_FAIL);
+//					FsblFallback();
+				}
+				else
+					printf("SD Init Done (BOOT.BIN)\r\n");
+			}
+			else
+				printf("SD Init Done (FAILSAFE.BIN)\r\n");
 		}
+		else
+			printf("SD Init Done (Z3660.BIN)\r\n");
 		MoveImage = SDAccess;
-		fsbl_printf(DEBUG_INFO,"SD Init Done \r\n");
 	} else
 
 	if (BootModeRegister == MMC_MODE) {

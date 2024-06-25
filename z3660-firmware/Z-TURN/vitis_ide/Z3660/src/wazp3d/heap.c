@@ -4,7 +4,7 @@
 #include "heap.h"
 #include "../memorymap.h"
 
-uintptr_t *heap = (uintptr_t *)(Z3_SOFT3D_ADDR+0x1000);
+uintptr_t *heap = (uintptr_t *)(Z3_SOFT3D_ADDR+0x100000);
 const uintptr_t *stack_base = 0;
 
 bool reachable_chunks[CHUNK_LIST_CAP] = {0};
@@ -15,7 +15,7 @@ Chunk_List alloced_chunks = {0};
 Chunk_List freed_chunks = {
     .count = 1,
     .chunks = {
-        [0] = {.start = (uintptr_t *)(Z3_SOFT3D_ADDR+0x1000), .size = 0x01000000}
+        [0] = {.start = (uintptr_t *)(Z3_SOFT3D_ADDR+0x100000), .size = 0x01000000}
     },
 };
 Chunk_List tmp_chunks = {0};

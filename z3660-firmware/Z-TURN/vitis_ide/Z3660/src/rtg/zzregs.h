@@ -135,6 +135,7 @@ enum zz_reg_offsets {
    REG_ZZ_APPLY_ALL      = 0x26C,
 
    REG_ZZ_SOFT3D_OP      = 0x270,
+   REG_ZZ_TEST_ENABLE    = 0x274,
 
    REG_ZZ_FW_BETA        = 0x280,
 

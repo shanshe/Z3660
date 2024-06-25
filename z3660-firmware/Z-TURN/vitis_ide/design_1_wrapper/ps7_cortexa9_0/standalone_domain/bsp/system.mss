@@ -277,3 +277,18 @@ BEGIN LIBRARY
 END
 
 
+BEGIN LIBRARY
+ PARAMETER LIBRARY_NAME = lwip213
+ PARAMETER LIBRARY_VER = 1.1
+ PARAMETER PROC_INSTANCE = ps7_cortexa9_0
+ PARAMETER lwip_debug = true
+ PARAMETER lwip_dhcp = true
+ PARAMETER netif_debug = true
+ PARAMETER pbuf_pool_bufsize = 9000
+ PARAMETER socket_debug = true
+ PARAMETER tcp_wnd = 65535
+ PARAMETER use_axieth_on_zynq = 0
+ PARAMETER use_emaclite_on_zynq = 0
+END
+
+

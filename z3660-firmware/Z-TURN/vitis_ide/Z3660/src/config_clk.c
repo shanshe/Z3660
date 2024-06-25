@@ -5,23 +5,6 @@
 XClk_Wiz clkwiz0;
 XClk_Wiz_Config conf0;
 
-typedef struct {
-	int divider;
-	int phase;
-	int dutycycle;
-} clock;
-typedef struct {
-	int clk;
-	int M;
-	int D;
-	clock axi;
-	clock pclk;
-	clock clken;
-	clock bclk;
-	clock clk90;
-	clock cpuclk;
-} clock_data;
-
 clock_data cd[]={
 {//100 MHz OK
 		.clk            =100, .M            =  30, .D                =  5,
@@ -130,15 +113,8 @@ void print_clkinfo(char * str,uint32_t base,uint32_t address)
 
 }
 uint32_t clken=1;
-void configure_clk(int clk, int busclk, int verbose, int nbr)
+unsigned int get_clock_index(int clk)
 {
-#ifndef CPU_FIXED_FREQUENCY
-   if(clk>100)
-      clk=100;
-   else if(clk<50)
-      clk=50;
-
-// unstable frequencies: mapped to stable ones
    unsigned int ind;
    if(clk>95) ind=0;
    else if(clk>90) ind=1;
@@ -151,6 +127,19 @@ void configure_clk(int clk, int busclk, int verbose, int nbr)
    else if(clk>55) ind=8;
    else if(clk>50) ind=9;
    else ind=10;
+   return ind;
+}
+void configure_clk(int clk, int verbose, int nbr)
+{
+#ifndef CPU_FIXED_FREQUENCY
+   if(clk>100)
+      clk=100;
+   else if(clk<50)
+      clk=50;
+
+// unstable frequencies: mapped to stable ones
+   unsigned int ind;
+   ind=get_clock_index(clk);
    clk=cd[ind].clk;
 
    printf("Clock index %d\n",ind);
@@ -209,7 +198,7 @@ void configure_clk(int clk, int busclk, int verbose, int nbr)
       print_clkinfo("  PCLK",XPAR_CLK_WIZ_0_BASEADDR,0x214);
       print_clkinfo("_CLKEN",XPAR_CLK_WIZ_0_BASEADDR,0x220);
       print_clkinfo("  BCLK",XPAR_CLK_WIZ_0_BASEADDR,0x22C);
-      print_clkinfo("CPUCLK",XPAR_CLK_WIZ_0_BASEADDR,0x238);
       print_clkinfo(" CLK90",XPAR_CLK_WIZ_0_BASEADDR,0x244);
+      print_clkinfo("CPUCLK",XPAR_CLK_WIZ_0_BASEADDR,0x238);
    }
 }

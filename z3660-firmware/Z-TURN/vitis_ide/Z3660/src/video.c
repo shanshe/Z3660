@@ -43,7 +43,6 @@ extern XAxiVdma vdma;
 extern XClk_Wiz clkwiz;
 extern XClk_Wiz_Config conf;
 extern uint16_t original_h;
-extern uint32_t ticks;
 uint32_t sprite_buf[32 * 48];
 uint8_t sprite_clipped = 0;
 int16_t sprite_clip_x = 0, sprite_clip_y = 0;
@@ -210,10 +209,10 @@ void video_reset(void) {
    while(video_formatter_read(0)==1);
    while(video_formatter_read(0)==0);
    original_h=256;
-   video_mode_init(ZZVMODE_640x480, NO_SCALE, MNTVA_COLOR_16BIT565);
+   video_mode_init(ZZVMODE_800x600, NO_SCALE, MNTVA_COLOR_16BIT565);
    set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + 0), vs.vmode_hsize/vs.vmode_hdiv);
    memset(vs.framebuffer,0,vs.framebuffer_size);
-//   fill_rect_solid(40, 40, 800-80, 600-80, swap16(color[color_reset&3]), MNTVA_COLOR_16BIT565);
+//   fill_rect_solid(0, 0, 800, 600, swap16(0x8410), MNTVA_COLOR_16BIT565);
 //   color_reset++;
 //   color_reset&=3;
    set_pixelclock(&preset_video_modes[vs.video_mode]);
@@ -536,14 +535,14 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
    min_distance(bT.P.P2,gT.P,grey);
 
    Font20.BackColor=CL_TRANSPARENT;
-   displayStringAt(0,h/2-12,(uint8_t*)"Z3660 reset...",CENTER_MODE);
+   displayStringAt(&Font20,0,h/2-12,(uint8_t*)"Z3660 reset...",CENTER_MODE);
    char message[50]={0};
    message[0]=0;
    Font20.TextColor=0x00FF2020; // red
    strcat(message,"Selected >> ");
    strcat(message,bootmode_names[cpu_boot_mode]);
    strcat(message," <<<<<<<<<<<");
-   displayStringAt(0,h/2+9,(uint8_t*)message,CENTER_MODE);
+   displayStringAt(&Font20,0,h/2+9,(uint8_t*)message,CENTER_MODE);
    Point P0;
    Point P1;
    Color white;
@@ -595,7 +594,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       strcat(message,"Will delete all env files");
    }
    strcat(message," after full bar");
-   displayStringAt(0,h/2+42,(uint8_t*)message,CENTER_MODE);
+   displayStringAt(&Font20,0,h/2+42,(uint8_t*)message,CENTER_MODE);
 
    if(no_init)
    {
@@ -749,12 +748,9 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
    return(XST_SUCCESS);
 }
 
-int toggle=0;
-int vblank=0;
 uint32_t ticks=0;
 void isr_video(void *dummy)
 {
-   vblank=video_formatter_read(0);
    int vblank=video_formatter_read(0);
 /*
    static int c=0;

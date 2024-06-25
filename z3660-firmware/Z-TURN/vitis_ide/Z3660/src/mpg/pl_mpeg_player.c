@@ -257,7 +257,7 @@ void app_on_video(plm_t *mpeg, plm_frame_t *frame, void *user) {
 	}
 	char str[20];
 	sprintf(str,"fps=%2.2f",fps);
-	displayStringAt(10,10,(uint8_t*)str,LEFT_MODE);
+	displayStringAt(&Font20,10,10,(uint8_t*)str,LEFT_MODE);
 }
 
 void app_on_audio(plm_t *mpeg, plm_samples_t *samples, void *user) {

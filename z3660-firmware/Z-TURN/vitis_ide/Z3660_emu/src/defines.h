@@ -1,0 +1,11 @@
+//#define RTG_CACHE_POLICY NORM_WB_CACHE
+#define NC 0b00
+#define WB 0b01
+#define WT 0b10
+#define WBNWA 0b11
+#define OUTER 12
+#define INNER 2
+
+#define RTG_CACHE_POLICY_FOR_060 0x14DE2|(WT<<OUTER)|(WB<<INNER)
+
+#define RTG_CACHE_POLICY_FOR_EMU 0x14DE2|(WT<<OUTER)|(WT<<INNER)

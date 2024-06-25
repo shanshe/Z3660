@@ -9,13 +9,13 @@
 #define SRC_MAIN_H_
 
 #define REVISION_MAJOR 1
-#define REVISION_MINOR 03
+#define REVISION_MINOR 3 // 03
 //#define REVISION_BETA 0
-#define REVISION_BETA 1
+#define REVISION_BETA 2
 
 #define INT_IPL_ON_THIS_CORE 0
 
-//#define NO_ARM_RESET_ON_AMIGA_RESET
+#define NO_ARM_RESET_ON_AMIGA_RESET
 //#define CPU_FIXED_FREQUENCY
 
 #define M_PI 3.14159265358979323846
@@ -121,6 +121,7 @@ extern SHARED *shared;
 //#define CPLD_RESET_ARM(X) *(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR)=~((BIT13)<<16) & (0xFFFF0000U | ((X)*(BIT13)));
 #define NBR_ARM(X)        XGpioPs_WritePin(&GpioPs, PS_MIO_8, X);
 #define CPLD_RESET_ARM(X) do{ XGpioPs_WritePin(&GpioPs, PS_MIO_13, X);} while(0)
+unsigned int READ_NBG_ARM(void);
 
 #define n040RSTI     PS_MIO_10 // MIO 10
 #define LED1         PS_MIO_11 // MIO 11 (Z3660's green led)
@@ -158,6 +159,16 @@ extern SHARED *shared;
 #define FPGA_INT6                     (1L<<29)  // SAXI REG0 29
 #define READ_WRITE_ACK                (1L<<30)  // SAXI REG0 30
 #define FPGA_RESET                    (1L<<31)  // SAXI REG0 31
+
+#define ENABLE_BURST_READ_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_READ_EN);\
+                  }while(0)
+#define DISABLE_BURST_READ_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_READ_EN);\
+                  }while(0)
+
+#define ENABLE_BURST_WRITE_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_WRITE_EN);\
+                  }while(0)
+#define DISABLE_BURST_WRITE_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_WRITE_EN);\
+                  }while(0)
 
 #ifdef XPARAMETERS_H // FIXME: this is not needed, but eclipse complaints if not defined here
 //#define XPAR_Z3660_0_BASEADDR 0x83C00000
@@ -210,4 +221,7 @@ void arm_write_nowait(uint32_t address, uint32_t data);
 #define M68K_RUNNING 0
 #define M68K_RESET   1
 #include "defines.h"
+
+#define ACTIVITY_LED_OFF do{XGpioPs_WritePin(&GpioPs, LED1, 1);}while(0)
+#define ACTIVITY_LED_ON do{XGpioPs_WritePin(&GpioPs, LED1, 0);}while(0)
 #endif /* SRC_MAIN_H_ */

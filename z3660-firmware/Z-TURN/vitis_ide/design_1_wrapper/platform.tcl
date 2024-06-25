@@ -224,3 +224,128 @@ platform clean
 platform generate
 platform generate -domains standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
 platform generate -domains standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains standalone_ps7_cortexa9_1 
+platform generate -domains zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform active {design_1_wrapper}
+bsp reload
+bsp setlib -name lwip213 -ver 1.1
+bsp config api_mode "RAW_API"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform clean
+platform generate
+domain active {zynq_fsbl}
+bsp reload
+bsp reload
+domain active {standalone_domain}
+bsp config api_mode "RAW_API"
+bsp config socket_mode_thread_prio "2"
+bsp reload
+bsp reload
+platform generate -domains 
+bsp config lwip_dhcp "true"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform clean
+platform generate
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains standalone_domain 
+platform active {design_1_wrapper}
+domain active {zynq_fsbl}
+bsp reload
+bsp reload
+domain active {standalone_domain}
+bsp reload
+bsp config use_axieth_on_zynq "0"
+bsp config use_emaclite_on_zynq "0"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains standalone_domain 
+bsp config pbuf_pool_bufsize "9000"
+bsp config tcp_wnd "65535"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform clean
+platform generate
+platform clean
+platform generate
+platform clean
+platform generate
+platform clean
+platform active {design_1_wrapper}
+platform generate
+platform clean
+platform generate
+platform clean
+platform generate
+platform active {design_1_wrapper}
+bsp reload
+bsp reload
+domain active {standalone_ps7_cortexa9_1}
+bsp reload
+bsp reload
+platform generate -domains 
+domain active {standalone_domain}
+bsp reload
+bsp config tcp_debug "true"
+bsp config sys_debug "true"
+bsp config socket_debug "true"
+bsp config pbuf_debug "true"
+bsp config netif_debug "true"
+bsp config lwip_debug "true"
+bsp config ip_debug "true"
+bsp config igmp_debug "true"
+bsp config icmp_debug "true"
+bsp config udp_debug "true"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+bsp config icmp_debug "false"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains standalone_domain 
+bsp reload
+platform clean
+platform generate
+platform generate
+platform clean
+platform generate
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform active {design_1_wrapper}
+domain active {zynq_fsbl}
+domain active {standalone_domain}
+bsp reload
+bsp reload
+bsp config udp_debug "false"
+bsp config tcp_debug "false"
+bsp config pbuf_debug "false"
+bsp config igmp_debug "false"
+bsp config ip_debug "false"
+bsp config sys_debug "false"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform generate
+platform generate
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 

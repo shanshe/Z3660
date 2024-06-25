@@ -3,18 +3,19 @@
 #include "../video.h"
 #include <xil_types.h>
 #include "xil_printf.h"
-#include "../console.h"
+
+#include "../debug_console.h"
 #include "str_dmaop.h"
 
 //int set_framebuffer_address(uint32_t fb);
-extern CONSOLE con;
+extern DEBUG_CONSOLE debug_console;
 
 void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 {
     struct GFXData *data = (struct GFXData*)((uint32_t)Z3_SCRATCH_ADDR);
 //    if((zdata!=11)&&(zdata!=2)&&(zdata!=5))
 //    	printf("OP %d\r\n",zdata);
-    if(con.debug_rtg)
+    if(debug_console.debug_rtg)
         printf("blitter_dma_op 0x%X  %s\n",zdata,dma_op_string[zdata]);
 
     switch(zdata) {
@@ -52,7 +53,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             SWAP16(data->pitch[0]);
             SWAP32(data->offset[0]);
 
-            if(con.debug_rtg)
+            if(debug_console.debug_rtg)
             {
             	printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
             	printf("x1: %d y1: %d\n",data->x[1],data->y[1]);
@@ -76,7 +77,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
             SWAP16(data->pitch[0]);		SWAP16(data->pitch[1]);
             SWAP32(data->offset[0]);	SWAP32(data->offset[1]);
-            if(con.debug_rtg)
+            if(debug_console.debug_rtg)
             {
             	printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
             	printf("x1: %d y1: %d\n",data->x[1],data->y[1]);
@@ -171,7 +172,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
             SWAP16(data->user[0]);
             SWAP16(data->user[1]);
-            if(con.debug_rtg)
+            if(debug_console.debug_rtg)
             {
             	printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
             	printf("x1: %d y1: %d\n",data->x[1],data->y[1]);

@@ -21,7 +21,7 @@
             			
             <storageModule moduleId="cdtBuildSystem" version="4.0.0">
                 				
-                <configuration artifactName="${ProjName}" buildProperties="" description="" id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293" name="Debug" parent="com.xilinx.sdx.system.managedbuilder.debugConfiguration">
+                <configuration artifactName="${ProjName}" buildProperties="" description="" id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293" name="Debug" parent="com.xilinx.sdx.system.managedbuilder.debugConfiguration" postbuildStep="cd .. &amp;&amp; python3 make_version.py">
                     					
                     <folderInfo id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293." name="/" resourcePath="">
                         						
@@ -103,6 +103,20 @@
         	
     </storageModule>
     	
-    <storageModule moduleId="refreshScope"/>
+    <storageModule moduleId="refreshScope" versionNumber="2">
+        		
+        <configuration configurationName="Debug">
+            			
+            <resource resourceType="PROJECT" workspacePath="/Z3660_system"/>
+            		
+        </configuration>
+        		
+        <configuration configurationName="Release">
+            			
+            <resource resourceType="PROJECT" workspacePath="/Z3660_system"/>
+            		
+        </configuration>
+        	
+    </storageModule>
     
 </cproject>

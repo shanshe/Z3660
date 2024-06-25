@@ -54,7 +54,17 @@ typedef struct {
 	char ext_kickstart7[150];
 	char ext_kickstart8[150];
 	char ext_kickstart9[150];
+	int enable_test;
 } CONFIG;
+typedef struct {
+	int bootmode;
+	int scsiboot;
+	int autoconfig_ram;
+	int cpu_ram;
+	int kickstart;
+	int ext_kickstart;
+	int enable_test;
+} ENV_FILE_VARS;
 
 enum CONFITEM {
 	CONFITEM_NONE,
@@ -114,13 +124,14 @@ enum CONFITEM {
 	CONFITEM_EXT_KICKSTART7,
 	CONFITEM_EXT_KICKSTART8,
 	CONFITEM_EXT_KICKSTART9,
+	CONFITEM_ENABLE_TEST,
 	CONFITEM_NUM
 };
 
 void read_config_file(void);
 void read_env_files(void);
 extern const char *bootmode_names[];
-int write_env_files(int bootmode, int scsiboot, int autoconfig_ram, int cpu_ram, int kickstart, int ext_kickstart);
+int write_env_files(ENV_FILE_VARS env_file);
 int write_env_files2(int *scsi_num);
 int delete_env_files(void);
 extern CONFIG config;

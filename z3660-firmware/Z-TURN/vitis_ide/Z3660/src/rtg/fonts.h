@@ -110,7 +110,7 @@ typedef enum
   LEFT_MODE               = 0x03     /* Left mode   */
 }Text_AlignModeTypdef;
 
-void displayStringAt(uint16_t Xpos, uint16_t Ypos, uint8_t *Text, Text_AlignModeTypdef Mode);
+void displayStringAt(sFONT *Font,uint16_t Xpos, uint16_t Ypos, uint8_t *Text, Text_AlignModeTypdef Mode);
 /**
   * @}
   */
