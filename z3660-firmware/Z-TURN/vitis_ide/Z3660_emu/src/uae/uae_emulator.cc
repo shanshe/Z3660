@@ -714,7 +714,7 @@ void uae_emulator(int enable_jit)
    RANGE_MAP(0x0100,0x0800,mbrm_bank); // Mother Board bank ( Mother board RAM )
    RANGE_MAP(0x0800,0x1000,drct_bank); // Direct bank ( CPU RAM )
    RANGE_MAP(0x1000,0x8000,slow_bank); // Slow bank ( Z3 Expansion space )
-   RANGE_MAP(0xFF00,0xFF01,auto_bank); // Autoconfig bank ( Z3660 and Z3 AutoConfig )
+   RANGE_MAP(0xFFFF,0xFFFF,dmmy_bank); // dummy
    uint32_t *ptr;
        ptr = &MMUTable;
    ptr[0x00F]=((uint32_t)&MMUL2Table)|0x1E1;

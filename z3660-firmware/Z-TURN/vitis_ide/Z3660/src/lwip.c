@@ -29,21 +29,22 @@ void lwip_run(void)
 }
 
 char url[500];
-char domain_name[30];
+char domain_name[300];
 httpc_connection_t conn_settings;
 httpc_state_t *connection;
 err_t RecvHttpHeaderCallback (httpc_state_t *connection, void *arg, struct pbuf *hdr, u16_t hdr_len, u32_t content_len);
 void HttpClientResultCallback (void *arg, httpc_result_t httpc_result, u32_t rx_content_len, u32_t srv_res, err_t err);
 err_t RecvBOOTbinCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 err_t RecvVersionCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
+err_t RecvVersionScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
+err_t RecvScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 
-#define filename_loc "BOOT.BIN"
-#define file_version_loc "version.txt"
 ip_addr_t google_dnsserver;
 
 #include "lwip/dns.h"
 char version_string[5000];
 char version_string_export[50];
+char version_scsirom_string_export[50];
 volatile int received=0;
 struct netif *netif;
 volatile int TcpFastTmrFlag = 0;
@@ -132,14 +133,14 @@ void platform_setup_timer(void)
 			ConfigPtr->BaseAddr);
 	if (Status != XST_SUCCESS) {
 
-		xil_printf("In %s: Scutimer Cfg initialization failed...\r\n",
+		printf("In %s: Scutimer Cfg initialization failed...\n",
 		__func__);
 		return;
 	}
 
 	Status = XScuTimer_SelfTest(&TimerInstance);
 	if (Status != XST_SUCCESS) {
-		xil_printf("In %s: Scutimer Self test failed...\r\n",
+		printf("In %s: Scutimer Self test failed...\n",
 		__func__);
 		return;
 
@@ -201,19 +202,19 @@ static void assign_default_ip(ip_addr_t *ip, ip_addr_t *mask, ip_addr_t *gw)
 {
 	int err;
 
-	xil_printf("Configuring default IP %s \r\n", DEFAULT_IP_ADDRESS);
+	printf("Configuring default IP %s \n", DEFAULT_IP_ADDRESS);
 
 	err = inet_aton(DEFAULT_IP_ADDRESS, ip);
 	if (!err)
-		xil_printf("Invalid default IP address: %d\r\n", err);
+		printf("Invalid default IP address: %d\n", err);
 
 	err = inet_aton(DEFAULT_IP_MASK, mask);
 	if (!err)
-		xil_printf("Invalid default IP MASK: %d\r\n", err);
+		printf("Invalid default IP MASK: %d\n", err);
 
 	err = inet_aton(DEFAULT_GW_ADDRESS, gw);
 	if (!err)
-		xil_printf("Invalid default gateway address: %d\r\n", err);
+		printf("Invalid default gateway address: %d\n", err);
 }
 
 int lwip_connect(void)
@@ -252,48 +253,8 @@ int lwip_connect(void)
 	}
 	return(1);
 }
-int lwip_get_update_version(void)
-{
-
-	conn_settings.use_proxy = 0;
-	conn_settings.headers_done_fn = RecvHttpHeaderCallback;
-	conn_settings.result_fn = HttpClientResultCallback;
-
-	strcpy(domain_name, "shanshe.mooo.com");
-	strcpy(url, "/z3660/");
-	strcat(url, file_version_loc);
-
-	err_t error;
-
-	google_dnsserver.addr=0x08080808;
-
-	dns_setserver(0, &google_dnsserver);
-
-	error = httpc_get_file_dns(domain_name, 80, url, &conn_settings,
-			RecvVersionCallback, NULL, &connection);
-	if(error==0)
-	{
-		int timeout=5000; // 5 seconds of timeout
-		while(received==0 && timeout>0)
-		{
-			timeout--;
-			usleep(1000);
-			txrx_loop(); // it executes at a rate of 250 and 500 ms
-		}
-		if(timeout==0)
-		{
-			printf("timeout 1\n");
-			return(0);
-		}
-		else
-		{
-			return(1);
-		}
-	}
-	return(0);
-}
-void hdmi_tick(void);
-int lwip_get_update(void)
+void hdmi_tick(int clean);
+int lwip_get_update_version(char* file_version_loc,int alfa)
 {
 	conn_settings.use_proxy = 0;
 	conn_settings.headers_done_fn = RecvHttpHeaderCallback;
@@ -303,30 +264,178 @@ int lwip_get_update(void)
 	err_t error;
 
 	received=0;
-	strcpy(url, "/z3660/");
-	strcat(url, filename_loc);
-	printf("url:\n%s\n", url);
+	sprintf(url,"/z3660/%s%s",alfa?"alfa/":"",file_version_loc);
+
+	google_dnsserver.addr=0x08080808;
+
+	dns_setserver(0, &google_dnsserver);
+
 	error = httpc_get_file_dns(domain_name, 80, url, &conn_settings,
-			RecvBOOTbinCallback, NULL, &connection);
+			RecvVersionCallback, NULL, &connection);
 	if(error==0)
 	{
-		long int timeout=20000000; // 20 seconds of timeout
+		int timeout=5000000; // 5 seconds of timeout
 		while(received==0 && timeout>0)
 		{
 			timeout--;
-			usleep(1);
 			txrx_loop(); // it executes at a rate of 250 and 500 ms
 			if((timeout%1000000)==0)
-				hdmi_tick();
+				hdmi_tick(0); // 0 = roll the bar
+			else
+				usleep(1);
 		}
 		if(timeout==0)
 		{
-			printf("\ntimeout 2\n");
+			printf("\nTimeout\n");
+			hdmi_tick(2); // 2 = timeout
+			return(0);
+		}
+		else
+		{
+			hdmi_tick(1); // 1 = clean
+			return(1);
+		}
+	}
+	return(0);
+}
+int lwip_get_update_version_scsirom(char* file_version_loc,int alfa)
+{
+	conn_settings.use_proxy = 0;
+	conn_settings.headers_done_fn = RecvHttpHeaderCallback;
+	conn_settings.result_fn = HttpClientResultCallback;
+
+	strcpy(domain_name, "shanshe.mooo.com");
+	err_t error;
+
+	received=0;
+	sprintf(url,"/z3660/%s%s",alfa?"alfa/":"",file_version_loc);
+
+	google_dnsserver.addr=0x08080808;
+
+	dns_setserver(0, &google_dnsserver);
+
+	error = httpc_get_file_dns(domain_name, 80, url, &conn_settings,
+			RecvVersionScsiRomCallback, NULL, &connection);
+	if(error==0)
+	{
+		int timeout=5000000; // 5 seconds of timeout
+		while(received==0 && timeout>0)
+		{
+			timeout--;
+			txrx_loop(); // it executes at a rate of 250 and 500 ms
+			if((timeout%1000000)==0)
+				hdmi_tick(0); // 0 = roll the bar
+			else
+				usleep(1);
+		}
+		if(timeout==0)
+		{
+			printf("\nTimeout\n");
+			hdmi_tick(2); // 2 = timeout
+			return(0);
+		}
+		else
+		{
+			hdmi_tick(1); // 1 = clean
+			return(1);
+		}
+	}
+
+	return(0);
+}
+int lwip_get_update(char *filename_loc,int alfa)
+{
+	conn_settings.use_proxy = 0;
+	conn_settings.headers_done_fn = RecvHttpHeaderCallback;
+	conn_settings.result_fn = HttpClientResultCallback;
+
+	strcpy(domain_name, "shanshe.mooo.com");
+	err_t error;
+
+	received=0;
+	sprintf(url,"/z3660/%s%s",alfa?"alfa/":"",filename_loc);
+	printf("url:\n%s\n", url);
+
+	google_dnsserver.addr=0x08080808;
+
+	dns_setserver(0, &google_dnsserver);
+
+	error = httpc_get_file_dns(domain_name, 80, url, &conn_settings,
+			RecvBOOTbinCallback, NULL, &connection);
+	download_data.IncomingBytes = 0;
+	download_data.PacketCnt = 0;
+
+	if(error==0)
+	{
+		long int timeout=10000000; // 10 seconds of timeout
+		while(received==0 && timeout>0)
+		{
+			timeout--;
+			txrx_loop(); // it executes at a rate of 250 and 500 ms
+			if((timeout%1000000)==0)
+				hdmi_tick(0); // 0 = roll the bar
+			else
+				usleep(1);
+		}
+		if(timeout==0)
+		{
+			printf("\nTimeout\n");
+			hdmi_tick(2); // 2 = timeout
 			return(0);
 		}
 		else
 		{
 			printf("Done...\n");
+			hdmi_tick(1); // 1 = clean
+			return(1);
+		}
+	}
+	return(0);
+}
+int lwip_get_update_scsirom(char *filename_loc,int alfa)
+{
+	conn_settings.use_proxy = 0;
+	conn_settings.headers_done_fn = RecvHttpHeaderCallback;
+	conn_settings.result_fn = HttpClientResultCallback;
+
+	strcpy(domain_name, "shanshe.mooo.com");
+	err_t error;
+
+	received=0;
+	sprintf(url,"/z3660/%s%s",alfa?"alfa/":"",filename_loc);
+	printf("url:\n%s\n", url);
+
+	google_dnsserver.addr=0x08080808;
+
+	dns_setserver(0, &google_dnsserver);
+
+	error = httpc_get_file_dns(domain_name, 80, url, &conn_settings,
+			RecvScsiRomCallback, NULL, &connection);
+	download_data.IncomingBytes = 0;
+	download_data.PacketCnt = 0;
+
+	if(error==0)
+	{
+		long int timeout=10000000; // 10 seconds of timeout
+		while(received==0 && timeout>0)
+		{
+			timeout--;
+			txrx_loop(); // it executes at a rate of 250 and 500 ms
+			if((timeout%1000000)==0)
+				hdmi_tick(0); // 0 = roll the bar
+			else
+				usleep(1);
+		}
+		if(timeout==0)
+		{
+			printf("\nTimeout\n");
+			hdmi_tick(2); // 2 = timeout
+			return(0);
+		}
+		else
+		{
+			printf("Done...\n");
+			hdmi_tick(1); // 1 = clean
 			return(1);
 		}
 	}
@@ -345,27 +454,51 @@ void HttpClientResultCallback (void *arg, httpc_result_t httpc_result, u32_t rx_
 //   printf("httpc_result: %u\n", httpc_result);
 //   printf("received number of bytes: %u\n", rx_content_len);
 }
-uint32_t BMPPacketCnt = 0, BMPIncomingBytes=0;
+
 
 uint8_t *DATA;
 err_t RecvBOOTbinCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
 	if (p == NULL) {
 		printf("pbuf==NULL TCP packet has arrived\n");
 	} else {
-		memcpy(&DATA[BMPIncomingBytes], p->payload, p->len);
-		BMPIncomingBytes = BMPIncomingBytes + p->len;
-		BMPPacketCnt++;
-		if(BMPPacketCnt%100==0 || BMPIncomingBytes>download_data.filesize-5000)
-			printf("Total length %ld bytes     \r",BMPIncomingBytes);
+		memcpy(&DATA[download_data.IncomingBytes], p->payload, p->len);
+		download_data.IncomingBytes = download_data.IncomingBytes + p->len;
+		download_data.PacketCnt++;
+		if(download_data.PacketCnt%100==0 || download_data.IncomingBytes>download_data.filesize-5000)
+			printf("Total length %ld bytes     \r", download_data.IncomingBytes);
 
 		tcp_recved(tpcb, p->tot_len);
 		pbuf_free(p);
 
-		if (BMPIncomingBytes >= download_data.filesize) {
-			printf("\nincoming bytes (%ld) >= filesize (%ld)\n", BMPIncomingBytes, download_data.filesize);
+		if (download_data.IncomingBytes >= download_data.filesize) {
+			printf("\nincoming bytes (%ld) >= filesize (%ld)\n", download_data.IncomingBytes, download_data.filesize);
 			printf("Last packed recieved -> closing the tcp connection...\n");
-			BMPIncomingBytes = 0;
-			BMPPacketCnt = 0;
+			download_data.IncomingBytes = 0;
+			download_data.PacketCnt = 0;
+			received=1;
+			return tcp_close(tpcb);
+		}
+	}
+	return ERR_OK;
+}
+err_t RecvScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if (p == NULL) {
+		printf("pbuf==NULL TCP packet has arrived\n");
+	} else {
+		memcpy(&DATA[download_data.IncomingBytes], p->payload, p->len);
+		download_data.IncomingBytes = download_data.IncomingBytes + p->len;
+		download_data.PacketCnt++;
+		if(download_data.PacketCnt%100==0 || download_data.IncomingBytes>download_data.filesize_scsirom-5000)
+			printf("Total length %ld bytes     \r", download_data.IncomingBytes);
+
+		tcp_recved(tpcb, p->tot_len);
+		pbuf_free(p);
+
+		if (download_data.IncomingBytes >= download_data.filesize_scsirom) {
+			printf("\nincoming bytes (%ld) >= filesize (%ld)\n", download_data.IncomingBytes, download_data.filesize_scsirom);
+			printf("Last packed recieved -> closing the tcp connection...\n");
+			download_data.IncomingBytes = 0;
+			download_data.PacketCnt = 0;
 			received=1;
 			return tcp_close(tpcb);
 		}
@@ -412,3 +545,102 @@ err_t RecvVersionCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t
     }
     return ERR_OK;
 }
+err_t RecvVersionScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if (p == NULL) {
+		printf("pbuf==NULL TCP packet has arrived\n");
+	} else {
+		printf("Packet received\n");
+
+		memcpy(&version_string, p->payload, p->len);
+		char *version=strstr(version_string,"version=");
+		if(version!=NULL && version==version_string) // version is in the downloaded text, and also is the first work
+		{
+			version=version_string+8;
+			char *plen=strchr(version_string,'\r');
+			*plen=0;
+			printf("Version: %s\n", version);
+			strcpy(version_scsirom_string_export,version);
+			*plen='\r';
+			plen=strstr(version_string,"length=");
+			char *pcheck=strchr(plen,'\r');
+			*pcheck=0;
+			download_data.filesize_scsirom=atoi(plen+7);
+			printf("File size: %ld\n",download_data.filesize_scsirom);
+			*pcheck='\r';
+			pcheck=strstr(version_string,"checksum32=");
+			char *last=strchr(pcheck,'\r');
+			*last=0;
+			download_data.checksum32_scsirom=hextoi(pcheck+11);
+
+			tcp_recved(tpcb, p->tot_len);
+			pbuf_free(p);
+			received=1;
+		}
+		else
+		{
+			printf("The update server is down.\nPlease let us know about this on the z3660 discord channel.\n");
+		}
+        return tcp_close(tpcb);
+    }
+    return ERR_OK;
+}
+/*
+err_t RecvVersionScsiRomVersionCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if (p == NULL) {
+		printf("pbuf==NULL TCP packet has arrived\n");
+	} else {
+		printf("Packet received\n");
+
+		memcpy(&version_string, p->payload, p->len);
+		int i=0;
+		do{
+			if(version_string[i]=='$')
+			{
+				if(version_string[i+1]=='V' && version_string[i+2]=='E' && version_string[i+3]=='R')
+				{
+					break;
+				}
+			}
+			i++;
+		}while(i<100);
+		if(i==100)
+		{
+			printf("Can't find $VER info\n");
+	        return tcp_close(tpcb);
+		}
+		i+=4;
+		do{
+			if(version_string[i]=='S')
+			{
+				if(version_string[i+1]=='C' && version_string[i+2]=='S' &&
+				   version_string[i+3]=='I' && version_string[i+4]==' ' &&
+				   version_string[i+5]=='v')
+				{
+					break;
+				}
+			}
+			i++;
+		}while(i<100);
+		if(i==100)
+		{
+			printf("Can't find SCSI v info\n");
+	        return tcp_close(tpcb);
+		}
+		i+=6;
+		int j=0;
+		do{
+			version_scsi_string_export[j]=version_string[i++];
+			if(version_scsi_string_export[j]==' ')
+				break;
+			j++;
+		}while(j<20);
+		version_scsi_string_export[j]=0;
+		tcp_recved(tpcb, p->tot_len);
+		pbuf_free(p);
+		received=1;
+        return tcp_close(tpcb);
+    }
+    return ERR_OK;
+}
+
+ */

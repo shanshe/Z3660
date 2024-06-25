@@ -85,6 +85,11 @@ const char *yesno_names[YESNO_NUM] = {
       "NO",
       "YES",
 };
+const char *yesnomin_names[YESNOMIN_NUM] = {
+      "NO",
+      "YES",
+	  "MIN",
+};
 void print_line(FIL *fil, char* line_in, ...)
 {
    va_list args;
@@ -199,6 +204,7 @@ void write_config_file(char *filename)
    print_line(&fil,"# Select Test Amiga CHIP RAM access on start (it uses the ARM, not the CPU)\n");
    print_line(&fil,"enable_test YES\n");
    print_line(&fil,"#enable_test NO\n");
+   print_line(&fil,"#enable_test MIN\n");
    print_line(&fil,"\n");
    f_close(&fil);
 
@@ -275,6 +281,14 @@ int get_bootmode_type(char *cmd) {
 int get_yesno_type(char *cmd) {
   for (int i = 0; i < YESNO_NUM; i++) {
     if (strcmp(cmd, yesno_names[i]) == 0) {
+      return i;
+    }
+  }
+  return NO;
+}
+int get_yesnomin_type(char *cmd) {
+  for (int i = 0; i < YESNOMIN_NUM; i++) {
+    if (strcmp(cmd, yesnomin_names[i]) == 0) {
       return i;
     }
   }
@@ -400,8 +414,8 @@ retry:
 
       case CONFITEM_ENABLE_TEST:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-         config.enable_test=get_yesno_type(cur_cmd);
-         printf("[CFG] Enable Test %s.\n", yesno_names[config.enable_test]);
+         config.enable_test=get_yesnomin_type(cur_cmd);
+         printf("[CFG] Enable Test %s.\n", yesnomin_names[config.enable_test]);
          break;
 
       case CONFITEM_SCSI0:
@@ -721,8 +735,8 @@ retry:
 		  memset(parse_line, 0x00, 512);
 		  f_gets(parse_line, (s32)512, &fil);
 		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
-		  config.enable_test=get_yesno_type(cur_cmd);
-		  printf("\e[30m\e[103m[ENV] Enable Test %s.\e[0m\n", yesno_names[config.enable_test]);
+		  config.enable_test=get_yesnomin_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] Enable Test %s.\e[0m\n", yesnomin_names[config.enable_test]);
 	  }
 	  else
 		  printf("[ENV] Warning!!! Enable Test file is empty\n");
@@ -754,13 +768,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/bootmode", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/bootmode with %s\r\n",bootmode_names[env_file.bootmode]);
+      printf("[Config] Write file env/bootmode with %s\n",bootmode_names[env_file.bootmode]);
       f_printf(&fil,"%s\n",bootmode_names[env_file.bootmode]);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/bootmode\r\n");
+      printf("[Config] ERROR Write file env/bootmode\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -768,13 +782,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/scsiboot", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/scsiboot with %s\r\n",yesno_names[env_file.scsiboot]);
+      printf("[Config] Write file env/scsiboot with %s\n",yesno_names[env_file.scsiboot]);
       f_printf(&fil,"%s\n",yesno_names[env_file.scsiboot]);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/scsiboot\r\n");
+      printf("[Config] ERROR Write file env/scsiboot\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -782,13 +796,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/autoconfig_ram", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/autoconfig_ram with %s\r\n",yesno_names[env_file.autoconfig_ram]);
+      printf("[Config] Write file env/autoconfig_ram with %s\n",yesno_names[env_file.autoconfig_ram]);
       f_printf(&fil,"%s\n",yesno_names[env_file.autoconfig_ram]);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/autoconfig_ram\r\n");
+      printf("[Config] ERROR Write file env/autoconfig_ram\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -796,13 +810,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/cpu_ram", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/cpu_ram with %s\r\n",yesno_names[env_file.cpu_ram]);
+      printf("[Config] Write file env/cpu_ram with %s\n",yesno_names[env_file.cpu_ram]);
       f_printf(&fil,"%s\n",yesno_names[env_file.cpu_ram]);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/cpu_ram\r\n");
+      printf("[Config] ERROR Write file env/cpu_ram\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -810,13 +824,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/cpufreq", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/cpufreq with %d\r\n",config.cpufreq);
+      printf("[Config] Write file env/cpufreq with %d\n",config.cpufreq);
       f_printf(&fil,"%d\n",config.cpufreq);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/cpufreq\r\n");
+      printf("[Config] ERROR Write file env/cpufreq\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -824,13 +838,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/kickstart", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/kickstart with %d\r\n",config.kickstart);
+      printf("[Config] Write file env/kickstart with %d\n",config.kickstart);
       f_printf(&fil,"%d\n",config.kickstart);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/kickstart\r\n");
+      printf("[Config] ERROR Write file env/kickstart\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -838,13 +852,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/ext_kickstart", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/ext_kickstart with %d\r\n",config.kickstart);
+      printf("[Config] Write file env/ext_kickstart with %d\n",config.kickstart);
       f_printf(&fil,"%d\n",config.ext_kickstart);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/ext_kickstart\r\n");
+      printf("[Config] ERROR Write file env/ext_kickstart\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -852,13 +866,13 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/enabletest", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/enabletest with %s\r\n",yesno_names[env_file.enable_test]);
+      printf("[Config] Write file env/enabletest with %s\n",yesno_names[env_file.enable_test]);
       f_printf(&fil,"%s\n",yesno_names[env_file.enable_test]);
       f_close(&fil);
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/enabletest\r\n");
+      printf("[Config] ERROR Write file env/enabletest\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -891,7 +905,7 @@ retry:
    ret=f_open(&fil,DEFAULT_ROOT "env/scsi", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
-      xil_printf("[Config] Write file env/scsi\r\n");
+      printf("[Config] Write file env/scsi\n");
       for(int i=0;i<7;i++)
       {
     	  f_printf(&fil,"%d\n",config.scsi_num[i]-1);
@@ -900,7 +914,7 @@ retry:
    }
    else
    {
-      xil_printf("[Config] ERROR Write file env/scsi\r\n");
+      printf("[Config] ERROR Write file env/scsi\n");
       Xil_ExceptionEnable();
       return(0);
    }
@@ -933,12 +947,12 @@ retry:
 #define DELETE_FILE(X) ret=f_unlink(DEFAULT_ROOT X);                         \
                        if(ret==FR_OK)                                        \
                        {                                                     \
-                          xil_printf("[Config] Delete file " X "\r\n");      \
+                          printf("[Config] Delete file " X "\n");      \
                           f_close(&fil);                                     \
                        }                                                     \
                        else                                                  \
                        {                                                     \
-                          xil_printf("[Config] Can't Delete file " X "\r\n");\
+                          printf("[Config] Can't Delete file " X "\n");\
                        }
 
    DELETE_FILE("env/bootmode")

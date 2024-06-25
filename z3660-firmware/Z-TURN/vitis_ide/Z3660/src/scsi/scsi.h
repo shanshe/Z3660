@@ -81,7 +81,7 @@ struct piscsi_dev {
     FIL *fd;
     uint32_t lba;
     uint32_t num_partitions;
-    FSIZE_t fshd_offs;
+    uint32_t fshd_offs;
     uint32_t block_size;
     struct PartitionBlock *pb[16];
     struct RigidDiskBlock *rdb;

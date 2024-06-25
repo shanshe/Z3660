@@ -2,7 +2,6 @@
 #include "gfx.h"
 #include "../video.h"
 #include <xil_types.h>
-#include "xil_printf.h"
 
 #include "../debug_console.h"
 #include "str_dmaop.h"
@@ -14,7 +13,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 {
     struct GFXData *data = (struct GFXData*)((uint32_t)Z3_SCRATCH_ADDR);
 //    if((zdata!=11)&&(zdata!=2)&&(zdata!=5))
-//    	printf("OP %d\r\n",zdata);
+//    	printf("OP %d\n",zdata);
     if(debug_console.debug_rtg)
         printf("blitter_dma_op 0x%X  %s\n",zdata,dma_op_string[zdata]);
 
@@ -27,10 +26,10 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             SWAP16(data->pitch[0]);
             SWAP32(data->offset[0]);
 
-//        	printf("OP 1 %d %lx\r\n",data->pitch[0],((uint32_t) frameBuf) + data->offset[0]);
-//        	printf("     %x %x\r\n",data->x[0],data->y[0]);
-//        	printf("     %x %x\r\n",data->x[1],data->y[1]);
-//        	printf("     %x %x\r\n",data->user[0],data->user[1]);
+//        	printf("OP 1 %d %lx\n",data->pitch[0],((uint32_t) frameBuf) + data->offset[0]);
+//        	printf("     %x %x\n",data->x[0],data->y[0]);
+//        	printf("     %x %x\n",data->x[1],data->y[1]);
+//        	printf("     %x %x\n",data->user[0],data->user[1]);
 
             set_fb((uint32_t*) (((uint32_t) vs->framebuffer) + data->offset[0]),
                     data->pitch[0]);
@@ -281,7 +280,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             uint8_t framebuffer_color_format = data->u8_user[GFXDATA_U8_COLORMODE];
             vs->framebuffer_pan_offset = data->offset[0] + (((int16_t)data->x[0]) << framebuffer_color_format);
            	vs->framebuffer_pan_offset += ((int16_t)data->y[0]) *(vs->framebuffer_pan_width << framebuffer_color_format);
-//            printf("OP 10 pan %08lX\r\n",data->offset[0]);
+//            printf("OP 10 pan %08lX\n",data->offset[0]);
             break;
         
         case OP_SET_SPLIT_POS:

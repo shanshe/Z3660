@@ -85,7 +85,8 @@ struct piscsi_fs filesystems[NUM_FILESYSTEMS];
 uint8_t piscsi_num_fs = 0;
 
 uint8_t piscsi_cur_drive = 0;
-uint32_t piscsi_u32[4];
+uint32_t piscsi_u32_read[4];
+uint32_t piscsi_u32_write[4];
 uint32_t piscsi_dbg[8];
 uint32_t piscsi_rom_size = 0;
 uint8_t *piscsi_rom_ptr=NULL;
@@ -143,13 +144,13 @@ int piscsi_init() {
         unsigned int n_bytes;
         memset((uint8_t*) piscsi_rom_ptr,0,BOOT_ROM_SIZE);
         f_read(&in,piscsi_rom_ptr, piscsi_rom_size, &n_bytes);
+        Xil_L1DCacheFlush();
+        Xil_L2CacheFlush();
 
         f_lseek(&in, PISCSI_DRIVER_OFFSET);
         process_hunks(&in, &piscsi_hinfo, piscsi_hreloc, PISCSI_DRIVER_OFFSET);
         f_close(&in);
 
-        Xil_L1DCacheFlush();
-        Xil_L2CacheFlush();
 //        Xil_DCacheFlushRange((INTPTR)piscsi_rom_ptr,BOOT_ROM_SIZE);
 //        Xil_DCacheInvalidateRange((INTPTR)piscsi_rom_ptr,BOOT_ROM_SIZE);
 
@@ -224,7 +225,7 @@ void piscsi_find_partitions(struct piscsi_dev *d) {
 
     char *block = malloc(d->block_size);
 
-    f_lseek(fd, ((uint64_t)BE(d->rdb->rdb_PartitionList)) * d->block_size);
+    f_lseek(fd, ((FSIZE_t)BE(d->rdb->rdb_PartitionList)) * d->block_size);
 next_partition:;
     unsigned int n_bytes;
     f_read(fd, block, d->block_size,&n_bytes);
@@ -260,7 +261,7 @@ next_partition:;
 
 partition_renamed:
     if (d->pb[cur_partition]->pb_Next != 0xFFFFFFFF) {
-        uint64_t next = be32toh(pb->pb_Next);
+        FSIZE_t next = be32toh(pb->pb_Next);
         block = malloc(d->block_size);
 //        lseek64(fd, next * d->block_size, SEEK_SET);
         f_lseek(fd, next * d->block_size);
@@ -361,12 +362,11 @@ void piscsi_find_filesystems(struct piscsi_dev *d) {
 
     uint8_t *fhb_block = malloc(d->block_size);
 
-//    lseek64(d->fd, d->fshd_offs, SEEK_SET);
     f_lseek(d->fd, d->fshd_offs);
-    DEBUG("[FSHD] FSHD offset 0x%llX.\n",d->fshd_offs);
     struct FileSysHeaderBlock *fhb = (struct FileSysHeaderBlock *)fhb_block;
     unsigned int n_bytes;
     f_read(d->fd, fhb_block, d->block_size,&n_bytes);
+    printf("[FSHD] Read %d bytes (should be %ld)\n",n_bytes,d->block_size);
 
     while ((BE(fhb->fhb_ID) == FS_IDENTIFIER) && (!f_eof(d->fd))) {
         char *dosID = (char *)&fhb->fhb_DosType;
@@ -386,6 +386,9 @@ void piscsi_find_filesystems(struct piscsi_dev *d) {
 #endif
 
         for (int i = 0; i < NUM_FILESYSTEMS; i++) {
+//        	printf("Filesystem %d\n",i);
+//#define DOS7_HACK
+#ifdef DOS7_HACK
 //FIXME HACK -> Skip DOS7 because it hangs z3660_scsi.device
 #define DOS7 ((uint32_t)0x07534f44L)
             if (DOS7 == fhb->fhb_DosType) {
@@ -395,6 +398,7 @@ void piscsi_find_filesystems(struct piscsi_dev *d) {
 
             	goto skip_fs_load_lseg;
             }
+#endif
             if (filesystems[i].FS_ID == fhb->fhb_DosType) {
                 DEBUG("[FSHD] File system %c%c%c/%d already loaded. Skipping.\n", dosID[0], dosID[1], dosID[2], dosID[3]);
                 if (BE(fhb->fhb_Next) == 0xFFFFFFFF)
@@ -403,24 +407,26 @@ void piscsi_find_filesystems(struct piscsi_dev *d) {
                 goto skip_fs_load_lseg;
             }
         }
-//#define ENABLE_LOAD_SEG
+#define ENABLE_LOAD_SEG
 #ifdef ENABLE_LOAD_SEG
         if (load_lseg(d->fd, &filesystems[piscsi_num_fs].binary_data, &filesystems[piscsi_num_fs].h_info, filesystems[piscsi_num_fs].relocs, d->block_size) != -1) {
             filesystems[piscsi_num_fs].FS_ID = fhb->fhb_DosType;
             filesystems[piscsi_num_fs].fhb = fhb;
             printf("[FSHD] Loaded and set up file system %d: %c%c%c/%d\n", piscsi_num_fs + 1, dosID[0], dosID[1], dosID[2], dosID[3]);
-            if(0) // enable or disable filesystem save
+//            if(0) // enable or disable filesystem save
             {
                 char fs_save_filename[256];
                 memset(fs_save_filename, 0x00, 256);
                 sprintf(fs_save_filename,DEFAULT_ROOT "data/fs/%c%c%c.%d", dosID[0], dosID[1], dosID[2], dosID[3]);
                 FIL save_fs;
-                int ret = f_open(&save_fs,fs_save_filename, FA_READ|FA_WRITE|FA_OPEN_EXISTING);
+                int ret = f_open(&save_fs,fs_save_filename, FA_READ|FA_OPEN_EXISTING);
                 if (ret != FR_OK) {
+                    printf("[FSHD] File system %c%c%c/%d not found in fs storage.\n", dosID[0], dosID[1], dosID[2], dosID[3]);
                     ret = f_open(&save_fs,fs_save_filename, FA_READ|FA_WRITE|FA_CREATE_NEW);
                     if (ret == FR_OK) {
                     	unsigned int n_bytes;
                         f_write(&save_fs,filesystems[piscsi_num_fs].binary_data, filesystems[piscsi_num_fs].h_info.byte_size, &n_bytes);
+                        printf("[FSHD] File system pointer %08lX size %ld bytes written %ld.\n", (uint32_t)filesystems[piscsi_num_fs].binary_data, (uint32_t)filesystems[piscsi_num_fs].h_info.byte_size, (uint32_t)n_bytes);
                         f_close(&save_fs);
                         printf("[FSHD] File system %c%c%c/%d saved to fs storage.\n", dosID[0], dosID[1], dosID[2], dosID[3]);
                     } else {
@@ -437,11 +443,13 @@ void piscsi_find_filesystems(struct piscsi_dev *d) {
         	goto fs_done;
 skip_fs_load_lseg:;
         fs_found++;
-        f_lseek(d->fd, ((uint64_t)BE(fhb->fhb_Next)) * d->block_size);
+        f_lseek(d->fd, ((FSIZE_t)BE(fhb->fhb_Next)) * d->block_size);
         fhb_block = malloc(d->block_size);
         fhb = (struct FileSysHeaderBlock *)fhb_block;
         unsigned int n_bytes;
         f_read(d->fd, fhb_block, d->block_size,&n_bytes);
+        Xil_L1DCacheFlush();
+        Xil_L2CacheFlush();
     }
 
     if (!fs_found) {
@@ -489,7 +497,7 @@ void piscsi_map_drive(char *filename, uint8_t index) {
     FSIZE_t file_size = f_size(tmp_fd);//lseek(tmp_fd, 0, SEEK_END);
     d->fs = file_size;
     d->fd = tmp_fd;
-    f_lseek(tmp_fd, 0);
+    f_lseek(d->fd, 0);
     printf("[PISCSI] Map %d: [%s] - %llu bytes.\n", index, filename, file_size);
 
     if (piscsi_parse_rdb(d) == -1) {
@@ -505,7 +513,7 @@ void piscsi_map_drive(char *filename, uint8_t index) {
     piscsi_find_partitions(d);
     DEBUG("Finding file systems.\n");
     piscsi_find_filesystems(d);
-    DEBUG("Done.\n");
+    DEBUG("Done file systems.\n");
 
     DEBUG("Enabling fast seek.\n");
     d->fd->cltbl = d->SeekTbl;			// Enable fast seek (set address of buffer)
@@ -520,7 +528,7 @@ void piscsi_map_drive(char *filename, uint8_t index) {
     if (res == FR_NOT_ENOUGH_CORE) {
         printf("[FASTSEEK %d] %lu items required to create the link map table.\n",index, d->SeekTbl[0]);
     }
-    DEBUG("Done.\n");
+    DEBUG("Done partitions.\n");
 
 }
 
@@ -708,6 +716,7 @@ void piscsi_debugme(uint32_t index) {
         DEBUGME_SIMPLE(33, "[PISCSI-DEBUGME] FileSystem.resource not available, creating.\n");
         DEBUGME_SIMPLE(34, "[PISCSI-DEBUGME] FSLoop.\n");
         DEBUGME_SIMPLE(37, "[PISCSI-DEBUGME] FSDone.\n");
+        DEBUGME_SIMPLE(38, "[PISCSI-DEBUGME] AddDosNode\n");
         DEBUGME_SIMPLE(39, "[PISCSI-DEBUGME] AllocMem size\n");
         DEBUGME_SIMPLE(40, "[PISCSI-DEBUGME] AllocMem attributes\n");
         DEBUGME_SIMPLE(41, "[PISCSI-DEBUGME] AllocMem()\n");
@@ -725,7 +734,7 @@ void piscsi_debugme(uint32_t index) {
             rom_cur_fs = 0;
             break;
         case 31:
-            DEBUGME("[PISCSI-DEBUGME] OpenResource result: %ld\n", piscsi_u32[0]);
+            DEBUGME("[PISCSI-DEBUGME] OpenResource result: %ld (%08lX)\n", piscsi_u32_read[1], piscsi_u32_read[1]);
             break;
         case 32:
             DEBUGME("[PISCSI-DEBUGME] Could not open FileSystem.resource!\n");
@@ -734,7 +743,7 @@ void piscsi_debugme(uint32_t index) {
             DEBUGME("[PISCSI-DEBUGME] stuff output\n");
             break;
         case 36:
-            DEBUGME("[PISCSI-DEBUGME] Debug pointers: %.8lX %.8lX %.8lX %.8lX\n", piscsi_u32[0], piscsi_u32[1], piscsi_u32[2], piscsi_u32[3]);
+            DEBUGME("[PISCSI-DEBUGME] Debug pointers: %.8lX %.8lX %.8lX %.8lX\n", piscsi_u32_read[0], piscsi_u32_read[1], piscsi_u32_read[2], piscsi_u32_read[3]);
             break;
         default:
             DEBUGME("[!!!PISCSI-DEBUGME] No debugme message for index %ld!\n", index);
@@ -748,7 +757,6 @@ void piscsi_debugme(uint32_t index) {
 
 void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
 	ACTIVITY_LED_ON; // ON
-    int32_t r;
     uint32_t map;
 #ifndef PISCSI_DEBUG
     if (type) {}
@@ -761,65 +769,59 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
         case PISCSI_CMD_READ64:
         case PISCSI_CMD_READ:
         case PISCSI_CMD_READBYTES:
-            d = &devs[val];
+        	d = &devs[val];
             if (d->fd == 0) {
                 DEBUG("[!!!PISCSI] BUG: Attempted read from unmapped drive %ld.\n", val);
                 break;
             }
 
             if (cmd == PISCSI_CMD_READBYTES) {
-                DEBUG("[PISCSI-%ld] %ld byte READBYTES from block %ld to address %.8lX\n", val, piscsi_u32[1], piscsi_u32[0] / d->block_size, piscsi_u32[2]);
-                uint32_t src = piscsi_u32[0];
+                DEBUG("[PISCSI-%ld] %ld byte READBYTES from block %ld to address %.8lX\n", val, piscsi_u32_read[1], piscsi_u32_read[0] / d->block_size, piscsi_u32_read[2]);
+                uint32_t src = piscsi_u32_read[0];
                 d->lba = (src / d->block_size);
                 f_lseek(d->fd, src);
             }
             else if (cmd == PISCSI_CMD_READ) {
-                DEBUG("[PISCSI-%ld] %ld byte READ from block %ld to address %.8lX\n", val, piscsi_u32[1], piscsi_u32[0], piscsi_u32[2]);
-                d->lba = piscsi_u32[0];
-                f_lseek(d->fd, (((uint64_t)piscsi_u32[0]) * d->block_size));
+                DEBUG("[PISCSI-%ld] %ld byte READ from block %ld to address %.8lX\n", val, piscsi_u32_read[1], piscsi_u32_read[0], piscsi_u32_read[2]);
+                d->lba = piscsi_u32_read[0];
+                f_lseek(d->fd, (((FSIZE_t)piscsi_u32_read[0]) * d->block_size));
             }
             else {
-                uint64_t src = piscsi_u32[3];
-                src = (src << 32) | piscsi_u32[0];
-                DEBUG("[PISCSI-%ld] %ld byte READ64 from block %lld to address %.8lX\n", val, piscsi_u32[1], (src / d->block_size), piscsi_u32[2]);
+                FSIZE_t src = piscsi_u32_read[3];
+                src = (src << 32) | piscsi_u32_read[0];
+                DEBUG("[PISCSI-%ld] %ld byte READ64 from block %lld to address %.8lX\n", val, piscsi_u32_read[1], (src / d->block_size), piscsi_u32_read[2]);
                 d->lba = (src / d->block_size);
                 f_lseek(d->fd, src);
             }
 
-            map = piscsi_u32[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32[2]);
-            if ( (config.cpu_ram        && (map>=0x08000000) && (map<0x10000000))
-               ||(config.autoconfig_ram && (map>=0x40000000) && (map<(0x40000000+0x10000000)))
+            map = piscsi_u32_read[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32_read[2]);
+            if ( (config.cpu_ram        && (map>=0x08000000) && (map<0x18000000))
+               ||(config.autoconfig_ram && (map>=0x40000000) && (map<0x50000000))
 			   )
             {
             	if(map>=0x40000000) map-=(0x40000000-0x20000000);
                 DEBUG("[PISCSI-%ld] \"DMA\" Read goes to mapped range 0x%08lX.\n", val, map);
                 unsigned int n_bytes;
-                FRESULT res=f_read(d->fd, (uint8_t *)map, piscsi_u32[1],&n_bytes);
-                Xil_L1DCacheFlushRange((INTPTR)map,n_bytes);
-                Xil_L2CacheFlushRange((INTPTR)map,n_bytes);
+                f_read(d->fd, (uint8_t *)map, piscsi_u32_read[1],&n_bytes);
                 used_dma=0;
                 DEBUG("            Bytes read %d\n",n_bytes);
-            	if(n_bytes!=piscsi_u32[1])
+            	if(n_bytes!=piscsi_u32_read[1])
             	{
-            		printf("SCSI ERROR!!! bytes_to_read=%ld, bytes_read=%d\n",piscsi_u32[1],n_bytes);
-            		printf("SCSI ERROR!!! res = %d, d = %8lX, fd = %8lX\n",res,(uint32_t)d,(uint32_t)d->fd);
+            		printf("SCSI ERROR!!! bytes_to_read=%ld, bytes_read=%d\n",piscsi_u32_read[1],n_bytes);
             	}
             } else {
             	DEBUG("[PISCSI-%ld] No mapped range found for read.\n", val);
-            	DEBUG("Begin data read from disk: 0x%08lX to 0x%08lX\n",piscsi_u32[0],piscsi_u32[2]);
+            	DEBUG("Begin data read from disk: 0x%08lX to 0x%08lX\n",piscsi_u32_read[0],piscsi_u32_read[2]);
             	unsigned int n_bytes;
-            	if(piscsi_u32[1]>=0x180000)
-                    printf("ERROR SCSI read length>0x180000 (0x%08lX)\n",piscsi_u32[1]);
+            	if(piscsi_u32_read[1]>=0x180000)
+                    printf("ERROR SCSI read length>0x180000 (0x%08lX)\n",piscsi_u32_read[1]);
             	uint8_t *buffer=(uint8_t *)SCSI_NO_DMA_ADDRESS;
-            	FRESULT res=f_read(d->fd, buffer, piscsi_u32[1], &n_bytes);
-                Xil_L1DCacheFlushRange((INTPTR)buffer,n_bytes);
-                Xil_L2CacheFlushRange((INTPTR)map,n_bytes);
-            	used_dma = piscsi_u32[2];
+            	f_read(d->fd, buffer, piscsi_u32_read[1], &n_bytes);
+            	used_dma = piscsi_u32_read[2];
                 DEBUG("            Bytes read %d\n",n_bytes);
-            	if(n_bytes!=piscsi_u32[1])
+            	if(n_bytes!=piscsi_u32_read[1])
             	{
-            		printf("SCSI ERROR!!! bytes_to_read=%ld, bytes_read=%d\n",piscsi_u32[1],n_bytes);
-            		printf("SCSI ERROR!!! res = %d, d = %8lX, fd = %8lX\n",res,(uint32_t)d,(uint32_t)d->fd);
+            		printf("SCSI ERROR!!! bytes_to_read=%ld, bytes_read=%d\n",piscsi_u32_read[1],n_bytes);
             	}
             }
             break;
@@ -827,64 +829,86 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
         case PISCSI_CMD_WRITE:
         case PISCSI_CMD_WRITEBYTES:
             d = &devs[val];
+            if(val != piscsi_cur_drive)
+            {
+            	printf("[PISCSI] Warning val=%ld piscsi_cur_drive=%d\n",val,piscsi_cur_drive);
+            	printf("[PISCSI] Command cmd=%d\n",cmd);
+            }
             if (d->fd == 0) {
-                DEBUG("[PISCSI] BUG: Attempted write to unmapped drive %ld.\n", val);
+                DEBUG("[!!!PISCSI] BUG: Attempted write to unmapped drive %ld.\n", val);
                 break;
             }
 
             if (cmd == PISCSI_CMD_WRITEBYTES) {
-                DEBUG("[PISCSI-%ld] %ld byte WRITEBYTES to block %ld from address %.8lX\n", val, piscsi_u32[1], piscsi_u32[0] / d->block_size, piscsi_u32[2]);
-                uint32_t src = piscsi_u32[0];
+                DEBUG("[PISCSI-%ld] %ld byte WRITEBYTES to block %ld from address %.8lX\n", val, piscsi_u32_write[1], piscsi_u32_write[0] / d->block_size, piscsi_u32_write[2]);
+                uint32_t src = piscsi_u32_write[0];
                 d->lba = (src / d->block_size);
                 f_lseek(d->fd, src);
             }
             else if (cmd == PISCSI_CMD_WRITE) {
-                DEBUG("[PISCSI-%ld] %ld byte WRITE to block %ld from address %.8lX\n", val, piscsi_u32[1], piscsi_u32[0], piscsi_u32[2]);
-                d->lba = piscsi_u32[0];
-                f_lseek(d->fd, (((uint64_t)piscsi_u32[0]) * d->block_size));
+                DEBUG("[PISCSI-%ld] %ld byte WRITE to block %ld from address %.8lX\n", val, piscsi_u32_write[1], piscsi_u32_write[0], piscsi_u32_write[2]);
+                d->lba = piscsi_u32_write[0];
+                FSIZE_t fpos=(((FSIZE_t)piscsi_u32_write[0]) * d->block_size);
+                if(fpos>=d->fd->obj.objsize)
+                {
+                	printf("Error on File Offset: %016llX (File size %016llX)\n",fpos,d->fd->obj.objsize);
+                }
+                f_lseek(d->fd, fpos);
             }
             else {
-                uint64_t src = piscsi_u32[3];
-                src = (src << 32) | piscsi_u32[0];
-                DEBUG("[PISCSI-%ld] %ld byte WRITE64 to block %lld from address %.8lX\n", val, piscsi_u32[1], (src / d->block_size), piscsi_u32[2]);
+                FSIZE_t src = piscsi_u32_write[3];
+                src = (src << 32) | piscsi_u32_write[0];
+                DEBUG("[PISCSI-%ld] %ld byte WRITE64 to block %lld from address %.8lX\n", val, piscsi_u32_write[1], (src / d->block_size), piscsi_u32_write[2]);
                 d->lba = (src / d->block_size);
                 f_lseek(d->fd, src);
             }
 
-            map = piscsi_u32[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32[2]);
-            if ( ((map>=0x08000000) && (map<0x10000000) && config.cpu_ram)
+            map = piscsi_u32_write[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32_write[2]);
+            if ( ((map>=0x08000000) && (map<0x18000000) && config.cpu_ram)
                ||((map>=0x40000000) && (map<0x50000000) && config.autoconfig_ram)
                )
             {
             	if(map>=0x40000000) map-=0x20000000;
             	DEBUG("[PISCSI-%ld] \"DMA\" Write comes from mapped range 0x%08lX.\n", val, map);
                 unsigned int n_bytes;
-                f_write(d->fd, (uint8_t *)map, piscsi_u32[1],&n_bytes);
+                f_write(d->fd, (uint8_t *)map, piscsi_u32_write[1],&n_bytes);
                 DEBUG("             Bytes written %d\n",n_bytes);
                 used_dma=0;
-            	if(n_bytes!=piscsi_u32[1])
-            		printf("SCSI ERROR!!! bytes_to_write=%ld, bytes_read=%d\n",piscsi_u32[1],n_bytes);
+            	if(n_bytes!=piscsi_u32_write[1])
+            	{
+            		printf("SCSI ERROR!!! bytes_to_write=%ld, bytes_written=%d\n",piscsi_u32_write[1],n_bytes);
+            	}
             }
             else {
             	DEBUG("[PISCSI-%ld] No mapped range found for write.\n", val);
-            	DEBUG("          Begin data write to disk: 0x%08lX to 0x%08lX\n",piscsi_u32[0],piscsi_u32[2]);
+            	DEBUG("          Begin data write to disk: 0x%08lX to 0x%08lX\n",piscsi_u32_write[0],piscsi_u32_write[2]);
             	unsigned int n_bytes;
-            	if(piscsi_u32[1]>=0x180000)
-                    printf("ERROR SCSI write length>0x180000 (0x%08lX)\n",piscsi_u32[1]);
+            	if(piscsi_u32_write[1]>=0x180000)
+                    printf("ERROR SCSI write length>0x180000 (0x%08lX)\n",piscsi_u32_write[1]);
             	uint8_t *buffer=(uint8_t *)SCSI_NO_DMA_ADDRESS;
-                f_write(d->fd, buffer, piscsi_u32[1], &n_bytes);
-                used_dma = piscsi_u32[2];
+            	f_write(d->fd, buffer, piscsi_u32_write[1], &n_bytes);
+                used_dma = piscsi_u32_write[2];
                 DEBUG("             Bytes written %d\n",n_bytes);
-            	if(n_bytes!=piscsi_u32[1])
-            		printf("SCSI ERROR!!! bytes_to_write=%ld, bytes_read=%d\n",piscsi_u32[1],n_bytes);
+            	if(n_bytes!=piscsi_u32_write[1])
+            	{
+            		printf("SCSI ERROR!!! bytes_to_write=%ld, bytes_written=%d dma=0x%08lX\n",piscsi_u32_write[1],n_bytes,used_dma);
+            	}
             }
             break;
-        case PISCSI_CMD_ADDR1:
-        case PISCSI_CMD_ADDR2:
-        case PISCSI_CMD_ADDR3:
-        case PISCSI_CMD_ADDR4: {
-            int i = (addr - PISCSI_CMD_ADDR1) / 4;
-            piscsi_u32[i] = val;
+        case PISCSI_CMD_READ_ADDR1:
+        case PISCSI_CMD_READ_ADDR2:
+        case PISCSI_CMD_READ_ADDR3:
+        case PISCSI_CMD_READ_ADDR4: {
+            int i = (addr - PISCSI_CMD_READ_ADDR1) / 4;
+            piscsi_u32_read[i] = val;
+            break;
+        }
+        case PISCSI_CMD_WRITE_ADDR1:
+        case PISCSI_CMD_WRITE_ADDR2:
+        case PISCSI_CMD_WRITE_ADDR3:
+        case PISCSI_CMD_WRITE_ADDR4: {
+            int i = (addr - PISCSI_CMD_WRITE_ADDR1) / 4;
+            piscsi_u32_write[i] = val;
             break;
         }
         case PISCSI_CMD_DRVNUM:
@@ -908,8 +932,8 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
             break;
         case PISCSI_CMD_DRIVER:
             DEBUG("[PISCSI] Driver copy/patch called, destination address %.8lX.\n", val);
-            r = 0;//get_mapped_item_by_address(cfg, val);
-            if ( ((val>=0x08000000) && (val<0x10000000) && config.cpu_ram)
+//            r = 0;//get_mapped_item_by_address(cfg, val);
+            if ( ((val>=0x08000000) && (val<0x18000000) && config.cpu_ram)
                ||((val>=0x40000000) && (val<0x50000000) && config.autoconfig_ram)
                )
             {
@@ -987,10 +1011,12 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
                     }
 skip_disk:;
                 }
+                Xil_L1DCacheFlush();
+                Xil_L2CacheFlush();
             }
             else
             {
-            	printf("[PISCSI] Address 0x%08lX not mapped in FPGA RAM...\n",val);
+            	printf("[PISCSI] DRIVER Address 0x%08lX not mapped in FPGA RAM...\n",val);
             }
 
             break;
@@ -1002,23 +1028,39 @@ skip_disk:;
             DEBUG("[PISCSI] Switch file system %ld -> %ld\n", rom_cur_fs, rom_cur_fs + 1);
             rom_cur_fs++;
             break;
-        case PISCSI_CMD_COPYFS:
-            DEBUG("[PISCSI] Copy file system %ld to %.8lX and reloc.\n", rom_cur_fs + 1, piscsi_u32[2]);
-            r = 0;//get_mapped_item_by_address(cfg, piscsi_u32[2]);
-            if (r != -1) {
-                uint32_t addr = piscsi_u32[2];// - cfg->map_offset[r];
-                memcpy(/*cfg->map_data[r] +*/ (uint8_t *)addr, filesystems[rom_cur_fs].binary_data, filesystems[rom_cur_fs].h_info.byte_size);
-                filesystems[rom_cur_fs].h_info.base_offset = piscsi_u32[2];
-                reloc_hunks(filesystems[rom_cur_fs].relocs, /*cfg->map_data[r] +*/(uint8_t*) addr, &filesystems[rom_cur_fs].h_info);
-                filesystems[rom_cur_fs].handler = piscsi_u32[2];
+        case PISCSI_CMD_COPYFS: {
+        	uint32_t addr=val;
+            if ( ((addr>=0x08000000) && (addr<0x18000000) && config.cpu_ram)
+               ||((addr>=0x40000000) && (addr<0x50000000) && config.autoconfig_ram)
+               )
+            {
+            	if(addr>=0x40000000) addr-=0x20000000;
+				printf("[PISCSI] Copy file system %ld to %.8lX and reloc.\n", rom_cur_fs + 1, addr);
+//				r = 0;//get_mapped_item_by_address(cfg, addr);
+//				if (r != -1) {
+					memcpy((uint8_t *)addr, filesystems[rom_cur_fs].binary_data, filesystems[rom_cur_fs].h_info.byte_size);
+					filesystems[rom_cur_fs].h_info.base_offset = addr;
+					reloc_hunks(filesystems[rom_cur_fs].relocs, (uint8_t*) addr, &filesystems[rom_cur_fs].h_info);
+					filesystems[rom_cur_fs].handler = addr;
+					Xil_L1DCacheFlush();
+					Xil_L2CacheFlush();
+//				}
             }
+            else
+            {
+            	printf("[PISCSI] COPYFS Address 0x%08lX not mapped in FPGA RAM...\n",addr);
+            }
+        }
             break;
         case PISCSI_CMD_SETFSH: {
             int i = 0;
             DEBUG("[PISCSI] Set handler for partition %ld (DeviceNode: %.8lX)\n", rom_cur_partition, val);
-            r = 0;//get_mapped_item_by_address(cfg, val);
-            if (r != -1) {
-                uint32_t addr = val;// - cfg->map_offset[r];
+            uint32_t addr = val;// - cfg->map_offset[r];
+			if ( ((addr>=0x08000000) && (addr<0x18000000) && config.cpu_ram)
+			   ||((addr>=0x40000000) && (addr<0x50000000) && config.autoconfig_ram)
+			   )
+			{
+            	if(addr>=0x40000000) addr-=0x20000000;
                 struct DeviceNode *node = (struct DeviceNode *)(/*cfg->map_data[r] +*/ addr);
                 char *dosID = (char *)&rom_partition_dostype[rom_cur_partition];
 
@@ -1043,12 +1085,21 @@ fs_found:;
                 Xil_L1DCacheFlush();
                 Xil_L2CacheFlush();
             }
+            else
+            {
+            	printf("[PISCSI] SETFSH Address 0x%08lX not mapped in FPGA RAM...\n",val);
+            }
             break;
         }
         case PISCSI_CMD_LOADFS: {
             DEBUG("[PISCSI] Attempt to load file system for partition %ld from disk.\n", rom_cur_partition);
-            r = 0;//get_mapped_item_by_address(cfg, val);
-            if (r != -1) {
+            printf("->>>>>>>>>>>>>>>>>>> a1 %08lX\n",val);
+            uint32_t addr = val;
+            if ( ((addr>=0x08000000) && (addr<0x18000000) && config.cpu_ram)
+			   ||((addr>=0x40000000) && (addr<0x50000000) && config.autoconfig_ram)
+			   )
+			{
+            	if(addr>=0x40000000) addr-=0x20000000;
                 char *dosID = (char *)&rom_partition_dostype[rom_cur_partition];
                 filesystems[piscsi_num_fs].binary_data = NULL;
                 filesystems[piscsi_num_fs].fhb = NULL;
@@ -1056,13 +1107,17 @@ fs_found:;
                 filesystems[piscsi_num_fs].handler = 0;
                 if (load_fs(&filesystems[piscsi_num_fs], dosID) != -1) {
                     printf("[FSHD-Late] Loaded file system %c%c%c/%d from fs storage.\n", dosID[0], dosID[1], dosID[2], dosID[3]);
-                    piscsi_u32[3] = piscsi_num_fs;
+                    piscsi_u32_read[3] = piscsi_num_fs;
                     rom_cur_fs = piscsi_num_fs;
                     piscsi_num_fs++;
                 } else {
                     printf("[FSHD-Late] Failed to load file system %c%c%c/%d from fs storage.\n", dosID[0], dosID[1], dosID[2], dosID[3]);
-                    piscsi_u32[3] = 0xFFFFFFFF;
+                    piscsi_u32_read[3] = 0xFFFFFFFF;
                 }
+            }
+            else
+            {
+            	printf("[PISCSI] LOADFS Address 0x%08lX not mapped in FPGA RAM...\n",val);
             }
             break;
         }
@@ -1127,13 +1182,22 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
     }
 
     switch (addr) {
-        case PISCSI_CMD_ADDR1:
-        case PISCSI_CMD_ADDR2:
-        case PISCSI_CMD_ADDR3:
-        case PISCSI_CMD_ADDR4: {
-            int i = (addr - PISCSI_CMD_ADDR1) / 4;
+        case PISCSI_CMD_READ_ADDR1:
+        case PISCSI_CMD_READ_ADDR2:
+        case PISCSI_CMD_READ_ADDR3:
+        case PISCSI_CMD_READ_ADDR4: {
+            int i = (addr - PISCSI_CMD_READ_ADDR1) / 4;
         	ACTIVITY_LED_OFF; // OFF
-            return piscsi_u32[i];
+            return piscsi_u32_read[i];
+            break;
+        }
+        case PISCSI_CMD_WRITE_ADDR1:
+        case PISCSI_CMD_WRITE_ADDR2:
+        case PISCSI_CMD_WRITE_ADDR3:
+        case PISCSI_CMD_WRITE_ADDR4: {
+            int i = (addr - PISCSI_CMD_WRITE_ADDR1) / 4;
+        	ACTIVITY_LED_OFF; // OFF
+            return piscsi_u32_write[i];
             break;
         }
         case PISCSI_CMD_DRVTYPE:
@@ -1168,11 +1232,28 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
         case PISCSI_CMD_BLOCKS: {
             uint32_t blox = devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size;
             DEBUG("[PISCSI] %s Read from BLOCKS %d: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
-            DEBUG("filesize: %lld (%lld blocks*block_size)\n", devs[piscsi_cur_drive].fs, ((uint64_t)blox)*devs[piscsi_cur_drive].block_size);
+            DEBUG("filesize: %lld (%lld blocks*block_size)\n", devs[piscsi_cur_drive].fs, ((FSIZE_t)blox)*devs[piscsi_cur_drive].block_size);
         	ACTIVITY_LED_OFF; // OFF
             return blox;
             break;
         }
+
+        case PISCSI_CMD_BLOCKS0:
+        case PISCSI_CMD_BLOCKS1:
+        case PISCSI_CMD_BLOCKS2:
+        case PISCSI_CMD_BLOCKS3:
+        case PISCSI_CMD_BLOCKS4:
+        case PISCSI_CMD_BLOCKS5:
+        case PISCSI_CMD_BLOCKS6:
+        case PISCSI_CMD_BLOCKS7: {
+        	piscsi_cur_drive=(addr-PISCSI_CMD_BLOCKS0) / 4;
+        	uint32_t blox = devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size;
+            DEBUG("[PISCSI] %s Read from BLOCKS %d: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
+            DEBUG("filesize: %lld (%lld blocks*block_size)\n", devs[piscsi_cur_drive].fs, ((FSIZE_t)blox)*devs[piscsi_cur_drive].block_size);
+        	ACTIVITY_LED_OFF; // OFF
+            return blox;
+        }
+
         case PISCSI_CMD_GETPART: {
             DEBUG("[PISCSI] Get ROM partition %ld offset: %.8lX\n", rom_cur_partition, rom_partitions[rom_cur_partition]);
         	ACTIVITY_LED_OFF; // OFF
@@ -1184,7 +1265,7 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
         	ACTIVITY_LED_OFF; // OFF
             return rom_partition_prio[rom_cur_partition];
             break;
-        case PISCSI_CMD_CHECKFS:
+        case PISCSI_CMD_GETFS:
             DEBUG("[PISCSI] Get current loaded file system: %.8lX\n", filesystems[rom_cur_fs].FS_ID);
         	ACTIVITY_LED_OFF; // OFF
             return filesystems[rom_cur_fs].FS_ID;
@@ -1195,6 +1276,18 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
         case PISCSI_CMD_BLOCKSIZE:
             DEBUG("[PISCSI] Get block size of drive %d: %ld\n", piscsi_cur_drive, devs[piscsi_cur_drive].block_size);
         	ACTIVITY_LED_OFF; // OFF
+            return devs[piscsi_cur_drive].block_size;
+        case PISCSI_CMD_BLOCKSIZE0:
+        case PISCSI_CMD_BLOCKSIZE1:
+        case PISCSI_CMD_BLOCKSIZE2:
+        case PISCSI_CMD_BLOCKSIZE3:
+        case PISCSI_CMD_BLOCKSIZE4:
+        case PISCSI_CMD_BLOCKSIZE5:
+        case PISCSI_CMD_BLOCKSIZE6:
+        case PISCSI_CMD_BLOCKSIZE7:
+            DEBUG("[PISCSI] Get block size of drive %d: %ld\n", piscsi_cur_drive, devs[piscsi_cur_drive].block_size);
+            piscsi_cur_drive=(addr-PISCSI_CMD_BLOCKSIZE0) / 4;
+            ACTIVITY_LED_OFF; // OFF
             return devs[piscsi_cur_drive].block_size;
         case PISCSI_CMD_GET_FS_INFO: {
             int i = 0;

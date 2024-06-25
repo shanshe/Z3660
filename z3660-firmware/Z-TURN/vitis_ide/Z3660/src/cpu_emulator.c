@@ -86,14 +86,14 @@ retry:
       }
       printf("Loading Kickstart at address: 0x%08lX\n",(uint32_t)ROM);
       unsigned int NumBytesRead;
-      printf("Reading %s file:\r\n[----------------]\r\n\033[F",kickstart_pointer);
+      printf("Reading %s file:\n[----------------]\n\033[F",kickstart_pointer);
 #define BYTES_TO_READ 128
       for(int i=0,j=0,k=2;i<0x80000;i+=BYTES_TO_READ,j+=BYTES_TO_READ)
       {
          if(j==(512*1024/16))
          {
             j=0;
-            printf("%.*s\r\n\033[F",(int)++k,"[================]");
+            printf("%.*s\n\033[F",(int)++k,"[================]");
          }
          f_read(&fil, ROM+i, BYTES_TO_READ,&NumBytesRead);
          if(NumBytesRead!=BYTES_TO_READ)
@@ -104,7 +104,7 @@ retry:
          }
       }
       f_close(&fil);
-      printf("\r\nFile read OK\r\n");
+      printf("\nFile read OK\n");
    }
    else
    {
@@ -127,13 +127,13 @@ retry:
 //   f_lseek(&fil, 4);
 //   UINT NumBytesRead;
    UINT NumBytesWritten;
-   printf("Dumping %s file:\r\n[----------]\r\n\033[F",Filename);
+   printf("Dumping %s file:\n[----------]\n\033[F",Filename);
    for(int i=0,j=0,k=0;i<0x80000;i+=4,j+=4)
    {
       if(j==512*1024/10)
       {
          j=0;
-         printf("%.*s\r\n\033[F",(int)++k,"[==========]");
+         printf("%.*s\n\033[F",(int)++k,"[==========]");
       }
       uint32_t data=arm_read_amiga_map(i,LONG);
       uint8_t buff[4];
@@ -145,7 +145,7 @@ retry:
    }
    f_close(&fil);
    f_mount(NULL, Path, 0); // NULL unmount, 0 delayed
-   printf("\r\nFile written OK\r\n");
+   printf("\nFile written OK\n");
    while(1);
 #endif
 #ifdef SERIAL_DUMP_ROM
@@ -220,7 +220,7 @@ retry:
       printf("Extended Kickstart file size: 0x%08lX\n",(uint32_t)size);
       f_read(&fil, EXT_ROM, size,&NumBytesRead);
       f_close(&fil);
-      printf("File read OK\r\n");
+      printf("File read OK\n");
    }
    Xil_L1DCacheFlush();
    Xil_L2CacheFlush();
@@ -241,7 +241,7 @@ void cpu_emulator_reset(void)
    CPLD_RESET_ARM(0);
    usleep(1000);
    CPLD_RESET_ARM(1);
-//   printf("Resetting...\n\r");
+//   printf("Resetting...\n");
 }
 
 void hard_reboot(void)
@@ -370,7 +370,7 @@ void cpu_emulator(void)
             counter=0;
             if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
             {
-               printf("[Core1] Reset active (DOWN)...\n\r");
+               printf("[Core1] Reset active (DOWN)...\n");
                reset_init();
                piscsi_shutdown();
                int reset_time_counter=0;
@@ -419,7 +419,7 @@ void cpu_emulator(void)
                      }
                   }
                }
-//               printf("[Core1] Reset inactive (UP)...\n\r");
+//               printf("[Core1] Reset inactive (UP)...\n");
                hard_reboot();
             }
          }

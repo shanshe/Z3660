@@ -46,9 +46,8 @@
 #endif
 #include "lwip.h"
 extern SHARED *shared;
-extern int boot_rom_loaded;
+extern DEBUG_CONSOLE debug_console;
 extern ENV_FILE_VARS env_file_vars_temp;
-//extern int bm,sb,ar,cr,ks,ext_ks,*scsi_num;
 void hard_reboot(void);
 void z3660_printf(const TCHAR *format, __VALIST args)
 {
@@ -308,7 +307,7 @@ void configure_gpio(void)
    DiscreteSet(REG0, FPGA_RESET);
    usleep(500);
    DiscreteClear(REG0, FPGA_RESET);
-   printf("Configured GPIO...\n\r");
+   printf("Configured GPIO...\n");
 }
 void fpga_feature_enable(int en_ram,int en_rtg,int en_z3ram,int en_maprom, int en_mapromext)
 {
@@ -317,54 +316,54 @@ void fpga_feature_enable(int en_ram,int en_rtg,int en_z3ram,int en_maprom, int e
       ENABLE_CPU_RAM_FPGA;
       ENABLE_BURST_READ_FPGA;
       ENABLE_BURST_WRITE_FPGA;
-      printf("FPGA CPU RAM ENABLED\n\r");
+      printf("FPGA CPU RAM ENABLED\n");
    }
    else
    {
       DISABLE_CPU_RAM_FPGA;
       DISABLE_BURST_READ_FPGA;
       DISABLE_BURST_WRITE_FPGA;
-      printf("FPGA CPU RAM DISABLED\n\r");
+      printf("FPGA CPU RAM DISABLED\n");
    }
    if(en_rtg)
    {
       ENABLE_RTG_AUTOCONFIG;
-      printf("FPGA RTG ENABLED\n\r");
+      printf("FPGA RTG ENABLED\n");
    }
    else
    {
       DISABLE_RTG_AUTOCONFIG;
-      printf("FPGA RTG DISABLED\n\r");
+      printf("FPGA RTG DISABLED\n");
    }
    if(en_z3ram)
    {
       ENABLE_256MB_AUTOCONFIG;
-      printf("FPGA Z3 RAM ENABLED\n\r");
+      printf("FPGA Z3 RAM ENABLED\n");
    }
    else
    {
       DISABLE_256MB_AUTOCONFIG;
-      printf("FPGA Z3 RAM DISABLED\n\r");
+      printf("FPGA Z3 RAM DISABLED\n");
    }
    if(en_maprom)
    {
       ENABLE_MAPROM_FPGA;
-      printf("FPGA MAPROM ENABLED\n\r");
+      printf("FPGA MAPROM ENABLED\n");
    }
    else
    {
       DISABLE_MAPROM_FPGA;
-      printf("FPGA MAPROM DISABLED\n\r");
+      printf("FPGA MAPROM DISABLED\n");
    }
    if(en_mapromext)
    {
       ENABLE_MAPROMEXT_FPGA;
-      printf("FPGA MAPROMEXT ENABLED\n\r");
+      printf("FPGA MAPROMEXT ENABLED\n");
    }
    else
    {
       DISABLE_MAPROMEXT_FPGA;
-      printf("FPGA MAPROMEXT DISABLED\n\r");
+      printf("FPGA MAPROMEXT DISABLED\n");
    }
 }
 char Filename[]=DEFAULT_ROOT "Z3660.bin";
@@ -497,6 +496,12 @@ void PrefetchAbortHandler(void *CallBackRef){
 	hard_reboot();
 	while(1);
 }
+void Enable_Abort_Interrutps(void)
+{
+	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_DATA_ABORT_INT, DataAbortHandler,0);
+	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_PREFETCH_ABORT_INT, PrefetchAbortHandler,0);
+	Xil_ExceptionEnable();
+}
 
 extern CONFIG config;
 extern int no_init;
@@ -559,14 +564,22 @@ void rtg_cache_policy_core0(uint32_t policy)
       Xil_SetTlbAttributes(i*0x100000UL,policy);//NORM_WT_CACHE);// NORM_WB_CACHE);//0x14de2);
    for(int i=0x1C2;i<0x1C3;i++) // RTG Registers (1 MB for soft3d registers)
       Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
-   for(int i=0x502,j=2;i<0x580;i++,j++)
+   int base=config.autoconfig_ram==0?0x400:0x500;
+   int ini=base+0x002;
+   int end=base+0x080;
+   for(int i=ini,j=0x002;i<end;i++,j++)
    {
       uint32_t address=(RTG_BASE+j*0x100000UL);
       setMMU(i*0x100000UL,address|policy); // mapped to RTG_BASE
    }
    finish_MMU_OP();
 }
-
+struct Soft3DData {
+  volatile uint32_t offset[4];
+  volatile uint32_t format[2];
+  volatile uint16_t x[2], y[2];
+};
+extern volatile struct Soft3DData* data3d;
 int main()
 {
     init_platform();
@@ -658,14 +671,14 @@ int main()
    int reset_time_counter_max=60*4;
 
 //   printf("\033[2J");
-   printf("Z3660 starting...\n\r\n\r");
-   printf(" ________   ______   ______   ______   ______ \n\r");
-   printf("|___    /  |____  | |  ____| |  ____| |  __  | a.k.a. PishaStorm\n\r");
-   printf("    /  /    ____| | | |____  | |____  | |  | | a.k.a. N\314\203Storm\n\r");
-   printf("   /  /    |____  | |  __  | |  __  | | |  | |\n\r");
-   printf("  /  /___   ____| | | |__| | | |__| | | |__| |\n\r");
-   printf(" /_______| |______| |______| |______| |______|\n\r");
-   printf("\n\r");
+   printf("Z3660 starting...\n\n");
+   printf(" ________   ______   ______   ______   ______ \n");
+   printf("|___    /  |____  | |  ____| |  ____| |  __  | a.k.a. PishaStorm\n");
+   printf("    /  /    ____| | | |____  | |____  | |  | | a.k.a. N\314\203Storm\n");
+   printf("   /  /    |____  | |  __  | |  __  | | |  | |\n");
+   printf("  /  /___   ____| | | |__| | | |__| | | |__| |\n");
+   printf(" /_______| |______| |______| |______| |______|\n");
+   printf("\n");
    printf("FPGA version number 0x%08lX\n",read_reg_s01(REG2));
 #ifdef REVISION_BETA
    printf("BOOT.bin version number %d.%02d (BETA %d)\n",REVISION_MAJOR,REVISION_MINOR,REVISION_BETA);
@@ -714,6 +727,12 @@ int main()
       shared->scsiboot_rom_loaded=0;
    }
 
+   video_state=video_init();
+   video_reset();
+   mobotest();
+//   if(config.update_sd==YES)
+	   update_sd();
+
    if(config.boot_mode==MUSASHI || config.boot_mode==UAE || config.boot_mode==UAEJIT)
    {
       //the autoconfig and CPU RAM are emulated in cpu_emulator(), so we don't need hardware autoconfig
@@ -730,10 +749,6 @@ int main()
    {
       rtg_cache_policy_core0(RTG_CACHE_POLICY_FOR_060);
    }
-
-   video_state=video_init();
-   video_reset();
-   mobotest();
 
    char *kickstart_pointer=0;
    char *ext_kickstart_pointer=0;
@@ -769,13 +784,13 @@ int main()
    }
 /*
    if((read_reg_s01(REG0)&2)==0)
-      printf("Read Bursts DISABLED\n\r");
+      printf("Read Bursts DISABLED\n");
    else
-      printf("Read Bursts ENABLED\n\r");
+      printf("Read Bursts ENABLED\n");
    if((read_reg_s01(REG0)&4)==0)
-      printf("Write Bursts DISABLED\n\r");
+      printf("Write Bursts DISABLED\n");
    else
-      printf("Write Bursts ENABLED\n\r");
+      printf("Write Bursts ENABLED\n");
 */
 
    // configure CPU frequency with verbose = 1, nbr = 0
@@ -793,18 +808,18 @@ int main()
    f_open(&fil,Filename, FA_OPEN_ALWAYS | FA_READ);
    f_lseek(&fil, 4);
    UINT NumBytesRead;
-   printf("Reading %s file:\r\n[----------]\r\n\033[F",Filename);
+   printf("Reading %s file:\n[----------]\n\033[F",Filename);
    for(uint32_t i=0,j=0,k=1;i<1920*1080*4;i+=10*1080*4,j++)
    {
       if(j==19)
       {
          j=0;
-         printf("%.*s\r\n\033[F",(int)++k,"[==========]");
+         printf("%.*s\n\033[F",(int)++k,"[==========]");
       }
       f_read(&fil, (void*)((uint32_t)video_state->framebuffer+i), 10*1080*4,&NumBytesRead);
    }
    f_close(&fil);
-   printf("\r\nFile read OK\r\n");
+   printf("\nFile read OK\n");
    reset_video(NO_RESET_FRAMEBUFFER);
 #else
    video_reset();
@@ -893,9 +908,13 @@ int main()
    Xil_L1DCacheFlush();
    Xil_L2CacheFlush();
 
-   Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_DATA_ABORT_INT, DataAbortHandler,0);
-   Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_PREFETCH_ABORT_INT, PrefetchAbortHandler,0);
-   Xil_ExceptionEnable();
+   if(data3d==NULL)
+   {
+	   uint32_t offset=config.autoconfig_ram==0?0x40000000:0x50000000;
+	   data3d = (volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR-RTG_BASE+offset);
+   }
+
+   Enable_Abort_Interrutps();
 
    ACTIVITY_LED_OFF; // OFF
    DiscreteClear(REG0, FPGA_RESET);
@@ -922,6 +941,7 @@ int main()
 
    usleep(1000);
    CPLD_RESET_ARM(1); // CPLD RUN -> 060 RUN
+   printf("060 starting now...\n");
 
    while(1)
    {
@@ -1007,67 +1027,82 @@ int main()
          break;
       }
 */
+      static int cycles=0;
       switch(state68k)
       {
       case M68K_RUNNING:
          rtg_loop();
          debug_console_loop();
-         if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
+
+       	 cycles++;
+       	 if(debug_console.reset_cpld==1)
+       		 cycles=0;
+         if(cycles==10000)
          {
-            printf("Reset active (DOWN)...\n\r");
-            state68k=M68K_RESET;
-            reset_time_counter_max=60*4; // 4 seconds
-            reset_time_counter=0;
-            reset_init();
-            piscsi_shutdown();
-//            Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
-//            Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
-//            uint32_t RegVal = Xil_In32(A9_CPU_RST_CTRL);
-//            XPS_SYS_CTRL_BASEADDR + A9_CPU_RST_CTRL_OFFSET
-         }
-         else
-         {
+            cycles=0;
+            if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
+            {
+               printf("Reset active (DOWN)...\n");
+               state68k=M68K_RESET;
+               reset_time_counter_max=60*4; // 4 seconds
+               reset_time_counter=0;
+               reset_init();
+//               piscsi_shutdown();
+               piscsi_refresh_drives();
+               CPLD_RESET_ARM(0);
+               DiscreteSet(REG0, FPGA_RESET);
+               usleep(1000);
+               CPLD_RESET_ARM(1);
+               DiscreteClear(REG0, FPGA_RESET);
+//                  Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
+//                  Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
+//                  uint32_t RegVal = Xil_In32(A9_CPU_RST_CTRL);
+//                  XPS_SYS_CTRL_BASEADDR + A9_CPU_RST_CTRL_OFFSET
+            }
+            else
+            {
 //#define USER_SWITCH1
 #ifdef USER_SWITCH1
-            if(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
-            {
-               clk_config++;
-               clk_config&=3;
-               switch(clk_config)
+               if(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
                {
-                  case 0:
-                     configure_clk(50,verbose,0);
-                     XGpioPs_WritePin(&GpioPs, LED2, 1);
-                     break;
-                  case 1:
-                     configure_clk(50,verbose,0);
-                     XGpioPs_WritePin(&GpioPs, LED2, 0);
-                     break;
-                  case 2:
-                     configure_clk(100,verbose,0);
-                     XGpioPs_WritePin(&GpioPs, LED2, 1);
-                     break;
-                  case 3:
-                     configure_clk(100,verbose,0);
-                     XGpioPs_WritePin(&GpioPs, LED2, 0);
-                     break;
+                  clk_config++;
+                  clk_config&=3;
+                  switch(clk_config)
+                  {
+                     case 0:
+                        configure_clk(50,verbose,0);
+                        XGpioPs_WritePin(&GpioPs, LED2, 1);
+                        break;
+                     case 1:
+                        configure_clk(50,verbose,0);
+                        XGpioPs_WritePin(&GpioPs, LED2, 0);
+                        break;
+                     case 2:
+                        configure_clk(100,verbose,0);
+                        XGpioPs_WritePin(&GpioPs, LED2, 1);
+                        break;
+                     case 3:
+                        configure_clk(100,verbose,0);
+                        XGpioPs_WritePin(&GpioPs, LED2, 0);
+                        break;
+                  }
+                  while(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
+                  {}
                }
-               while(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
-               {}
-            }
 #endif
+            }
          }
          break;
       case M68K_RESET:
          int long_reset=0;
          while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
          {
-            reset_run(env_file_vars_temp.bootmode,reset_time_counter,reset_time_counter_max,long_reset);
-            reset_time_counter++;
-            if(reset_time_counter==60) // 60 -> 1 sec
-       	    no_init=1;
-            if(reset_time_counter==reset_time_counter_max) // 60 -> reset_run waits for vblank;
-            {
+    	    reset_run(env_file_vars_temp.bootmode,reset_time_counter,reset_time_counter_max,long_reset);
+    	    reset_time_counter++;
+    	    if(reset_time_counter==60) // 60 -> 1 sec
+               no_init=1;
+    	    if(reset_time_counter==reset_time_counter_max) // 60 -> reset_run waits for vblank;
+    	    {
 //               no_init=1;
                if(long_reset==0)
                {
@@ -1076,7 +1111,7 @@ int main()
                   reset_time_counter_max=60*4; // 4 seconds
                   env_file_vars_temp.bootmode++;
                   if(env_file_vars_temp.bootmode>=BOOTMODE_NUM)
-                	  env_file_vars_temp.bootmode=0;
+                     env_file_vars_temp.bootmode=0;
                   write_env_files(env_file_vars_temp);
                   for(int i=0;i<env_file_vars_temp.bootmode+1;i++)
                   {
@@ -1088,6 +1123,7 @@ int main()
                }
                else // long_reset==1
                {
+                  printf("Long x2 Reset detected. Deleting env files and Hard reboot...\n");
                   delete_env_files();
                   for(int i=0;i<5+1;i++)
                   {
@@ -1101,44 +1137,28 @@ int main()
                   DiscreteClear(REG0,FPGA_BP);
                   hard_reboot(); //
                }
-            }
+    	    }
          }
 #ifndef NO_ARM_RESET_ON_AMIGA_RESET
 //         audio_set_interrupt_enabled(0);
 //         CPLD_RESET_ARM(0);
          hard_reboot(); //
 #else
+         printf("Reset inactive (UP)...\n");
          if(long_reset)
-        	 hard_reboot();
+         {
+            printf("Long Reset detected. Hard reboot...\n");
+            hard_reboot();
+         }
 
-         CPLD_RESET_ARM(0);
+//         piscsi_init();
          state68k=M68K_RUNNING;
-         DiscreteSet(REG0, FPGA_RESET);
-         int reset_counter=10;
-         while(reset_counter>0)
-         {
-        	 usleep(25000);
-        	 reset_counter--;
-         }
-         DiscreteClear(REG0, FPGA_RESET);
-         reset_counter=10;
-         while(reset_counter>0)
-         {
-        	 usleep(25000);
-        	 reset_counter--;
-         }
-         flash_colors();
-         CPLD_RESET_ARM(0);
-         usleep(100);
-         CPLD_RESET_ARM(1);
-         printf("Reset inactive (UP)...\n\r");
-         video_reset();
-         audio_reset();
-         piscsi_init();
+//         flash_colors();
+//         video_reset();
+//         audio_reset();
 #endif
          break;
       }
-
    }
    cleanup_platform();
    return(0);

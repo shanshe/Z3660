@@ -142,7 +142,7 @@ inline void set_palette(uint32_t zdata,uint16_t op_palette)
    uint8_t idx;
    idx=(uint8_t)((zdata>>24)&0xFF);
    data=zdata&0x00FFFFFF;
-   printf("set_palette(%d) idx=%d color=%08lx\r\n",op_palette==19,idx,data);
+   printf("set_palette(%d) idx=%d color=%08lx\n",op_palette==19,idx,data);
     */
    Xil_ExceptionDisable();
    video_formatter_write(zdata, op_palette);
@@ -151,7 +151,7 @@ inline void set_palette(uint32_t zdata,uint16_t op_palette)
 ZZ_VIDEO_STATE* video_state;
 void rtg_init(void)
 {
-   printf("RTG init...\r\n");
+   printf("RTG init...\n");
    video_state->framebuffer_pan_offset=0;
 
    ethernet_send_result = 0;
@@ -537,7 +537,7 @@ uint32_t read_rtg_register(uint32_t zaddr)
       data=config.cpu_ram==YES;
       break;
    case REG_ZZ_TEST_ENABLE:
-      data=config.enable_test==YES;
+      data=config.enable_test;
       break;
 
    case REG_ZZ_ETH_MAC_HI: {
@@ -582,11 +582,11 @@ uint32_t read_rtg_register(uint32_t zaddr)
       break;
    case REG_ZZ_KS_SEL:
 	   data=config.kickstart;
-//       printf("KICKSTART SEL READ %ld\r\n",data);
+//       printf("KICKSTART SEL READ %ld\n",data);
        break;
    case REG_ZZ_EXT_KS_SEL:
 	   data=config.ext_kickstart;
-//       printf("EXT KICKSTART SEL READ %ld\r\n",data);
+//       printf("EXT KICKSTART SEL READ %ld\n",data);
 	   break;
    case REG_ZZ_SCSI_SEL_0:
    case REG_ZZ_SCSI_SEL_1:
@@ -598,8 +598,8 @@ uint32_t read_rtg_register(uint32_t zaddr)
 	   data=config.scsi_num[(address-REG_ZZ_SCSI_SEL_0)>>2];
        break;
    default:
-      printf("Read to 0x%X RTG register\n",address);
-      return(swap32(*((uint32_t *)(RTG_BASE+address))));
+      printf("Read from 0x%X RTG register\n",address);
+      data=0xFFFFFFFF; // swap32(*((uint32_t *)(RTG_BASE+address)));
    }
    return(data);
 }
@@ -737,7 +737,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 
    case REG_ZZ_X1:
       rect_x1 = zdata;
-      //         printf("rect_x1 %d\r\n",rect_x1);
+      //         printf("rect_x1 %d\n",rect_x1);
       break;
    case REG_ZZ_Y1:
       rect_y1 = zdata;
@@ -798,8 +798,8 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 
    // RTG rendering
    case REG_ZZ_FILLRECT:
-      //         printf("FILLRECT blitter_dst_offset %lx\r\n",blitter_dst_offset);
-      //         printf("         %d %d %d %d \r\n",rect_x1,rect_y1,rect_x2,rect_y2);
+      //         printf("FILLRECT blitter_dst_offset %lx\n",blitter_dst_offset);
+      //         printf("         %d %d %d %d \n",rect_x1,rect_y1,rect_x2,rect_y2);
       set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
             blitter_dst_pitch);
       uint8_t mask = zdata;
@@ -1398,10 +1398,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 
       case REG_ZZ_OP_DATA: // idx + RGB data
          op_data=zdata;
-         //        printf("1000 <= 0x%08X\r\n",zdata);
+         //        printf("1000 <= 0x%08X\n",zdata);
          break;
       case REG_ZZ_OP:
-         //        printf("1004 <= %d\r\n",zdata);
+         //        printf("1004 <= %d\n",zdata);
          if(zdata==OP_PALETTE)
          {
             set_palette(op_data,OP_PALETTE);
@@ -1412,10 +1412,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          }
          break;
       case REG_ZZ_OP_NOP:
-         //        printf("1008 <= %d\r\n",zdata);
+         //        printf("1008 <= %d\n",zdata);
          break;
       case REG_ZZ_OP_CAPTUREMODE:
-         printf("CAPTUREMODE <= %ld\r\n",zdata);
+         printf("CAPTUREMODE <= %ld\n",zdata);
          //            zz_set_monswitch(!zdata);
          break;
       case REG_ZZ_JIT_ENABLE:
@@ -1425,45 +1425,45 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case REG_ZZ_BOOTMODE:
          if(zdata>=0 && zdata<BOOTMODE_NUM)
          {
-            printf("BOOTMODE %ld (%s)\r\n",zdata,bootmode_names[zdata]);
+            printf("BOOTMODE %ld (%s)\n",zdata,bootmode_names[zdata]);
             env_file_vars_temp.bootmode=zdata;
          }
          else
          {
-            printf("BOOTMODE %ld unknown\r\n",zdata);
+            printf("BOOTMODE %ld unknown\n",zdata);
             env_file_vars_temp.bootmode=0;
          }
          break;
       case REG_ZZ_APPLY_BOOTMODE:
          if(zdata>=0x55AA)
          {
-            printf("Apply BOOTMODE %d (%s)\r\n",env_file_vars_temp.bootmode,bootmode_names[env_file_vars_temp.bootmode]);
+            printf("Apply BOOTMODE %d (%s)\n",env_file_vars_temp.bootmode,bootmode_names[env_file_vars_temp.bootmode]);
             piscsi_shutdown();
             if(write_env_files(env_file_vars_temp)==1)
                hard_reboot();
          }
          else
          {
-            printf("Apply BOOTMODE magic code not valid: 0x%lx\r\n",zdata);
+            printf("Apply BOOTMODE magic code not valid: 0x%lx\n",zdata);
          }
          break;
       case REG_ZZ_APPLY_SCSI:
          if(zdata>=0x55AA)
          {
-            printf("Apply SCSI\r\n");
+            printf("Apply SCSI\n");
             piscsi_shutdown();
             if(write_env_files2(scsi_num)==1)
                hard_reboot();
          }
          else
          {
-            printf("Apply SCSI magic code not valid: 0x%lx\r\n",zdata);
+            printf("Apply SCSI magic code not valid: 0x%lx\n",zdata);
          }
          break;
       case REG_ZZ_APPLY_ALL:
          if(zdata>=0x55AA)
          {
-            printf("Apply ALL\r\n");
+            printf("Apply ALL\n");
             piscsi_shutdown();
             if((write_env_files(env_file_vars_temp)==1)&&
            	   (write_env_files2(scsi_num)==1))
@@ -1471,24 +1471,24 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          }
          else
          {
-            printf("Apply ALL magic code not valid: 0x%lx\r\n",zdata);
+            printf("Apply ALL magic code not valid: 0x%lx\n",zdata);
          }
          break;
       case REG_ZZ_SCSIBOOT_EN:
     	  env_file_vars_temp.scsiboot=zdata;
-         printf("SCSI BOOT %s\r\n",zdata?"enabled":"disabled");
+         printf("SCSI BOOT %s\n",zdata?"enabled":"disabled");
          break;
       case REG_ZZ_AUTOC_RAM_EN:
     	  env_file_vars_temp.autoconfig_ram=zdata;
-         printf("AUTOCONFIG RAM %s\r\n",zdata?"enabled":"disabled");
+         printf("AUTOCONFIG RAM %s\n",zdata?"enabled":"disabled");
          break;
       case REG_ZZ_KS_SEL:
      	 config.kickstart=zdata;
-         //printf("KICKSTART SELECT %ld\r\n",zdata);
+         //printf("KICKSTART SELECT %ld\n",zdata);
      	 break;
       case REG_ZZ_EXT_KS_SEL:
          config.ext_kickstart=zdata;
-         //printf("EXT KICKSTART SELECT %ld\r\n",zdata);
+         //printf("EXT KICKSTART SELECT %ld\n",zdata);
          break;
       case REG_ZZ_SCSI_SEL_0:
       case REG_ZZ_SCSI_SEL_1:
@@ -1498,7 +1498,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case REG_ZZ_SCSI_SEL_5:
       case REG_ZZ_SCSI_SEL_6:
      	 config.scsi_num[(address-REG_ZZ_SCSI_SEL_0)>>2]=zdata;
-         //printf("KICKSTART SELECT %ld\r\n",zdata);
+         //printf("KICKSTART SELECT %ld\n",zdata);
      	 break;
       case REG_ZZ_KS_SEL_TXT:
          {
@@ -1611,10 +1611,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          break;
       case REG_ZZ_TEST_ENABLE:
     	  env_file_vars_temp.enable_test=zdata;
-         printf("TEST ENABLE %s\r\n",zdata?"enabled":"disabled");
+         printf("TEST ENABLE %s\n",zdata?"enabled":"disabled");
          break;
       default:
-         printf("W %08lx\r\n",address); // write to an unknown RTG register
+         printf("W %08lx\n",address); // write to an unknown RTG register
          break;
    }
 }

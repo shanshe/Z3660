@@ -182,7 +182,7 @@ void video_reset(void) {
 //   f_read(&fil, (void*)((uint32_t)vs.framebuffer), 1080,&NumBytesRead);
 
 //   f_close(&fil);
-//   printf("\r\nFile read %d\n",NumBytesRead);
+//   printf("\nFile read %d\n",NumBytesRead);
 //   reset_video(NO_RESET_FRAMEBUFFER);
 //   f_lseek(&fil, 0);
 
@@ -635,13 +635,13 @@ int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
       Config = XAxiVdma_LookupConfig(VDMA_DEVICE_ID);
 
       if (!Config) {
-         printf("VDMA not found for ID %d\r\n", VDMA_DEVICE_ID);
+         printf("VDMA not found for ID %d\n", VDMA_DEVICE_ID);
          return(XST_FAILURE);
       }
    }
       status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
       if (status != XST_SUCCESS) {
-         printf("VDMA Configuration Initialization failed, status: %d\r\n", status);
+         printf("VDMA Configuration Initialization failed, status: %d\n", status);
          printf("Halted\n");
          while(1);
          return(status);
@@ -672,19 +672,19 @@ int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    status = XAxiVdma_DmaConfig(&vdma, XAXIVDMA_READ, &ReadCfg);
    if (status != XST_SUCCESS) {
-      printf("VDMA Read channel config failed, status: %d\r\n", status);
+      printf("VDMA Read channel config failed, status: %d\n", status);
       return(status);
    }
 
    status = XAxiVdma_DmaSetBufferAddr(&vdma, XAXIVDMA_READ, ReadCfg.FrameStoreStartAddr);
    if (status != XST_SUCCESS) {
-      printf("VDMA Read channel set buffer address failed, status: 0x%X\r\n", status);
+      printf("VDMA Read channel set buffer address failed, status: 0x%X\n", status);
       return(status);
    }
 
    status = XAxiVdma_DmaStart(&vdma, XAXIVDMA_READ);
    if (status != XST_SUCCESS) {
-      printf("VDMA Failed to start DMA engine (read channel), status: 0x%X\r\n", status);
+      printf("VDMA Failed to start DMA engine (read channel), status: 0x%X\n", status);
       return(status);
    }
    return(XST_SUCCESS);
@@ -698,13 +698,13 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
       Config = XAxiVdma_LookupConfig(VDMA_DEVICE_ID);
 
       if (!Config) {
-         printf("VDMA not found for ID %d\r\n", VDMA_DEVICE_ID);
+         printf("VDMA not found for ID %d\n", VDMA_DEVICE_ID);
          return(XST_FAILURE);
       }
    }
       status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
       if (status != XST_SUCCESS) {
-         printf("VDMA Configuration Initialization failed, status: %d\r\n", status);
+         printf("VDMA Configuration Initialization failed, status: %d\n", status);
          printf("Halted\n");
          while(1);
          return(status);
@@ -730,19 +730,19 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    status = XAxiVdma_DmaConfig(&vdma, XAXIVDMA_READ, &ReadCfg);
    if (status != XST_SUCCESS) {
-      printf("VDMA Read channel config failed, status: %d\r\n", status);
+      printf("VDMA Read channel config failed, status: %d\n", status);
       return(status);
    }
 
    status = XAxiVdma_DmaSetBufferAddr(&vdma, XAXIVDMA_READ, ReadCfg.FrameStoreStartAddr);
    if (status != XST_SUCCESS) {
-      printf("VDMA Read channel set buffer address failed, status: 0x%X\r\n", status);
+      printf("VDMA Read channel set buffer address failed, status: 0x%X\n", status);
       return(status);
    }
 
    status = XAxiVdma_DmaStart(&vdma, XAXIVDMA_READ);
    if (status != XST_SUCCESS) {
-      printf("VDMA Failed to start DMA engine (read channel), status: 0x%X\r\n", status);
+      printf("VDMA Failed to start DMA engine (read channel), status: 0x%X\n", status);
       return(status);
    }
    return(XST_SUCCESS);
@@ -845,32 +845,32 @@ void isr_video(void *dummy)
 uint32_t dump_vdma_status(XAxiVdma *InstancePtr) {
    uint32_t status = XAxiVdma_GetStatus(InstancePtr, XAXIVDMA_READ);
 
-   printf("Read channel dump\n\r");
-   printf("\tMM2S DMA Control Register: 0x%08lx\r\n",
+   printf("Read channel dump\n");
+   printf("\tMM2S DMA Control Register: 0x%08lx\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_CR_OFFSET));
-   printf("\tMM2S DMA Status Register: 0x%08lx\r\n",
+   printf("\tMM2S DMA Status Register: 0x%08lx\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_SR_OFFSET));
-   printf("\tMM2S HI_FRMBUF Reg: 0x%08lx\r\n",
+   printf("\tMM2S HI_FRMBUF Reg: 0x%08lx\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_HI_FRMBUF_OFFSET));
-   printf("\tFRMSTORE Reg: %ld\r\n",
+   printf("\tFRMSTORE Reg: %ld\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_FRMSTORE_OFFSET));
-   printf("\tBUFTHRES Reg: %ld\r\n",
+   printf("\tBUFTHRES Reg: %ld\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_BUFTHRES_OFFSET));
-   printf("\tMM2S Vertical Size Register: %ld\r\n",
+   printf("\tMM2S Vertical Size Register: %ld\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_VSIZE_OFFSET));
-   printf("\tMM2S Horizontal Size Register: %ld\r\n",
+   printf("\tMM2S Horizontal Size Register: %ld\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_HSIZE_OFFSET));
-   printf("\tMM2S Frame Delay and Stride Register: %ld\r\n",
+   printf("\tMM2S Frame Delay and Stride Register: %ld\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_STRD_FRMDLY_OFFSET));
-   printf("\tMM2S Start Address 1: 0x%08lx\r\n",
+   printf("\tMM2S Start Address 1: 0x%08lx\n",
          XAxiVdma_ReadReg(InstancePtr->ReadChannel.ChanBase,
                XAXIVDMA_MM2S_ADDR_OFFSET + XAXIVDMA_START_ADDR_OFFSET));
 

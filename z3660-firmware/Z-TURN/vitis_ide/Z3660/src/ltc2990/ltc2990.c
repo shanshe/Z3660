@@ -48,7 +48,7 @@ int iic_write_ltc2990(uint8_t command,uint8_t data)
    }
    else if(i2c_ltc2990==99)
    {
-      printf("[I2C] LTC2990 DISABLED!!!!!!\r\n");
+      printf("[I2C] LTC2990 DISABLED!!!!!!\n");
       i2c_ltc2990++;
       return(1);
    }
@@ -62,23 +62,23 @@ int iic_write_ltc2990(uint8_t command,uint8_t data)
                  2, LTC_I2C_ADDRESS);
       if (Status != XST_SUCCESS) {
          i2c_ltc2990++;
-         DEBUG_I2C("[I2C] write1 error %d\r\n",i2c_ltc2990);
+         DEBUG_I2C("[I2C] write1 error %d\n",i2c_ltc2990);
          return(1);
       }
       state=1;
-      DEBUG_I2C("[I2C] write1 ok\r\n");
+      DEBUG_I2C("[I2C] write1 ok\n");
       break;
    case 1:
       Status=XIicPs_BusIsBusy(&IicInstance);
       if(Status==XST_SUCCESS) {
     	  state=0;
-          DEBUG_I2C("[I2C] write slave:%02x cmd:%02x data:%02x ok\r\n", LTC_I2C_ADDRESS, command, data);
+          DEBUG_I2C("[I2C] write slave:%02x cmd:%02x data:%02x ok\n", LTC_I2C_ADDRESS, command, data);
     	  return(1);
       }
-      DEBUG_I2C("[I2C] waiting bus busy (write)\r\n");
+      DEBUG_I2C("[I2C] waiting bus busy (write)\n");
       break;
    default:
-      DEBUG_I2C("[I2C] default1\r\n");
+      DEBUG_I2C("[I2C] default1\n");
    }
    return(0);
 }
@@ -92,7 +92,7 @@ int iic_read_ltc2990(uint8_t command)
    }
    else if(i2c_ltc2990==99)
    {
-      printf("[I2C] LTC2990 DISABLED!!!!!!\r\n");
+      printf("[I2C] LTC2990 DISABLED!!!!!!\n");
       i2c_ltc2990++;
       return(1);
    }
@@ -104,19 +104,19 @@ int iic_read_ltc2990(uint8_t command)
                  1, LTC_I2C_ADDRESS);
       if (Status != XST_SUCCESS) {
          i2c_ltc2990++;
-         DEBUG_I2C("[I2C] write2 error %d\r\n",i2c_ltc2990);
+         DEBUG_I2C("[I2C] write2 error %d\n",i2c_ltc2990);
          return(1);
       }
       state=1;
-      DEBUG_I2C("[I2C] write2 ok\r\n");
+      DEBUG_I2C("[I2C] write2 ok\n");
       break;
    case 1:
       Status=XIicPs_BusIsBusy(&IicInstance);
       if(Status==XST_SUCCESS) {
     	  state=2;
-          DEBUG_I2C("[I2C] write slave:%02x cmd:%02x ok\r\n", LTC_I2C_ADDRESS, command);
+          DEBUG_I2C("[I2C] write slave:%02x cmd:%02x ok\n", LTC_I2C_ADDRESS, command);
       }
-      DEBUG_I2C("[I2C] waiting bus busy (write (read command))\r\n");
+      DEBUG_I2C("[I2C] waiting bus busy (write (read command))\n");
       break;
    case 2:
       ReadBuffer_ltc2990[0]   =   0;
@@ -126,24 +126,24 @@ int iic_read_ltc2990(uint8_t command)
                  2, LTC_I2C_ADDRESS);
       if (Status != XST_SUCCESS) {
          i2c_ltc2990++;
-         xil_printf("[I2C] read error %d\r\n",i2c_ltc2990);
+         printf("[I2C] read error %d\n",i2c_ltc2990);
          state=0;
          return(1);
       }
       state=3;
-      DEBUG_I2C("[I2C] read ok\r\n");
+      DEBUG_I2C("[I2C] read ok\n");
       break;
    case 3:
       Status=XIicPs_BusIsBusy(&IicInstance);
       if(Status==XST_SUCCESS) {
          state=0;
-         DEBUG_I2C("[I2C] write slave:%02x cmd:%02x data:%02x%02x ok\r\n", LTC_I2C_ADDRESS, command, ReadBuffer_ltc2990[0],ReadBuffer_ltc2990[1]);
+         DEBUG_I2C("[I2C] write slave:%02x cmd:%02x data:%02x%02x ok\n", LTC_I2C_ADDRESS, command, ReadBuffer_ltc2990[0],ReadBuffer_ltc2990[1]);
          return(1);
       }
-      DEBUG_I2C("[I2C] waiting bus busy (read)\r\n");
+      DEBUG_I2C("[I2C] waiting bus busy (read)\n");
       break;
    default:
-      DEBUG_I2C("[I2C] default2\r\n");
+      DEBUG_I2C("[I2C] default2\n");
    }
    return(0);
 }
@@ -156,12 +156,12 @@ void test_i2c(void)
       Status = XIicPs_MasterRecvPolled(&IicInstance, ReadBuffer_ltc2990, 1, i);
       if (Status != XST_SUCCESS)
       {
-         xil_printf("[I2C] 0x%02X read error\r\n",i);
+         printf("[I2C] 0x%02X read error\n",i);
       }
       else
       {
          while (XIicPs_BusIsBusy(&IicInstance));
-         xil_printf("[I2C] 0x%02X read OK!!!!!!!!!!!!!!!!\r\n",i);
+         printf("[I2C] 0x%02X read OK!!!!!!!!!!!!!!!!\n",i);
       }
       usleep(25000);
    }
@@ -174,7 +174,7 @@ int ltc2990_init(void)
    iic_write_ltc2990(LTC_CONTROL_REG,0b01011111); // V1, V2, V3, V4
    usleep(25000);
 
-   xil_printf("Init LTC2990\n\r");
+   printf("Init LTC2990\n");
 /*
    // test LTC2990
    while(1)
@@ -191,44 +191,44 @@ int ltc2990_init(void)
       // xli_printf does not support float...
       value=data*0.0625;
       dvalue=100*(value-(int)value)+0.5;
-      xil_printf("TINT_REG:= %d.%02d C\r\n",(int)value,(int)dvalue);
+      printf("TINT_REG:= %d.%02d C\n",(int)value,(int)dvalue);
 
       iic_read_ltc2990(LTC_V1_MSB);
       data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
       value=data*(305.8e-6)*10.;
       dvalue=100*(value-(int)value)+0.5;
-      xil_printf("V1_REG:= %d.%02d V\r\n",(int)value,(int)dvalue);
+      printf("V1_REG:= %d.%02d V\n",(int)value,(int)dvalue);
 
       iic_read_ltc2990(LTC_V2_MSB);
       data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
       value=data*(305.8e-6)*10.;
       dvalue=100*(value-(int)value)+0.5;
-      xil_printf("V2_REG:= %d.%02d V\r\n",(int)value,(int)dvalue);
+      printf("V2_REG:= %d.%02d V\n",(int)value,(int)dvalue);
 
       iic_read_ltc2990(LTC_V3_MSB);
       data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
       value=data*(305.8e-6);
       dvalue=100*(value-(int)value)+0.5;
-      xil_printf("V3_REG:= %d.%02d V\r\n",(int)value,(int)dvalue);
+      printf("V3_REG:= %d.%02d V\n",(int)value,(int)dvalue);
       value3=value;
 
       iic_read_ltc2990(LTC_V4_MSB);
       data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
       value=data*(305.8e-6)*10.;
       dvalue=100*(value-(int)value)+0.5;
-      xil_printf("V4_REG:= %d.%02d V\r\n",(int)value,(int)dvalue);
+      printf("V4_REG:= %d.%02d V\n",(int)value,(int)dvalue);
       value4=value;
 
       // resistor calculation
 
       value=value3/(value4-value3)*9000.;
-      xil_printf("RESISTOR:= %d ohm\r\n",(int)value);
+      printf("RESISTOR:= %d ohm\n",(int)value);
 
       iic_read_ltc2990(LTC_VCC_MSB);
       data = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
       value=(2.5+data*305.18e-6);
       dvalue=100*(value-(int)value)+0.5;
-      xil_printf("VCC_REG:= %d.%02d\r\n",(int)value,(int)dvalue);
+      printf("VCC_REG:= %d.%02d\n",(int)value,(int)dvalue);
    }
 */
 //   test_i2c();

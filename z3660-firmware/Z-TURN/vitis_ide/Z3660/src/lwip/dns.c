@@ -824,7 +824,7 @@ dns_send(u8_t idx)
     pcb_idx = 0;
 #endif
     /* send dns packet */
-    LWIP_DEBUGF(DNS_DEBUG, ("sending DNS request ID %d for name \"%s\" to server %d\r\n",
+    LWIP_DEBUGF(DNS_DEBUG, ("sending DNS request ID %d for name \"%s\" to server %d\n",
                             entry->txid, entry->name, entry->server_idx));
 #if LWIP_DNS_SUPPORT_MDNS_QUERIES
     if (entry->is_mdns) {

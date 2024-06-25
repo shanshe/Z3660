@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include "../video.h"
 #include <xil_types.h>
-#include "xil_printf.h"
 
 #include "../debug_console.h"
 #include "../memorymap.h"
@@ -103,7 +102,7 @@ void Libloadfile(void *filename,void *pt,ULONG size)
 #undef TRUE
 #define TRUE 1
 
-volatile struct Soft3DData *data3d = (volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR);
+volatile struct Soft3DData *data3d = NULL;//(volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR);
 struct Soft3DData local_data;
 
 void handle_soft3d_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
@@ -115,6 +114,7 @@ void handle_soft3d_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
     	case OP_START: {
     		local_data.offset[0]=swap32(data3d->offset[0]);
     		DEBUG_SOFT3D("PrefsWazp3D 0x%08lx\n",local_data.offset[0]);
+    		printf("data3d allocated at 0x%08lX\n",(uint32_t)data3d);
     		uint32_t add=(uint32_t)
     				SOFT3D_Start((uint32_t *)local_data.offset[0]);
     		*(uint32_t*)(RTG_BASE+REG_ZZ_SOFT3D_OP)=swap32(add);
@@ -5743,8 +5743,8 @@ void DrawPolyP(struct SOFT3D_context *SC)
 #ifdef WAZP3DDEBUG
     if(Wazp3D->DebugSOFT3D.ON) Libprintf("DrawPolyP Pnb %ld  \n",(ULONG)SC->PolyPnb);
 #endif
-//    printf("PIX 0x%08lx\r\n",(uint32_t)Pix);
-//    printf("P 0x%08lx\r\n",(uint32_t)P);
+//    printf("PIX 0x%08lx\n",(uint32_t)Pix);
+//    printf("P 0x%08lx\n",(uint32_t)P);
 
 
     if(SC->PolyPnb > MAXPOLY )

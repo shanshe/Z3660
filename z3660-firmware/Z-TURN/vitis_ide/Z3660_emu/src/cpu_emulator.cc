@@ -329,6 +329,7 @@ inline int not_decode(uint32_t address)
       ||(address>=0x00B80000 && address<0x00BF0000)
       ||(address>=0x80000000 && address<0xFF000000)
       ||(address>=0xFF00F000)
+      ||(address>=0xFFFFFFFF)
    )
    {
 //      z3660_printf("access to address 0x%08X\n",address);

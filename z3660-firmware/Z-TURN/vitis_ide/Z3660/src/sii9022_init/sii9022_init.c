@@ -8,6 +8,7 @@
 #include "xil_types.h"
 #include "sii9022_init.h"
 #include "xiicps.h"
+#include <stdio.h>
 //#include "xparameters.h"
 
 #include "sleep.h"
@@ -127,7 +128,7 @@ int iic_write_8(uint8_t a,uint8_t data)
 		return(XST_FAILURE);
 	}
 	while (XIicPs_BusIsBusy(&IicInstance));
-//	xil_printf("0x%02x=0x%02x\r\n",a,ReadBuffer[0]);
+//	printf("0x%02x=0x%02x\n",a,ReadBuffer[0]);
 	return(XST_SUCCESS);
 }
 
@@ -187,7 +188,7 @@ int sii9022_init(zz_video_mode *vmode)
 		i++;
 	}
 
-	xil_printf("Init SII9022\n\r");
+	printf("Init SII9022\n");
 
 	return(0);
 }

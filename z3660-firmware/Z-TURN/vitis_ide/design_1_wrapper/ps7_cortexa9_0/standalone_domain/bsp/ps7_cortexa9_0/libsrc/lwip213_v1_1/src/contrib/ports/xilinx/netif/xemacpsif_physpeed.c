@@ -269,7 +269,9 @@ void detect_phy(XEmacPs *xemacpsp)
 			if ((phy_reg != PHY_MARVELL_IDENTIFIER) &&
 				(phy_reg != PHY_TI_IDENTIFIER) &&
 				(phy_reg != PHY_REALTEK_IDENTIFIER) &&
-				(phy_reg != PHY_ADI_IDENTIFIER)) {
+				(phy_reg != PHY_ADI_IDENTIFIER) &&
+                (phy_reg != 0x4f51) &&
+                (phy_reg != 0x22)) {
 				xil_printf("WARNING: Not a Marvell or TI or Realtek or Xilinx PCS PMA Ethernet PHY or ADI Ethernet PHY. Please verify the initialization sequence\r\n");
 			}
 		}
@@ -795,8 +797,8 @@ static u32_t get_Adi_phy_speed(XEmacPs *xemacpsp, u32_t phy_addr)
 
 	return XST_SUCCESS;
 }
-void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr);
-uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr);
+
+uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_type);
 static u32_t get_IEEE_phy_speed(XEmacPs *xemacpsp, u32_t phy_addr)
 {
 	u16_t phy_identity;
@@ -815,8 +817,10 @@ static u32_t get_IEEE_phy_speed(XEmacPs *xemacpsp, u32_t phy_addr)
 	} else if (phy_identity == PHY_MARVELL_IDENTIFIER) {
 		RetStatus = get_Marvell_phy_speed(xemacpsp, phy_addr);
 	} else if (phy_identity == 0x22) {
-		RetStatus = micrel_auto_negotiate_step2(xemacpsp, phy_addr);
-	} else { // works with MOTORCOMM
+		RetStatus = micrel_auto_negotiate_step2(xemacpsp, phy_addr, 0);
+	} else if (phy_identity == 0x4F51) {
+		RetStatus = micrel_auto_negotiate_step2(xemacpsp, phy_addr, 1);
+	} else {
 		RetStatus = get_Marvell_phy_speed(xemacpsp, phy_addr);
 	}
 

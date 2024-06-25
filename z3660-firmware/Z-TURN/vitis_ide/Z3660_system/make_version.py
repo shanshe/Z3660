@@ -12,6 +12,7 @@ import struct
 DST_PATH = "Z:/z3660/"
 SRC_PATH = "Debug/sd_card/"
 BOOT_NAME = "BOOT.BIN"
+SCSI_NAME = "z3660_scsi.rom"
 SOURCE = "C:/Users/shanshe/workspace/Z3660/src/main.h"
 
 def buscarDefine(clave, archivo):
@@ -41,8 +42,8 @@ def delete(src):
 def swap32(i):
     return struct.unpack("<i", struct.pack(">i", i))[0]
 
-def crc32():
-    with open(DST_PATH + BOOT_NAME, "rb") as f:
+def crc32(name):
+    with open(DST_PATH + name, "rb") as f:
         while True:
             data = f.read(4)
             if len(data) < 4:
@@ -53,6 +54,8 @@ def crc32():
 def main():
     
     shutil.copy2(SRC_PATH + BOOT_NAME,DST_PATH)
+    shutil.copy2(SRC_PATH + "../../z3660_scsi.rom",DST_PATH)
+
     file = open(SOURCE, 'r', encoding='utf-8')
     V_MAJOR        = getValor("REVISION_MAJOR", file)
     V_MINOR        = getValor("REVISION_MINOR", file)
@@ -72,15 +75,39 @@ def main():
     version = version + V_MINOR
     if (int(BETA) != 0):
         version = version + " BETA " + BETA
+    print("version " + version)
     
     text_file.write("version=" + version + "\r")
     str_len = "%d" % os.path.getsize(DST_PATH + BOOT_NAME)
     text_file.write("length=" + str_len + "\r")
     checksum32=0
-    for eachdata in crc32():
+    for eachdata in crc32(BOOT_NAME):
         checksum32 = eachdata + checksum32
     str_checksum32 = "%08lX" % (checksum32 & 0xFFFFFFFF)
     text_file.write("checksum32=" + str_checksum32 + "\r")
     text_file.close()
+
+    delete(DST_PATH + "scsirom_version.txt")
+    text_file = open(DST_PATH + "scsirom_version.txt", "w")
+    
+    with open(DST_PATH + SCSI_NAME, 'rb') as f:
+        s = f.read()
+        pos=s.find(b"$VER")
+        f.seek(pos+35)
+        bytes = f.read(3)
+        version_scsirom = "".join(map(chr,bytes))
+
+    text_file.write("version=" + version_scsirom + "\r")
+    str_len = "%d" % os.path.getsize(DST_PATH + SCSI_NAME)
+    text_file.write("length=" + str_len + "\r")
+    checksum32=0
+    for eachdata in crc32(SCSI_NAME):
+        checksum32 = eachdata + checksum32
+    str_checksum32 = "%08lX" % (checksum32 & 0xFFFFFFFF)
+    text_file.write("checksum32=" + str_checksum32 + "\r")
+    text_file.close()
+    
+    print("z3660_scsi.rom checksum-32 " + str_checksum32)
+
 main()
 

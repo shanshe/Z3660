@@ -44,6 +44,10 @@ typedef enum {
 	TRB,     TOGGLE_READ_BURST,
 	TWB,     TOGGLE_WRITE_BURST,
 	CCP,     CHANGE_CLOCK_PHASE,
+	RCPLD,   RESET_CPLD,
+	RFPGA,   RESET_FPGA,
+	RAMIGA,  RESET_AMIGA,
+	RARM,    RESET_ARM,
 
 	NUM_COMMANDS
 } COMMANDS;
@@ -75,6 +79,10 @@ const char *command_names[NUM_COMMANDS] = {
 	"TRB",     "TOGGLE READ BURST",
 	"TWB",     "TOGGLE WRITE BURST",
 	"CCP",     "CHANGE CLOCK PHASE",
+	"RCPLD",   "RESET CPLD",
+	"RFPGA",   "RESET FPGA",
+	"RAMIGA",  "RESET AMIGA",
+	"RARM",    "RESET ARM",
 };
 extern clock_data cd[];
 extern CONFIG config;
@@ -111,6 +119,8 @@ void debug_console_init(void)
 	CLKCONFIG(CPUCLK,cpuclk);
 	CLKCONFIG( CLK90,clk90);
 
+	debug_console.reset_cpld=0;
+	debug_console.reset_fpga=0;
 }
 uint32_t hextoi(char *str)
 {
@@ -478,6 +488,57 @@ void debug_console_loop(void)
 							debug_console.subcmd=3;
 							debug_console.cmd=0;
 							break;
+						case RCPLD:
+						case RESET_CPLD:
+							debug_console.reset_cpld=!debug_console.reset_cpld;
+							if(debug_console.reset_cpld)
+							{
+								xil_printf("RESET CPLD SCSI ON\r\n");
+								CPLD_RESET_ARM(0);
+							}
+							else
+							{
+								xil_printf("RESET CPLD OFF\r\n");
+								CPLD_RESET_ARM(1);
+							}
+							debug_console.subcmd=0;
+							break;
+						case RFPGA:
+						case RESET_FPGA:
+							debug_console.reset_fpga=!debug_console.reset_fpga;
+							if(debug_console.reset_fpga)
+							{
+								xil_printf("RESET FPGA SCSI ON\r\n");
+								DiscreteSet(REG0, FPGA_RESET);
+							}
+							else
+							{
+								xil_printf("RESET FPGA OFF\r\n");
+								DiscreteClear(REG0, FPGA_RESET);
+							}
+							debug_console.subcmd=0;
+							break;
+						case RAMIGA:
+						case RESET_AMIGA:
+							xil_printf("RESET CPLD SCSI ON\r\n");
+							CPLD_RESET_ARM(0);
+							usleep(500000);
+							xil_printf("RESET FPGA SCSI ON\r\n");
+							DiscreteSet(REG0, FPGA_RESET);
+							usleep(500000);
+							xil_printf("RESET FPGA OFF\r\n");
+							DiscreteClear(REG0, FPGA_RESET);
+							usleep(500000);
+							xil_printf("RESET CPLD OFF\r\n");
+							CPLD_RESET_ARM(1);
+							usleep(500000);
+							debug_console.subcmd=0;
+							break;
+						case RARM:
+						case RESET_ARM:
+							hard_reboot();
+							debug_console.subcmd=0;
+							break;
 						default:
 							xil_printf("Not defined command '%s'. Type 'help' or 'h' for help.\r\n",debug_console.cmd_buf);
 							debug_console.subcmd=0;
@@ -714,5 +775,9 @@ void debug_console_help(void)
 	xil_printf("'TRB'     or 'TOGGLE READ BURST' for toggling Read Burst\r\n");
 	xil_printf("'TWB'     or 'TOGGLE WRITE BURST' for toggling Write Burst\r\n");
 	xil_printf("'CCP'     or 'CHANGE CLOCK PHASE' for changing clock phases\r\n");
+	xil_printf("'RCPLD'   or 'RESET CPLD' for toggling reset CPLD\r\n");
+	xil_printf("'RFPGA'   or 'RESET FPGA' for toggling reset FPGA\r\n");
+	xil_printf("'RAMIGA'  or 'RESET AMIGA' for resetting the AMIGA (sequence of the two above)\r\n");
+	xil_printf("'RARM'    or 'RESET ARM' for resetting the ARM (reboot the entire system)\r\n");
 }
 #endif

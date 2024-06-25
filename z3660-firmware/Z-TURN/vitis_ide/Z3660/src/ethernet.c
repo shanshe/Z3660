@@ -25,7 +25,6 @@
 
 #include <stdio.h>
 #include "platform.h"
-#include <xil_printf.h>
 #include <xil_cache.h>
 #include <xil_mmu.h>
 #include "sleep.h"
@@ -69,7 +68,7 @@ int frames_received_from_backlog = 0;
 
 #define ETH_PHY_TYPE_MICREL    0
 #define ETH_PHY_TYPE_MOTORCOMM 1
-static int eth_phy_type = ETH_PHY_TYPE_MICREL;
+static int eth_phy_type_ = ETH_PHY_TYPE_MICREL;
 
 uint32_t PhyAddr;
 
@@ -96,8 +95,8 @@ static void xEmacPsErrorHandler(void *Callback, uint8_t direction, uint32_t word
 LONG setup_phy(XEmacPs * EmacPsInstancePtr);
 static LONG emacPsSetupIntrSystem(XEmacPs *EmacPsInstancePtr, uint16_t EmacPsIntrId);
 
-void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr);
-uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr);
+void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_type);
+uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_type);
 
 void xEmacPsClkSetup(XEmacPs *EmacPsInstancePtr, uint16_t EmacPsIntrId, int link_speed)
 {
@@ -297,7 +296,7 @@ void ethernet_task() {
 
 
 		case ETH_TASK_NEGOTIATE: {
-			int complete = micrel_auto_negotiate_step2(EmacPsInstancePtr, PhyAddr);
+			int complete = micrel_auto_negotiate_step2(EmacPsInstancePtr, PhyAddr, eth_phy_type_);
 
 			if (complete) {
 				ethernet_task_state = ETH_TASK_INIT;
@@ -646,15 +645,15 @@ LONG setup_phy(XEmacPs * EmacPsInstancePtr)
 	XEmacPs_PhyRead(EmacPsInstancePtr, PhyAddr, PHY_DETECT_REG1, &PhyIdentity);
 
 	if (PhyIdentity == PHY_ID_MICREL_KSZ9031) {
-		eth_phy_type = ETH_PHY_TYPE_MICREL;
+		eth_phy_type_ = ETH_PHY_TYPE_MICREL;
 		printf("EMAC: MICREL KSZ9031 PHY detected\n");
-		micrel_auto_negotiate(EmacPsInstancePtr, PhyAddr);
+		micrel_auto_negotiate(EmacPsInstancePtr, PhyAddr,eth_phy_type_);
 		return(XST_SUCCESS);
 	}
 	else if (PhyIdentity == 0x4f51) {
-		eth_phy_type = ETH_PHY_TYPE_MOTORCOMM;
+		eth_phy_type_ = ETH_PHY_TYPE_MOTORCOMM;
 		printf("EMAC: MOTORCOMM TY8531S PHY detected\n");
-		micrel_auto_negotiate(EmacPsInstancePtr, PhyAddr);
+		micrel_auto_negotiate(EmacPsInstancePtr, PhyAddr,eth_phy_type_);
 		return(XST_SUCCESS);
 	}
 	else {
@@ -717,7 +716,7 @@ LONG setup_phy(XEmacPs * EmacPsInstancePtr)
 
 #define IEEE_1000BASE_STATUS_REG 0x0a
 
-void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr)
+void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_type)
 {
 	uint16_t control;
 	uint16_t status;
@@ -801,7 +800,7 @@ void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr)
 	printf("PHY: Waiting for PHY to complete auto negotiation. (status: %x).\n", status);
 }
 
-uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr) {
+uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_type) {
 	uint16_t status;
 	uint16_t status_speed;
 	uint16_t link_speed = 8;

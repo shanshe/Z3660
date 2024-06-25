@@ -349,3 +349,25 @@ platform generate
 platform generate
 platform generate -domains standalone_domain 
 platform generate -domains standalone_domain 
+platform active {design_1_wrapper}
+bsp reload
+bsp config socket_debug "false"
+bsp config lwip_debug "false"
+bsp config netif_debug "false"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain 
+platform generate
+platform generate
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform clean
+platform generate
+platform generate -domains standalone_domain 
+platform clean
+platform generate

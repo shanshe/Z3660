@@ -51,7 +51,7 @@ void set_fb(uint32_t* fb_, uint32_t pitch) {
 	fb=fb_;
 	fb_pitch=pitch;
 //	if(((uint32_t)fb)>=0x08000000U-0x00200000U)
-//		printf("set_fb 0x%08lX\n\r",(uint32_t)fb);
+//		printf("set_fb 0x%08lX\n",(uint32_t)fb);
 }
 
 

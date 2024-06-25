@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "gfx.h"
 #include <xil_types.h>
-#include "xil_printf.h"
 
 #include "../debug_console.h"
 #include "compression/compression.h"

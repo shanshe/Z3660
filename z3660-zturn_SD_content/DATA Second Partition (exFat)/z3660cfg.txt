@@ -1,33 +1,51 @@
-### Z3660 config file
+#### Z3660 config file
 
 # Select the default boot mode: "CPU" for 060 CPU, "MUSASHI" / "UAE" / "UAEJIT" for emulator
 # This selection can be overriden by env/bootmode file on SD root
-bootmode UAEJIT
+#bootmode UAEJIT
 #bootmode MUSASHI
 #bootmode UAE
-#bootmode UAEJIT
+bootmode CPU
 
 # Select 060 CPU frequency in MHz
 # This value can be overriden by env/cpufreq file on SD root
 cpufreq 50
 
-# Select your kickstart file to map it on ARM's internal RAM, or comment lines to use installed Kickstart on your Amiga
-#kickstart kicks/DiagROM.rom
-#kickstart kicks/A4kOS31.rom
-#kickstart kicks/A4kOS321.rom
-kickstart kicks/A4kOS322.rom
+# Declare up to 9 kickstarts files. (1-9)
+kickstart1 kicks/A4kOS322.rom
+kickstart2 kicks/DiagROM1.3.rom
+kickstart3 kicks/A4kOS31.rom
+kickstart4 kicks/A4kOS321.rom
+kickstart5 kicks/A3kOS322.rom
+# Select the number (1-9) to map one of the above kickstarts on ARM's internal RAM, or 0 to use the installed kickstart on your Amiga
+# This selection can be overriden by env/kickstart file on SD root
+kickstart 5
+
+# Declare up to 9 extended kickstarts files. (1-9)
+ext_kickstart1 kicks/kick060.rom
+# Select the number (1-9) to map one of the above extended kickstarts on ARM's internal RAM, or 0 to use the installed extended kickstart on your Amiga (if any)
+# This selection can be overriden by env/ext_kickstart file on SD root
+ext_kickstart 1
 
 # Load scsi ROM on boot (boot from SCSI hdf files on SD)
 # (YES or NO, in capitals)
 # This selection can be overriden by env/scsiboot file on SD root
-#scsiboot YES
-scsiboot NO
+scsiboot YES
+#scsiboot NO
 
-# Select your hdf files (from scsi0 to scsi6)\n");
-#scsi0 hdf/A4000.hdf
-#scsi1 hdf/ZDH0.hdf
-#scsi2 hdf/Programs.hdf
-#scsi3 hdf/cputester_rdb.hdf
+# Select your hdf files (from hdf0 to hdf19)
+hdf0 hdf/a4000.hdf
+hdf1 hdf/Daten5.hdf
+hdf2 hdf/Work.hdf
+hdf3 hdf/temp_1G_PFS3.hdf
+# Select the scsi number (scsi0 to scsi6) to assign one of the above hdf files
+scsi0 0
+scsi1 1
+#scsi2 2
+scsi3 3
+#scsi4 0
+#scsi5 0
+#scsi6 0
 
 # Autoconfig RAM Enable (256 MB Zorro III RAM)
 # (YES or NO, in capitals)
@@ -35,9 +53,20 @@ scsiboot NO
 #autoconfig_ram NO
 autoconfig_ram YES
 
+# CPU RAM Enable (128 MB CPU RAM)
+# IMPORTANT NOTE: disabling CPU RAM, will also disable SCSIBOOT
+# (YES or NO, in capitals)
+# This selection can be overriden by env/cpu_ram file on SD root
+#cpu_ram NO
+cpu_ram YES
+
 # Temperature sensor calibration (THERM)
 # Theoretical value 780 Ohms @ 25 Celsius, but every 060 has a random offset.
 # Resistor R30 (measured from R30 right pad to ground, with 060 cooled to room temperature) in Ohms
 resistor 800.0
 # Room temperature in Celsius
 temperature 27.0
+
+# Select Test Amiga CHIP RAM access on start (it uses the ARM, not the CPU or EMU)
+enable_test YES
+#enable_test NO

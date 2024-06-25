@@ -109,7 +109,7 @@ void print_clkinfo(char * str,uint32_t base,uint32_t address)
    float clk_phase=temp/1000.;
    temp=XClk_Wiz_ReadReg(base, address+8);
    float clk_dc=temp/1000.;
-   printf("%s %06.2f MHz, PHASE %06.2f degrees, DC %06.2f%c\n\r",str,clk,clk_phase,clk_dc,'%');
+   printf("%s %06.2f MHz, PHASE %06.2f degrees, DC %06.2f%c\n",str,clk,clk_phase,clk_dc,'%');
 
 }
 uint32_t clken=1;

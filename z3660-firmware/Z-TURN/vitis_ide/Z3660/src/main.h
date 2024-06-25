@@ -11,7 +11,7 @@
 #define REVISION_MAJOR 1
 #define REVISION_MINOR 3 // 03
 //#define REVISION_BETA 0
-#define REVISION_BETA 2
+#define REVISION_BETA 3
 
 #define INT_IPL_ON_THIS_CORE 0
 
@@ -21,7 +21,6 @@
 #define M_PI 3.14159265358979323846
 
 #include "platform.h"
-#include "xil_printf.h"
 #include "xgpiops.h"
 #include "xil_io.h"
 #include "xscugic.h"
@@ -201,6 +200,7 @@ void loop2(void);
 void Display2(void);
 void rtg_loop(void);
 void rtg_init(void);
+void hard_reboot(void);
 
 void video_mode_init(int mode, int scalemode, int colormode);
 int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t buspos);

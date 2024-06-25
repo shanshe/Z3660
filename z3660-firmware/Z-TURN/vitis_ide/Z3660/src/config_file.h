@@ -21,6 +21,12 @@ enum YESNO{
 	YES,
 	YESNO_NUM
 };
+enum YESNOMIN{
+	_NO,
+	_YES,
+	_MIN,
+	YESNOMIN_NUM
+};
 
 typedef struct {
 	int boot_mode;

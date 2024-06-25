@@ -38,6 +38,8 @@ typedef struct {
 	uint8_t stop_i2c;
 	uint8_t toggle_read_burst;
 	uint8_t toggle_write_burst;
+	uint8_t reset_cpld;
+	uint8_t reset_fpga;
 	CLOCKS clocks;
 } DEBUG_CONSOLE;
 void debug_console_loop(void);
