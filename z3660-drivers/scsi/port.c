@@ -1,3 +1,4 @@
+#ifdef BOOT_MENU
 #ifdef DEBUG_PORT
 #define USE_SERIAL_OUTPUT
 #endif
@@ -328,4 +329,5 @@ callout_invoking(callout_t *c);
 
 void
 callout_ack(callout_t *c);
+#endif
 #endif

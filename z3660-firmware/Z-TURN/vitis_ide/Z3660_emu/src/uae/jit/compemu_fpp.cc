@@ -479,6 +479,7 @@ void comp_fpp_opp (uae_u32 opcode, uae_u16 extra)
 		  if (comp_fp_put (opcode, extra) < 0)
 			  FAIL (1);
 		  return;
+#if 0
 		case 4: /* FMOVE.L  <EA>, ControlReg */
 			if ((opcode & 0x38) == 0) {
 				// Dn
@@ -559,6 +560,210 @@ void comp_fpp_opp (uae_u32 opcode, uae_u16 extra)
       }
 		  FAIL (1);
 		  return;
+#endif
+		case 4:							/* FMOVEM <ea>,<control> */
+		case 5:							/* FMOVEM <control>,<ea> */
+			/* rare */
+			if ((opcode & 0x30) == 0)
+			{
+				/* <ea> = Dn or An */
+				if (extra & 0x2000)
+				{
+					if (extra & 0x1000)
+					{
+//						mov_l_rm(opcode & 15, (uintptr) & fpu.fpcr.rounding_mode);
+//						or_l_rm(opcode & 15, (uintptr) & fpu.fpcr.rounding_precision);
+						mov_l_rm(opcode & 15, (uintptr) &regs.fpcr);
+					}
+					if (extra & 0x0800)
+					{
+						FAIL(1);
+						printf("FAIL=1 4,5 1\n");
+						return;
+					}
+					if (extra & 0x0400)
+					{
+						/* FPIAR: fixme; we cannot correctly return the address from compiled code */
+						mov_l_rm(opcode & 15, (uintptr) &regs.fpiar);
+					}
+					return;
+				} else
+				{
+					// gb-- moved here so that we may FAIL() without generating any code
+					if (extra & 0x0800)
+					{
+						// set_fpsr(m68k_dreg (regs, opcode & 15));
+						FAIL(1);
+						printf("FAIL=1 4,5 2\n");
+						return;
+					}
+					if (extra & 0x1000)
+					{
+//						mov_l_rr(S1, opcode & 15);
+//						mov_l_rr(S2, opcode & 15);
+//						and_l_ri(S1, FPCR_ROUNDING_PRECISION);
+//						and_l_ri(S2, FPCR_ROUNDING_MODE);
+//						mov_l_mr((uintptr) & fpu.fpcr.rounding_precision, S1);
+//						mov_l_mr((uintptr) & fpu.fpcr.rounding_mode, S2);
+						mov_l_mr((uintptr) &regs.fpcr, opcode & 15);
+					}
+					if (extra & 0x0400)
+					{
+						/* FPIAR: does that make sense at all? */
+						mov_l_mr((uintptr) &regs.fpiar, opcode & 15);
+					}
+					return;
+				}
+			} else if ((opcode & 0x3f) == 0x3c)
+			{
+				/* <ea> = #imm */
+				if ((extra & 0x2000) == 0)
+				{
+					// gb-- moved here so that we may FAIL() without generating any code
+					if (extra & 0x0800)
+					{
+						FAIL(1);
+						printf("FAIL=1 4,5 3\n");
+						return;
+					}
+					if (extra & 0x1000)
+					{
+						uae_u32 val = comp_get_ilong((m68k_pc_offset += 4) - 4);
+						 mov_l_mi((uintptr)&regs.fpcr,val);
+//						mov_l_ri(S1, val);
+//						mov_l_ri(S2, val);
+//						and_l_ri(S1, FPCR_ROUNDING_PRECISION);
+//						and_l_ri(S2, FPCR_ROUNDING_MODE);
+//						mov_l_mr((uintptr) & fpu.fpcr.rounding_precision, S1);
+//						mov_l_mr((uintptr) & fpu.fpcr.rounding_mode, S2);
+					}
+					if (extra & 0x0400)
+					{
+						uae_u32 val = comp_get_ilong((m68k_pc_offset += 4) - 4);
+						mov_l_mi((uintptr) &regs.fpiar, val);
+					}
+					return;
+				}
+				FAIL(1);
+				printf("FAIL=1 4,5 4\n");
+				return;
+			} else if (extra & 0x2000)
+			{
+				/* FMOVE(M) Control Register(s),EA */
+
+				FAIL(1);
+				printf("FAIL=1 4,5 5\n");
+				return;
+
+				int incr = 0;
+				uae_u32 ad;
+				ad = comp_fp_adr (opcode);
+				if (ad < 0) {
+					m68k_setpc (m68k_getpc () - 4);
+					op_illg (opcode);
+					return;
+				}
+				// No control register bits set: FPIAR
+				if (!(extra & (0x1000 | 0x0800 | 0x0400))) {
+					extra |= 0x0400;
+				}
+
+				if((opcode & 0x38) == 0x20) {
+					if (extra & 0x1000)
+						incr++;
+					if (extra & 0x0800)
+						incr++;
+					if (extra & 0x0400)
+						incr++;
+				}
+				ad -= incr;
+				if (extra & 0x0800)
+				{
+					FAIL(1);
+					printf("FAIL=1 4,5 5\n");
+					return;
+					mov_l_rr(ad,(uintptr) (&regs.fpsr - &regs.regs[0]));
+					ad++;
+				}
+				if (extra & 0x1000)
+				{
+					mov_l_rr(ad,(uintptr) (&regs.fpcr - &regs.regs[0]));
+					ad++;
+				}
+				if (extra & 0x0400)
+				{
+					mov_l_rr(ad, (uintptr) (&regs.fpiar - &regs.regs[0]));
+					ad++;
+				}
+				ad -= incr;
+				if ((opcode & 0x38) == 0x18)
+					mov_l_rr ((opcode & 7)+8, ad);
+				if ((opcode & 0x38) == 0x20)
+					mov_l_rr ((opcode & 7)+8, ad);
+				return;
+			} else
+			{
+				/* FMOVE(M) EA,Control Register(s) */
+
+				FAIL(1);
+				printf("FAIL=1 4,5 6\n");
+				return;
+
+				int incr = 0;
+				uae_u32 ad;
+				ad = comp_fp_adr (opcode);
+				if (ad < 0) {
+					m68k_setpc (m68k_getpc () - 4);
+					op_illg (opcode);
+					return;
+				}
+				// No control register bits set: FPIAR
+				if (!(extra & (0x1000 | 0x0800 | 0x0400))) {
+					extra |= 0x0400;
+				}
+
+				// -(An)
+				if((opcode & 0x38) == 0x20) {
+					if (extra & 0x1000)
+						incr++;
+					if (extra & 0x0800)
+						incr++;
+					if (extra & 0x0400)
+						incr++;
+					ad = ad - incr;
+				}
+				if (extra & 0x0800)
+				{
+					FAIL(1);
+					printf("FAIL=1 4,5 6\n");
+					return;
+					mov_l_rr((uintptr) (&regs.fpsr - &regs.regs[0]), ad);
+					ad++;
+				}
+				if (extra & 0x1000)
+				{
+					mov_l_rr((uintptr) (&regs.fpcr - &regs.regs[0]), ad);
+					ad++;
+				}
+				if (extra & 0x0400)
+				{
+					mov_l_rr((uintptr) (&regs.fpiar - &regs.regs[0]), ad);
+					ad++;
+				}
+				if ((opcode & 0x38) == 0x18) {
+					// (An)+
+					mov_l_rr ((opcode & 7)+8, ad);
+				}
+				if ((opcode & 0x38) == 0x20) {
+					// -(An)
+					mov_l_rr ((opcode & 7)+8, ad - incr);
+				}
+				return;
+			}
+			FAIL(1);
+			printf("FAIL=1 4,5 7\n");
+			return;
+
 		case 6:
 		case 7:
 		{

@@ -20,7 +20,7 @@
 
 extern XScuGic int_handler;
 extern XGpioPs GpioPs;
-int interrupt_init(void* isr_video);
+int interrupt_init(void);
 void amiga_interrupt_clear(uint32_t bit);
 void amiga_interrupt_set(uint32_t bit);
 volatile uint32_t amiga_interrupt_get();

@@ -38,6 +38,7 @@ hdf0 hdf/a4000.hdf
 hdf1 hdf/Daten5.hdf
 hdf2 hdf/Work.hdf
 hdf3 hdf/temp_1G_PFS3.hdf
+hdf4 hdf/hd0.hda
 # Select the scsi number (scsi0 to scsi6) to assign one of the above hdf files
 scsi0 0
 scsi1 1
@@ -70,3 +71,6 @@ temperature 27.0
 # Select Test Amiga CHIP RAM access on start (it uses the ARM, not the CPU or EMU)
 enable_test YES
 #enable_test NO
+
+# Select a boot screen resolution (1920x1080, 1280x720 or 800x600)
+#bootscreen_resolution 1280x720

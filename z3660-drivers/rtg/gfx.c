@@ -64,11 +64,11 @@ struct GFXBase {
 #define __saveds__
 
 #define DEVICE_VERSION 1
-#define DEVICE_REVISION 13
+#define DEVICE_REVISION 03
 #define DEVICE_PRIORITY 0
 #define DEVICE_ID_STRING "$VER Z3660.card " XSTR(DEVICE_VERSION) "." XSTR(DEVICE_REVISION) " " DEVICE_DATE
 #define DEVICE_NAME "Z3660.card"
-#define DEVICE_DATE "(04.18.2023)"
+#define DEVICE_DATE "(18.02.2024)"
 
 int __attribute__((no_reorder)) _start()
 {
@@ -111,8 +111,8 @@ char dummies[128];
 // Place scratch area right after framebuffer? Might be a horrible idea.
 #define Z3660_FRAMEBUF_ADDR 0x00200000
 #define Z3660_MEMBASE_ADDR 0x00200000
-#define Z3_GFXDATA_ADDR	(0x3200000 - Z3660_MEMBASE_ADDR)
-#define Z3_TEMPLATE_ADDR (0x3210000 - Z3660_MEMBASE_ADDR)
+#define Z3_GFXDATA_ADDR    (0x03200000 - Z3660_MEMBASE_ADDR)
+#define Z3_TEMPLATE_ADDR   (0x03210000 - Z3660_MEMBASE_ADDR)
 #define ZZVMODE_800x600 1
 #define ZZVMODE_720x576 6
 
@@ -391,8 +391,8 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 		KPrintF((CONST_STRPTR)"Z3660.card: FW Revision Major: %ld.\n", fwrev_major);
 		KPrintF((CONST_STRPTR)"Z3660.card: FW Revision Minor: %ld.\n", fwrev_minor);
 
-		if (fwrev_major <= 1 && fwrev_minor < 13) {
-			char *alert = "\x00\x14\x14 vX.XX: Z3660.card v1.13 needs at least firmware (BOOT.bin) v1.13.\x00\x00";
+		if (fwrev_major <= 1 && fwrev_minor < 3) {
+			char *alert = "\x00\x14\x14 vX.XX: Z3660.card v1.03 needs at least firmware (BOOT.bin) v1.03.\x00\x00";
 			alert[5]='0'+fwrev_major;
 			alert[7]='0'+(fwrev_minor/10);
 			alert[8]='0'+(fwrev_minor%10);
@@ -414,11 +414,11 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 		}
 */
 
-		if ((f = Open((APTR)"ENV:ZZ9000-NS-VSYNC", MODE_OLDFILE))) {
+		if ((f = Open((APTR)"ENV:Z3660-NS-VSYNC", MODE_OLDFILE))) {
 			Close(f);
 			ZZ_REGS_WRITE(REG_ZZ_USER1, CARD_FEATURE_NONSTANDARD_VSYNC);
 			ZZ_REGS_WRITE(REG_ZZ_SET_FEATURE, 1);
-		} else if ((f = Open((APTR)"ENV:ZZ9000-NS-VSYNC-NTSC", MODE_OLDFILE))) {
+		} else if ((f = Open((APTR)"ENV:Z3660-NS-VSYNC-NTSC", MODE_OLDFILE))) {
 			Close(f);
 			ZZ_REGS_WRITE(REG_ZZ_USER1, CARD_FEATURE_NONSTANDARD_VSYNC);
 			ZZ_REGS_WRITE(REG_ZZ_SET_FEATURE, 2);
@@ -441,9 +441,13 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
 	b->CardBase = (struct CardBase *)_gfxbase;
 	b->ExecBase = SysBase;
 	b->BoardName = "Z3660";
-	b->BoardType = BT_MNT_ZZ9000;
-	b->PaletteChipType = PCT_MNT_ZZ9000;
-	b->GraphicsControllerType = GCT_MNT_ZZ9000;
+//	b->BoardType = BT_MNT_ZZ9000;
+//	b->PaletteChipType = PCT_MNT_ZZ9000;
+//	b->GraphicsControllerType = GCT_MNT_ZZ9000;
+	b->BoardType = BT_uaegfx;
+	b->PaletteChipType = PCT_S3ViRGE;
+	b->GraphicsControllerType = GCT_S3ViRGE;
+
 
 	b->Flags |= BIF_GRANTDIRECTACCESS |
 				BIF_HARDWARESPRITE |
@@ -630,7 +634,7 @@ void SetGC(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __
 
 	colormode = rtg_to_mnt[b->RGBFormat];
 
-	if (mode_info->Height >= 480 || mode_info->Width >= 640) {
+	if (mode_info->Height >= 400 || mode_info->Width >= 640) {
 		scale = 0;
 
 		w = mode_info->Width;

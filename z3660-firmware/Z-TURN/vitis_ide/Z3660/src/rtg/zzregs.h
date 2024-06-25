@@ -138,6 +138,7 @@ enum zz_reg_offsets {
    REG_ZZ_TEST_ENABLE    = 0x274,
 
    REG_ZZ_FW_BETA        = 0x280,
+   REG_ZZ_FW_ALFA        = 0x284,
 
    //NOT USED 0x284 - 0x2FC
 

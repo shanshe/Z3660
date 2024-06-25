@@ -1,3 +1,4 @@
+#ifdef BOOT_MENU
 /*
  * These printf() functions are based on NetBSD kernel printf code as
  * of version 1.20 2011/05/20. They have been extensively modified,
@@ -611,3 +612,4 @@ printf_test(void)
            "on the right.\n\n");
 }
 #endif /* DO_PRINTF_TEST */
+#endif

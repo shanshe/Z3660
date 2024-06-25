@@ -30,6 +30,7 @@ typedef struct {
 	uint8_t debug_rtg;
 	uint8_t debug_scsi;
 	uint8_t debug_audio;
+	uint8_t debug_ethernet;
 	uint8_t debug_soft3d;
 	uint8_t debug_i2c;
 	uint8_t cmd;

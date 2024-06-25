@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include "z3660_regs.h"
+#include <string.h>
 
 enum {
 MYGAD_CPU_FREQ,           //  0
@@ -48,12 +49,18 @@ MYGAD_VAUX,               //  3
 MYGAD_VINT,               //  4
 MYGAD_BTN_TEST,           //  5
 MYGAD_BTN_REFRESH,        //  6
-MYGAD_Z9AX,               //  7
-MYGAD_JIT,                //  8
-MYGAD_LPF,                //  9
-MYGAD_LIST_BOOTMODE,      // 10
-MYGAD_BTN_APPLY_BOOTMODE, // 11
-MYGAD_SCSIBOOT,           // 12
+MYGAD_JIT,                //  7
+MYGAD_LPF,                //  8
+MYGAD_LIST_BOOTMODE,      //  9
+MYGAD_BTN_APPLY_BOOTMODE, // 10
+MYGAD_SCSIBOOT,           // 11
+MYGAD_LTC_TEMP,           // 12
+MYGAD_LTC_V1,             // 13
+MYGAD_LTC_V2,             // 14
+MYGAD_LTC_060_TEMP,       // 15
+MYGAD_AUTOCONFIG_RAM,     // 16
+MYGAD_LIST_KICKSTART,     // 17
+MYGAD_LIST_EXT_KICKSTART, // 18
 NUM_GADGETS
 };
 struct Gadget *gads[NUM_GADGETS];
@@ -75,6 +82,33 @@ char bootmode_names[NUM_BOOTMODES][20]={
 	"  030 MUSASHI emu  ",
 	"    040 UAE emu    ",
 	"  040 UAE JIT emu  ",
+};
+#define KS_CHARS "012345678901234567890123456789"
+char *kickstarts[] = {
+	"0" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"1" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"2" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"3" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"4" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"5" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"6" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"7" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"8" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"9" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	NULL
+};
+char *ext_kickstarts[] = {
+	"00" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"01" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"02" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"03" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"04" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"05" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"06" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"07" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"08" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	"09" KS_CHARS KS_CHARS KS_CHARS KS_CHARS,
+	NULL
 };
 cpulist dnode[NUM_BOOTMODES];
 
@@ -112,19 +146,39 @@ void zz_set_reg(uint32_t offset, uint32_t value)
 double zz_get_temperature(void)
 {
 	double temp = (double)(zz_get_reg(REG_ZZ_TEMPERATURE));
-	return temp/10.0;
+	return temp*0.100;
 }
 
 double zz_get_voltage_aux(void)
 {
 	double vaux = (double)(zz_get_reg(REG_ZZ_VOLTAGE_AUX));
-	return vaux/100.0;
+	return vaux*0.010;
 }
 
 double zz_get_voltage_int(void)
 {
 	double vint = (double)(zz_get_reg(REG_ZZ_VOLTAGE_INT));
-	return vint/100.0;
+	return vint*0.010;
+}
+double zz_get_ltc_temperature(void)
+{
+	double ltc_temp = (double)(zz_get_reg(REG_ZZ_LTC_TEMP));
+	return ltc_temp*0.010;
+}
+double zz_get_ltc_v1(void)
+{
+	double ltc_v1 = (double)(zz_get_reg(REG_ZZ_LTC_V1));
+	return ltc_v1*0.010;
+}
+double zz_get_ltc_v2(void)
+{
+	double ltc_v2 = (double)(zz_get_reg(REG_ZZ_LTC_V2));
+	return ltc_v2*0.010;
+}
+double zz_get_ltc_060_temperature(void)
+{
+	double ltc_060_temp = (double)(zz_get_reg(REG_ZZ_LTC_060_TEMP));
+	return ltc_060_temp*0.010;
 }
 
 uint32_t zz_get_jit_enable(void)
@@ -137,27 +191,37 @@ uint32_t zz_get_scsiboot_enable(void)
 	return zz_get_reg(REG_ZZ_SCSIBOOT_EN);
 }
 
+uint32_t zz_get_autoconfig_ram_enable(void)
+{
+	return zz_get_reg(REG_ZZ_AUTOC_RAM_EN);
+}
+
 uint32_t zz_get_emulation_used(void)
 {
 	return zz_get_reg(REG_ZZ_EMULATION_USED);
 }
-
+/* ax is always preset :)
 uint32_t zz_get_ax_present(void)
 {
 	return zz_get_reg(REG_ZZ_AUDIO_CONFIG);
 }
-
+*/
 uint32_t zz_get_cpu_freq(void)
 {
 	return 	zz_get_reg(REG_ZZ_CPU_FREQ);
 }
 
-void zz_set_selected_bootmode(struct Window* win,uint16_t bm);
-uint32_t zz_get_selected_bootmode(struct Window* win)
+uint32_t zz_get_selected_bootmode(void)
 {
-	int bm=zz_get_reg(REG_ZZ_BOOTMODE);
-	zz_set_selected_bootmode(win,bm); // update this value on write registers...
-	return 	bm;
+	return zz_get_reg(REG_ZZ_BOOTMODE);
+}
+uint32_t zz_get_selected_kickstart(void)
+{
+	return zz_get_reg(REG_ZZ_KS_SEL);
+}
+uint32_t zz_get_selected_ext_kickstart(void)
+{
+	return zz_get_reg(REG_ZZ_EXT_KS_SEL);
 }
 
 uint32_t zz_get_usb_status(void)
@@ -179,6 +243,12 @@ void zz_set_scsiboot_enabled(uint16_t enable)
 {
 	zz_set_reg(REG_ZZ_SCSIBOOT_EN, !!enable);
 }
+
+void zz_set_autoconfig_ram_enabled(uint16_t enable)
+{
+	zz_set_reg(REG_ZZ_AUTOC_RAM_EN, !!enable);
+}
+
 void zz_set_lpf_freq(uint16_t freq)
 {
 	zz_set_reg(REG_ZZ_AUDIO_PARAM, 9);
@@ -191,55 +261,207 @@ void zz_set_cpu_freq(uint16_t freq)
 	zz_set_reg(REG_ZZ_CPU_FREQ, freq);
 }
 
-void zz_set_selected_bootmode(struct Window* win,uint16_t bm)
+void zz_set_selected_bootmode(uint16_t bm)
 {
 	zz_set_reg(REG_ZZ_BOOTMODE, bm);
-	if (bm==0)
-		GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
 }
 
-void zz_set_apply_bootmode(void)
+void zz_set_selected_kickstart(uint16_t ks)
 {
+	zz_set_reg(REG_ZZ_KS_SEL, ks);
+}
+void zz_set_selected_ext_kickstart(uint16_t ks)
+{
+	zz_set_reg(REG_ZZ_EXT_KS_SEL, ks);
+}
+void zz_set_selected_kickstart_txt(uint16_t ks)
+{
+	zz_set_reg(REG_ZZ_KS_SEL_TXT, ks);
+}
+void zz_set_selected_ext_kickstart_txt(uint16_t ks)
+{
+	zz_set_reg(REG_ZZ_EXT_KS_SEL_TXT, ks);
+}
+
+void zz_set_apply_bootmode(struct Window *win)
+{
+	int kickstart=0,ext_kickstart=0;
+	GT_GetGadgetAttrs(gads[MYGAD_LIST_KICKSTART], win, NULL, GTCY_Active, &kickstart, TAG_END);
+	zz_set_selected_kickstart(kickstart);
+	GT_GetGadgetAttrs(gads[MYGAD_LIST_EXT_KICKSTART], win, NULL, GTCY_Active, &ext_kickstart, TAG_END);
+	zz_set_selected_ext_kickstart(ext_kickstart);
 	zz_set_reg(REG_ZZ_APPLY_BOOTMODE, 0x55AA);
 }
+typedef struct {
+	float m;
+	float m_old;
+	float m_filt;
+} Measure;
+Measure t,vaux,vint,ltc_temp,ltc_v1,ltc_v2,ltc_060_temp;
+void filter(Measure *measure)
+{
+	if (measure->m_old==0.)
+		measure->m_filt=measure->m;
+	else
+		measure->m_filt=0.1*measure->m+0.9*measure->m_old;
+	measure->m_old=measure->m_filt;
+}
+void init_measures(void)
+{
+	t.m_old=0;
+	vaux.m_old=0;
+	vint.m_old=0;
+	ltc_temp.m_old=0;
+	ltc_v1.m_old=0;
+	ltc_v2.m_old=0;
+	ltc_060_temp.m_old=0;
 
-double t_old=0;
+}
+unsigned int num_kickstarts=0,num_ext_kickstarts=0;
 void refresh_zz_info(struct Window* win)
 {
 	uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
-
 	int fwrev_major = fwrev>>8;
 	int fwrev_minor = fwrev&0xff;
-	double t = zz_get_temperature();
-	double vaux = zz_get_voltage_aux();
-	double vint = zz_get_voltage_int();
-	int z9ax_present = zz_get_ax_present();
+	uint32_t beta = zz_get_reg(REG_ZZ_FW_BETA);
+	if(beta)
+		SetWindowTitles(win,"Z3660 ZTop 1.03 BETA",-1);
+	t.m = zz_get_temperature();
+	vaux.m = zz_get_voltage_aux();
+	vint.m = zz_get_voltage_int();
+	ltc_temp.m = zz_get_ltc_temperature();
+	ltc_v1.m = zz_get_ltc_v1();
+	ltc_v2.m = zz_get_ltc_v2();
+	ltc_060_temp.m = zz_get_ltc_060_temperature();
 	int emulation_used = zz_get_emulation_used();
 	int jit_enable = zz_get_jit_enable();
 	int cpu_freq=zz_get_cpu_freq();
-	int bootmode=zz_get_selected_bootmode(win);
+	int bootmode=zz_get_selected_bootmode();
 	int scsiboot=zz_get_scsiboot_enable();
+	int autoconfig_ram=zz_get_autoconfig_ram_enable();
+	int kickstart=zz_get_selected_kickstart();
 
-	double t_filt;
-	if (t_old==0)
-		t_filt=t;
-	else
-		t_filt=0.1*t+0.9*t_old;
-	t_old=t_filt;
+	for(int i=0;i<10;i++)
+	{
+		int j=0;
+		zz_set_selected_kickstart_txt(i);
+		while(1)
+		{
+			uint32_t data=*((volatile uint32_t*)(zz_regs+REG_ZZ_SEL_KS_TXT+j));
+			char hh=data>>24;
+			char hl=data>>16;
+			char lh=data>>8;
+			char ll=data;
+			kickstarts[i][j++]=hh;
+			if(hh==0)
+				break;
+			kickstarts[i][j++]=hl;
+			if(hl==0)
+				break;
+			kickstarts[i][j++]=lh;
+			if(lh==0)
+				break;
+			kickstarts[i][j++]=ll;
+			if(ll==0)
+				break;
+		}
+		if(j==1)
+		{
+			num_kickstarts=i;
+			kickstarts[i][1]='\0';
+			kickstarts[i][2]='\0';
+			kickstarts[i][3]='\0';
+			i++;
+			kickstarts[i][0]='\0';
+			kickstarts[i][1]='\0';
+			kickstarts[i][2]='\0';
+			kickstarts[i][3]='\0';
+			break;
+		}
+	}
+	kickstarts[10][0]='\0';
+	kickstarts[10][1]='\0';
+	kickstarts[10][2]='\0';
+	kickstarts[10][3]='\0';
+
+	int ext_kickstart=zz_get_selected_ext_kickstart();
+
+	for(int i=0;i<10;i++)
+	{
+		int j=0;
+		zz_set_selected_ext_kickstart_txt(i);
+		while(1)
+		{
+			uint32_t data=*((volatile uint32_t*)(zz_regs+REG_ZZ_SEL_KS_TXT+j));
+			char hh=data>>24;
+			char hl=data>>16;
+			char lh=data>>8;
+			char ll=data;
+			ext_kickstarts[i][j++]=hh;
+			if(hh==0)
+				break;
+			ext_kickstarts[i][j++]=hl;
+			if(hl==0)
+				break;
+			ext_kickstarts[i][j++]=lh;
+			if(lh==0)
+				break;
+			ext_kickstarts[i][j++]=ll;
+			if(ll==0)
+				break;
+		}
+		if(j==1)
+		{
+			num_ext_kickstarts=i;
+			ext_kickstarts[i][1]='\0';
+			ext_kickstarts[i][2]='\0';
+			ext_kickstarts[i][3]='\0';
+			i++;
+			ext_kickstarts[i][0]='\0';
+			ext_kickstarts[i][1]='\0';
+			ext_kickstarts[i][2]='\0';
+			ext_kickstarts[i][3]='\0';
+			break;
+		}
+	}
+	ext_kickstarts[10][0]='\0';
+	ext_kickstarts[10][1]='\0';
+	ext_kickstarts[10][2]='\0';
+	ext_kickstarts[10][3]='\0';
+
+	filter(&t);
+	filter(&vaux);
+	filter(&vint);
+	filter(&ltc_temp);
+	filter(&ltc_v1);
+	filter(&ltc_v2);
+	filter(&ltc_060_temp);
 
 	GT_SetGadgetAttrs(gads[MYGAD_CPU_FREQ], win, NULL, GTSL_Level, cpu_freq, TAG_END);
 
-	snprintf(txt_buf, 20, "Z3660 %d.%d", fwrev_major, fwrev_minor);
+	snprintf(txt_buf, 20, "%d.%02d", fwrev_major, fwrev_minor);
 	GT_SetGadgetAttrs(gads[MYGAD_FWVER], win, NULL, GTST_String, txt_buf, TAG_END);
 
-	snprintf(txt_buf, 20, "%.1f", t_filt);
+	snprintf(txt_buf, 20, "%.1f", t.m_filt);
 	GT_SetGadgetAttrs(gads[MYGAD_TEMP], win, NULL, GTST_String, txt_buf, TAG_END);
 
-	snprintf(txt_buf, 20, "%.2f", vaux);
+	snprintf(txt_buf, 20, "%.2f", vaux.m_filt);
 	GT_SetGadgetAttrs(gads[MYGAD_VAUX], win, NULL, GTST_String, txt_buf, TAG_END);
 
-	snprintf(txt_buf, 20, "%.2f", vint);
+	snprintf(txt_buf, 20, "%.2f", vint.m_filt);
 	GT_SetGadgetAttrs(gads[MYGAD_VINT], win, NULL, GTST_String, txt_buf, TAG_END);
+
+	snprintf(txt_buf, 20, "%.1f", ltc_temp.m_filt);
+	GT_SetGadgetAttrs(gads[MYGAD_LTC_TEMP], win, NULL, GTST_String, txt_buf, TAG_END);
+
+	snprintf(txt_buf, 20, "%.2f", ltc_v1.m_filt);
+	GT_SetGadgetAttrs(gads[MYGAD_LTC_V1], win, NULL, GTST_String, txt_buf, TAG_END);
+
+	snprintf(txt_buf, 20, "%.2f", ltc_v2.m_filt);
+	GT_SetGadgetAttrs(gads[MYGAD_LTC_V2], win, NULL, GTST_String, txt_buf, TAG_END);
+
+	snprintf(txt_buf, 20, "%.1f", ltc_060_temp.m_filt);
+	GT_SetGadgetAttrs(gads[MYGAD_LTC_060_TEMP], win, NULL, GTST_String, txt_buf, TAG_END);
 
 	if (emulation_used) {
 		GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, jit_enable, TAG_END);
@@ -247,27 +469,29 @@ void refresh_zz_info(struct Window* win)
 		GT_SetGadgetAttrs(gads[MYGAD_JIT], win, NULL, GTCB_Checked, FALSE, TAG_END);
 	}
 	
-	if (bootmode!=0) {
-		GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, scsiboot, TAG_END);
+	if (scsiboot) {
+		GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, TRUE, TAG_END);
 	} else {
 		GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
 	}
-
-	if (z9ax_present) {
-		GT_SetGadgetAttrs(gads[MYGAD_Z9AX], win, NULL, GTST_String, (STRPTR)"Present", TAG_END);
+	
+	if (autoconfig_ram) {
+		GT_SetGadgetAttrs(gads[MYGAD_AUTOCONFIG_RAM], win, NULL, GTCB_Checked, TRUE, TAG_END);
 	} else {
-		GT_SetGadgetAttrs(gads[MYGAD_Z9AX], win, NULL, GTST_String, (STRPTR)"Not present", TAG_END);
+		GT_SetGadgetAttrs(gads[MYGAD_AUTOCONFIG_RAM], win, NULL, GTCB_Checked, FALSE, TAG_END);
 	}
 
 	GT_SetGadgetAttrs(gads[MYGAD_LIST_BOOTMODE], win, NULL, GTLV_Selected, bootmode, TAG_END);
+	GT_SetGadgetAttrs(gads[MYGAD_LIST_KICKSTART], win, NULL, GTCY_Active, kickstart, TAG_END);
+	GT_SetGadgetAttrs(gads[MYGAD_LIST_EXT_KICKSTART], win, NULL, GTCY_Active, ext_kickstart, TAG_END);
 }
 
 ULONG zz_perform_memtest(uint32_t offset)
 {
-	volatile uint32_t* bufferl = (volatile uint32_t*)(zz_cd->cd_BoardAddr+offset);
+	uint32_t errors=0;
+	volatile uint32_t* bufferl = (volatile uint32_t*)((uint32_t)zz_cd->cd_BoardAddr+offset);
 	volatile uint16_t* bufferw = (volatile uint16_t*)bufferl;
 	uint32_t i = 0;
-	uint32_t errors = 0;
 	uint32_t rep=1024*256;
 
 	printf("zz_perform_memtest...\n");
@@ -279,14 +503,14 @@ ULONG zz_perform_memtest(uint32_t offset)
 		uint16_t v3 = (i%2)?0xffff:0x0000;
 
 		if ((i % (32*1024)) == 0) {
-			printf("`-- Test %p %6ld/%ld...\n", zz_cd->cd_BoardAddr+offset, i, rep);
+			printf("`-- Test %lx %6ld/%ld...\n", (uint32_t)zz_cd->cd_BoardAddr+offset, i, rep);
 		}
 
 		bufferl[i] = v;
 		v2 = bufferl[i];
 
 		if (v!=v2) {
-			printf("32-bit mismatch at %p: 0x%lx should be 0x%lx\n",&bufferl[i],v2,v);
+			printf("32-bit mismatch at %lx: 0x%lx should be 0x%lx\n",(uint32_t)&bufferl[i],v2,v);
 			errors++;
 		}
 
@@ -294,7 +518,7 @@ ULONG zz_perform_memtest(uint32_t offset)
 		v4 = bufferw[i];
 
 		if (v3!=v4) {
-			printf("16-bit mismatch at %p: 0x%x should be 0x%x\n",&bufferw[i],v4,v3);
+			printf("16-bit mismatch at %lx: 0x%x should be 0x%x\n",(uint32_t)&bufferw[i],v4,v3);
 			errors++;
 		}
 	}
@@ -304,9 +528,9 @@ ULONG zz_perform_memtest(uint32_t offset)
 
 ULONG zz_perform_memtest_rand(uint32_t offset, int rep)
 {
-	uint32_t errors = 0;
+	uint32_t errors=0;
 	const int sz = 16;
-	volatile uint16_t* buffer = (volatile uint16_t*)(zz_cd->cd_BoardAddr+offset);
+	volatile uint16_t* buffer = (volatile uint16_t*)((uint32_t)zz_cd->cd_BoardAddr+offset);
 
 	printf("zz_perform_memtest_rand...\n");
 
@@ -318,7 +542,7 @@ ULONG zz_perform_memtest_rand(uint32_t offset, int rep)
 
 	for (int k = 0; k < rep; k++) {
 		if ((k % 128) == 0) {
-			printf("`-- Test %p %3d/%d...\n", zz_cd->cd_BoardAddr+offset, k, rep);
+			printf("`-- Test %lx %3d/%d...\n", (uint32_t)zz_cd->cd_BoardAddr+offset, k, rep);
 		}
 		// step 1: fill buffer with random data
 		for (int i=0; i<sz; i++) {
@@ -345,7 +569,7 @@ ULONG zz_perform_memtest_rand(uint32_t offset, int rep)
 		for (int i=0; i<sz; i++) {
 			uint16_t v = buffer[i];
 			if (v != tbuf[i]) {
-				if (errors<100) printf("Mismatch at %p: 0x%x should be 0x%x\n",&buffer[i],v,tbuf[i]);
+				if (errors<100) printf("Mismatch at %lx: 0x%x should be 0x%x\n",(uint32_t)&buffer[i],v,tbuf[i]);
 				errors++;
 			}
 		}
@@ -359,7 +583,7 @@ ULONG zz_perform_memtest_rand(uint32_t offset, int rep)
 
 ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 {
-	unsigned long errors = 0;
+	uint32_t errors=0;
 	const int sz = 16;
 	volatile uint32_t * buffer32 = (volatile uint32_t *)(offset);
 	volatile uint16_t * buffer16 = (volatile uint16_t *)(offset);
@@ -380,7 +604,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			//read32
 			uint32_t v = *((uint32_t *)dir);
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -403,7 +627,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			uint16_t vhigh = *((uint16_t *)dir);
 			uint32_t v=(vhigh<<16)|vlow;
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -428,7 +652,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			uint32_t vll = *((uint8_t *)dir+3);
 			uint32_t v=(vhh<<24)|(vhl<<16)|(vlh<<8)|vll;
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -452,7 +676,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			//read32
 			uint32_t v = *((uint32_t *)dir);
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -473,7 +697,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			//read16
 			uint16_t v = *((uint16_t *)dir);
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -496,7 +720,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			uint8_t vh = *((uint8_t *)dir);
 			uint16_t v=(vh<<8)|vl;
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -524,7 +748,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			//read32
 			uint32_t v = *((uint32_t *)dir);
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%08lx should be 0x%08lx\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -548,7 +772,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			//read16
 			uint16_t v = *((uint16_t *)dir);
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%04x should be 0x%04x\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -569,7 +793,7 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 			//read16
 			uint8_t v = *((uint8_t *)dir);
 			if (v != value) {
-				if (errors<100) printf("Mismatch at %p: 0x%02x should be 0x%02x\n",(uint32_t *)dir,v,value);
+				if (errors<100) printf("Mismatch at %lx: 0x%02x should be 0x%02x\n",(uint32_t)dir,v,value);
 				errors++;
 			}
 		}
@@ -580,9 +804,9 @@ ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
 }
 
 ULONG zz_perform_memtest_fpgareg() {
-	volatile uint16_t* d1 = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1030);
-	volatile uint16_t* d2 = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1034);
-	volatile uint16_t* dr = (volatile uint16_t*)(zz_cd->cd_BoardAddr+0x1030);
+	volatile uint16_t* d1 = (volatile uint16_t*)((uint32_t)zz_cd->cd_BoardAddr+0x1030);
+	volatile uint16_t* d2 = (volatile uint16_t*)((uint32_t)zz_cd->cd_BoardAddr+0x1034);
+	volatile uint16_t* dr = (volatile uint16_t*)((uint32_t)zz_cd->cd_BoardAddr+0x1030);
 
 	printf("zz_perform_memtest_fpgareg...\n");
 
@@ -597,14 +821,17 @@ ULONG zz_perform_memtest_fpgareg() {
 }
 
 ULONG zz_perform_memtest_multi() {
-	uint32_t offset = 0x100000;
-	zz_perform_memtest(offset);
-	zz_perform_memtest_rand(offset, 1024);
+	uint32_t offset = 0x07100000;
+	uint32_t errors=0;
+	errors+=zz_perform_memtest(offset);
+	errors+=zz_perform_memtest_rand(offset, 1024);
 	printf("Testing CPU access to Z3660 Memory...\n");
-	zz_perform_memtest_cross((unsigned long)zz_cd->cd_BoardAddr+offset, 1024);
+	errors+=zz_perform_memtest_cross((uint32_t)zz_cd->cd_BoardAddr+offset, 1024);
+	offset = 0x00100000;
 	printf("Testing CPU access to CHIP...\n");
-	zz_perform_memtest_cross(offset, 1024);
+	errors+=zz_perform_memtest_cross(offset, 1024);
 	//zz_perform_memtest_fpgareg();
+	printf("Bus Test finished with %ld total errors\n",errors);
 
 	return 0;
 }
@@ -634,24 +861,35 @@ VOID handleGadgetEvent(struct Window *win, struct Gadget *gad, ULONG code)
 			break;
 		}
 		case MYGAD_CPU_FREQ: {
-// It doesn't work well...
-//			zz_set_cpu_freq(code);
+			code=(code/5)*5;
+			GT_SetGadgetAttrs(gads[MYGAD_CPU_FREQ], win, NULL, GTSL_Level, code, TAG_END);
+			zz_set_cpu_freq(code);
 			break;
 		}
 		case MYGAD_LIST_BOOTMODE: {
-			zz_set_selected_bootmode(win,code);
+			zz_set_selected_bootmode(code);
+			break;
+		}
+		case MYGAD_LIST_KICKSTART: {
+			if(code>=num_kickstarts)
+	          	GT_SetGadgetAttrs(gads[MYGAD_LIST_KICKSTART], win, NULL, GTCY_Active, 0, TAG_END);
+			break;
+		}
+		case MYGAD_LIST_EXT_KICKSTART: {
+			if(code>=num_ext_kickstarts)
+	          	GT_SetGadgetAttrs(gads[MYGAD_LIST_EXT_KICKSTART], win, NULL, GTCY_Active, 0, TAG_END);
 			break;
 		}
 		case MYGAD_BTN_APPLY_BOOTMODE: {
-			zz_set_apply_bootmode();
+			zz_set_apply_bootmode(win);
 			break;
 		}
 		case MYGAD_SCSIBOOT: {
-			int bootmode=zz_get_selected_bootmode(win);
-			if(bootmode!=0)
-				zz_set_scsiboot_enabled(code);
-			else
-				GT_SetGadgetAttrs(gads[MYGAD_SCSIBOOT], win, NULL, GTCB_Checked, FALSE, TAG_END);
+			zz_set_scsiboot_enabled(code);
+			break;
+		}
+		case MYGAD_AUTOCONFIG_RAM: {
+			zz_set_autoconfig_ram_enabled(code);
 			break;
 		}
 	}
@@ -664,28 +902,31 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 
 	gad = CreateContext(glistptr);
 
+#define GADGET_GRID   16
+#define GADGET_LEFT  160
+#define GADGET_WIDTH  70
+#define GADGET_LEFT2 (GADGET_LEFT+GADGET_WIDTH+20)
 	ng.ng_LeftEdge   = 20;
-	ng.ng_TopEdge    = 190+topborder;
-	ng.ng_Width      = 100;
+	ng.ng_TopEdge    = 13*GADGET_GRID+topborder;
+	ng.ng_Width      = GADGET_WIDTH;
 	ng.ng_Height     = 14;
 	ng.ng_GadgetText = (STRPTR)"Bus Test";
 	ng.ng_TextAttr   = &Topaz80;
 	ng.ng_VisualInfo = vi;
 	ng.ng_GadgetID   = MYGAD_BTN_TEST;
 	ng.ng_Flags      = 0;
+ 
+	gads[MYGAD_BTN_TEST] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
+										TAG_END);
+
+	ng.ng_LeftEdge   = GADGET_LEFT;
+	ng.ng_GadgetID   = MYGAD_BTN_REFRESH;
+	ng.ng_GadgetText = (STRPTR)"Refresh";
 
 	gads[MYGAD_BTN_REFRESH] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
 										TAG_END);
 
-	ng.ng_LeftEdge   = 160;
-	ng.ng_GadgetID   = MYGAD_BTN_REFRESH;
-	ng.ng_GadgetText = (STRPTR)"Refresh";
-
-	gads[MYGAD_BTN_TEST] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
-										TAG_END);
-
-	ng.ng_LeftEdge   = 160;
-	ng.ng_TopEdge    = 20+topborder;
+	ng.ng_TopEdge    = 1*GADGET_GRID+topborder;
 	ng.ng_GadgetID   = MYGAD_CPU_FREQ;
 	ng.ng_GadgetText = (STRPTR)"CPU Frequency";
 
@@ -698,11 +939,7 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 										GTSL_LevelPlace, PLACETEXT_ABOVE,
 										TAG_END);
 
-//	gads[MYGAD_ZORROVER] = gad = CreateGadget(INTEGER_KIND, gad, &ng,
-//										GTIN_Number, 0,
-//										TAG_END);
-
-	ng.ng_TopEdge    = 40+topborder;
+	ng.ng_TopEdge    = 2*GADGET_GRID+topborder;
 	ng.ng_GadgetID   = MYGAD_FWVER;
 	ng.ng_GadgetText = (STRPTR)"Firmware Version";
 
@@ -710,15 +947,15 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 										GTST_String, "",
 										TAG_END);
 
-	ng.ng_TopEdge    = 60+topborder;
+	ng.ng_TopEdge    = 3*GADGET_GRID+topborder;
 	ng.ng_GadgetID   = MYGAD_TEMP;
-	ng.ng_GadgetText = (STRPTR)"Core Temperature C";
+	ng.ng_GadgetText = (STRPTR)"FPGA Core Temp C";
 
 	gads[MYGAD_TEMP] = gad = CreateGadget(STRING_KIND, gad, &ng,
 										GTST_String, "",
 										TAG_END);
 
-	ng.ng_TopEdge    = 80+topborder;
+	ng.ng_TopEdge    = 4*GADGET_GRID+topborder;
 	ng.ng_GadgetID   = MYGAD_VAUX;
 	ng.ng_GadgetText = (STRPTR)"Aux Voltage V";
 
@@ -726,7 +963,7 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 										GTST_String, "",
 										TAG_END);
 
-	ng.ng_TopEdge    = 100+topborder;
+	ng.ng_TopEdge    = 5*GADGET_GRID+topborder;
 	ng.ng_GadgetID   = MYGAD_VINT;
 	ng.ng_GadgetText = (STRPTR)"Core Voltage V";
 
@@ -734,23 +971,51 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 										GTST_String, "",
 										TAG_END);
 
-	ng.ng_TopEdge    = 120+topborder;
-	ng.ng_GadgetID   = MYGAD_Z9AX;
-	ng.ng_GadgetText = (STRPTR)"Z3660 AHI";
+	ng.ng_TopEdge    = 6*GADGET_GRID+topborder;
+	ng.ng_GadgetID   = MYGAD_LTC_TEMP;
+	ng.ng_GadgetText = (STRPTR)"LTC Temp C";
 
-	gads[MYGAD_Z9AX] = gad = CreateGadget(STRING_KIND, gad, &ng,
+	gads[MYGAD_LTC_TEMP] = gad = CreateGadget(STRING_KIND, gad, &ng,
 										GTST_String, "",
 										TAG_END);
 
-	ng.ng_TopEdge    = 140+topborder;
+	ng.ng_TopEdge    = 7*GADGET_GRID+topborder;
+	ng.ng_GadgetID   = MYGAD_LTC_V1;
+	ng.ng_GadgetText = (STRPTR)"LTC (3V3) Vdd V";
+
+	gads[MYGAD_LTC_V1] = gad = CreateGadget(STRING_KIND, gad, &ng,
+										GTST_String, "",
+										TAG_END);
+
+	ng.ng_TopEdge    = 8*GADGET_GRID+topborder;
+	ng.ng_GadgetID   = MYGAD_LTC_V2;
+	ng.ng_GadgetText = (STRPTR)"LTC (5V) Vcc V";
+
+	gads[MYGAD_LTC_V2] = gad = CreateGadget(STRING_KIND, gad, &ng,
+										GTST_String, "",
+										TAG_END);
+
+	ng.ng_TopEdge    = 9*GADGET_GRID+topborder;
+	ng.ng_GadgetID   = MYGAD_LTC_060_TEMP;
+	ng.ng_GadgetText = (STRPTR)"LTC (060 THERM) C";
+
+	gads[MYGAD_LTC_060_TEMP] = gad = CreateGadget(STRING_KIND, gad, &ng,
+										GTST_String, "",
+										TAG_END);
+
+	ng.ng_TopEdge    = 4*GADGET_GRID+topborder+10*NUM_BOOTMODES+2+10;
 	ng.ng_GadgetID   = MYGAD_JIT;
+	ng.ng_LeftEdge   = GADGET_LEFT2+14*8+(20*8-(100))/2;
+	ng.ng_Width      = 100;
 	ng.ng_GadgetText = (STRPTR)"JIT enabled";
 
 	gads[MYGAD_JIT]  = gad = CreateGadget(CHECKBOX_KIND, gad, &ng,
 	                                	GTCB_Scaled, FALSE, TAG_END);
 
-	ng.ng_TopEdge    = 160+topborder;
+	ng.ng_TopEdge    = 6*GADGET_GRID-5+topborder+10*NUM_BOOTMODES+2+10;
 	ng.ng_GadgetID   = MYGAD_LPF;
+	ng.ng_LeftEdge   = GADGET_LEFT2+14*8+(20*8-(100))/2-45+1;
+	ng.ng_Width      = GADGET_WIDTH;
 	ng.ng_GadgetText = (STRPTR)"Audio Lowpass";
 
 	gads[MYGAD_LPF]  = gad = CreateGadget(SLIDER_KIND, gad, &ng,
@@ -759,11 +1024,11 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 										GTSL_Level, 23900,
 										GTSL_LevelFormat, "%ld Hz",
 										GTSL_MaxLevelLen, 10,
-										GTSL_LevelPlace, PLACETEXT_BELOW,
+										GTSL_LevelPlace, PLACETEXT_ABOVE,
 										TAG_END);
 
-	ng.ng_LeftEdge   = 280;
-	ng.ng_TopEdge    = 20+topborder;
+	ng.ng_LeftEdge   = GADGET_LEFT2;
+	ng.ng_TopEdge    = 1*GADGET_GRID+topborder;
 	ng.ng_Width      = 20*8;
 	ng.ng_Height     = 10*NUM_BOOTMODES+2;
 	ng.ng_GadgetID   = MYGAD_LIST_BOOTMODE;
@@ -785,8 +1050,8 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 										GTLV_ShowSelected, NULL,
 										TAG_END);
 
-	ng.ng_TopEdge    = 20+topborder+10*NUM_BOOTMODES+2;
-	ng.ng_LeftEdge   = 280+14*8+(20*8-(100))/2;
+	ng.ng_TopEdge    = 1*GADGET_GRID+topborder+10*NUM_BOOTMODES+2;
+	ng.ng_LeftEdge   = GADGET_LEFT2+14*8+(20*8-(100))/2;
 	ng.ng_Height     = 14;
 	ng.ng_Width      = 100;
 	ng.ng_GadgetID   = MYGAD_SCSIBOOT;
@@ -795,14 +1060,133 @@ struct Gadget *createAllGadgets(struct Gadget **glistptr, void *vi, UWORD topbor
 	gads[MYGAD_SCSIBOOT] = gad = CreateGadget(CHECKBOX_KIND, gad, &ng,
 	                                	GTCB_Scaled, FALSE, TAG_END);
 
-	ng.ng_TopEdge    = 40+topborder+10*NUM_BOOTMODES+2;
-	ng.ng_LeftEdge   = 280+(20*8-(15*8+10))/2;
+	ng.ng_TopEdge    = 2*GADGET_GRID+topborder+10*NUM_BOOTMODES+2;
+	ng.ng_LeftEdge   = GADGET_LEFT2+14*8+(20*8-(100))/2;
+	ng.ng_Height     = 14;
+	ng.ng_Width      = 100;
+	ng.ng_GadgetID   = MYGAD_AUTOCONFIG_RAM;
+	ng.ng_GadgetText = (STRPTR)"AUTOC RAM enabled";
+
+	gads[MYGAD_AUTOCONFIG_RAM] = gad = CreateGadget(CHECKBOX_KIND, gad, &ng,
+	                                	GTCB_Scaled, FALSE, TAG_END);
+
+	ng.ng_LeftEdge   = GADGET_LEFT-50-2+10;
+	ng.ng_TopEdge    = 10*GADGET_GRID+topborder;
+	ng.ng_Width      = 20*8+140;
+	ng.ng_Height     = 12;
+	ng.ng_GadgetID   = MYGAD_LIST_KICKSTART;
+	ng.ng_GadgetText = (STRPTR)"Kickstart";
+
+	int kickstart=zz_get_selected_kickstart();
+
+	for(int i=0;i<10;i++)
+	{
+		int j=0;
+		zz_set_selected_kickstart_txt(i);
+		while(1)
+		{
+			uint32_t data=*((volatile uint32_t*)(zz_regs+REG_ZZ_SEL_KS_TXT+j));
+			char hh=data>>24;
+			char hl=data>>16;
+			char lh=data>>8;
+			char ll=data;
+			kickstarts[i][j++]=hh;
+			if(hh==0)
+				break;
+			kickstarts[i][j++]=hl;
+			if(hl==0)
+				break;
+			kickstarts[i][j++]=lh;
+			if(lh==0)
+				break;
+			kickstarts[i][j++]=ll;
+			if(ll==0)
+				break;
+		}
+		if(j==1)
+		{
+			kickstarts[i][1]='\0';
+			kickstarts[i][2]='\0';
+			kickstarts[i][3]='\0';
+			i++;
+			kickstarts[i][0]='\0';
+			kickstarts[i][1]='\0';
+			kickstarts[i][2]='\0';
+			kickstarts[i][3]='\0';
+			break;
+		}
+	}
+	kickstarts[10][0]='\0';
+	kickstarts[10][1]='\0';
+	kickstarts[10][2]='\0';
+	kickstarts[10][3]='\0';
+
+	gads[MYGAD_LIST_KICKSTART] = gad = CreateGadget(CYCLE_KIND, gad, &ng,
+									    GTCY_Labels, kickstarts,
+										GTCY_Active, kickstart,
+										TAG_END);
+
+	ng.ng_TopEdge    = 11*GADGET_GRID+topborder;
+	ng.ng_GadgetID   = MYGAD_LIST_EXT_KICKSTART;
+	ng.ng_GadgetText = (STRPTR)"Ext Kickstart";
+
+	int ext_kickstart=zz_get_selected_ext_kickstart();
+
+	for(int i=0;i<10;i++)
+	{
+		int j=0;
+		zz_set_selected_ext_kickstart_txt(i);
+		while(1)
+		{
+			uint32_t data=*((volatile uint32_t*)(zz_regs+REG_ZZ_SEL_KS_TXT+j));
+			char hh=data>>24;
+			char hl=data>>16;
+			char lh=data>>8;
+			char ll=data;
+			ext_kickstarts[i][j++]=hh;
+			if(hh==0)
+				break;
+			ext_kickstarts[i][j++]=hl;
+			if(hl==0)
+				break;
+			ext_kickstarts[i][j++]=lh;
+			if(lh==0)
+				break;
+			ext_kickstarts[i][j++]=ll;
+			if(ll==0)
+				break;
+		}
+		if(j==1)
+		{
+			ext_kickstarts[i][1]='\0';
+			ext_kickstarts[i][2]='\0';
+			ext_kickstarts[i][3]='\0';
+			i++;
+			ext_kickstarts[i][0]='\0';
+			ext_kickstarts[i][1]='\0';
+			ext_kickstarts[i][2]='\0';
+			ext_kickstarts[i][3]='\0';
+			break;
+		}
+	}
+	ext_kickstarts[10][0]='\0';
+	ext_kickstarts[10][1]='\0';
+	ext_kickstarts[10][2]='\0';
+	ext_kickstarts[10][3]='\0';
+
+	gads[MYGAD_LIST_EXT_KICKSTART] = gad = CreateGadget(CYCLE_KIND, gad, &ng,
+									    GTCY_Labels, ext_kickstarts,
+										GTCY_Active, ext_kickstart,
+										TAG_END);
+
+	ng.ng_TopEdge    = 3*GADGET_GRID+topborder+10*NUM_BOOTMODES+2;
+	ng.ng_LeftEdge   = GADGET_LEFT2+(20*8-(15*8+10))/2;
 	ng.ng_Height     = 14;
 	ng.ng_Width      = 15*8+10;
 	ng.ng_GadgetID   = MYGAD_BTN_APPLY_BOOTMODE;
 	ng.ng_GadgetText = (STRPTR)"Apply Boot Mode";
 
-	gads[MYGAD_BTN_TEST] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
+	gads[MYGAD_BTN_APPLY_BOOTMODE] = gad = CreateGadget(BUTTON_KIND, gad, &ng,
 										TAG_END);
 
 	return(gad);
@@ -920,13 +1304,13 @@ VOID gadtoolsWindow(VOID) {
 					errorMessage("createAllGadgets() failed");
 				else {
 					if (NULL == (mywin = OpenWindowTags(NULL,
-							WA_Title,              "Z3660 ZTop 1.13",
-							WA_Gadgets,    glist,   WA_AutoAdjust,     TRUE,
-							WA_Width,        460,   WA_MinWidth,        460,
-							WA_InnerHeight,  220,   WA_MinHeight,       220,
-							WA_DragBar,     TRUE,   WA_DepthGadget,    TRUE,
-							WA_Activate,    TRUE,   WA_CloseGadget,    TRUE,
-							WA_SizeGadget, FALSE,   WA_SimpleRefresh,  TRUE,
+							WA_Title,              "Z3660 ZTop 1.03",
+							WA_Gadgets,                 glist,   WA_AutoAdjust,                TRUE,
+							WA_Width,                     440,   WA_MinWidth,                   440,
+							WA_InnerHeight, 14*GADGET_GRID+10,   WA_MinHeight,    14*GADGET_GRID+10,
+							WA_DragBar,                  TRUE,   WA_DepthGadget,               TRUE,
+							WA_Activate,                 TRUE,   WA_CloseGadget,               TRUE,
+							WA_SizeGadget,              FALSE,   WA_SimpleRefresh,             TRUE,
 							WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_REFRESHWINDOW |
 							IDCMP_VANILLAKEY | SLIDERIDCMP | STRINGIDCMP |
 							BUTTONIDCMP,
@@ -934,6 +1318,7 @@ VOID gadtoolsWindow(VOID) {
 							TAG_END))) {
 						errorMessage("OpenWindow() failed");
 					} else {
+						init_measures();
 						refresh_zz_info(mywin);
 						GT_RefreshWindow(mywin, NULL);
 						process_window_events(mywin);
@@ -985,3 +1370,4 @@ int main(void) {
 
 	return 0;
 }
+

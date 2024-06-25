@@ -94,6 +94,26 @@ uint16_t argb888_to_rgb565(uint32_t argb)
 	c|=(argb&0x0000F8)>>3;
 	return(swap16(c));
 }
+uint16_t rgba888_to_rgb565(uint32_t rgba)
+{
+ // R: FF00 -> 7e0
+	uint16_t c;
+	uint32_t argb=rgba>>8;
+	c =(argb&0xF80000)>>8;
+	c|=(argb&0x00FC00)>>5;
+	c|=(argb&0x0000F8)>>3;
+	return(swap16(c));
+}
+uint16_t abgr888_to_rgb565(uint32_t abgr)
+{
+ // R: FF00 -> 7e0
+	uint16_t c;
+	uint32_t argb=swap32(abgr)>>8;
+	c =(argb&0xF80000)>>8;
+	c|=(argb&0x00FC00)>>5;
+	c|=(argb&0x0000F8)>>3;
+	return(swap16(c));
+}
 void putpixel(uint16_t Xpos, uint16_t Ypos, uint32_t RGB_Code)
 {
 	if(vs.colormode==MNTVA_COLOR_8BIT)

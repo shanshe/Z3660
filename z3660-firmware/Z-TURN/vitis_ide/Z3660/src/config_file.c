@@ -74,6 +74,7 @@ const char *config_item_names[CONFITEM_NUM] = {
       "ext_kickstart8",
       "ext_kickstart9",
 	  "enable_test",
+	  "bootscreen_resolution",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
       "CPU",
@@ -89,6 +90,11 @@ const char *yesnomin_names[YESNOMIN_NUM] = {
       "NO",
       "YES",
 	  "MIN",
+};
+const char *resolution_names[RES_NUM] = {
+      "1920x1080",
+      "1280x720",
+	  "800x600",
 };
 void print_line(FIL *fil, char* line_in, ...)
 {
@@ -111,7 +117,7 @@ void load_default_config(void)
    config.cpu_ram=1;
    config.resistor=800.0;
    config.temperature=27.0;
-   config.cpufreq=100;
+   config.cpufreq=50;
    config.kickstart=0;
    config.kickstart0[0]=0;
    config.kickstart1[0]=0;
@@ -135,6 +141,7 @@ void load_default_config(void)
    config.ext_kickstart8[0]=0;
    config.ext_kickstart9[0]=0;
    config.enable_test=0;
+   config.bootscreen_resolution=RES_800x600;
 }
 void write_config_file(char *filename)
 {
@@ -205,6 +212,9 @@ void write_config_file(char *filename)
    print_line(&fil,"enable_test YES\n");
    print_line(&fil,"#enable_test NO\n");
    print_line(&fil,"#enable_test MIN\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Select a boot screen resolution (1920x1080, 1280x720 or 800x600)\n");
+   print_line(&fil,"bootscreen_resolution 1920x1080\n");
    print_line(&fil,"\n");
    f_close(&fil);
 
@@ -294,6 +304,14 @@ int get_yesnomin_type(char *cmd) {
   }
   return NO;
 }
+int get_resolution_type(char *cmd) {
+  for (int i = 0; i < RES_NUM; i++) {
+    if (strcmp(cmd, resolution_names[i]) == 0) {
+      return i;
+    }
+  }
+  return RES_800x600;
+}
 float get_float_type(char *cmd) {
   return atof(cmd);
 }
@@ -362,6 +380,7 @@ retry:
 	   config.hdf[i][0]=0;
    for(int i=0;i<7;i++)
 	   config.scsi_num[i]=-1;
+   config.bootscreen_resolution=RES_800x600;
 
    while (!f_eof(&fil))
    {
@@ -527,6 +546,12 @@ retry:
          CASE_CONFITEM_EXT_KICKSTART(7)
          CASE_CONFITEM_EXT_KICKSTART(8)
          CASE_CONFITEM_EXT_KICKSTART(9)
+
+      case CONFITEM_BOOTSCREEN_RESOLUTION:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.bootscreen_resolution=get_resolution_type(cur_cmd);
+         printf("[CFG] Boot Screen Resolution %s\n", resolution_names[config.bootscreen_resolution]);
+         break;
 
       case CONFITEM_NONE:
       default:

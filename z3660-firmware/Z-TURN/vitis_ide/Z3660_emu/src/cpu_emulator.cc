@@ -67,16 +67,6 @@ void cpu_emulator_reset(void)
 //   dsb();
 //   *(uint32_t *)0x83c00000=0x00000000;
 }
-//int irq=0;
-//int last_cpu_level=0;
-//int last_irq=-1;
-//int mask0=0,mask1=0;
-#define BIT0  (1<<0)
-#define BIT8  (1<<8)
-#define BIT9  (1<<9)
-#define BIT12 (1<<12)
-#define BIT13 (1<<13)
-#define BIT15 (1<<15)
 
 int intlev(void);
 extern "C" void z3660_printf(const TCHAR *format, ...);
@@ -239,17 +229,52 @@ void finish_MMU_OP(void)
    dsb(); /* ensure completion of the BP and TLB invalidation */
    isb(); /* synchronize context on this processor */
 }
-void rtg_cache_policy_core1(uint32_t ini, uint32_t policy)
+void rtg_cache_policy_core1(uint32_t ini, uint32_t fb_policy, uint32_t soft3d_policy)
 {
+/*
+	for(int i=ini,j=0;j<2;i++,j++) // RTG registers
+    {
+        uint32_t address=(RTG_BASE+j*0x100000UL);
+        setMMU(address,address|NORM_NONCACHE);
+        setMMU(i*0x100000UL,address|NORM_NONCACHE);
+    }
+*/
     // +2 -> don't use RTG registers with MMU (write to RTG registers is emulated)
-    for(unsigned int i=ini+2,j=2;i<ini+0x080;i++,j++)
+    for(unsigned int i=ini+2,j=2;j<0x042;i++,j++)
     {
        uint32_t address=(RTG_BASE+j*0x100000UL);
-       setMMU(address,address|policy);
-       setMMU(i*0x100000UL,address|policy);
+       setMMU(address,address|fb_policy);
+       setMMU(i*0x100000UL,address|fb_policy);
     }
-    setMMU(0x1C200000,0x1C200000|NORM_NONCACHE); // RTG registers for soft3d
-    setMMU((0x542)*0x100000UL,0x1C200000|NORM_NONCACHE);
+    // SOFT3D registers
+    for(unsigned int i=ini+0x042,j=0x042;j<0x043;i++,j++)
+    {
+       uint32_t address=(RTG_BASE+j*0x100000UL);
+       setMMU(address,address|NORM_NONCACHE);
+       setMMU(i*0x100000UL,address|NORM_NONCACHE);
+    }
+    // SOFT3D RAM
+    for(unsigned int i=ini+0x043,j=0x043;j<0x070;i++,j++)
+    {
+       uint32_t address=(RTG_BASE+j*0x100000UL);
+       setMMU(address,address|soft3d_policy);
+       setMMU(i*0x100000UL,address|soft3d_policy);
+    }
+    // Audio
+    for(unsigned int i=ini+0x070,j=0x070;j<0x07E;i++,j++)
+    {
+       uint32_t address=(RTG_BASE+j*0x100000UL);
+       setMMU(address,address|AUDIO_CACHE_POLICY);
+       setMMU(i*0x100000UL,address|AUDIO_CACHE_POLICY);
+    }
+    // Ethernet
+    for(unsigned int i=ini+0x07E,j=0x07E;j<0x080;i++,j++)
+    {
+       uint32_t address=(RTG_BASE+j*0x100000UL);
+       setMMU(address,address|ETHERNET_CACHE_POLICY);
+       setMMU(i*0x100000UL,address|ETHERNET_CACHE_POLICY);
+    }
+
     finish_MMU_OP();
 }
 extern "C" void write_autoconfig(uint32_t address, uint32_t data)
@@ -272,7 +297,11 @@ extern "C" void write_autoconfig(uint32_t address, uint32_t data)
             shared->shared_data=1;
             while(shared->core0_hold_ack==0);
             for(unsigned int i=ini,j=0;i<end;i++,j++)
-               setMMU(i*0x100000UL,(0x20000000+j*0x100000UL)|NORM_WB_CACHE|SHAREABLE); // mapped to 0x20000000
+            {
+               uint32_t address=(0x20000000+j*0x100000UL); // mapped to 0x20000000
+               setMMU(address,address|RAM_CACHE_POLICY);
+               setMMU(i*0x100000UL,address|RAM_CACHE_POLICY);
+            }
             finish_MMU_OP();
             init_z3_ram_bank(ini);
             // core0 continues
@@ -290,13 +319,7 @@ extern "C" void write_autoconfig(uint32_t address, uint32_t data)
             shared->shared_data=1;
             while(shared->core0_hold_ack==0);
 
-            rtg_cache_policy_core1(ini, RTG_CACHE_POLICY_FOR_EMU);
-
-            //ETHERNET
-            setMMU(0x1FE00000,0x1FE00000|NORM_NONCACHE);
-            setMMU((ini+0x080-2)*0x100000UL,0x1FE00000|NORM_NONCACHE);
-            setMMU(0x1FF00000,0x1FF00000|NORM_NONCACHE);
-            setMMU((ini+0x080-1)*0x100000UL,0x1FF00000|NORM_NONCACHE);
+            rtg_cache_policy_core1(ini, RTG_FB_CACHE_POLICY_FOR_EMU, RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
 
             init_rtg_bank(ini);
             // core0 continues
@@ -320,16 +343,15 @@ inline int not_decode(uint32_t address)
 //   if(address>=0xF0000000 && address<0xFF000000)
 //      return(1);
    if(0
-      ||(address>=0x18000000 && address<0x40000000)
+      ||(address>=0x10000000 && address<0x40000000)
 //      ||(address>=0x78000000 && address<0xFF000000)
 //      ||(address>=RTG_BASE && address<0x40000000)
       ||(address>=0x00E00000 && address<0x00E80000)
 //      ||(address>=0x00DD0000 && address<0x00DE0000) mobo IDE (SCSI control)
       ||(address>=0x00C00000 && address<0x00DC0000)
       ||(address>=0x00B80000 && address<0x00BF0000)
-      ||(address>=0x80000000 && address<0xFF000000)
-      ||(address>=0xFF00F000)
-      ||(address>=0xFFFFFFFF)
+      ||(address>=0x7e000000 && address<0x80000000)
+      ||(address>=0x80000000)// && address<0xFFFFFFFF)
    )
    {
 //      z3660_printf("access to address 0x%08X\n",address);
@@ -390,13 +412,13 @@ unsigned int read_long(unsigned int address)
       return(ps_read_32(address));
    }
 #ifdef CPU_RAM
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
    {
       uint32_t add=address-0x08000000;
       return(swap32(*(((uint32_t*)(RAM+add)))));
    }
 #else
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
       return(0);
 #endif
    if(address>=autoConfigBaseFastRam && address<autoConfigBaseFastRam+0x10000000 && (configured&1))
@@ -494,13 +516,13 @@ unsigned int read_word(unsigned int address)
       return(ps_read_16(address));
    }
 #ifdef CPU_RAM
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
    {
       uint32_t add=address-0x08000000;
       return(swap16(*(uint16_t *)(RAM+add)));
    }
 #else
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
       return(0);
 #endif
    if(address>=autoConfigBaseFastRam && address<autoConfigBaseFastRam+0x10000000 && (configured&1))
@@ -594,14 +616,14 @@ unsigned int read_byte(unsigned int address)
       return(ps_read_8(address));
    }
 #ifdef CPU_RAM
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
    {
       uint32_t add=address-0x08000000;
       data=RAM[add];
       return(data);
    }
 #else
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
       return(0);
 #endif
    if(address>=autoConfigBaseFastRam && address<autoConfigBaseFastRam+0x10000000 && (configured&1))
@@ -697,14 +719,14 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
       return;
    }
 #ifdef CPU_RAM
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
    {
       uint32_t add=address-0x08000000;
       RAM[add]=value&0xFF;
       return;
    }
 #else
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
       return;
 #endif
    if(address>=autoConfigBaseFastRam && address<autoConfigBaseFastRam+0x10000000 && (configured&1))
@@ -767,14 +789,14 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
       return;
    }
 #ifdef CPU_RAM
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
    {
       uint32_t add=address-0x08000000;
       *(uint16_t*)(RAM+add)=swap16(value);
       return;
    }
 #else
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
       return;
 #endif
    if(address>=autoConfigBaseFastRam && address<autoConfigBaseFastRam+0x10000000 && (configured&1))
@@ -837,14 +859,14 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
       return;
    }
 #ifdef CPU_RAM
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
    {
       uint32_t add=address-0x08000000;
       *(((uint32_t*)(RAM+add)))=swap32(value);
       return;
    }
 #else
-   if(address>=0x08000000 && address<0x18000000)
+   if(address>=0x08000000 && address<0x10000000)
       return;
 #endif
    if(address>=autoConfigBaseFastRam && address<autoConfigBaseFastRam+0x10000000 && (configured&1))
@@ -892,14 +914,14 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
 }
 #define NOP asm(" nop")
 
-void NOPX_WRITE(void)
+inline void NOPX_WRITE(void)
 {
 	for(int i=shared->nops_write;i>0;i--)
 	{
 		NOP;
 	}
 }
-void NOPX_READ(void)
+inline void NOPX_READ(void)
 {
 	for(int i=shared->nops_read;i>0;i--)
 	{
@@ -920,6 +942,59 @@ void check_bus_error(uint32_t v,uint32_t address)
 #define WRITE_FINISH_DELAYED
 //#define READ_THROUGH_REGS
 //#define WRITE_THROUGH_REGS
+extern "C" void make_dummy_address_bank(uint32_t address);
+void wait_read_ack(uint32_t address)
+{
+   long int timeout=10000;
+   do {
+      NOPX_READ();
+      timeout--;
+   }
+   while(read_reg(0x14)==0
+		   && timeout>0
+		   );          // read ack
+   if(timeout<=0)
+   {
+	   if(read_reg(0x14)==0)
+	   {
+		   do {
+			   NOPX_READ();
+			   timeout--;
+		   }
+		   while(read_reg(0x14)==0);
+
+		   printf("READ Memory access timeout: 0x%08lx\n",address);
+//		   if(address>=0x01000000 && address<0x08000000) // mobo RAM space
+//			   make_dummy_address_bank(address);
+	   }
+   }
+}
+void wait_write_ack(uint32_t address)
+{
+   long int timeout=10000;
+   while(read_reg(0x14)==0
+		   && timeout>0
+		   )          // read ack
+   {
+      NOPX_WRITE();
+      timeout--;
+   }
+   if(timeout<=0)
+   {
+	   if(read_reg(0x14)==0)
+	   {
+		   do {
+			   NOPX_WRITE();
+			   timeout--;
+		   }
+		   while(read_reg(0x14)==0);
+
+		   printf("WRITE Memory access timeout: 0x%08lx\n",address);
+//		   if(address>=0x01000000 && address<0x08000000) // mobo RAM space
+//			   make_dummy_address_bank(address);
+	   }
+   }
+}
 
 int write_pending=0;
 uint32_t last_bank=-1;
@@ -938,10 +1013,7 @@ inline void arm_write_amiga_long(uint32_t address, uint32_t data)
    if(write_pending)
    {
       write_pending=0;
-      while(read_reg(0x14)==0) // read ack
-      {
-         NOPX_WRITE();
-      }
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -963,10 +1035,7 @@ inline void arm_write_amiga_long(uint32_t address, uint32_t data)
    if(write_pending)
    {
       write_pending=0;
-      do {
-         NOPX_WRITE();
-      }
-      while(read_reg(0x14)==0);        // read ack
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -986,10 +1055,7 @@ inline void arm_write_amiga_word(uint32_t address, uint32_t data)
    if(write_pending)
    {
       write_pending=0;
-      while(read_reg(0x14)==0) // read ack
-      {
-         NOPX_WRITE();
-      }
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1011,10 +1077,7 @@ inline void arm_write_amiga_word(uint32_t address, uint32_t data)
    if(write_pending)
    {
       write_pending=0;
-      do {
-         NOPX_WRITE();
-      }
-      while(read_reg(0x14)==0);        // read ack
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1034,10 +1097,7 @@ inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
    if(write_pending)
    {
       write_pending=0;
-      while(read_reg(0x14)==0) // read ack
-      {
-         NOPX_WRITE();
-      }
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1059,10 +1119,7 @@ inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
    if(write_pending)
    {
       write_pending=0;
-      do {
-         NOPX_WRITE();
-      }
-      while(read_reg(0x14)==0);        // read ack
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1084,10 +1141,7 @@ inline uint32_t arm_read_amiga_long(uint32_t address)
    if(write_pending)
    {
       write_pending=0;
-      while(read_reg(0x14)==0) // read ack
-      {
-         NOPX_WRITE();
-      }
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1099,10 +1153,7 @@ inline uint32_t arm_read_amiga_long(uint32_t address)
    read_mem32(address);
    NOP;
 #endif
-   do {
-      NOPX_READ();
-   }
-   while(read_reg(0x14)==0);          // read ack
+   wait_read_ack(address);
    check_bus_error(read_reg(0x14),address);
    uint32_t data_read=read_reg(0x1C); // read data
    return(data_read);
@@ -1124,10 +1175,7 @@ inline uint32_t arm_read_amiga_word(uint32_t address)
    if(write_pending)
    {
       write_pending=0;
-      while(read_reg(0x14)==0) // read ack
-      {
-         NOPX_WRITE();
-      }
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1139,10 +1187,7 @@ inline uint32_t arm_read_amiga_word(uint32_t address)
    read_mem16(address);
    NOP;
 #endif
-   do {
-      NOPX_READ();
-   }
-   while(read_reg(0x14)==0);          // read ack
+   wait_read_ack(address);
    check_bus_error(read_reg(0x14),address);
    uint32_t data_read=read_reg(0x1C); // read data
    return(data_read);
@@ -1164,10 +1209,7 @@ inline uint32_t arm_read_amiga_byte(uint32_t address)
    if(write_pending)
    {
       write_pending=0;
-      while(read_reg(0x14)==0) // read ack
-      {
-         NOPX_WRITE();
-      }
+      wait_write_ack(address);
       check_bus_error(read_reg(0x14),address);
    }
 #endif
@@ -1179,10 +1221,7 @@ inline uint32_t arm_read_amiga_byte(uint32_t address)
    read_mem8(address);
    NOP;
 #endif
-   do {
-      NOPX_READ();
-   }
-   while(read_reg(0x14)==0);          // read ack
+   wait_read_ack(address);
    check_bus_error(read_reg(0x14),address);
    uint32_t data_read=read_reg(0x1C); // read data
    return(data_read);

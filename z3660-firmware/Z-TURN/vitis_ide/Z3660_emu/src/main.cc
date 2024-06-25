@@ -1,5 +1,5 @@
 /*
- * Empty C++ Application
+ * main.cc
  */
 
 #include <stdio.h>
@@ -433,10 +433,10 @@ void finish_Attributes(void)
     dsb(); /* ensure completion of the BP and TLB invalidation */
     isb(); /* synchronize context on this processor */
 }
-XScuGic_Config *IntcConfig;
 XScuGic intc;
 void ipl_configure_interrupt(void)
 {
+	XScuGic_Config *IntcConfig;
     IntcConfig = XScuGic_LookupConfig(XPAR_SCUGIC_SINGLE_DEVICE_ID);
 
     XScuGic_CfgInitialize(&intc, IntcConfig, IntcConfig->CpuBaseAddress);
@@ -527,7 +527,7 @@ int main()
     Xil_L1DCacheEnable();
     Xil_L2CacheEnable();
 
-    // This has happend when upgrading to Vitis...
+    // This has happened when upgrading to Vitis...
     // This is incredible, MMU 0 position is not updated with the SetTlbAttributes subroutine!!!
     uint32_t *ptr;
     ptr = &MMUTable;
@@ -543,18 +543,22 @@ int main()
 
     for(int i=0x010;i<0x080;i++) // Mother Board RAM
         SetTlbAttributes(i*0x100000UL,RESERVED);
-    for(int i=0x080;i<0x180;i++) // extended CPU RAM
-        SetTlbAttributes(i*0x100000UL,NORM_WB_CACHE);
+    for(int i=0x080;i<0x100;i++) // CPU RAM
+        SetTlbAttributes(i*0x100000UL,RAM_CACHE_POLICY);
+    for(int i=0x100;i<0x180;i++) // extended CPU RAM
+        SetTlbAttributes(i*0x100000UL,RESERVED);
     for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, framebuffer is at 0x200000)
         SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
     for(int i=0x182;i<0x1FE;i++) // RTG
-        SetTlbAttributes(i*0x100000UL,RTG_CACHE_POLICY_FOR_EMU);//0x14de2);//NORM_NONCACHE);
+        SetTlbAttributes(i*0x100000UL,RTG_FB_CACHE_POLICY_FOR_EMU);
     for(int i=0x1C2;i<0x1C3;i++) // RTG Registers (1 MB for soft3d registers)
        Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
-    for(int i=0x1FE;i<0x200;i++) // RTG
-        SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);//0x14de2);//NORM_NONCACHE);
-//    for(int i=0x200;i<0x300;i++) // Z3 RAM
-//        SetTlbAttributes(i*0x100000UL,RESERVED);
+    for(int i=0x1F0;i<0x1FE;i++) // Audio
+        SetTlbAttributes(i*0x100000UL,AUDIO_CACHE_POLICY);
+    for(int i=0x1FE;i<0x200;i++) // Ethernet
+        SetTlbAttributes(i*0x100000UL,ETHERNET_CACHE_POLICY);
+    for(int i=0x200;i<0x300;i++) // Z3 RAM
+        SetTlbAttributes(i*0x100000UL,RESERVED);
     for(int i=0x400;i<0x780;i++)
         SetTlbAttributes(i*0x100000UL,RESERVED);
     for(int i=0xFF0;i<0x1000;i++)

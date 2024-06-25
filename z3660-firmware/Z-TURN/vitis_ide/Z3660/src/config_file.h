@@ -27,6 +27,12 @@ enum YESNOMIN{
 	_MIN,
 	YESNOMIN_NUM
 };
+enum BOOTSCREEN_RES{
+	RES_1920x1080,
+	RES_1280x720,
+	RES_800x600,
+	RES_NUM
+};
 
 typedef struct {
 	int boot_mode;
@@ -61,6 +67,7 @@ typedef struct {
 	char ext_kickstart8[150];
 	char ext_kickstart9[150];
 	int enable_test;
+	int bootscreen_resolution;
 } CONFIG;
 typedef struct {
 	int bootmode;
@@ -131,6 +138,7 @@ enum CONFITEM {
 	CONFITEM_EXT_KICKSTART8,
 	CONFITEM_EXT_KICKSTART9,
 	CONFITEM_ENABLE_TEST,
+	CONFITEM_BOOTSCREEN_RESOLUTION,
 	CONFITEM_NUM
 };
 

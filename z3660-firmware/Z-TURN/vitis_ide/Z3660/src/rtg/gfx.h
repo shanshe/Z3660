@@ -53,7 +53,7 @@ typedef struct {
 
 void video_formatter_write(uint32_t data, uint16_t op);
 void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata);
-void handle_soft3d_op(ZZ_VIDEO_STATE* vs,uint16_t zdata);
+void handle_soft3d_op(uint16_t zdata);
 void handle_acc_op(uint16_t zdata);
 
 void set_fb(uint32_t* fb_, uint32_t pitch);

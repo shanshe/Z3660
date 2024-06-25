@@ -129,7 +129,7 @@ rt_Name:    dc.l     DevName-DiagStart  ; APTR  RT_NAME
 rt_Id:      dc.l     IdString-DiagStart ; APTR  RT_IDSTRING
 rt_Init:    dc.l     Init-RomStart      ; APTR  RT_INIT
 
-
+            dc.b     '$VER '
 ******* Strings referenced in Diag Copy area  ************************
 DevName:    dc.b     'z3660_scsi.device',0                      ; Name string
 IdString    dc.b     'Z3660 SCSI v0.8',0   ; Id string
@@ -411,8 +411,7 @@ NoEntries:
             move.l  #41,PiSCSIDebugMe(a5)
             jsr     AllocMem(a6)
             jsr     get_boardbase
-            move.l  d0,PiSCSIAddr3(a5)
-            move.l  #1,PiSCSICopyFS(a5)
+            move.l  d0,PiSCSICopyFS(a5)
 
 AlreadyLoaded:
             jsr     get_boardbase

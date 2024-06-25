@@ -371,3 +371,18 @@ platform generate
 platform generate -domains standalone_domain 
 platform clean
 platform generate
+platform generate
+platform generate -domains standalone_ps7_cortexa9_1 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_ps7_cortexa9_1 
+platform generate -domains standalone_domain,standalone_ps7_cortexa9_1 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain,standalone_ps7_cortexa9_1 
+platform generate
+platform generate -domains standalone_ps7_cortexa9_1 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain,zynq_fsbl 
+platform generate -domains standalone_domain 
+platform generate -domains standalone_domain,zynq_fsbl 
+platform generate
+platform generate

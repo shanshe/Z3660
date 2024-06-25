@@ -45,6 +45,8 @@
 #include "cpu_emulator.h"
 #endif
 #include "lwip.h"
+#include "alfa.txt"
+#include <stdlib.h>
 extern SHARED *shared;
 extern DEBUG_CONSOLE debug_console;
 extern ENV_FILE_VARS env_file_vars_temp;
@@ -558,20 +560,52 @@ void finish_MMU_OP(void)
    isb(); /* synchronize context on this processor */
 }
 
-void rtg_cache_policy_core0(uint32_t policy)
+void rtg_cache_policy_core0(int ini,uint32_t fb_policy,uint32_t soft3d_policy)
 {
-   for(int i=0x182;i<0x1FE;i++) // RTG
-      Xil_SetTlbAttributes(i*0x100000UL,policy);//NORM_WT_CACHE);// NORM_WB_CACHE);//0x14de2);
-   for(int i=0x1C2;i<0x1C3;i++) // RTG Registers (1 MB for soft3d registers)
-      Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
-   int base=config.autoconfig_ram==0?0x400:0x500;
-   int ini=base+0x002;
-   int end=base+0x080;
-   for(int i=ini,j=0x002;i<end;i++,j++)
+/*
+	for(int i=ini,j=0;j<2;i++,j++) // RTG registers
    {
       uint32_t address=(RTG_BASE+j*0x100000UL);
-      setMMU(i*0x100000UL,address|policy); // mapped to RTG_BASE
+      setMMU(address,address|NORM_NONCACHE);
+      setMMU(i*0x100000UL,address|NORM_NONCACHE);
    }
+*/
+   // +2 -> don't use RTG registers with MMU (write to RTG registers is emulated)
+   for(int i=ini+2,j=2;j<0x042;i++,j++) // RTG
+   {
+      uint32_t address=(RTG_BASE+j*0x100000UL);
+      setMMU(address,address|fb_policy);
+      setMMU(i*0x100000UL,address|fb_policy);
+   }
+   // SOFT3D registers
+   for(int i=ini+0x042,j=0x042;j<0x043;i++,j++)
+   {
+      uint32_t address=(RTG_BASE+j*0x100000UL);
+      setMMU(address,address|NORM_NONCACHE);
+      setMMU(i*0x100000UL,address|NORM_NONCACHE);
+   }
+   // SOFT3D RAM
+   for(int i=ini+0x043,j=0x043;j<0x070;i++,j++)
+   {
+      uint32_t address=(RTG_BASE+j*0x100000UL);
+      setMMU(address,address|soft3d_policy);
+      setMMU(i*0x100000UL,address|soft3d_policy);
+   }
+   // Audio
+   for(unsigned int i=ini+0x070,j=0x070;j<0x07E;i++,j++)
+   {
+      uint32_t address=(RTG_BASE+j*0x100000UL);
+      setMMU(address,address|AUDIO_CACHE_POLICY);
+      setMMU(i*0x100000UL,address|AUDIO_CACHE_POLICY);
+   }
+   // Ethernet
+   for(unsigned int i=ini+0x07E,j=0x07E;j<0x080;i++,j++)
+   {
+      uint32_t address=(RTG_BASE+j*0x100000UL);
+      setMMU(address,address|ETHERNET_CACHE_POLICY);
+      setMMU(i*0x100000UL,address|ETHERNET_CACHE_POLICY);
+   }
+
    finish_MMU_OP();
 }
 struct Soft3DData {
@@ -580,6 +614,10 @@ struct Soft3DData {
   volatile uint16_t x[2], y[2];
 };
 extern volatile struct Soft3DData* data3d;
+extern volatile int read_reset;
+uint16_t argb888_to_rgb565(uint32_t argb);
+uint16_t rgba888_to_rgb565(uint32_t rgba);
+uint16_t abgr888_to_rgb565(uint32_t abgr);
 int main()
 {
     init_platform();
@@ -599,11 +637,13 @@ int main()
 //   for(int i=0x000;i<0x010;i++)
 //      Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
    for(int i=0x080;i<0x180;i++)
-      Xil_SetTlbAttributes(i*0x100000UL,NORM_WB_CACHE);
+      Xil_SetTlbAttributes(i*0x100000UL,RAM_CACHE_POLICY);
    for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, fb is at 0x200000)
       Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
+   for(int i=0x1FC;i<0x1FE;i++) // AUDIO
+      Xil_SetTlbAttributes(i*0x100000UL,AUDIO_CACHE_POLICY);//NORM_NONCACHE);// NORM_WB_CACHE);//0x14de2);
    for(int i=0x1FE;i<0x200;i++) // ETHERNET
-      Xil_SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);//NORM_NONCACHE);// NORM_WB_CACHE);//0x14de2);
+      Xil_SetTlbAttributes(i*0x100000UL,ETHERNET_CACHE_POLICY);//NORM_NONCACHE);// NORM_WB_CACHE);//0x14de2);
    for(int i=0x400;i<0x780;i++)
       Xil_SetTlbAttributes(i*0x100000UL,RESERVED);
    for(int i=0xE00;i<0xE03;i++) //
@@ -680,8 +720,12 @@ int main()
    printf(" /_______| |______| |______| |______| |______|\n");
    printf("\n");
    printf("FPGA version number 0x%08lX\n",read_reg_s01(REG2));
-#ifdef REVISION_BETA
+#if REVISION_BETA > 0
+#if REVISION_ALFA > 0
+   printf("BOOT.bin version number %d.%02d (BETA %d ALFA %d)\n",REVISION_MAJOR,REVISION_MINOR,REVISION_BETA,REVISION_ALFA);
+#else
    printf("BOOT.bin version number %d.%02d (BETA %d)\n",REVISION_MAJOR,REVISION_MINOR,REVISION_BETA);
+#endif
 #else
    printf("BOOT.bin version number %d.%02d\n",REVISION_MAJOR,REVISION_MINOR);
 #endif
@@ -729,6 +773,73 @@ int main()
 
    video_state=video_init();
    video_reset();
+   {
+      static FIL fil;      /* File object */
+      static FATFS fatfs;
+      TCHAR *Path = DEFAULT_ROOT;
+#define boot_filename_base "images/bootscreen_z3660_"
+#define boot_filename_ext ".bin"
+      int w=1920;
+      int h=1080;
+      int offset=0;
+      char resname[20]="1920x1080";
+      switch(config.bootscreen_resolution)
+      {
+      case RES_1920x1080:
+    	  w=1920;
+    	  h=1080;
+    	  offset=0;
+    	  strcpy(resname,"1920x1080");
+    	  break;
+      case RES_1280x720:
+    	  w=1280;
+    	  h=720;
+    	  offset=0;
+    	  strcpy(resname,"1280x720");
+    	  break;
+      case RES_800x600:
+      default:
+    	  w=800;
+    	  h=600;
+    	  offset=800*((600-450)/2)*2;
+    	  strcpy(resname,"800x600");
+    	  break;
+      }
+      char boot_filename[50];
+	  memset(video_state->framebuffer,0,w*h*2);
+      sprintf(boot_filename,"%s%s%s%s",DEFAULT_ROOT,boot_filename_base,resname,boot_filename_ext);
+      f_mount(&fatfs, Path, 1); // 1 mount immediately
+      FRESULT res=f_open(&fil,boot_filename, FA_READ);
+      if(res==FR_OK)
+      {
+		  f_lseek(&fil, 0);
+		  UINT NumBytesRead;
+		  uint8_t *buffer=malloc(w*h*4);
+		  memset(buffer,0,w*h*4);
+		  printf("Reading %s file:\n[----------]\n\033[F",boot_filename);
+		  for(uint32_t i=0,j=0,k=1;i<w*h*4;i+=10*h*4,j++)
+		  {
+			 if(j==w/100)
+			 {
+				j=0;
+				printf("%.*s\n\033[F",(int)++k,"[==========]");
+			 }
+			 f_read(&fil, (void*)((uint32_t)buffer+i), 10*h*4,&NumBytesRead);
+		  }
+		  f_close(&fil);
+		  for(uint32_t i=0,j=0;i<w*h*4;i+=4,j+=2)
+		  {
+			  uint32_t data32=*(uint32_t *)(buffer+i);
+			  *(uint16_t *)((uint8_t *)(video_state->framebuffer)+offset+j)=abgr888_to_rgb565(data32);
+		  }
+		  printf("\nFile read OK\n");
+	      free(buffer);
+      }
+      else
+      {
+    	  printf("\nCan't open File %s\n",boot_filename);
+      }
+   }
    mobotest();
 //   if(config.update_sd==YES)
 	   update_sd();
@@ -743,11 +854,20 @@ int main()
       DISABLE_BURST_WRITE_FPGA;
       DISABLE_256MB_AUTOCONFIG;
       DISABLE_RTG_AUTOCONFIG;
-      rtg_cache_policy_core0(RTG_CACHE_POLICY_FOR_EMU);
+      int ini=config.autoconfig_ram?0x500:0x400;
+      rtg_cache_policy_core0(ini,RTG_FB_CACHE_POLICY_FOR_EMU,RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
    }
    else
    {
-      rtg_cache_policy_core0(RTG_CACHE_POLICY_FOR_060);
+      int ini=config.autoconfig_ram?0x500:0x400;
+      rtg_cache_policy_core0(ini,RTG_FB_CACHE_POLICY_FOR_060,RTG_SOFT3D_CACHE_POLICY_FOR_060);
+   }
+
+   if(config.autoconfig_ram)
+   {
+	   for(int i=0x200;i<0x300;i++) //
+	      Xil_SetTlbAttributes(i*0x100000UL,RAM_CACHE_POLICY);
+	   finish_MMU_OP();
    }
 
    char *kickstart_pointer=0;
@@ -799,33 +919,9 @@ int main()
 
 //    PrepareHdf();
 //    InitGayle();
-//#define READ_BOOT_IMAGE
-#ifdef READ_BOOT_IMAGE
-   static FIL fil;      /* File object */
-   static FATFS fatfs;
-   TCHAR *Path = DEFAULT_ROOT;
-   f_mount(&fatfs, Path, 1); // 1 mount immediately
-   f_open(&fil,Filename, FA_OPEN_ALWAYS | FA_READ);
-   f_lseek(&fil, 4);
-   UINT NumBytesRead;
-   printf("Reading %s file:\n[----------]\n\033[F",Filename);
-   for(uint32_t i=0,j=0,k=1;i<1920*1080*4;i+=10*1080*4,j++)
-   {
-      if(j==19)
-      {
-         j=0;
-         printf("%.*s\n\033[F",(int)++k,"[==========]");
-      }
-      f_read(&fil, (void*)((uint32_t)video_state->framebuffer+i), 10*1080*4,&NumBytesRead);
-   }
-   f_close(&fil);
-   printf("\nFile read OK\n");
-   reset_video(NO_RESET_FRAMEBUFFER);
-#else
-   video_reset();
-#endif
 
-   ltc2990_init();
+//   video_reset();
+//   ltc2990_init();
 
    ACTIVITY_LED_ON; // ON
    DiscreteSet(REG0, FPGA_RESET);
@@ -911,7 +1007,7 @@ int main()
    if(data3d==NULL)
    {
 	   uint32_t offset=config.autoconfig_ram==0?0x40000000:0x50000000;
-	   data3d = (volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR-RTG_BASE+offset);
+	   data3d = (volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR_DATA3D-RTG_BASE+offset);
    }
 
    Enable_Abort_Interrutps();
@@ -940,9 +1036,9 @@ int main()
    NBR_ARM(1);        // relinquish bus
 
    usleep(1000);
+   read_reset=0;
    CPLD_RESET_ARM(1); // CPLD RUN -> 060 RUN
    printf("060 starting now...\n");
-
    while(1)
    {
 /*
@@ -1027,73 +1123,70 @@ int main()
          break;
       }
 */
-      static int cycles=0;
       switch(state68k)
       {
-      case M68K_RUNNING:
+      case M68K_RUNNING: {
          rtg_loop();
          debug_console_loop();
 
-       	 cycles++;
-       	 if(debug_console.reset_cpld==1)
-       		 cycles=0;
-         if(cycles==10000)
+         if(read_reset )
          {
-            cycles=0;
-            if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
-            {
-               printf("Reset active (DOWN)...\n");
-               state68k=M68K_RESET;
-               reset_time_counter_max=60*4; // 4 seconds
-               reset_time_counter=0;
-               reset_init();
-//               piscsi_shutdown();
-               piscsi_refresh_drives();
-               CPLD_RESET_ARM(0);
-               DiscreteSet(REG0, FPGA_RESET);
-               usleep(1000);
-               CPLD_RESET_ARM(1);
-               DiscreteClear(REG0, FPGA_RESET);
-//                  Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
-//                  Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
-//                  uint32_t RegVal = Xil_In32(A9_CPU_RST_CTRL);
-//                  XPS_SYS_CTRL_BASEADDR + A9_CPU_RST_CTRL_OFFSET
-            }
-            else
-            {
+            usleep(100000);
+            CPLD_RESET_ARM(0);
+            printf("Reset active (DOWN)...\n");
+            state68k=M68K_RESET;
+            reset_time_counter_max=60*4; // 4 seconds
+            reset_time_counter=0;
+            reset_init();
+//            piscsi_shutdown();
+//            piscsi_refresh_drives();
+
+            DiscreteSet(REG0, FPGA_RESET);
+            usleep(1000);
+            CPLD_RESET_ARM(1);
+            DiscreteClear(REG0, FPGA_RESET);
+//               Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
+//               Xil_Out32(XSLCR_UNLOCK_ADDR, XSLCR_UNLOCK_CODE);
+//               uint32_t RegVal = Xil_In32(A9_CPU_RST_CTRL);
+//               XPS_SYS_CTRL_BASEADDR + A9_CPU_RST_CTRL_OFFSET
+            read_reset=0;
+         }
+         else
+         {
 //#define USER_SWITCH1
 #ifdef USER_SWITCH1
-               if(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
+            if(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
+            {
+               clk_config++;
+               clk_config&=3;
+               switch(clk_config)
                {
-                  clk_config++;
-                  clk_config&=3;
-                  switch(clk_config)
-                  {
-                     case 0:
-                        configure_clk(50,verbose,0);
-                        XGpioPs_WritePin(&GpioPs, LED2, 1);
-                        break;
-                     case 1:
-                        configure_clk(50,verbose,0);
-                        XGpioPs_WritePin(&GpioPs, LED2, 0);
-                        break;
-                     case 2:
-                        configure_clk(100,verbose,0);
-                        XGpioPs_WritePin(&GpioPs, LED2, 1);
-                        break;
-                     case 3:
-                        configure_clk(100,verbose,0);
-                        XGpioPs_WritePin(&GpioPs, LED2, 0);
-                        break;
-                  }
-                  while(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
-                  {}
+                  case 0:
+                     configure_clk(50,verbose,0);
+                     XGpioPs_WritePin(&GpioPs, LED2, 1);
+                     break;
+                  case 1:
+                     configure_clk(50,verbose,0);
+                     XGpioPs_WritePin(&GpioPs, LED2, 0);
+                     break;
+                  case 2:
+                     configure_clk(100,verbose,0);
+                     XGpioPs_WritePin(&GpioPs, LED2, 1);
+                     break;
+                  case 3:
+                     configure_clk(100,verbose,0);
+                     XGpioPs_WritePin(&GpioPs, LED2, 0);
+                     break;
                }
-#endif
+               while(XGpioPs_ReadPin(&GpioPs, USER_SW1)==0)
+               {}
             }
+#endif
+
          }
          break;
-      case M68K_RESET:
+      }
+      case M68K_RESET: {
          int long_reset=0;
          while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
          {
@@ -1154,11 +1247,12 @@ int main()
 //         piscsi_init();
          state68k=M68K_RUNNING;
 //         flash_colors();
-//         video_reset();
-//         audio_reset();
+         video_reset();
+         audio_reset();
 #endif
          break;
       }
+   }
    }
    cleanup_platform();
    return(0);

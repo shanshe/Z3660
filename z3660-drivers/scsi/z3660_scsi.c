@@ -25,8 +25,10 @@
 
 #include "z3660_scsi_enums.h"
 #include <stdint.h>
+#include <string.h>
 
 #include "z3660_scsi.h"
+#include "z3660_regs.h"
 
 #pragma pack(4)
 struct piscsi_base {
@@ -41,7 +43,6 @@ struct piscsi_base {
         uint8_t read_only;
         uint8_t motor;
         uint8_t unit_num;
-        uint16_t scsi_num;
         uint16_t h, s;
         uint32_t c;
 
@@ -53,12 +54,20 @@ struct ExecBase *SysBase;
 uint8_t *saved_seg_list;
 uint8_t is_open;
 
-//#define WRITESHORT(cmd, val) *(unsigned short *)((unsigned long)(ZZ9K_REGS + cmd)) = val;
-#define WRITELONG(cmd, val) *(unsigned long *)((unsigned long)(ZZ9K_REGS + cmd)) = val;
-//#define WRITEBYTE(cmd, val) *(unsigned char *)((unsigned long)(ZZ9K_REGS + cmd)) = val;
+//#define WRITESHORT(cmd, val) *(unsigned short *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + cmd)) = val;
+#define WRITELONG(cmd, val) *(volatile unsigned long *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + (cmd))) = (val);
+//#define WRITEBYTE(cmd, val) *(unsigned char *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + cmd)) = val;
 
-//#define READSHORT(cmd, var) var = *(volatile unsigned short *)(ZZ9K_REGS  + cmd);
-#define READLONG(cmd, var) var = *(volatile unsigned long *)(ZZ9K_REGS  + cmd);
+#define WRITE_CMD(COMMAND,UNIT,DATA,LEN)  do{               \
+            uint32_t len2=LEN;                              \
+/*            CacheClearE((APTR)DATA,len,CACRF_ClearD); */  \
+            CachePreDMA((APTR)(DATA),&len2,0);              \
+            WRITELONG(COMMAND, UNIT);                       \
+            CachePostDMA((APTR)DATA,&len2,0);               \
+            }while(0)
+
+//#define READSHORT(cmd, var) var = *(volatile unsigned short *)(Z3660_REGS + PISCSI_OFFSET + cmd);
+#define READLONG(cmd, var) var = *(volatile unsigned long *)(Z3660_REGS + PISCSI_OFFSET + cmd);
 
 asm("romtag:                                \n"
     "       dc.w    "XSTR(RTC_MATCHWORD)"   \n"
@@ -96,7 +105,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io);
 //#define debugval(c, v) WRITELONG(c, v)
 
 struct piscsi_base *dev_base = NULL;
-ULONG ZZ9K_REGS=0;
+ULONG Z3660_REGS=0;
 void boot_menu(void);
 static struct Library __attribute__((used)) *init_device(uint8_t *seg_list asm("a0"), struct Library *dev asm("d0"))
 {
@@ -115,18 +124,17 @@ static struct Library __attribute__((used)) *init_device(uint8_t *seg_list asm("
         if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1)) ) {
             ok = 1;
             debug_z3660("Z3660_SCSI: Z3660 found.\n");
-            ZZ9K_REGS = (ULONG)cd->cd_BoardAddr + PISCSI_OFFSET;
+            Z3660_REGS = (ULONG)cd->cd_BoardAddr;
 
             for (int i = 0; i < NUM_UNITS; i++) {
                 uint32_t r = 0;
                 WRITELONG(PISCSI_CMD_DRVNUM, (i));
-                dev_base->units[i].regs_ptr = ZZ9K_REGS;
+                dev_base->units[i].regs_ptr = Z3660_REGS + PISCSI_OFFSET;
                 READLONG(PISCSI_CMD_DRVTYPE, r);
                 dev_base->units[i].enabled = r;
                 dev_base->units[i].present = r;
                 dev_base->units[i].valid = r;
                 dev_base->units[i].unit_num = i;
-                dev_base->units[i].scsi_num = i;
                 if (dev_base->units[i].present) {
                     READLONG(PISCSI_CMD_CYLS, dev_base->units[i].c);
                     READLONG(PISCSI_CMD_HEADS, dev_base->units[i].h);
@@ -184,9 +192,10 @@ static void __attribute__((used)) open(struct Library *dev asm("a6"), struct IOE
     }
 
     iotd->iotd_Req.io_Error = io_err;
-    int counter=((struct Library *)dev_base->pi_dev)->lib_OpenCnt++;
-    if(counter==1)
-        boot_menu();
+//    int counter=
+    ((struct Library *)dev_base->pi_dev)->lib_OpenCnt++;
+//    if(counter==1)
+//        boot_menu();
 
 }
 
@@ -227,63 +236,155 @@ static uint32_t __attribute__((used)) abort_io(struct Library *dev asm("a6"), st
 
     return IOERR_ABORTED;
 }
+uint32_t get_blocksize(uint8_t unit_num)
+{
+    uint32_t block_size;
+    switch(unit_num){
+        case 0:
+            READLONG(PISCSI_CMD_BLOCKSIZE0, block_size);
+            break;
+        case 1:
+            READLONG(PISCSI_CMD_BLOCKSIZE1, block_size);
+            break;
+        case 2:
+            READLONG(PISCSI_CMD_BLOCKSIZE2, block_size);
+            break;
+        case 3:
+            READLONG(PISCSI_CMD_BLOCKSIZE3, block_size);
+            break;
+        case 4:
+            READLONG(PISCSI_CMD_BLOCKSIZE4, block_size);
+            break;
+        case 5:
+            READLONG(PISCSI_CMD_BLOCKSIZE5, block_size);
+            break;
+        case 6:
+            READLONG(PISCSI_CMD_BLOCKSIZE6, block_size);
+            break;
+        case 7:
+            READLONG(PISCSI_CMD_BLOCKSIZE7, block_size);
+            break;
+        default:
+            block_size=0;
+    }
+    return block_size;
+}
+uint32_t get_blocks(uint8_t unit_num)
+{
+    uint32_t blocks;
+    switch(unit_num){
+        case 0:
+            READLONG(PISCSI_CMD_BLOCKS0, blocks);
+            break;
+        case 1:
+            READLONG(PISCSI_CMD_BLOCKS1, blocks);
+            break;
+        case 2:
+            READLONG(PISCSI_CMD_BLOCKS2, blocks);
+            break;
+        case 3:
+            READLONG(PISCSI_CMD_BLOCKS3, blocks);
+            break;
+        case 4:
+            READLONG(PISCSI_CMD_BLOCKS4, blocks);
+            break;
+        case 5:
+            READLONG(PISCSI_CMD_BLOCKS5, blocks);
+            break;
+        case 6:
+            READLONG(PISCSI_CMD_BLOCKS6, blocks);
+            break;
+        case 7:
+            READLONG(PISCSI_CMD_BLOCKS7, blocks);
+            break;
+        default:
+            blocks=0;
+    }
+    return blocks;
+}
 
+//static unsigned char last_unit_num=-1;
 uint8_t piscsi_rw(struct piscsi_unit *u, struct IORequest *io) {
     struct IOStdReq *iostd = (struct IOStdReq *)io;
     struct IOExtTD *iotd = (struct IOExtTD *)io;
 
     uint8_t* data;
     uint32_t len;
+    uint8_t unit_num;
+    ULONG io_Offset;
+    ULONG io_Actual;
     //uint32_t block, num_blocks;
     uint8_t sderr = 0;
     uint32_t block_size = 512;
 
-    data = iotd->iotd_Req.io_Data;
-    len = iotd->iotd_Req.io_Length;
-
+    unit_num = u->unit_num;
+//    if(last_unit_num!=u->unit_num)
+//    {
     WRITELONG(PISCSI_CMD_DRVNUMX, u->unit_num);
-    READLONG(PISCSI_CMD_BLOCKSIZE, block_size);
+//    READLONG(PISCSI_CMD_BLOCKSIZE, block_size);
+    block_size=get_blocksize(u->unit_num);
+//        last_unit_num=u->unit_num;
+//    }
 
+    data = iotd->iotd_Req.io_Data;
     if (data == 0) {
         return IOERR_BADADDRESS;
     }
+    len = iotd->iotd_Req.io_Length;
     if (len < block_size) {
         iostd->io_Actual = 0;
         return IOERR_BADLENGTH;
     }
-
+    io_Offset=iostd->io_Offset;
+    io_Actual=iostd->io_Actual;
     switch (io->io_Command) {
         case TD_WRITE64:
         case NSCMD_TD_WRITE64:
         case TD_FORMAT64:
-        case NSCMD_TD_FORMAT64:
-            WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
-            WRITELONG(PISCSI_CMD_ADDR2, len);
-            WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-            WRITELONG(PISCSI_CMD_ADDR4, iostd->io_Actual);
-            WRITELONG(PISCSI_CMD_WRITE64, u->unit_num);
+        case NSCMD_TD_FORMAT64: {
+    WRITELONG(PISCSI_CMD_WRITE_ADDR1, io_Offset);
+    WRITELONG(PISCSI_CMD_WRITE_ADDR2, len);
+    WRITELONG(PISCSI_CMD_WRITE_ADDR3, (uint32_t)data);
+            if((ULONG)data<0x08000000)
+                memcpy((uint8_t *)(Z3660_REGS + 0x80000), data, len);
+            WRITELONG(PISCSI_CMD_WRITE_ADDR4, io_Actual);
+            WRITE_CMD(PISCSI_CMD_WRITE64,unit_num,data,len);
             break;
+        }
         case TD_READ64:
-        case NSCMD_TD_READ64:
-            WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
-            WRITELONG(PISCSI_CMD_ADDR2, len);
-            WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-            WRITELONG(PISCSI_CMD_ADDR4, iostd->io_Actual);
-            WRITELONG(PISCSI_CMD_READ64, u->unit_num);
+        case NSCMD_TD_READ64: {
+    WRITELONG(PISCSI_CMD_READ_ADDR1, io_Offset);
+    WRITELONG(PISCSI_CMD_READ_ADDR2, len);
+    WRITELONG(PISCSI_CMD_READ_ADDR3, (uint32_t)data);
+            WRITELONG(PISCSI_CMD_READ_ADDR4, io_Actual);
+            WRITE_CMD(PISCSI_CMD_READ64,unit_num,data,len);
+            ULONG dma;
+            READLONG(PISCSI_CMD_USED_DMA,dma);
+            if(dma!=0)
+                memcpy((uint8_t *)data,(uint8_t *)(Z3660_REGS + 0x80000), len);
             break;
+        }
         case TD_FORMAT:
-        case CMD_WRITE:
-            WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
-            WRITELONG(PISCSI_CMD_ADDR2, len);
-            WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-            WRITELONG(PISCSI_CMD_WRITEBYTES, u->unit_num);
+        case CMD_WRITE: {
+    WRITELONG(PISCSI_CMD_WRITE_ADDR1, io_Offset);
+    WRITELONG(PISCSI_CMD_WRITE_ADDR2, len);
+    WRITELONG(PISCSI_CMD_WRITE_ADDR3, (uint32_t)data);
+            if((ULONG)data<0x08000000)
+                memcpy((uint8_t *)(Z3660_REGS + 0x80000), data, len);
+            WRITE_CMD(PISCSI_CMD_WRITEBYTES,unit_num,data,len);
             break;
-        case CMD_READ:
-            WRITELONG(PISCSI_CMD_ADDR1, iostd->io_Offset);
-            WRITELONG(PISCSI_CMD_ADDR2, len);
-            WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-            WRITELONG(PISCSI_CMD_READBYTES, u->unit_num);
+        }
+        case CMD_READ: {
+    WRITELONG(PISCSI_CMD_READ_ADDR1, io_Offset);
+    WRITELONG(PISCSI_CMD_READ_ADDR2, len);
+    WRITELONG(PISCSI_CMD_READ_ADDR3, (uint32_t)data);
+            WRITE_CMD(PISCSI_CMD_READBYTES,unit_num,data,len);
+            ULONG dma;
+            READLONG(PISCSI_CMD_USED_DMA,dma);
+            if(dma!=0)
+                memcpy((uint8_t *)data,(uint8_t *)(Z3660_REGS + 0x80000), len);
             break;
+        }
     }
 
     if (sderr) {
@@ -312,7 +413,8 @@ uint8_t piscsi_rw(struct piscsi_unit *u, struct IORequest *io) {
     return 0;
 }
 
-#define PISCSI_ID_STRING "Z3660    SCSI Disk      0.1 1111111111111111"
+#define PISCSI_ID_STRING "Z3660    SCSI DiskX     0.1 1111111111111111"
+// that X in position 18 is reserved for disknumber...
 
 uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
 {
@@ -323,10 +425,11 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
     uint32_t i, block = 0, blocks = 0, maxblocks = 0;
     uint8_t err = 0;
     uint8_t write = 0;
-    uint32_t block_size = 512;
+    uint32_t block_size;
 
-    WRITELONG(PISCSI_CMD_DRVNUMX, u->unit_num);
-    READLONG(PISCSI_CMD_BLOCKSIZE, block_size);
+//    WRITELONG(PISCSI_CMD_DRVNUMX, u->unit_num);
+//    READLONG(PISCSI_CMD_BLOCKSIZE, block_size);
+    block_size=get_blocksize(u->unit_num);
 
     debugval(PISCSI_DBG_VAL1, iostd->io_Length);
     debugval(PISCSI_DBG_VAL2, scsi->scsi_Command[0]);
@@ -363,6 +466,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
                         break;
                     case 1: // RMB = 1
                         val = (1 << 7);
+//                        val = 0;
                         break;
                     case 2: // VERSION = 0
                         val = 0;
@@ -375,13 +479,19 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
                         break;
                     default:
                         if (i >= 8 && i < 44)
-                            val = PISCSI_ID_STRING[i - 8];
+                        {
+                            if(i-8==18)
+                                val= '0'+u->unit_num;
+                            else
+                                val = PISCSI_ID_STRING[i - 8];
+                        }
                         else
                             val = 0;
                         break;
                 }
                 data[i] = val;
             }
+//            scsi->scsi_Actual = scsi->scsi_Length;
             scsi->scsi_Actual = i;
             err = 0;
             break;
@@ -413,9 +523,14 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
             blocks = (blocks << 8) | scsi->scsi_Command[8];
 
 scsireadwrite:;
-            WRITELONG(PISCSI_CMD_DRVNUM, (u->scsi_num));
-            READLONG(PISCSI_CMD_BLOCKS, maxblocks);
-            if (block + blocks > maxblocks || blocks == 0) {
+//            WRITELONG(PISCSI_CMD_DRVNUMX, u->unit_num);
+//            READLONG(PISCSI_CMD_BLOCKS, maxblocks);
+//            uint8_t unit_num;
+//            do{
+                maxblocks=get_blocks(u->unit_num);
+//                READLONG(PISCSI_CMD_DRVNUM,unit_num);
+//            }while(unit_num!=u->unit_num);
+            if (block > maxblocks || (block + blocks) > maxblocks || blocks == 0) {
                 err = IOERR_BADADDRESS;
                 break;
             }
@@ -423,18 +538,29 @@ scsireadwrite:;
                 err = IOERR_BADADDRESS;
                 break;
             }
-
+            uint32_t len=blocks << 9;
+/*            if (scsi->scsi_Length < len) {
+                err = IOERR_BADLENGTH;
+                break;
+            }
+*/
             if (write == 0) {
-                WRITELONG(PISCSI_CMD_ADDR1, block);
-                WRITELONG(PISCSI_CMD_ADDR2, (blocks << 9));
-                WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-                WRITELONG(PISCSI_CMD_READ, u->unit_num);
+                WRITELONG(PISCSI_CMD_READ_ADDR1, block);
+                WRITELONG(PISCSI_CMD_READ_ADDR2, len);
+                WRITELONG(PISCSI_CMD_READ_ADDR3, (uint32_t)data);
+                WRITE_CMD(PISCSI_CMD_READ,u->unit_num,data,len);
+                ULONG dma;
+                READLONG(PISCSI_CMD_USED_DMA,dma);
+                if(dma!=0)
+                    memcpy((uint8_t *)data,(uint8_t *)(Z3660_REGS + 0x80000), len);
             }
             else {
-                WRITELONG(PISCSI_CMD_ADDR1, block);
-                WRITELONG(PISCSI_CMD_ADDR2, (blocks << 9));
-                WRITELONG(PISCSI_CMD_ADDR3, (uint32_t)data);
-                WRITELONG(PISCSI_CMD_WRITE, u->unit_num);
+                if((ULONG)data<0x08000000)
+                    memcpy((uint8_t *)(Z3660_REGS + 0x80000), data, len);
+                WRITELONG(PISCSI_CMD_WRITE_ADDR1, block);
+                WRITELONG(PISCSI_CMD_WRITE_ADDR2, len);
+                WRITELONG(PISCSI_CMD_WRITE_ADDR3, (uint32_t)data);
+                WRITE_CMD(PISCSI_CMD_WRITE,u->unit_num,data,len);
             }
 
             scsi->scsi_Actual = scsi->scsi_Length;
@@ -446,14 +572,20 @@ scsireadwrite:;
                 err = HFERR_BadStatus;
                 break;
             }
-
+/*            if (scsi->scsi_Command[2] != 0 || scsi->scsi_Command[3] != 0 || scsi->scsi_Command[4] != 0 || scsi->scsi_Command[5] != 0 || (scsi->scsi_Command[8] & 1))
+            {
+                err = HFERR_BadStatus;
+                break;
+            }
+*/
             if (scsi->scsi_Length < 8) {
                 err = IOERR_BADLENGTH;
                 break;
             }
             
-            WRITELONG(PISCSI_CMD_DRVNUM, (u->scsi_num));
-            READLONG(PISCSI_CMD_BLOCKS, blocks);
+//            WRITELONG(PISCSI_CMD_DRVNUM, (u->unit_num));
+//            READLONG(PISCSI_CMD_BLOCKS, blocks);
+            blocks=get_blocks(u->unit_num);
             ((uint32_t*)data)[0] = blocks - 1;
             ((uint32_t*)data)[1] = block_size;
 
@@ -470,9 +602,14 @@ scsireadwrite:;
             debugval(PISCSI_DBG_VAL1, ((uint32_t)scsi->scsi_Command));
             debug(PISCSI_DBG_MSG, DBG_SCSI_DEBUG_MODESENSE_6);
 
-            WRITELONG(PISCSI_CMD_DRVNUM, (u->scsi_num));
-            READLONG(PISCSI_CMD_BLOCKS, maxblocks);
+//            WRITELONG(PISCSI_CMD_DRVNUM, (u->unit_num));
+//            READLONG(PISCSI_CMD_BLOCKS, maxblocks);
+            maxblocks=get_blocks(u->unit_num);
             (blocks = (maxblocks - 1) & 0xFFFFFF);
+//            if (maxblocks > (1 << 24))
+//                blocks = 0xffffff;
+//            else
+//                blocks = maxblocks;
 
             *((uint32_t *)&data[4]) = blocks;
             *((uint32_t *)&data[8]) = block_size;
@@ -485,14 +622,17 @@ scsireadwrite:;
                     datext[1] = 0x16; // page length
                     datext[2] = 0x00;
                     datext[3] = 0x01; // tracks per zone (heads)
+//                    *((uint16_t *)&datext[2]) = u->h;// tracks per zone (heads)
                     *((uint32_t *)&datext[4]) = 0;
                     *((uint32_t *)&datext[8]) = 0;
                     *((uint16_t *)&datext[10]) = u->s; // sectors per track
                     *((uint16_t *)&datext[12]) = block_size; // data bytes per physical sector
                     datext[14] = 0x00;
                     datext[15] = 0x01;
+//                    datext[15] = 0x00;
                     *((uint32_t *)&datext[16]) = 0;
                     datext[20] = 0x80;
+//                    datext[20] = (1 << 6) | (1 << 5);
 
                     scsi->scsi_Actual = data[0] + 1;
                     err = 0;
@@ -640,8 +780,10 @@ uint8_t piscsi_perform_io(struct piscsi_unit *u, struct IORequest *io) {
         case TD_GETGEOMETRY: {
             struct DriveGeometry *res = (struct DriveGeometry *)iostd->io_Data;
             WRITELONG(PISCSI_CMD_DRVNUMX, u->unit_num);
-            READLONG(PISCSI_CMD_BLOCKSIZE, res->dg_SectorSize);
-            READLONG(PISCSI_CMD_BLOCKS, res->dg_TotalSectors);
+//            READLONG(PISCSI_CMD_BLOCKSIZE, res->dg_SectorSize);
+            res->dg_SectorSize=get_blocksize(u->unit_num);
+//            READLONG(PISCSI_CMD_BLOCKS, res->dg_TotalSectors);
+            res->dg_TotalSectors=get_blocks(u->unit_num);
             res->dg_Cylinders = u->c;
             res->dg_CylSectors = u->s * u->h;
             res->dg_Heads = u->h;

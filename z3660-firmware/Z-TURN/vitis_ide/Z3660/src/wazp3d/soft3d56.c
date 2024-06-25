@@ -54,9 +54,11 @@ void Libfree(void *p)
 {
 	heap_free(p);
 }
-void Libmemcpy(void *s1,void *s2,LONG n)
+extern void *(memcpy_neon)(void * s1, const void * s2, u32 n);
+
+inline void Libmemcpy(void *s1,void *s2,LONG n)
 {
-	memcpy(s1,s2,n);
+	memcpy_neon(s1,s2,n);
 }
 void Libstrcpy(void *p1,void *p2)
 {
@@ -105,7 +107,7 @@ void Libloadfile(void *filename,void *pt,ULONG size)
 volatile struct Soft3DData *data3d = NULL;//(volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR);
 struct Soft3DData local_data;
 
-void handle_soft3d_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
+void handle_soft3d_op(uint16_t zdata)
 {
 //    if(con.debug_rtg)
 //    printf("soft3d_op 0x%X  %s\n",zdata,soft3d_op_string[zdata]);
@@ -117,6 +119,7 @@ void handle_soft3d_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
     		printf("data3d allocated at 0x%08lX\n",(uint32_t)data3d);
     		uint32_t add=(uint32_t)
     				SOFT3D_Start((uint32_t *)local_data.offset[0]);
+    		printf("SOFT3D_Start return value %08lx\n",add);
     		*(uint32_t*)(RTG_BASE+REG_ZZ_SOFT3D_OP)=swap32(add);
     	}
     		break;

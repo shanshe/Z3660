@@ -9,6 +9,7 @@
 #include "main.h"
 #include "cpu_emulator.h"
 #include "xil_types.h"
+#include <stdio.h>
 
 volatile uint32_t amiga_interrupts = 0;
 extern SHARED *shared;
@@ -48,6 +49,16 @@ void ipl_interrupt_handler(void *CallBackRef, u32 Bank, u32 Status)
 	shared->int_available=1;
 //	printf("Interrupt!\n");
 }
+volatile int read_reset=0;
+void reset_interrupt_handler(void *CallBackRef, u32 Bank, u32 Status)
+{
+//	XGpioPs *gpio=(XGpioPs *)CallBackRef;
+//	if(XGpioPs_ReadPin(gpio, n040RSTI)==0) // hehehe if you read it, surely it is high...
+	{
+		read_reset=1;
+		printf("Reset detected!\n");
+	}
+}
 
 XScuGic int_handler;
 XScuGic* interrupt_get_intc()
@@ -55,7 +66,7 @@ XScuGic* interrupt_get_intc()
 	return(&int_handler);
 }
 
-int interrupt_init(void* isr_video)
+int interrupt_init(void)
 {
 	int result;
 	XScuGic_Config *int_config;
@@ -67,7 +78,7 @@ int interrupt_init(void* isr_video)
 		return(result);
 	Xil_ExceptionInit();
 	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_IRQ_INT,(Xil_ExceptionHandler)XScuGic_InterruptHandler,&int_handler);
-//    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,(Xil_ExceptionHandler)XScuGic_InterruptHandler,&int_handler);
+    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,(Xil_ExceptionHandler)XScuGic_InterruptHandler,&int_handler);
 
 	return(XST_SUCCESS);
 }
@@ -119,6 +130,11 @@ int fpga_interrupt_connect(void* isr_video,void* isr_audio_tx, int ipl)
 		XGpioPs_SetCallbackHandler(&GpioPs,(void *)&GpioPs,ipl_interrupt_handler);
 		XScuGic_Enable(&int_handler,XPAR_XGPIOPS_0_INTR);
 	}
+	XScuGic_Connect(&int_handler,XPAR_XGPIOPS_0_INTR,(Xil_ExceptionHandler)XGpioPs_IntrHandler,(void *)(&GpioPs));
+	XGpioPs_IntrEnablePin(&GpioPs,n040RSTI);
+	XGpioPs_SetIntrTypePin(&GpioPs,n040RSTI,XGPIOPS_IRQ_TYPE_EDGE_FALLING);
+	XGpioPs_SetCallbackHandler(&GpioPs,NULL,reset_interrupt_handler);
+	XScuGic_Enable(&int_handler,XPAR_XGPIOPS_0_INTR);
 	return(XST_SUCCESS);
 }
 

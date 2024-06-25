@@ -27,6 +27,7 @@
 #include "../debug_console.h"
 #include "str_zzregs.h"
 #include "../lwip.h"
+#include "../alfa.txt"
 
 extern DEBUG_CONSOLE debug_console;
 void DEBUG_AUDIO(const char *format, ...)
@@ -61,7 +62,6 @@ uint32_t read_rtg_register(uint32_t zaddr);
 
 uint32_t gpio=0;
 uint16_t ack_request=0;
-extern uint16_t flag_cache_flush;
 uint32_t custom_vmode_param=0;
 uint32_t custom_video_mode=ZZVMODE_CUSTOM;
 ENV_FILE_VARS env_file_vars_temp;
@@ -93,9 +93,6 @@ int decoder_param = 0; // selected parameter
 int decoder_bytes_decoded = 0;
 int max_samples = 0;
 int frfb=0;
-
-//int video_mode = ZZVMODE_1920x1080_50 | 2 << 12 | MNTVA_COLOR_32BIT << 8;
-//int video_mode;// = ZZVMODE_800x600 | 2 << 12 | MNTVA_COLOR_32BIT << 8;
 
 // blitter etc
 uint16_t rect_x1 = 0;
@@ -496,6 +493,10 @@ uint32_t read_rtg_register(uint32_t zaddr)
       data=REVISION_BETA;
 //      printf("Read beta version number: %d\n",REVISION_BETA);
       break;
+   case REG_ZZ_FW_ALFA:
+      data=REVISION_ALFA;
+//      printf("Read alfa version number: %d\n",REVISION_ALFA);
+      break;
    case REG_ZZ_ETH_TX:
       data=ethernet_send_result;
       break;
@@ -792,7 +793,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
    }
    // Soft3D rendering
    case REG_ZZ_SOFT3D_OP: {
-      handle_soft3d_op(video_state,zdata);
+      handle_soft3d_op(zdata);
       break;
    }
 

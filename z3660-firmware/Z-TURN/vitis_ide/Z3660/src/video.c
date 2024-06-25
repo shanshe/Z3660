@@ -101,7 +101,7 @@ void do_update_hw_sprite_pos(int16_t x, int16_t y);
 void do_clip_hw_sprite(int16_t offset_x, int16_t offset_y);
 
 
-int interrupt_init(void* isr_video);
+int interrupt_init(void);
 
 ZZ_VIDEO_STATE* video_init() {
 #define NO_SCALE 0
@@ -110,7 +110,7 @@ ZZ_VIDEO_STATE* video_init() {
    vs.video_mode = ZZVMODE_800x600 | NO_SCALE << 12 | MNTVA_COLOR_16BIT565 << 8;
    vs.colormode = 0;
    vs.framebuffer_size=800*600*1;
-   interrupt_init(isr_video);
+   interrupt_init();
 
 //   video_reset();
 
@@ -209,14 +209,29 @@ void video_reset(void) {
    while(video_formatter_read(0)==1);
    while(video_formatter_read(0)==0);
    original_h=256;
-   video_mode_init(ZZVMODE_800x600, NO_SCALE, MNTVA_COLOR_16BIT565);
+   int vr=0;
+   switch(config.bootscreen_resolution)
+   {
+   	   case RES_1920x1080:
+   		   vr=ZZVMODE_1920x1080_60;
+   		   break;
+   	   case RES_1280x720:
+   		   vr=ZZVMODE_1280x720;
+   		   break;
+   	   case RES_800x600:
+   	   default:
+   		vr=ZZVMODE_800x600;
+   		   break;
+   }
+   video_mode_init(vr, NO_SCALE, MNTVA_COLOR_16BIT565);
    set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + 0), vs.vmode_hsize/vs.vmode_hdiv);
    memset(vs.framebuffer,0,vs.framebuffer_size);
 //   fill_rect_solid(0, 0, 800, 600, swap16(0x8410), MNTVA_COLOR_16BIT565);
 //   color_reset++;
 //   color_reset&=3;
-   set_pixelclock(&preset_video_modes[vs.video_mode]);
-   sii9022_init(&preset_video_modes[vs.video_mode]);
+// It is already done in video_mode_init...
+//   set_pixelclock(&preset_video_modes[vs.video_mode]);
+//   sii9022_init(&preset_video_modes[vs.video_mode]);
    while(video_formatter_read(0)==1);
    while(video_formatter_read(0)==0);
    init_vdma(vs.vmode_hsize,vs.vmode_vsize, 2, 1, (uint32_t)vs.framebuffer);

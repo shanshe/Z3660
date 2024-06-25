@@ -253,7 +253,7 @@ struct memory3D{
 
 /* if not AMIGA */
 #else                                  /* Make it use less memory on AmigaOS    */
-#define FRAGBUFFERSIZE (256*256)       /* Assume PC is fast enough to draw in   */
+#define FRAGBUFFERSIZE (512*512)       /* Assume PC is fast enough to draw in   */
 #endif                                 /* one call a big square 256x256 pixels  */
 
 #define PSIZE sizeof(struct point3D)   /* Size for copying a point              */

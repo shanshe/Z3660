@@ -191,9 +191,11 @@ OKToRun:
 
 	/*invalidate scu*/
 #if USE_AMP!=1
+/*
 	ldr	r7, =0xf8f0000c
 	ldr	r6, =0xffff
 	str	r6, [r7]
+*/
 #endif
 
 	/* Invalidate caches and TLBs */
@@ -303,6 +305,7 @@ shareable_loop:
 /* Invalidate L2 Cache and enable L2 Cache*/
 /* For AMP, assume running on CPU1. Don't initialize L2 Cache (up to Linux) */
 #if USE_AMP!=1
+#if 0==1
 	ldr	r0,=L2CCCrtl			/* Load L2CC base address base + control register */
 	mov	r1, #0				/* force the disable bit */
 	str	r1, [r0]			/* disable the L2 Caches */
@@ -354,6 +357,7 @@ Sync:	ldr	r1, [r0]
 	mov	r2, #L2CCControl		/* set the enable bit */
 	orr	r1,r1,r2
 	str	r1, [r0]			/* enable the L2 Caches */
+#endif
 #endif
 
 	mov	r0, r0

@@ -22,6 +22,12 @@
 #include "gfx.h"
 #include "../main.h"
 
+//#define MEMCPY memcpy
+#define MEMMOVE memmove_rom1
+#define MEMCPY memcpy_neon
+//#define MEMMOVE memcpy_neon
+
+extern void *(memcpy_neon)(void * s1, const void * s2, u32 n);
 
 uint32_t* fb=0;
 uint32_t fb_pitch=0;
@@ -36,22 +42,37 @@ static void *(memcpy_rom1)(void * s1, const void * s2, u32 n)
 		*dst++ = *src++;
 	return s1;
 }
+*/
 static void *(memmove_rom1)(void * s1, const void * s2, u32 n)
 {
-	char *dst = (char *)s1+n;
-	const char *src = (char *)s2+n;
+/*
+	if(s1 < s2)
+	{
+		char *dst = (char *)s1;
+		const char *src = (char *)s2;
 
-	// Loop and copy
-	while (n-- != 0)
-		*dst-- = *src--;
+		// Loop and copy
+		while (n-- != 0)
+			*dst++ = *src++;
+	}
+	else
+*/
+	{
+		char *dst = (char *)s1+n-1;
+		const char *src = (char *)s2+n-1;
+
+		// Loop and copy
+		while (n-- != 0)
+			*dst-- = *src--;
+	}
 	return s1;
 }
-*/
+
 void set_fb(uint32_t* fb_, uint32_t pitch) {
 	fb=fb_;
 	fb_pitch=pitch;
-//	if(((uint32_t)fb)>=0x08000000U-0x00200000U)
-//		printf("set_fb 0x%08lX\n",(uint32_t)fb);
+	if(((uint32_t)fb)<FRAMEBUFFER_ADDRESS || ((uint32_t)fb)>=Z3_SCRATCH_ADDR)
+		printf("set_fb 0x%08lX\n",(uint32_t)fb);
 }
 
 
@@ -187,12 +208,12 @@ void copy_rect_nomask(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h
 			if (!x_reverse)
 			{
 				for (uint16_t y_line = 0; y_line < h; y_line++,dp += line_step_d,sp += line_step_s)
-					memcpy((uint8_t *)dp + rect_x1, (uint8_t *)sp + rect_sx, w);
+					MEMCPY((uint8_t *)dp + rect_x1, (uint8_t *)sp + rect_sx, w);
 			}
 			else
 			{
 				for (uint16_t y_line = 0; y_line < h; y_line++,dp += line_step_d,sp += line_step_s)
-					memmove((uint8_t *)dp + rect_x1, (uint8_t *)sp + rect_sx, w);
+					MEMMOVE((uint8_t *)dp + rect_x1, (uint8_t *)sp + rect_sx, w);
 			}
 			break;
 
@@ -201,24 +222,24 @@ void copy_rect_nomask(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h
 			if (!x_reverse)
 			{
 				for (uint16_t y_line = 0; y_line < h; y_line++,dp += line_step_d,sp += line_step_s)
-					memcpy((uint16_t *)dp + rect_x1, (uint16_t *)sp + rect_sx, w * 2);
+					MEMCPY((uint16_t *)dp + rect_x1, (uint16_t *)sp + rect_sx, w * 2);
 			}
 			else
 			{
 				for (uint16_t y_line = 0; y_line < h; y_line++,dp += line_step_d,sp += line_step_s)
-					memmove((uint16_t *)dp + rect_x1, (uint16_t *)sp + rect_sx, w * 2);
+					MEMMOVE((uint16_t *)dp + rect_x1, (uint16_t *)sp + rect_sx, w * 2);
 			}
 			break;
 		case MNTVA_COLOR_32BIT:
 			if (!x_reverse)
 			{
 				for (uint16_t y_line = 0; y_line < h; y_line++,dp += line_step_d,sp += line_step_s)
-					memcpy(dp + rect_x1, sp + rect_sx, w * 4);
+					MEMCPY(dp + rect_x1, sp + rect_sx, w * 4);
 			}
 			else
 			{
 				for (uint16_t y_line = 0; y_line < h; y_line++,dp += line_step_d,sp += line_step_s)
-					memmove(dp + rect_x1, sp + rect_sx, w * 4);
+					MEMMOVE(dp + rect_x1, sp + rect_sx, w * 4);
 			}
 			break;
 		}
@@ -864,14 +885,14 @@ engage_cheat_codes:;
 		for (uint16_t y_line = cheat_y; y_line < h; y_line++) {
 			switch (color_format) {
 				case MNTVA_COLOR_8BIT:
-					memcpy(&((uint8_t *)dp)[rect_x1], &((uint8_t *)sp)[rect_x1], w);
+					MEMCPY(&((uint8_t *)dp)[rect_x1], &((uint8_t *)sp)[rect_x1], w);
 					break;
 				case MNTVA_COLOR_16BIT565:
 				case MNTVA_COLOR_15BIT:
-					memcpy(&((uint16_t *)dp)[rect_x1], &((uint16_t *)sp)[rect_x1], w * 2);
+					MEMCPY(&((uint16_t *)dp)[rect_x1], &((uint16_t *)sp)[rect_x1], w * 2);
 					break;
 				case MNTVA_COLOR_32BIT:
-					memcpy(&dp[rect_x1], &sp[rect_x1], w * 4);
+					MEMCPY(&dp[rect_x1], &sp[rect_x1], w * 4);
 					break;
 			}
 			dp += fb_pitch / 4;
@@ -1090,7 +1111,7 @@ void acc_flip_to_fb(uint32_t src, uint32_t dest, uint16_t w, uint16_t h, uint16_
 	uint8_t* sp = (uint8_t*)((uint32_t)src);
 	uint8_t* dp = (uint8_t *)((uint32_t)dest);
 
-	memcpy(dp, sp, h * pitch);
+	MEMCPY(dp, sp, h * pitch);
 }
 
 void acc_blit_rect(uint32_t src, uint32_t dest, uint16_t dx, uint16_t dy, uint16_t w, uint16_t h, uint16_t src_pitch, uint16_t dest_pitch, uint8_t draw_mode, uint8_t mask_color)
@@ -1108,7 +1129,7 @@ void acc_blit_rect(uint32_t src, uint32_t dest, uint16_t dx, uint16_t dy, uint16
 			dp = (uint8_t*)((uint32_t)src) + (dy) * src_pitch;
 
 			for (int y = 0; y < 0; y++) {
-				memmove(dp, sp, w);
+				MEMMOVE(dp, sp, w);
 				dp -= dest_pitch;
 				sp -= src_pitch;
 			}
@@ -1130,7 +1151,7 @@ void acc_blit_rect(uint32_t src, uint32_t dest, uint16_t dx, uint16_t dy, uint16
 	}
 
 	for (int i = 0; i < h; i++) {
-		memcpy(dp, sp, w);
+		MEMCPY(dp, sp, w);
 		dp += dest_pitch;
 		sp += src_pitch;
 	}

@@ -246,7 +246,8 @@ void cpu_emulator_reset(void)
 
 void hard_reboot(void)
 {
-   cpu_emulator_reset();
+//   cpu_emulator_reset();
+   CPLD_RESET_ARM(0);
 #define PS_RST_CTRL_REG         (XPS_SYS_CTRL_BASEADDR + 0x244)
 #define PS_RST_MASK         0x3   /**< PS software reset (Core 1 reset)*/
    Xil_Out32(PS_RST_CTRL_REG, PS_RST_MASK);
@@ -265,7 +266,7 @@ void cpu_emulator(void)
 {
 //   printf("Bus Request from ARM OK\n");
 
-   video_reset();
+//   video_reset();
    audio_reset();
 
    printf("Starting CPU emulator on Core1\n");

@@ -36,8 +36,19 @@
 #include "interrupt.h"
 #include "memorymap.h"
 #include "main.h"
+#include "debug_console.h"
+extern DEBUG_CONSOLE debug_console;
 
 static XEmacPs EmacPsInstance;
+void DEBUG_ETHERNET(const char *format, ...)
+{
+	if(debug_console.debug_ethernet==0)
+		return;
+	va_list args;
+	va_start(args, format);
+	vprintf(format,args);
+	va_end(args);
+}
 
 // could also be 55, 77 (eth1), see interrupts.pdf last page
 // XPS_GEM0_INT_ID == 54
@@ -331,25 +342,26 @@ static void xEmacPsSendHandler(void *Callback)
 	uint32_t status = XEmacPs_ReadReg(EmacPsInstancePtr->Config.BaseAddress, XEMACPS_TXSR_OFFSET);
 	XEmacPs_WriteReg(EmacPsInstancePtr->Config.BaseAddress, XEMACPS_TXSR_OFFSET, status);
 
-//	printf("XEMACPS_TXSR status: %lu\n", status);
+	DEBUG_ETHERNET("XEMACPS_TXSR status: %lu\n", status);
 
 	int bds_sent = XEmacPs_BdRingFromHwTx(&(XEmacPs_GetTxRing(EmacPsInstancePtr)), 1, &BdTxPtr);
 
 	if (bds_sent == 1) {
 		status = XEmacPs_BdGetStatus(BdTxPtr);
-
-		/*printf("BD status: ");
-		if (status&XEMACPS_TXBUF_USED_MASK) printf("USED ");
-		if (status&XEMACPS_TXBUF_WRAP_MASK) printf("WRAP ");
-		if (status&XEMACPS_TXBUF_RETRY_MASK) printf("RETRY "); // retry limit exceeded
-		if (status&XEMACPS_TXBUF_URUN_MASK) printf("URUN"); // tx underrun
-		if (status&XEMACPS_TXBUF_EXH_MASK) printf("EXH "); // buffers exhausted
-		if (status&XEMACPS_TXBUF_TCP_MASK) printf("TCP "); // late collision
-		if (status&XEMACPS_TXBUF_NOCRC_MASK) printf("NOCRC "); // no crc
-		if (status&XEMACPS_TXBUF_LAST_MASK) printf("LAST ");
-		if (status&XEMACPS_TXBUF_LEN_MASK) printf("LEN ");
-		printf("\n");*/
-
+		if(debug_console.debug_ethernet)
+		{
+			DEBUG_ETHERNET("BD status: ");
+			if (status&XEMACPS_TXBUF_USED_MASK) DEBUG_ETHERNET("USED ");
+			if (status&XEMACPS_TXBUF_WRAP_MASK) DEBUG_ETHERNET("WRAP ");
+			if (status&XEMACPS_TXBUF_RETRY_MASK) DEBUG_ETHERNET("RETRY "); // retry limit exceeded
+			if (status&XEMACPS_TXBUF_URUN_MASK) DEBUG_ETHERNET("URUN"); // tx underrun
+			if (status&XEMACPS_TXBUF_EXH_MASK) DEBUG_ETHERNET("EXH "); // buffers exhausted
+			if (status&XEMACPS_TXBUF_TCP_MASK) DEBUG_ETHERNET("TCP "); // late collision
+			if (status&XEMACPS_TXBUF_NOCRC_MASK) DEBUG_ETHERNET("NOCRC "); // no crc
+			if (status&XEMACPS_TXBUF_LAST_MASK) DEBUG_ETHERNET("LAST ");
+			if (status&XEMACPS_TXBUF_LEN_MASK) DEBUG_ETHERNET("LEN ");
+			DEBUG_ETHERNET("\n");
+		}
 		status = XEmacPs_BdRingFree(&(XEmacPs_GetTxRing(EmacPsInstancePtr)), 1, BdTxPtr);
 
 		if (status != XST_SUCCESS) {
@@ -415,7 +427,7 @@ static void xEmacPsRecvHandler(void *Callback)
 	// and this will free up the EmacPS receive buffer again.
 
 	if (num_rx_bufs > 0) {
-		//printf("EMAC: num_rx_bufs %d\n", num_rx_bufs);
+		DEBUG_ETHERNET("EMAC: num_rx_bufs %d\n", num_rx_bufs);
 
 		cur_bd_ptr = rxbdset;
 
@@ -423,14 +435,14 @@ static void xEmacPsRecvHandler(void *Callback)
 
 			frame_serial++;
 
-			//printf("RX ser: %d\n",frame_serial);
+			DEBUG_ETHERNET("RX ser: %d\n",frame_serial);
 
 			uint32_t bd_idx = XEMACPS_BD_TO_INDEX(rxring, cur_bd_ptr);
 			int rx_bytes = XEmacPs_BdGetLength(cur_bd_ptr);
 
 			uint8_t* frame_ptr = (uint8_t*)(RxFrame + bd_idx*FRAME_SIZE);
 
-			//printf("EMAC: RX: %d [%d] bd_idx: %d\n", frame_serial, rx_bytes, bd_idx);
+			DEBUG_ETHERNET("EMAC: RX: %d [%d] bd_idx: %d\n", frame_serial, rx_bytes, bd_idx);
 
 //			Xil_DCacheInvalidateRange((UINTPTR)frame_ptr, FRAME_SIZE);
 //			Xil_L1DCacheFlushRange((UINTPTR)frame_ptr, FRAME_SIZE);
@@ -448,9 +460,9 @@ static void xEmacPsRecvHandler(void *Callback)
 
 				frames_backlog++;
 
-//				printf("bd %ld [%d] copied from %p to %p\n", bd_idx, rx_bytes, frame_ptr, frame_bl_ptr);
+				DEBUG_ETHERNET("bd %ld [%d] copied from %p to %p\n", bd_idx, rx_bytes, frame_ptr, frame_bl_ptr);
 			} else {
-//				printf("EMAC: frames_backlog full\n");
+				DEBUG_ETHERNET("EMAC: frames_backlog full\n");
 			}
 
 			XEmacPs_BdClearRxNew(cur_bd_ptr);
@@ -461,14 +473,14 @@ static void xEmacPsRecvHandler(void *Callback)
 
 		int Status = XEmacPs_BdRingFree(rxring, num_rx_bufs, rxbdset);
 		if (Status != XST_SUCCESS) {
-			//printf("EMAC: Error freeing RxBDs\n");
+			DEBUG_ETHERNET("EMAC: Error freeing RxBDs\n");
 		} else {
-			//printf("EMAC: freed %d RxBDs\n", num_rx_bufs);
+			DEBUG_ETHERNET("EMAC: freed %d RxBDs\n", num_rx_bufs);
 		}
 
 		ethernet_alloc_rx_frames();
 
-		//printf("EMAC: backlog %d fetched %d\n", frames_backlog, frames_received_from_backlog);
+		DEBUG_ETHERNET("EMAC: backlog %d fetched %d\n", frames_backlog, frames_received_from_backlog);
 	}
 
 	status = XEmacPs_ReadReg(EmacPsInstancePtr->Config.BaseAddress, XEMACPS_RXSR_OFFSET);
@@ -511,11 +523,11 @@ int ethernet_receive_frame() {
 			frm[2]=old_serial_0;
 			frm[3]=old_serial_1;
 
-//			printf("EMAC: caught up with backlog\n");
+			DEBUG_ETHERNET("EMAC: caught up with backlog\n");
 		}
 	} else {
 		// this is NOT an error, Amiga wants data and there is no data on RX buffers
-//		printf("EMAC: ethernet_receive_frame() called but backlog is empty\n");
+		DEBUG_ETHERNET("EMAC: ethernet_receive_frame() called but backlog is empty\n");
 	}
 	return(frames_received_from_backlog);
 }
@@ -562,7 +574,7 @@ static void xEmacPsErrorHandler(void *Callback, uint8_t Direction, uint32_t Erro
 			printf("EMAC: Receive DMA error\n");
 		}
 		if (ErrorWord & XEMACPS_RXSR_RXOVR_MASK) {
-//			printf("EMAC: Receive over run\n");
+			DEBUG_ETHERNET("EMAC: Receive over run\n");
 		}
 		if (ErrorWord & XEMACPS_RXSR_BUFFNA_MASK) {
 			printf("EMAC: Receive buffer not available\n");
@@ -570,7 +582,7 @@ static void xEmacPsErrorHandler(void *Callback, uint8_t Direction, uint32_t Erro
 			frames_dropped++;
 			frames_received++;
 			if (frames_dropped%10 == 0) {
-//				printf("ETHDROP: %d\n",frames_dropped);
+				DEBUG_ETHERNET("ETHDROP: %d\n",frames_dropped);
 				ethernet_alloc_rx_frames();
 			}
 		}
@@ -646,13 +658,13 @@ LONG setup_phy(XEmacPs * EmacPsInstancePtr)
 
 	if (PhyIdentity == PHY_ID_MICREL_KSZ9031) {
 		eth_phy_type_ = ETH_PHY_TYPE_MICREL;
-		printf("EMAC: MICREL KSZ9031 PHY detected\n");
+		printf("EMAC: MICROCHIP KSZ9031 PHY detected\n");
 		micrel_auto_negotiate(EmacPsInstancePtr, PhyAddr,eth_phy_type_);
 		return(XST_SUCCESS);
 	}
 	else if (PhyIdentity == 0x4f51) {
 		eth_phy_type_ = ETH_PHY_TYPE_MOTORCOMM;
-		printf("EMAC: MOTORCOMM TY8531S PHY detected\n");
+		printf("EMAC: MOTORCOMM YT8531S PHY detected\n");
 		micrel_auto_negotiate(EmacPsInstancePtr, PhyAddr,eth_phy_type_);
 		return(XST_SUCCESS);
 	}
@@ -723,11 +735,11 @@ void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_typ
 	int link_speed = 100;
 
 	if(eth_phy_type == ETH_PHY_TYPE_MOTORCOMM) {
-		printf("PHY: Start Ethernet PHY auto negotiation (MotorComm)\n");
+		printf("PHY: Start Ethernet PHY auto negotiation (MotorCom YT8531S)\n"); //MotorComm
 		// access IEEE MII regs
-		XEmacPs_PhyWrite(xemacpsp, phy_addr, 0x100, 0x6);
+//		XEmacPs_PhyWrite(xemacpsp, phy_addr, 0x100, 0x6);
 	} else {
-		printf("PHY: Start Ethernet PHY auto negotiation (Micrel)\n");
+		printf("PHY: Start Ethernet PHY auto negotiation (Microchip KSZ9031)\n"); //Micrel
 	}
 
 	XEmacPs_PhyWrite(xemacpsp, phy_addr, IEEE_PAGE_ADDRESS_REGISTER, 2);
@@ -795,7 +807,7 @@ void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_typ
 		}
 	}
 
-	XEmacPs_PhyRead(xemacpsp, phy_addr, IEEE_STATUS_REG_OFFSET, &status);
+		XEmacPs_PhyRead(xemacpsp, phy_addr, IEEE_STATUS_REG_OFFSET, &status);
 
 	printf("PHY: Waiting for PHY to complete auto negotiation. (status: %x).\n", status);
 }
@@ -956,8 +968,8 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
 
 	XEmacPs_Transmit(EmacPsInstancePtr);
 
-//	printf("FramesTx:%ld\n",FramesTx);
-//	printf("BdTxPtr:0x%08lx\n",(uint32_t)BdTxPtr);
+	DEBUG_ETHERNET("FramesTx:%ld\n",FramesTx);
+	DEBUG_ETHERNET("BdTxPtr:0x%08lx\n",(uint32_t)BdTxPtr);
 	uint32_t counter = 0;
 	while (old_frames_tx == FramesTx) {
 		usleep(100);
@@ -969,7 +981,7 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
 			return(4);
 		}
 	}
-//	printf("frame %ld transmitted!\n",FramesTx);
+	DEBUG_ETHERNET("frame %ld transmitted!\n",FramesTx);
 
 	// all good
 	return(0);

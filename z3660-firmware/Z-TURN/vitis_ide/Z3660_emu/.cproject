@@ -73,7 +73,7 @@
                                     								
                                 </option>
                                 								
-                                <option id="xilinx.gnu.compiler.misc.other.1463549120" name="Other flags" superClass="xilinx.gnu.compiler.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -MT&quot;$@&quot; -mcpu=cortex-a9 -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -mfloat-abi=hard -ffast-math" valueType="string"/>
+                                <option id="xilinx.gnu.compiler.misc.other.1463549120" name="Other flags" superClass="xilinx.gnu.compiler.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -MT&quot;$@&quot; -mcpu=cortex-a9 -mfpu=neon-vfpv3 -ftree-vectorize -mvectorize-with-neon-quad -mfloat-abi=hard -ffast-math" valueType="string"/>
                                 								
                                 <option id="xilinx.gnu.compiler.symbols.defined.348038599" name="Defined symbols (-D)" superClass="xilinx.gnu.compiler.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
                                     									

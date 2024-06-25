@@ -31,7 +31,7 @@ For this you will need the new CPLD firmware, if you don't update it, then 060 w
 I think I haven't to say it but... obviously, you will need to connect an ethernet cable to the z-turn...
  * From serial console, you can select different phase for clocks. The setting can't be stored, this is only for my own tests.
  * Warp3D working in 060 and EMU, you will need the Wazp3D-Prefs and set Renderer to "Soft to Bitmap"
- 
+
 ##v1.03 beta 3
  * SCSI SD emulation had two main issues.
 <br> 1. The first one was that when copying a lot of data sometines the change between units was no applied, so the destination hdf had a bad write to a unknown block sector... this made the hdf corruption.
@@ -39,5 +39,8 @@ I think I haven't to say it but... obviously, you will need to connect an ethern
 Finally, I have working and booting several hdf and partitions with PFS3
  * Warp3D should work now with and without Zorro3 RAM. It had some addreses hardcoded in beta 2, now all addresses are calculated in the system boot.
  * I have been working on the reset of 060 and ARM (I always reseted the ARM when Amiga was reseted, and this made that "Boot with no Startup-Sequence" didn't work). Now the reset of ARM is not attached to the reset of the Amiga, but sometimes the ARM doesn't reinit the Amiga autoconfig (that is done in FPGA when using the 060. EMU is not affected) so sometimes you will not see the SCSI, Z3 RAM and RTG boards... WIP...
- 
- 
+
+##v1.03 beta 4
+ * Ethernet driver got statistics and then apps like netmon now shows info about your network (thanks to @Stefan R )
+ * New Boot screen showing a new logo, and info about version and options loaded. You need a new folder named images in exFAT partition.
+ * RTG now has different MMU configurations in its different memory zones. So, the cache activity of the ARM RAM is not seen as RTG glitches, but without loosing the acceleration of the cache.

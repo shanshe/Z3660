@@ -31,6 +31,9 @@ extern CONFIG config;
 // Uncomment the line below to enable debug output
 //#define PISCSI_DEBUG
 uint32_t used_dma=0;
+#define MEMCPY memcpy
+//#define MEMCPY memcpy_neon
+extern void *(memcpy_neon)(void * s1, const void * s2, u32 n);
 
 #ifdef PISCSI_DEBUG
 #define read8(a) *(uint8_t*)(a)
@@ -795,7 +798,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
             }
 
             map = piscsi_u32_read[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32_read[2]);
-            if ( (config.cpu_ram        && (map>=0x08000000) && (map<0x18000000))
+            if ( (config.cpu_ram        && (map>=0x08000000) && (map<0x10000000))
                ||(config.autoconfig_ram && (map>=0x40000000) && (map<0x50000000))
 			   )
             {
@@ -824,6 +827,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
             		printf("SCSI ERROR!!! bytes_to_read=%ld, bytes_read=%d\n",piscsi_u32_read[1],n_bytes);
             	}
             }
+            Xil_L1DCacheFlush();
             break;
         case PISCSI_CMD_WRITE64:
         case PISCSI_CMD_WRITE:
@@ -864,7 +868,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
             }
 
             map = piscsi_u32_write[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32_write[2]);
-            if ( ((map>=0x08000000) && (map<0x18000000) && config.cpu_ram)
+            if ( ((map>=0x08000000) && (map<0x10000000) && config.cpu_ram)
                ||((map>=0x40000000) && (map<0x50000000) && config.autoconfig_ram)
                )
             {
@@ -894,6 +898,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
             		printf("SCSI ERROR!!! bytes_to_write=%ld, bytes_written=%d dma=0x%08lX\n",piscsi_u32_write[1],n_bytes,used_dma);
             	}
             }
+            Xil_L1DCacheFlush();
             break;
         case PISCSI_CMD_READ_ADDR1:
         case PISCSI_CMD_READ_ADDR2:
@@ -933,7 +938,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
         case PISCSI_CMD_DRIVER:
             DEBUG("[PISCSI] Driver copy/patch called, destination address %.8lX.\n", val);
 //            r = 0;//get_mapped_item_by_address(cfg, val);
-            if ( ((val>=0x08000000) && (val<0x18000000) && config.cpu_ram)
+            if ( ((val>=0x08000000) && (val<0x10000000) && config.cpu_ram)
                ||((val>=0x40000000) && (val<0x50000000) && config.autoconfig_ram)
                )
             {
@@ -942,7 +947,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
                 uint32_t addr = val;// - cfg->map_offset[r];
                 uint8_t *dst_data = 0;//cfg->map_data[r];
                 uint8_t cur_partition = 0;
-                memcpy(dst_data + addr, piscsi_rom_ptr + PISCSI_DRIVER_OFFSET, BOOT_ROM_SIZE - PISCSI_DRIVER_OFFSET);
+                MEMCPY(dst_data + addr, piscsi_rom_ptr + PISCSI_DRIVER_OFFSET, BOOT_ROM_SIZE - PISCSI_DRIVER_OFFSET);
 
                 piscsi_hinfo.base_offset = val;
 
@@ -978,7 +983,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
                             PUTNODELONG(i);
                             PUTNODELONG(0);
                             uint32_t nodesize = (be32toh(devs[i].pb[j]->pb_Environment[0]) + 1) * 4;
-                            memcpy(dst_data + p_offs, devs[i].pb[j]->pb_Environment, nodesize);
+                            MEMCPY(dst_data + p_offs, devs[i].pb[j]->pb_Environment, nodesize);
 
                             struct pihd_dosnode_data *dat = (struct pihd_dosnode_data *)(&dst_data[addr2+0x20]);
 
@@ -1030,7 +1035,7 @@ skip_disk:;
             break;
         case PISCSI_CMD_COPYFS: {
         	uint32_t addr=val;
-            if ( ((addr>=0x08000000) && (addr<0x18000000) && config.cpu_ram)
+            if ( ((addr>=0x08000000) && (addr<0x10000000) && config.cpu_ram)
                ||((addr>=0x40000000) && (addr<0x50000000) && config.autoconfig_ram)
                )
             {
@@ -1038,7 +1043,7 @@ skip_disk:;
 				printf("[PISCSI] Copy file system %ld to %.8lX and reloc.\n", rom_cur_fs + 1, addr);
 //				r = 0;//get_mapped_item_by_address(cfg, addr);
 //				if (r != -1) {
-					memcpy((uint8_t *)addr, filesystems[rom_cur_fs].binary_data, filesystems[rom_cur_fs].h_info.byte_size);
+					MEMCPY((uint8_t *)addr, filesystems[rom_cur_fs].binary_data, filesystems[rom_cur_fs].h_info.byte_size);
 					filesystems[rom_cur_fs].h_info.base_offset = addr;
 					reloc_hunks(filesystems[rom_cur_fs].relocs, (uint8_t*) addr, &filesystems[rom_cur_fs].h_info);
 					filesystems[rom_cur_fs].handler = addr;
@@ -1056,7 +1061,7 @@ skip_disk:;
             int i = 0;
             DEBUG("[PISCSI] Set handler for partition %ld (DeviceNode: %.8lX)\n", rom_cur_partition, val);
             uint32_t addr = val;// - cfg->map_offset[r];
-			if ( ((addr>=0x08000000) && (addr<0x18000000) && config.cpu_ram)
+			if ( ((addr>=0x08000000) && (addr<0x10000000) && config.cpu_ram)
 			   ||((addr>=0x40000000) && (addr<0x50000000) && config.autoconfig_ram)
 			   )
 			{
@@ -1095,7 +1100,7 @@ fs_found:;
             DEBUG("[PISCSI] Attempt to load file system for partition %ld from disk.\n", rom_cur_partition);
             printf("->>>>>>>>>>>>>>>>>>> a1 %08lX\n",val);
             uint32_t addr = val;
-            if ( ((addr>=0x08000000) && (addr<0x18000000) && config.cpu_ram)
+            if ( ((addr>=0x08000000) && (addr<0x10000000) && config.cpu_ram)
 			   ||((addr>=0x40000000) && (addr<0x50000000) && config.autoconfig_ram)
 			   )
 			{

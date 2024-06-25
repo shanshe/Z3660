@@ -23,6 +23,7 @@ typedef enum {
 	DSCSI,   DEBUG_SCSI,
 	DAUDIO,  DEBUG_AUDIO,
 	DI2C,    DEBUG_I2C,
+	DENET,   DEBUG_ENET,
 	DSOFT3D, DEBUG_SOFT3D,
 	H,       HELP,
 	SD,      STOP_DEBUG,
@@ -58,6 +59,7 @@ const char *command_names[NUM_COMMANDS] = {
 	"DSCSI",   "DEBUG SCSI",
 	"DAUDIO",  "DEBUG AUDIO",
 	"DI2C",    "DEBUG I2C",
+	"DENET",   "DEBUG ENET",
 	"DSOFT3D", "DEBUG SOFT3D",
 	"H",       "HELP",
 	"SD",      "STOP DEBUG",
@@ -94,6 +96,7 @@ void debug_console_init(void)
 	debug_console.subcmd=0;
 	debug_console.debug_scsi=0;
 	debug_console.debug_audio=0;
+	debug_console.debug_ethernet=0;
 	debug_console.debug_soft3d=0;
 	debug_console.debug_i2c=0;
 	debug_console.stop_i2c=0;
@@ -319,6 +322,15 @@ void debug_console_loop(void)
 								xil_printf("DEBUG AUDIO OFF\r\n");
 							debug_console.subcmd=0;
 							break;
+						case DENET:
+						case DEBUG_ENET:
+							debug_console.debug_ethernet=!debug_console.debug_ethernet;
+							if(debug_console.debug_ethernet)
+								xil_printf("DEBUG ETHERNET ON\r\n");
+							else
+								xil_printf("DEBUG ETHERNET OFF\r\n");
+							debug_console.subcmd=0;
+							break;
 						case DSOFT3D:
 						case DEBUG_SOFT3D:
 							debug_console.debug_soft3d=!debug_console.debug_soft3d;
@@ -347,6 +359,7 @@ void debug_console_loop(void)
 							debug_console.debug_rtg=0;
 							debug_console.debug_scsi=0;
 							debug_console.debug_audio=0;
+							debug_console.debug_ethernet=0;
 							debug_console.debug_soft3d=0;
 							debug_console.debug_i2c=0;
 							xil_printf("ALL DEBUG STOPPED\r\n");
@@ -754,6 +767,7 @@ void debug_console_help(void)
 	xil_printf("'DSCSI'   or 'DEBUG SCSI' for toggling debug SCSI commands.\r\n");
 	xil_printf("'DAUDIO'  or 'DEBUG AUDIO' for toggling debug AHI/MHI commands.\r\n");
 	xil_printf("'DI2C'    or 'DEBUG I2C' for toggling debug i2c (LTC2990)\r\n");
+	xil_printf("'DENET'   or 'DEBUG ENET' for toggling debug ETHERNET commands.\r\n");
 	xil_printf("'DSOFT3D' or 'DEBUG SOFT3D' for toggling debug SOFT3D commands.\r\n");
 	xil_printf("'SD'      or 'STOP DEBUG' for stop all debugging.\r\n");
 	xil_printf("'DMMU'    or 'DUMP MMU' for dumping Core0 MMU content.\r\n");

@@ -1,5 +1,5 @@
 /*
- * mem.c
+ * uae_emulator.cc
  *
  *  Created on: 2 ene. 2023
  *      Author: shanshe
@@ -525,8 +525,8 @@ addrbank drct_bank = {
       0xFFFFFFFF, //mask
       0, // startmask
       0, // start
-      0x10000000, // allocated_size 256 MByte
-      0x10000000, // reserved_size 256 MByte
+      0x08000000, // allocated_size 256 MByte
+      0x08000000, // reserved_size 256 MByte
       (uae_u8*)0x08000000, // baseaddr_direct_r
       (uae_u8*)0x08000000, // baseaddr_direct_w
       0x08000000, // startaccessmask
@@ -640,6 +640,11 @@ extern void init_mem_banks (void);
 extern void finish_Attributes(void);
 extern uint32_t MMUTable;
 extern uint32_t MMUL2Table[];
+extern "C" void make_dummy_address_bank(uint32_t address)
+{
+   int add=address>>16;
+   RANGE_MAP(add,add,dmmy_bank); // dummy
+}
 void uae_emulator(int enable_jit)
 {
    z3660_printf("[Core1] Starting UAE%s emulator\n",enable_jit?"JIT":"");
@@ -711,9 +716,12 @@ void uae_emulator(int enable_jit)
          MMUL2Table[i]=0;
       RANGE_MAP(0x00F0,0x00F8,slow_bank);//mobo_bank); // Mother Board bank ( Mobo ROM )
    }
-   RANGE_MAP(0x0100,0x0800,mbrm_bank); // Mother Board bank ( Mother board RAM )
+   RANGE_MAP(0x0100,0x0800,dmmy_bank);//mbrm_bank); // Mother Board bank ( Mother board RAM )
    RANGE_MAP(0x0800,0x1000,drct_bank); // Direct bank ( CPU RAM )
-   RANGE_MAP(0x1000,0x8000,slow_bank); // Slow bank ( Z3 Expansion space )
+   RANGE_MAP(0x1000,0x1800,dflt_bank); // Direct bank ( extended CPU RAM )
+   RANGE_MAP(0x1800,0x4000,dmmy_bank); // Slow bank ( Z3 Expansion space )
+   RANGE_MAP(0x4000,0x8000,slow_bank); // Slow bank ( Z3 Expansion space )
+   RANGE_MAP(0xFF00,0xFF01,auto_bank); // Autoconfig bank ( Z3660 and Z3 AutoConfig )
    RANGE_MAP(0xFFFF,0xFFFF,dmmy_bank); // dummy
    uint32_t *ptr;
        ptr = &MMUTable;

@@ -9,7 +9,7 @@
 #include "rtg/fonts.h"
 #include "config_file.h"
 #include "xil_mmu.h"
-
+sFONT *Font=&Font20;
 extern SHARED *shared;
 #define NOP __asm(" NOP")
 
@@ -180,22 +180,22 @@ void handle_cache_flush(uint32_t address,uint32_t size);
 extern ZZ_VIDEO_STATE vs;
 void copy_rect_mobotest( int line)
 {
-#define LINE_MAX 49
-	int delta=(line-LINE_MAX)*Font12.Height;
-	uint32_t h = 600 - delta;
-	uint32_t w = 800;
+#define LINE_MAX ((vs.vmode_vsize/Font->Height) - 1)
+	int delta=(line-LINE_MAX)*Font->Height;
+	uint32_t h = vs.vmode_vsize - delta;
+	uint32_t w = vs.vmode_hsize;
 	uint16_t *dp=(uint16_t *)(FRAMEBUFFER_ADDRESS);
-	uint16_t *sp=(uint16_t *)(FRAMEBUFFER_ADDRESS+delta*800*2);
+	uint16_t *sp=(uint16_t *)(FRAMEBUFFER_ADDRESS+delta*w*2);
 	for (uint16_t y_line = 0; y_line < h; y_line++,dp += w,sp += w)
 		memcpy(dp, sp, w * 2);
-	for (uint16_t y_line = h; y_line < 600; y_line++,dp += w)
+	for (uint16_t y_line = h; y_line < vs.vmode_vsize; y_line++,dp += w)
 		memset(dp, 0, w * 2);
 }
 int line=0;
 
 void print_hdmi(int xpos, char *message)
 {
-	displayStringAt(&Font12,xpos*Font12.Width,line*Font12.Height,(uint8_t*)message,LEFT_MODE);
+	displayStringAt(Font,xpos*Font->Width,line*Font->Height,(uint8_t*)message,LEFT_MODE);
 //	handle_cache_flush(((uint32_t)vs.framebuffer) + vs.framebuffer_pan_offset,vs.framebuffer_size);
 //	while(video_formatter_read(0)==1) //wait vblank
 //	{}
@@ -314,7 +314,22 @@ void mobotest(void)
 	vs.sprite_y_base = 1000;
 	do_update_hw_sprite_pos(vs.sprite_x_base, vs.sprite_y_base);
 	video_formatter_write((vs.sprite_y_adj << 16) | vs.sprite_x_adj, MNTVF_OP_SPRITE_XY);
-	Font12.TextColor=0x00FFFFFF; // white
+	switch(config.bootscreen_resolution)
+	{
+	case RES_1920x1080:
+		Font=&Font20;
+		break;
+	case RES_1280x720:
+		Font=&Font12;
+		break;
+	case RES_800x600:
+	default:
+		Font=&Font12;
+		break;
+	}
+
+	Font->TextColor=0x00FFFFFF; // white
+	Font->BackColor=0x00000000; // black
 
 	NBR_ARM(0);        // bus request
 	usleep(1000);
@@ -348,21 +363,21 @@ void mobotest(void)
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when writing 1 to 0xbfe201");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 		arm_write_amiga_byte(0xbfe001,0x00<<16); // OVL LOW to see the CHIP RAM
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when writing 0 to 0xbfe001");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 		sprintf(message,"[TEST] 0xbfe201 %08lX",arm_read_amiga_byte(0xbfe201));
 		printf("%s\n",message);
@@ -375,41 +390,41 @@ void mobotest(void)
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when writing 0xAA55AA55 to 0x00000000");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 		arm_write_amiga_long(0x00100000,0x55AA55AA);
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when writing 0x55AA55AA to 0x00100000");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 		uint32_t data1=arm_read_amiga_long(0x00000000);
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when reading from 0x00000000");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 		uint32_t data2=arm_read_amiga_long(0x00100000);
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when reading from 0x00100000");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 		if(data1==0xAA55AA55 && data2==0x55AA55AA)
 		{
@@ -420,11 +435,11 @@ void mobotest(void)
 		else
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Test basic Amiga CHIP RAM FAILED!!!");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 			if(data1==0xAA55AA55)
 			{
 				sprintf(message,"[TEST] (0x00000000) -> 0x%08lX == 0xAA55AA55  OK!!!",data1);
@@ -434,19 +449,19 @@ void mobotest(void)
 			else if(data1==0x11144EF9)
 			{
 				ovl_failed=1;
-				Font12.TextColor=0x00FF0000; // red
+				Font->TextColor=0x00FF0000; // red
 				sprintf(message,"[TEST] (0x00000000) -> 0x%08lX == 0x11144EF9 This is the kickstart!!!",data1);
 				printf("%s\n",message);
 				print_hdmi_ln(0,message);
-				Font12.TextColor=0x00FFFFFF; // white
+				Font->TextColor=0x00FFFFFF; // white
 			}
 			else
 			{
-				Font12.TextColor=0x00FF0000; // red
+				Font->TextColor=0x00FF0000; // red
 				sprintf(message,"[TEST] (0x00000000) -> 0x%08lX instead of 0xAA55AA55",data1);
 				printf("%s\n",message);
 				print_hdmi_ln(0,message);
-				Font12.TextColor=0x00FFFFFF; // white
+				Font->TextColor=0x00FFFFFF; // white
 			}
 			if(data2==0x55AA55AA)
 			{
@@ -456,11 +471,11 @@ void mobotest(void)
 			}
 			else
 			{
-				Font12.TextColor=0x00FF0000; // red
+				Font->TextColor=0x00FF0000; // red
 				sprintf(message,"[TEST] (0x00100000) -> 0x%08lX instead of 0x55AA55AA",data2);
 				printf("%s\n",message);
 				print_hdmi_ln(0,message);
-				Font12.TextColor=0x00FFFFFF; // white
+				Font->TextColor=0x00FFFFFF; // white
 			}
 		}
 	}
@@ -492,13 +507,13 @@ void mobotest(void)
 					printf("\n");
 				sprintf(message,"[TEST] Timeout when writing 0x%08lX to 0x%08lX",((uint32_t *)test_mem1)[i>>2],i);
 				printf("%s\n",message);
-				Font12.TextColor=0x00FF0000; // red
+				Font->TextColor=0x00FF0000; // red
 				sprintf(message,"Timeout when writing 0x%08lX to 0x%08lX      ",((uint32_t *)test_mem1)[i>>2],i);
 				int line_old=line;
 				line=0;
 				print_hdmi(60,message);
 				line=line_old;
-				Font12.TextColor=0x00FFFFFF; // white
+				Font->TextColor=0x00FFFFFF; // white
 				failed=1;
 			}
 			if(failed==0 && (i%0x10000)==0)
@@ -533,13 +548,13 @@ void mobotest(void)
 					printf("\n");
 				sprintf(message,"[TEST] Timeout when reading from 0x%08lX",i);
 				printf("%s\n",message);
-				Font12.TextColor=0x00FF0000; // red
+				Font->TextColor=0x00FF0000; // red
 				sprintf(message,"Timeout when reading from 0x%08lX               ",i);
 				int line_old=line;
 				line=0;
 				print_hdmi(60,message);
 				line=line_old;
-				Font12.TextColor=0x00FFFFFF; // white
+				Font->TextColor=0x00FFFFFF; // white
 				failed=1;
 			}
 			if(failed==0 && (i%0x10000)==0)
@@ -574,13 +589,13 @@ void mobotest(void)
 					printf("\n");
 				sprintf(message,"[TEST] Address 0x%08lX failed: W/R %08lX/%08lX",i,data1,data2);
 				printf("%s\n",message);
-				Font12.TextColor=0x00FF0000; // red
+				Font->TextColor=0x00FF0000; // red
 				sprintf(message,"Address 0x%08lX failed: W/R %08lX/%08lX",i,data1,data2);
 				int line_old=line;
 				line=0;
 				print_hdmi(60,message);
 				line=line_old;
-				Font12.TextColor=0x00FFFFFF; // white
+				Font->TextColor=0x00FFFFFF; // white
 				failed=1;
 			}
 			if(failed==0 && (i%0x10000)==0)
@@ -620,21 +635,21 @@ void mobotest(void)
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when writing 0Xff to 0xbfe001");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 		arm_write_amiga_byte(0xbfe201,0x00<<16); // OVL HIGH to see the ROM
 		if(timeout==0)
 		{
 			failed=1;
-			Font12.TextColor=0x00FF0000; // red
+			Font->TextColor=0x00FF0000; // red
 			sprintf(message,"[TEST] Timeout when writing 0 to 0xbfe201");
 			printf("%s\n",message);
 			print_hdmi_ln(0,message);
-			Font12.TextColor=0x00FFFFFF; // white
+			Font->TextColor=0x00FFFFFF; // white
 		}
 
 		sprintf(message,"[TEST] 0xbfe201 %08lX",arm_read_amiga_byte(0xbfe201));
@@ -645,24 +660,82 @@ void mobotest(void)
 		print_hdmi_ln(0,message);
 	}
 }
+extern const char *bootmode_names[];
+
 void update_sd(void)
 {
 	uint8_t keybd_data=0;
+	int data=read_rtg_register(REG_ZZ_FW_VERSION);
+	int v_major=(data>>8)&0xFF;
+	int v_minor=(data)&0xFF;
+	int beta=read_rtg_register(REG_ZZ_FW_BETA);
+	int alfa=read_rtg_register(REG_ZZ_FW_ALFA);
+	int w=1920;
+	int h=1080;
+	if(config.enable_test!=_YES)
+	{
+		int offset=7;
+		switch(config.bootscreen_resolution)
+		{
+		case RES_1920x1080:
+			w=1920;
+			h=1080;
+			offset=7;
+			break;
+		case RES_1280x720:
+			w=1280;
+			h=720;
+			offset=10;
+			break;
+		case RES_800x600:
+		default:
+			w=800;
+			h=600;
+			offset=10+5;
+			break;
+		}
+		line=(h/Font->Height - 1)- offset; // 43 @ 1080p
+	}
+	if(beta==0)
+		sprintf(message,"Z3660 Firmware %d.%02d (%s)",v_major,v_minor,__DATE__);
+	else
+	{
+		if(alfa==0)
+			sprintf(message,"Z3660 Firmware %d.%02d BETA %d (%s)",v_major,v_minor,beta,__DATE__);
+		else
+			sprintf(message,"Z3660 Firmware %d.%02d BETA %d ALFA %d (%s)",v_major,v_minor,beta,alfa,__DATE__);
+	}
 
-	sprintf(message,"Press 'C' key to start the SD update tool...");
-	print_hdmi_ln(0,message);
+//	Font=&Font20;
+	int x=(w/Font->Width-strlen(message))/2;
+	Font->TextColor=0x00FFFFFF;
+	Font->BackColor=0x00303030;
+	print_hdmi_ln(x,message);
+//	Font=&Font12;
+	line+=2;
+	Font->BackColor=0x00404040;
+	sprintf(message,"Press 'C' key after Power ON to start the SD update tool...");
+	if(config.enable_test==_YES)
+		x=0;
+	else
+		x=(w/Font->Width-strlen(message))/2;
+	print_hdmi_ln(x,message);
 
 	keybd_data=0;
 	int time=2;
 	if(config.enable_test==_YES)
 		time=10;
-	printf("Continuing in %d seconds...\n",time);
+	printf("  Continuing in %d seconds...  \n",time);
 	for(int i=time*1000;i>0;i--)
 	{
 		if(read_keyboard(&keybd_data))
 		{
 			if(keybd_data=='c' || keybd_data=='C')
 			{
+				Font->TextColor=0x00FFFFFF; // white
+				Font->BackColor=0x00000000;
+				memset(vs.framebuffer,0,w*h*4);
+				line=0;
 				sprintf(message,"Starting console...                 ");
 				printf("Starting console... Use the Amiga keyboard\n");
 				print_hdmi_ln(0,message);
@@ -671,15 +744,37 @@ void update_sd(void)
 		}
 		if((i%1000)==0)
 		{
-			sprintf(message,"Continuing in %i %s   ",i/1000,i/1000==1?"second":"seconds");
-			print_hdmi_ln(0,message);
-			line--;
+			sprintf(message,"   Continuing in %i %s   ",i/1000,i/1000==1?"second":"seconds");
+			if(config.enable_test==_YES)
+				x=0;
+			else
+				x=(w/Font->Width-strlen(message))/2;
+			print_hdmi(x,message);
 		}
 		usleep(1000);
 	}
-	sprintf(message,"Rebooting                     ");
-	print_hdmi_ln(0,message);
-	line--;
+	sprintf(message,"          Booting...          ");
+	x=(w/Font->Width-strlen(message))/2;
+	print_hdmi_ln(x,message);
+
+	if(config.boot_mode==0)
+		sprintf(message,"060 CPU");
+	else
+		sprintf(message,"%s CPU EMULATOR",bootmode_names[config.boot_mode]);
+	x=(w/Font->Width-strlen(message))/2;
+	print_hdmi_ln(x,message);
+
+	sprintf(message,"BUS Frequency %d MHz",config.cpufreq);
+	x=(w/Font->Width-strlen(message))/2;
+	print_hdmi_ln(x,message);
+
+	sprintf(message,"Z3 RAM %s",config.autoconfig_ram?"Enabled":"Disabled");
+	x=(w/Font->Width-strlen(message))/2;
+	print_hdmi_ln(x,message);
+
+	sprintf(message,"SCSI BOOT %s",config.scsiboot?"Enabled":"Disabled");
+	x=(w/Font->Width-strlen(message))/2;
+	print_hdmi_ln(x,message);
 
 	NBR_ARM(1);
 	usleep(1000);
@@ -689,7 +784,7 @@ start_console:
 
 	show_options();
 	int connected=0;
-	int alfa=0;
+	alfa=0;
 	while(1)
 	{
 		if(read_keyboard(&keybd_data))
@@ -721,10 +816,16 @@ start_console:
 						int v_major=(data>>8)&0xFF;
 						int v_minor=(data)&0xFF;
 						int beta=read_rtg_register(REG_ZZ_FW_BETA);
+						int alfa=read_rtg_register(REG_ZZ_FW_ALFA);
 						if(beta==0)
 							sprintf(message,"The loaded BOOT.bin version is %d.%02d",v_major,v_minor);
 						else
-							sprintf(message,"The loaded BOOT.bin version is %d.%02d BETA %d",v_major,v_minor,beta);
+						{
+							if(alfa==0)
+								sprintf(message,"The loaded BOOT.bin version is %d.%02d BETA %d",v_major,v_minor,beta);
+							else
+								sprintf(message,"The loaded BOOT.bin version is %d.%02d BETA %d ALFA %d",v_major,v_minor,beta,alfa);
+						}
 						print_hdmi_ln(0,message);
 					}
 					ok=lwip_get_update_version_scsirom("scsirom_version.txt",0); // 0 = no alfa
@@ -762,10 +863,16 @@ start_console:
 						int v_major=(data>>8)&0xFF;
 						int v_minor=(data)&0xFF;
 						int beta=read_rtg_register(REG_ZZ_FW_BETA);
+						int alfa=read_rtg_register(REG_ZZ_FW_ALFA);
 						if(beta==0)
 							sprintf(message,"The loaded BOOT.bin version is %d.%02d",v_major,v_minor);
 						else
-							sprintf(message,"The loaded BOOT.bin version is %d.%02d BETA %d",v_major,v_minor,beta);
+						{
+							if(alfa==0)
+								sprintf(message,"The loaded BOOT.bin version is %d.%02d BETA %d",v_major,v_minor,beta);
+							else
+								sprintf(message,"The loaded BOOT.bin version is %d.%02d BETA %d ALFA %d",v_major,v_minor,beta,alfa);
+						}
 						print_hdmi_ln(0,message);
 					}
 					ok=lwip_get_update_version_scsirom("scsirom_version.txt",1); // 1 = no alfa

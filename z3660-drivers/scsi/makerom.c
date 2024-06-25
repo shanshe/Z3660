@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #define BOOTLDR_SIZE 0x1000
-#define DIAG_TOTAL_SIZE 0x20000
+#define DIAG_TOTAL_SIZE 0x4000 //0x20000
 
 char *rombuf, *zerobuf, *devicebuf;
 
@@ -45,6 +45,8 @@ int main(int argc, char *argv[]) {
 
     uint32_t pad_size = BOOTLDR_SIZE - rom_size;
     
+    printf("rom size %ld\n",(long)(rom_size));
+    printf("rom size + padsize %ld (PISCSI_DRIVER_OFFSET = 0x%lX)\n",(long)(rom_size + pad_size),(long)(rom_size + pad_size));
     printf("total size %ld\n",(long)(rom_size + pad_size + device_size));
     
     rombuf = malloc(rom_size);

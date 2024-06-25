@@ -32,6 +32,11 @@
 #include "cputbl.h"
 #include "cpu_prefetch.h"
 #include "uae/uaestring.h"
+
+#include <xil_cache_l.h>
+#include <xil_io.h>
+#include "xscuwdt.h"
+
 //#include "autoconf.h"
 //#include "traps.h"
 //#include "debug.h"
@@ -769,6 +774,7 @@ static void flush_cpu_caches(bool force)
          regs.cacr &= ~0x400;
       }
    }
+//   Xil_L1DCacheFlush();
 }
 
 void flush_cpu_caches_040(uae_u16 opcode)
@@ -4491,6 +4497,20 @@ void exception2_fetch(uae_u32 opcode, int offset, int pcoffset)
 
 extern "C" void cpu_emulator_reset_core0(void);
 extern "C" void reset_autoconfig(void);
+int reset_loop_counter=0;
+void hard_reboot(void)
+{
+#define PS_RST_CTRL_REG         (XPS_SYS_CTRL_BASEADDR + 0x244)
+#define PS_RST_MASK         0x3   /**< PS software reset (Core 1 reset)*/
+   Xil_Out32(PS_RST_CTRL_REG, PS_RST_MASK);
+   XScuWdt_Config *config=XScuWdt_LookupConfig(XPAR_SCUWDT_0_DEVICE_ID);
+   XScuWdt instance;
+   XScuWdt_CfgInitialize(&instance,config,config->BaseAddr);
+   XScuWdt_LoadWdt(&instance,0xFF);
+   XScuWdt_Start(&instance);
+   XScuWdt_SetWdMode(&instance);
+   while(1);
+}
 
 bool cpureset (void)
 {
@@ -4539,6 +4559,12 @@ bool cpureset (void)
             addr += 0xf80000;
          write_log (_T("reset/jmp (ax) combination at %08x emulated -> %x\n"), pc, addr+2);
          m68k_setpc_normal (addr +2 - 2);
+         reset_loop_counter++;
+         if(reset_loop_counter>=5)
+         {
+        	 printf("Emulator reset loop detected -> Hard reboot\n");
+        	 hard_reboot();
+         }
          return false;
       }
    }
