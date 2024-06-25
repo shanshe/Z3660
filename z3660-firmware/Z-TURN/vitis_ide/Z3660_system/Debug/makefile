@@ -33,7 +33,7 @@ SD_FILES = --elf C:/Users/shanshe/workspace/Z3660/Debug/Z3660.elf,ps7_cortexa9_0
 
 package:
 	-@echo Generating bif file for the system project
-	generate_system_bif.bat 56422 ${XPFM_PATH} ${DOMAINS} ${BIF_PATH}
+	generate_system_bif.bat 50703 ${XPFM_PATH} ${DOMAINS} ${BIF_PATH}
 	${SDCARD_GEN} --xpfm ${XPFM_PATH} --sys_config ${SYS_CONFIG} --bif ${BIF_PATH} --bitstream ${BITSTREAM_PATH} ${SD_FILES}
 
 clean:

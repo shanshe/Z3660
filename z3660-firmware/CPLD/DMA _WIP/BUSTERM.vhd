@@ -38,7 +38,7 @@ entity BUSTERM is
            SLV3 : in  STD_LOGIC;
            nCYCPEND : in  STD_LOGIC;
            SIZ40 : in  STD_LOGIC_VECTOR (1 downto 0);
-           nPLSTERM : in  STD_LOGIC;
+			  nPLSTERM : in  STD_LOGIC;
            nRTERM : in  STD_LOGIC;
            nTS : in  STD_LOGIC;
            nDS040 : out  STD_LOGIC;
@@ -93,26 +93,26 @@ begin
 --nTBI <= '0';
 
 -- another way to do the same thing...
---   process(BCLK,n040RSTI)
---   begin
---      if(n040RSTI='0') then
---         nDS040_int <= '1';
---         nAS040_int <= '1';
---      elsif(BCLK'event and  BCLK='1') then
---         if(nBGACK040='0') then
+--	process(BCLK,n040RSTI)
+--	begin
+--		if(n040RSTI='0') then
+--			nDS040_int <= '1';
+--			nAS040_int <= '1';
+--		elsif(BCLK'event and  BCLK='1') then
+--			if(nBGACK040='0') then
 --nAS040_int <= not(
 --        ( not(SLV0) and not(SLV1) and SLV2 )
 --     or ( not(SLV0) and SLV1 and not(SLV2) ) );
 --nDS040_int <= not(
 --        ( not(SLV0) and not(SLV1) and SLV2 )
 --     or ( not(SLV0) and SLV1 and not(SLV2) ) );
---         else
---            nAS040_int <= '1';
---            nDS040_int <= '1';
---         end if;
---      end if;
---   end process;
-     
+--			else
+--				nAS040_int <= '1';
+--				nDS040_int <= '1';
+--			end if;
+--		end if;
+--	end process;
+	  
 ------ original equations
 nDS040 <= nDS040_int;
 nAS040 <= nAS040_int;
@@ -140,14 +140,14 @@ nDS040_int <= not(
 --        ( SLV0 and not(SLV1) and not(SLV2) and not(SLV3) and not(IO5) and nAS040_int and SIZ40(1) and nDS040_int and IO2 and SIZ40(0) ) );
 --nTEA <= not(
 --        ( not(SLV0) and SLV1 and SLV2 and not(SLV3) ) );
---   process(BCLK,n040RSTI)
---   begin
---      if(n040RSTI='0') then
---         IO2 <= '0';
---         IO5 <= '0';
---         nDS040_int <= '1';
---         nAS040_int <= '1';
---      elsif(BCLK'event and  BCLK='1') then
+--	process(BCLK,n040RSTI)
+--	begin
+--		if(n040RSTI='0') then
+--			IO2 <= '0';
+--			IO5 <= '0';
+--			nDS040_int <= '1';
+--			nAS040_int <= '1';
+--		elsif(BCLK'event and  BCLK='1') then
 ----register
 --IO5 <= not(
 --        ( SLV0 and n040RSTI and SLV1 and not(IO5) and nAS040_int and nDS040_int and IO2 )
@@ -175,8 +175,8 @@ nDS040_int <= not(
 --IO2 <= not(
 --        ( not(nBGACK040) and IO5 and nAS040_int and nDS040_int and IO2 and not(nTS) )
 --     or ( not(nBGACK040) and IO5 and not(nCYCPEND) and nAS040_int and nDS040_int and IO2 ) );
---      end if;
---   end process;
+--		end if;
+--	end process;
 
 end Behavioral;
 

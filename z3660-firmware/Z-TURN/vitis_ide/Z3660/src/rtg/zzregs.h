@@ -115,15 +115,40 @@ enum zz_reg_offsets {
    REG_ZZ_LTC_060_TEMP   = 0x22C,
 
    REG_ZZ_LTC_VCC        = 0x230,
+   REG_ZZ_CPU_RAM_EN     = 0x234,
+   REG_ZZ_KS_SEL         = 0x238,
+   REG_ZZ_EXT_KS_SEL     = 0x23C,
 
-   //NOT USED 0x234 - 0x2FC
+   REG_ZZ_KS_SEL_TXT     = 0x240,
+   REG_ZZ_EXT_KS_SEL_TXT = 0x244,
+   REG_ZZ_SCSI_SEL_0     = 0x248,
+   REG_ZZ_SCSI_SEL_1     = 0x24C,
+
+   REG_ZZ_SCSI_SEL_2     = 0x250,
+   REG_ZZ_SCSI_SEL_3     = 0x254,
+   REG_ZZ_SCSI_SEL_4     = 0x258,
+   REG_ZZ_SCSI_SEL_5     = 0x25C,
+
+   REG_ZZ_SCSI_SEL_6     = 0x260,
+   REG_ZZ_SCSI_SEL_TXT   = 0x264,
+   REG_ZZ_APPLY_SCSI     = 0x268,
+   REG_ZZ_APPLY_ALL      = 0x26C,
+
+   REG_ZZ_SOFT3D_OP      = 0x270,
+
+   REG_ZZ_FW_BETA        = 0x280,
+
+   //NOT USED 0x284 - 0x2FC
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
    REG_ZZ_OP_NOP         = 0x308,
    REG_ZZ_OP_CAPTUREMODE = 0x30C,
 
-//   REG_ZZ_RX_BUFF        = 0x2000,
+   REG_ZZ_SEL_KS_TXT     = 0x500,
+   REG_ZZ_SEL_SCSI_TXT   = 0x600,
+
+   //   REG_ZZ_RX_BUFF        = 0x2000,
 //   REG_ZZ_TX_BUFF        = 0x8000
 /*
    REG_ZZ_ARM_RUN_HI     = 0x90,
@@ -163,4 +188,23 @@ enum zz9k_card_features {
    CARD_FEATURE_NUM,
 };
 
+enum gfx_soft3d_op {
+  OP_SETBITMAP,
+  OP_SETCLIPPING,
+  OP_SETDRAWSTATE,
+  OP_DRAWPRIMITIVE,
+  OP_DOUPDATE,
+  OP_FLUSH,
+  OP_END,
+  OP_CREATETEXTURE,
+  OP_FREETEXTURE,
+  OP_UPDATETEXTURE,
+  OP_START,
+  OP_ALLOCZBUFFER,
+  OP_ALLOCIMAGEBUFFER,
+  OP_CLEARZBUFFER,
+  OP_READZSPAN,
+  OP_WRITEZSPAN,
+  OP_SOFT3D_NUM,
+};
 #endif

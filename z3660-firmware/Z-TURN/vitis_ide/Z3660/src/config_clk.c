@@ -5,8 +5,6 @@
 XClk_Wiz clkwiz0;
 XClk_Wiz_Config conf0;
 
-int cpu_freq=-1;
-
 typedef struct {
 	int divider;
 	int phase;
@@ -108,11 +106,11 @@ clock_data cd[]={
 {// 50 MHz OK
 		.clk            = 50, .M            =   8, .D                =  1,
 		.axi.divider    = 16, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 32, .pclk.phase   =  30, .pclk.dutycycle   = 50,
+		.pclk.divider   = 32, .pclk.phase   = -20, .pclk.dutycycle   = 50,
 		.clken.divider  = 64, .clken.phase  =  60, .clken.dutycycle  = 50,
-		.bclk.divider   = 64, .bclk.phase   =  10, .bclk.dutycycle   = 50,
-		.clk90.divider  = 64, .clk90.phase  = 270, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 64, .cpuclk.phase = 180, .cpuclk.dutycycle = 50},
+		.bclk.divider   = 64, .bclk.phase   =  40, .bclk.dutycycle   = 50,
+		.clk90.divider  = 64, .clk90.phase  = 270+40, .clk90.dutycycle  = 50,
+		.cpuclk.divider = 64, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 50},
 };
 
 void print_clkinfo(char * str,uint32_t base,uint32_t address)
@@ -154,11 +152,6 @@ void configure_clk(int clk, int busclk, int verbose, int nbr)
    else if(clk>50) ind=9;
    else ind=10;
    clk=cd[ind].clk;
-
-//   if(cpu_freq==clk)
-//	   return;
-
-   cpu_freq=clk;
 
    printf("Clock index %d\n",ind);
 

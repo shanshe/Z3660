@@ -31,6 +31,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity LEBUS_component is
     Port ( BCLK : in  STD_LOGIC;
+	        nBGACK040 : in  STD_LOGIC;
            MAS0 : in  STD_LOGIC;
            MAS1 : in  STD_LOGIC;
            MAS2 : in  STD_LOGIC;
@@ -93,200 +94,200 @@ CONSTANT SR1: std_logic_vector(3 downto 0):= "0110";
 
 begin
 
---   NEG_LE <= '0' when SLV_state=S3 or SLV_state=SR1 else '1'; -- ok???
---   nSIG_LE <= '0' when SLV0='0' and SLV1='0' and SLV3='0' else '1';
---   MAS_state <= MAS3 & MAS2 & MAS1 & MAS0;
---   SLV_state <= SLV3 & SLV2 & SLV1 & SLV0;
-   LEBUS <= LEBUS_int;
---   process(BCLK)
---   begin
---      if(BCLK'event and  BCLK='1') then
---      if(R_W040='1') then
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(0)='1' and NEG_LE='0' and 
---                           (MAS_state=I or --rearm
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=A or
---                            MAS_state=F or
---                            MAS_state=K)) or
---                            MAS_state=B or --maintain
---                            MAS_state=C or
---                            MAS_state=D or
---                            MAS_state=E or
---                            MAS_state=H then
---            LEBUS_int(0)<='1';
---         else 
---            LEBUS_int(0)<='0';
---         end if;
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(1)='1' and NEG_LE='0' and 
---                           (MAS_state=I or
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=C or
---                            MAS_state=H or
---                            MAS_state=L)) or
---                            MAS_state=D or
---                            MAS_state=E then
---            LEBUS_int(1) <= '1';
---         else
---            LEBUS_int(1) <= '0';
---         end if;
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(2)='1' and NEG_LE='0' and 
---                           (MAS_state=I or
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=A or
---                            MAS_state=F or
---                            MAS_state=L)) or
---                            MAS_state=B then
---            LEBUS_int(2) <= '1';
---         else
---            LEBUS_int(2) <= '0';
---         end if;
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(3)='1' and NEG_LE='0' and 
---                           (MAS_state=I or
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=B or
---                            MAS_state=D or
---                            MAS_state=G or
---                            MAS_state=M --or
---                            --MAS_state=DC
---                            )) or
-----                            MAS_state=C or
---                            MAS_state=E or
-----                            MAS_state=H or
---                            MAS_state=J then
---            LEBUS_int(3) <= '1';
---         else
---            LEBUS_int(3) <= '0';
---         end if;
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(4)='1' and NEG_LE='0' and 
---                           (MAS_state=I or
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=A or
---                            MAS_state=G or
---                            MAS_state=M)) then
---            LEBUS_int(4) <= '1';
---         else
---            LEBUS_int(4) <= '0';
---         end if;
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(5)='1' and NEG_LE='0' and 
---                           (MAS_state=I or
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=E or
---                            MAS_state=J or
---                            MAS_state=N)) then
---            LEBUS_int(5) <= '1';
---         else
---            LEBUS_int(5) <= '0';
---         end if;
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(6)='1' and NEG_LE='0' and 
---                           (MAS_state=I or
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=B or
---                            MAS_state=G or
---                            MAS_state=N --or
---                            --MAS_state=DC
---                            )) then
---            LEBUS_int(6) <= '1';
---         else
---            LEBUS_int(6) <= '0';
---         end if;
---         if nRTERM='0' or nLSTERM='0' or (LEBUS_int(7)='1' and NEG_LE='0' and 
---                           (MAS_state=I or
---                            MAS_state=Z or
---                            MAS_state=DC or
---                            MAS_state=A or
---                            MAS_state=N or
---                            MAS_state=G)) then
---            LEBUS_int(7) <= '1';
---         else
---            LEBUS_int(7) <= '0';
---         end if;
---         else
---            LEBUS_int<= "00000000";
---         end if;
---      end if;
---   end process;
+--	NEG_LE <= '0' when SLV_state=S3 or SLV_state=SR1 else '1'; -- ok???
+--	nSIG_LE <= '0' when SLV0='0' and SLV1='0' and SLV3='0' else '1';
+--	MAS_state <= MAS3 & MAS2 & MAS1 & MAS0;
+--	SLV_state <= SLV3 & SLV2 & SLV1 & SLV0;
+	LEBUS <= LEBUS_int;
+--	process(BCLK)
+--	begin
+--		if(BCLK'event and  BCLK='1') then
+--		if(R_W040='1') then
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(0)='1' and NEG_LE='0' and 
+--									(MAS_state=I or --rearm
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=A or
+--									 MAS_state=F or
+--									 MAS_state=K)) or
+--									 MAS_state=B or --maintain
+--									 MAS_state=C or
+--									 MAS_state=D or
+--									 MAS_state=E or
+--									 MAS_state=H then
+--				LEBUS_int(0)<='1';
+--			else 
+--				LEBUS_int(0)<='0';
+--			end if;
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(1)='1' and NEG_LE='0' and 
+--									(MAS_state=I or
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=C or
+--									 MAS_state=H or
+--									 MAS_state=L)) or
+--									 MAS_state=D or
+--									 MAS_state=E then
+--				LEBUS_int(1) <= '1';
+--			else
+--				LEBUS_int(1) <= '0';
+--			end if;
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(2)='1' and NEG_LE='0' and 
+--									(MAS_state=I or
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=A or
+--									 MAS_state=F or
+--									 MAS_state=L)) or
+--									 MAS_state=B then
+--				LEBUS_int(2) <= '1';
+--			else
+--				LEBUS_int(2) <= '0';
+--			end if;
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(3)='1' and NEG_LE='0' and 
+--									(MAS_state=I or
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=B or
+--									 MAS_state=D or
+--									 MAS_state=G or
+--									 MAS_state=M --or
+--									 --MAS_state=DC
+--									 )) or
+----									 MAS_state=C or
+--									 MAS_state=E or
+----									 MAS_state=H or
+--									 MAS_state=J then
+--				LEBUS_int(3) <= '1';
+--			else
+--				LEBUS_int(3) <= '0';
+--			end if;
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(4)='1' and NEG_LE='0' and 
+--									(MAS_state=I or
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=A or
+--									 MAS_state=G or
+--									 MAS_state=M)) then
+--				LEBUS_int(4) <= '1';
+--			else
+--				LEBUS_int(4) <= '0';
+--			end if;
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(5)='1' and NEG_LE='0' and 
+--									(MAS_state=I or
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=E or
+--									 MAS_state=J or
+--									 MAS_state=N)) then
+--				LEBUS_int(5) <= '1';
+--			else
+--				LEBUS_int(5) <= '0';
+--			end if;
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(6)='1' and NEG_LE='0' and 
+--									(MAS_state=I or
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=B or
+--									 MAS_state=G or
+--									 MAS_state=N --or
+--									 --MAS_state=DC
+--									 )) then
+--				LEBUS_int(6) <= '1';
+--			else
+--				LEBUS_int(6) <= '0';
+--			end if;
+--			if nRTERM='0' or nLSTERM='0' or (LEBUS_int(7)='1' and NEG_LE='0' and 
+--									(MAS_state=I or
+--									 MAS_state=Z or
+--									 MAS_state=DC or
+--									 MAS_state=A or
+--									 MAS_state=N or
+--									 MAS_state=G)) then
+--				LEBUS_int(7) <= '1';
+--			else
+--				LEBUS_int(7) <= '0';
+--			end if;
+--			else
+--				LEBUS_int<= "00000000";
+--			end if;
+--		end if;
+--	end process;
 
---   process(BCLK)
---   begin
---      if(BCLK'event and  BCLK='1') then
---         if((nRTERM='0') or (nLSTERM='0')) then
---            LEBUS_int(0) <= '1';
---            LEBUS_int(1) <= '1';
---            LEBUS_int(2) <= '1';
---            LEBUS_int(3) <= '1';
---            LEBUS_int(4) <= '1';
---            LEBUS_int(5) <= '1';
---            LEBUS_int(6) <= '1';
---            LEBUS_int(7) <= '1';
---         else
---            case (MAS_state) is
---               when B | C | D | E | H =>
---                  LEBUS_int(0) <= '1';
---               when others =>
---                  LEBUS_int(0) <= '0';
---            end case;
+--	process(BCLK)
+--	begin
+--		if(BCLK'event and  BCLK='1') then
+--			if((nRTERM='0') or (nLSTERM='0')) then
+--				LEBUS_int(0) <= '1';
+--				LEBUS_int(1) <= '1';
+--				LEBUS_int(2) <= '1';
+--				LEBUS_int(3) <= '1';
+--				LEBUS_int(4) <= '1';
+--				LEBUS_int(5) <= '1';
+--				LEBUS_int(6) <= '1';
+--				LEBUS_int(7) <= '1';
+--			else
+--			   case (MAS_state) is
+--					when B | C | D | E | H =>
+--						LEBUS_int(0) <= '1';
+--					when others =>
+--						LEBUS_int(0) <= '0';
+--				end case;
 --
---            case (MAS_state) is
---               when D | E =>
---                  LEBUS_int(1) <= '1';
---               when others =>
---                  LEBUS_int(1) <= '0';
---            end case;
+--			   case (MAS_state) is
+--					when D | E =>
+--						LEBUS_int(1) <= '1';
+--					when others =>
+--						LEBUS_int(1) <= '0';
+--				end case;
 --
---            case (MAS_state) is
---               when B =>
---                  LEBUS_int(2) <= '1';
---               when others =>
---                  LEBUS_int(2) <= '0';
---            end case;
+--			   case (MAS_state) is
+--					when B =>
+--						LEBUS_int(2) <= '1';
+--					when others =>
+--						LEBUS_int(2) <= '0';
+--				end case;
 --
---            case (MAS_state) is
---               when C | E | H | J =>
---                  LEBUS_int(3) <= '1';
---               when others =>
---                  LEBUS_int(3) <= '0';
---            end case;
---            LEBUS_int(4) <= '0';
---            LEBUS_int(5) <= '0';
---            LEBUS_int(6) <= '0';
---            LEBUS_int(7) <= '0';
---         end if;
---      end if;
---   end process;
+--			   case (MAS_state) is
+--					when C | E | H | J =>
+--						LEBUS_int(3) <= '1';
+--					when others =>
+--						LEBUS_int(3) <= '0';
+--				end case;
+--				LEBUS_int(4) <= '0';
+--				LEBUS_int(5) <= '0';
+--				LEBUS_int(6) <= '0';
+--				LEBUS_int(7) <= '0';
+--			end if;
+--		end if;
+--	end process;
 
 ----simplified equations
---   process(BCLK)
---   begin
---      if(BCLK'event and  BCLK='1') then
---         if((nRTERM='0') or (nLSTERM='0')) then
---            LEBUS_int(0) <= '1';
---            LEBUS_int(1) <= '1';
---            LEBUS_int(2) <= '1';
---            LEBUS_int(3) <= '1';
---            LEBUS_int(4) <= '1';
---            LEBUS_int(5) <= '1';
---            LEBUS_int(6) <= '1';
---            LEBUS_int(7) <= '1';
---         else
---            LEBUS_int(0) <= ( not(MAS1) and  MAS2 )
---                     or (  MAS0 and  MAS2 and  MAS3 );                   -- b c d e h
---            LEBUS_int(1) <= ( not(MAS0) and not(MAS1) and  MAS2 );           -- d e
---            LEBUS_int(2) <= (  MAS0 and not(MAS1) and  MAS2 and not(MAS3) ); -- b    
---            LEBUS_int(3) <= (  MAS2 and  MAS3 );                             -- c e h j
---            LEBUS_int(4) <= '0';
---            LEBUS_int(5) <= '0';
---            LEBUS_int(6) <= '0';
---            LEBUS_int(7) <= '0';
---         end if;
---      end if;
---   end process;
+--	process(BCLK)
+--	begin
+--		if(BCLK'event and  BCLK='1') then
+--			if((nRTERM='0') or (nLSTERM='0')) then
+--				LEBUS_int(0) <= '1';
+--				LEBUS_int(1) <= '1';
+--				LEBUS_int(2) <= '1';
+--				LEBUS_int(3) <= '1';
+--				LEBUS_int(4) <= '1';
+--				LEBUS_int(5) <= '1';
+--				LEBUS_int(6) <= '1';
+--				LEBUS_int(7) <= '1';
+--			else
+--				LEBUS_int(0) <= ( not(MAS1) and  MAS2 )
+--							or (  MAS0 and  MAS2 and  MAS3 );                   -- b c d e h
+--				LEBUS_int(1) <= ( not(MAS0) and not(MAS1) and  MAS2 );           -- d e
+--				LEBUS_int(2) <= (  MAS0 and not(MAS1) and  MAS2 and not(MAS3) ); -- b    
+--				LEBUS_int(3) <= (  MAS2 and  MAS3 );                             -- c e h j
+--				LEBUS_int(4) <= '0';
+--				LEBUS_int(5) <= '0';
+--				LEBUS_int(6) <= '0';
+--				LEBUS_int(7) <= '0';
+--			end if;
+--		end if;
+--	end process;
 
 --LEBUS <= "00000000"; -- transparent bus
 --LEBUS <= "11111111"; -- maintains what was previously on the bus
@@ -294,9 +295,10 @@ begin
 --       0 = "ream"
 
 -- "original equations"
-   process(BCLK)
-   begin
-      if(BCLK'event and  BCLK='1') then
+	process(BCLK)
+	begin
+		if(BCLK'event and  BCLK='1') then
+         if nBGACK040 ='0' then
 --register
 LEBUS_int(0) <= (
        ( not(nRTERM) )
@@ -334,12 +336,13 @@ LEBUS_int(6) <= (
 LEBUS_int(7) <= (
        ( not(nRTERM) )
     or ( not(nLSTERM) ) );
-      end if;
-   end process;
+         end if;
+		end if;
+	end process;
 
---   process(BCLK)
---   begin
---      if(BCLK'event and  BCLK='1') then
+--	process(BCLK)
+--	begin
+--		if(BCLK'event and  BCLK='1') then
 --original 3640
 ----register
 --LEBUS_int(0) <= (
@@ -407,8 +410,8 @@ LEBUS_int(7) <= (
 --
 --
 --
---      end if;
---   end process;
+--		end if;
+--	end process;
 
 end Behavioral;
 

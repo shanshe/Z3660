@@ -3,14 +3,19 @@
 #include "../video.h"
 #include <xil_types.h>
 #include "xil_printf.h"
+#include "../console.h"
+#include "str_dmaop.h"
 
 //int set_framebuffer_address(uint32_t fb);
+extern CONSOLE con;
 
 void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 {
     struct GFXData *data = (struct GFXData*)((uint32_t)Z3_SCRATCH_ADDR);
 //    if((zdata!=11)&&(zdata!=2)&&(zdata!=5))
 //    	printf("OP %d\r\n",zdata);
+    if(con.debug_rtg)
+        printf("blitter_dma_op 0x%X  %s\n",zdata,dma_op_string[zdata]);
 
     switch(zdata) {
         case OP_DRAWLINE:
@@ -41,18 +46,18 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             break;
         
         case OP_FILLRECT:
-//			printf("OP2 %d %d %d %d\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
-//			printf("    %x %x %x %x\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
             SWAP16(data->x[0]);		SWAP16(data->x[1]);
             SWAP16(data->y[0]);		SWAP16(data->y[1]);
-//			printf("OP2 %4d %4d %4d %4d\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
-//			printf("    %04x %04x %04x %04x\r\n",data->x[0],data->y[0],data->x[1],data->y[1]);
 
             SWAP16(data->pitch[0]);
             SWAP32(data->offset[0]);
-//			printf(" pitch %04x %04x offset %08lx\r\n",data->pitch[0],data->pitch[1],data->offset[0]);
-//			printf(" color %02x %02x %02x %02x\r\n",data->u8_user[0],data->u8_user[1],data->u8_user[2],data->u8_user[3]);
 
+            if(con.debug_rtg)
+            {
+            	printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
+            	printf("x1: %d y1: %d\n",data->x[1],data->y[1]);
+            	printf("p0: %d o0: %lx\n",data->pitch[0],data->offset[0]);
+            }
             set_fb((uint32_t*) (((uint32_t) vs->framebuffer) + data->offset[0]),
                     data->pitch[0]);
 
@@ -71,7 +76,15 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
             SWAP16(data->pitch[0]);		SWAP16(data->pitch[1]);
             SWAP32(data->offset[0]);	SWAP32(data->offset[1]);
-
+            if(con.debug_rtg)
+            {
+            	printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
+            	printf("x1: %d y1: %d\n",data->x[1],data->y[1]);
+            	printf("x2: %d y2: %d\n",data->x[2],data->y[2]);
+            	printf("p0: %d p1: %d\n",data->pitch[0],data->pitch[1]);
+            	printf("o0: %lx o1: %lx\n",data->offset[0],data->offset[1]);
+            	printf("mt: %d\n",data->minterm);
+            }
             set_fb((uint32_t*) (((uint32_t) vs->framebuffer) + data->offset[0]),
                     data->pitch[0]);
 
@@ -158,6 +171,15 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
             SWAP16(data->user[0]);
             SWAP16(data->user[1]);
+            if(con.debug_rtg)
+            {
+            	printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
+            	printf("x1: %d y1: %d\n",data->x[1],data->y[1]);
+            	printf("x2: %d y2: %d\n",data->x[2],data->y[2]);
+            	printf("p0: %d p1: %d\n",data->pitch[0],data->pitch[1]);
+            	printf("o0: %lx o1: %lx\n",data->offset[0],data->offset[1]);
+            	printf("u0: %d u1: %d\n",data->user[0],data->user[1]);
+            }
 
             uint8_t* bmp_data = (uint8_t*) (((uint32_t) vs->framebuffer) + data->offset[1]);
 

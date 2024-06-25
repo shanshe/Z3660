@@ -89,7 +89,7 @@ $(SRC_MHI)/mhiz3660.library: $(SRC_MHI)/Startup.c $(SRC_MHI)/LibInit.c $(SRC_MHI
 
 $(SRC_SCSI)/z3660_scsi.device: $(SRC_SCSI)/z3660_scsi.c $(SRC_SCSI)/z3660_scsi_enums.h $(SRC_SCSI)/makerom.c $(SRC_SCSI)/bootrom.s $(SRC_SCSI)/bootmenu.c $(SRC_SCSI)/printf.c $(SRC_SCSI)/port.c $(SRC_SCSI)/scsimsg.c
 	$(GCC) $(SRC_SCSI)/z3660_scsi.c $(SRC_SCSI)/bootmenu.c $(SRC_SCSI)/printf.c $(SRC_SCSI)/port.c $(SRC_SCSI)/scsimsg.c -m68020 -O2 -o $(SRC_SCSI)/z3660_scsi.device -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -nostartfiles -lc -lamiga -ldebug
-	/opt/amiga/bin/vasmm68k_mot -m68020 -Fhunk $(SYSINC_I) $(SRC_SCSI)/bootrom.s -o $(SRC_SCSI)/bootrom_uncut
+	/opt/amiga/bin/vasmm68k_mot -m68000 -Fhunk $(SYSINC_I) $(SRC_SCSI)/bootrom.s -o $(SRC_SCSI)/bootrom_uncut
 	dd bs=1 skip=40 if=$(SRC_SCSI)/bootrom_uncut of=$(SRC_SCSI)/bootrom
 	gcc $(SRC_SCSI)/makerom.c -o $(SRC_SCSI)/makerom
 	cd $(SRC_SCSI) ; ./makerom
@@ -144,10 +144,8 @@ clean:
 adf: all
 	@echo creating adf...
 	$(RM)   0_Z3660.adf
-	xdftool 0_Z3660.adf format Z3660 + makedir C + makedir Libs + makedir Libs/Picasso96 + makedir Libs/MHI + makedir Devs + makedir Devs/Monitors + makedir Devs/Networks + makedir Devs/AudioModes + makedir Devs/AHI
+	xdftool 0_Z3660.adf format Z3660 + makedir C + makedir Libs + makedir Libs/Picasso96 + makedir Libs/MHI + makedir Devs + makedir Devs/Networks + makedir Devs/AudioModes + makedir Devs/AHI
 	xdftool 0_Z3660.adf write $(SRC_RTG)/Z3660.card Libs/Picasso96
-	xdftool 0_Z3660.adf write $(SRC_RTG)/Monitors/Z3660 Devs/Monitors
-	xdftool 0_Z3660.adf write $(SRC_RTG)/Monitors/Z3660.info Devs/Monitors
 	xdftool 0_Z3660.adf write $(SRC_AHI)/z3660ax.audio Devs/AHI
 	xdftool 0_Z3660.adf write $(SRC_AHI)/Z3660AX Devs/AudioModes
 	xdftool 0_Z3660.adf write $(SRC_MHI)/mhiz3660.library Libs/MHI
@@ -155,7 +153,8 @@ adf: all
 	xdftool 0_Z3660.adf write $(SRC_ETH)/Z3660Net.device Devs/Networks
 	xdftool 0_Z3660.adf write $(SRC_ZTP)/ZTop
 	xdftool 0_Z3660.adf write $(SRC_ZTP)/ZTop.info
-	xdftool 0_Z3660.adf write $(SRC_SCSI)/z3660_scsi.device Devs + list
+	xdftool 0_Z3660.adf write $(SRC_SCSI)/z3660_scsi.device Devs
+	xdftool 0_Z3660.adf write $(SRC_SCSI)/z3660_scsi.rom + list
 
 A4000: adf
 	$(CP) 0_Z3660.adf /Volumes/A4000/0_Z3660.adf

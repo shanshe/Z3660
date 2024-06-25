@@ -17,7 +17,7 @@
 
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
-void reset_run(int cpu_boot_mode,int counter, int counter_max);
+void reset_run(int cpu_boot_mode,int counter, int counter_max,int long_int);
 void reset_init(void);
 
 SHARED *shared;
@@ -28,9 +28,9 @@ void init_shared(void)
 
 void other_tasks(void);
 extern CONFIG config;
-extern int bm,sb,ar;
+extern int bm,sb,ar,cr,ks,ext_ks,*scsi_num;
 
-void load_rom(void)
+int load_rom(void)
 {
 //#define DUMP_ROM
 #define MAP_ROM
@@ -38,7 +38,6 @@ void load_rom(void)
    static FIL fil;      /* File object */
    static FATFS fatfs;
    uint8_t *ROM=(uint8_t *)shared->load_rom_addr;
-   printf("Loading Kickstart at address: 0x%08lX\n",(uint32_t)ROM);
    TCHAR *Path = DEFAULT_ROOT;
    Xil_ExceptionDisable();
    int ret;
@@ -51,36 +50,69 @@ retry:
       sleep(5);
       goto retry;
    }
-   ret=f_open(&fil,config.kickstart, FA_OPEN_EXISTING | FA_READ);
-   if(ret!=0)
+   char *kickstart_pointer=0;
+   switch(config.kickstart)
    {
-      printf("Error opening file \"%s\"\nHALT!!!\n",config.kickstart);
-      while(1);
+      case 0:
+         f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+         return(2);
+    	 break;
+#define CASE_KICKSTART(x) case x:\
+          kickstart_pointer=&config.kickstart ## x[0];\
+          break;
+      CASE_KICKSTART(1)
+      CASE_KICKSTART(2)
+      CASE_KICKSTART(3)
+      CASE_KICKSTART(4)
+      CASE_KICKSTART(5)
+      CASE_KICKSTART(6)
+      CASE_KICKSTART(7)
+      CASE_KICKSTART(8)
+      CASE_KICKSTART(9)
+      default:
+         printf("Error: index %d -> kickstart is not loaded\n",config.kickstart);
+         f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+         return(2);
    }
-   unsigned int NumBytesRead;
-   printf("Reading %s file:\r\n[----------------]\r\n\033[F",config.kickstart);
+   if(config.kickstart!=0)
+   {
+      ret=f_open(&fil,kickstart_pointer, FA_OPEN_EXISTING | FA_READ);
+      if(ret!=0)
+      {
+         printf("Error opening file \"%s\"\n",kickstart_pointer);
+         f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+         return(2);
+      }
+      printf("Loading Kickstart at address: 0x%08lX\n",(uint32_t)ROM);
+      unsigned int NumBytesRead;
+      printf("Reading %s file:\r\n[----------------]\r\n\033[F",kickstart_pointer);
 #define BYTES_TO_READ 128
-   for(int i=0,j=0,k=2;i<0x80000;i+=BYTES_TO_READ,j+=BYTES_TO_READ)
-   {
-      if(j==(512*1024/16))
+      for(int i=0,j=0,k=2;i<0x80000;i+=BYTES_TO_READ,j+=BYTES_TO_READ)
       {
-         j=0;
-         printf("%.*s\r\n\033[F",(int)++k,"[================]");
+         if(j==(512*1024/16))
+         {
+            j=0;
+            printf("%.*s\r\n\033[F",(int)++k,"[================]");
+         }
+         f_read(&fil, ROM+i, BYTES_TO_READ,&NumBytesRead);
+         if(NumBytesRead!=BYTES_TO_READ)
+         {
+            printf("\nError reading at file offset 0x%08x\nHALT!!!",i);
+            f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+            return(2);
+         }
       }
-      f_read(&fil, ROM+i, BYTES_TO_READ,&NumBytesRead);
-      if(NumBytesRead!=BYTES_TO_READ)
-      {
-         printf("\nError reading at file offset 0x%08x\nHALT!!!",i);
-         while(1);
-      }
-//      uint8_t buff[BYTES_TO_READ];
-//      for(int i1=0;i1<BYTES_TO_READ;i1++)
-//         ROM[i+i1]=buff[i1];
+      f_close(&fil);
+      printf("\r\nFile read OK\r\n");
    }
-   Xil_DCacheFlush();
-   f_close(&fil);
+   else
+   {
+      f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+      return(2);
+   }
+   Xil_L1DCacheFlush();
+   Xil_L2CacheFlush();
    f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
-   printf("\r\nFile read OK\r\n");
 //   while(1);
 #endif
 #ifdef DUMP_ROM
@@ -126,6 +158,76 @@ retry:
    while(1);
 #endif
    Xil_ExceptionEnable();
+   return(1);
+}
+int load_romext(void)
+{
+//#define DUMP_ROMEXT
+#define MAP_ROMEXT
+#ifdef MAP_ROMEXT
+   static FIL fil;      /* File object */
+   static FATFS fatfs;
+   uint8_t *EXT_ROM=(uint8_t *)shared->load_ext_rom_addr;
+   TCHAR *Path = DEFAULT_ROOT;
+   Xil_ExceptionDisable();
+   int ret;
+
+retry:
+   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   if(ret!=0)
+   {
+      printf("Error opening SD media\nRetry in 5 seconds\n");
+      sleep(5);
+      goto retry;
+   }
+   char *ext_kickstart_pointer=0;
+   switch(config.ext_kickstart)
+   {
+      case 0:
+         f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+         return(2);
+ 	     break;
+#define CASE_EXT_KICKSTART(x) case x:\
+          ext_kickstart_pointer=&config.ext_kickstart ## x[0];\
+         break;
+      CASE_EXT_KICKSTART(1)
+      CASE_EXT_KICKSTART(2)
+      CASE_EXT_KICKSTART(3)
+      CASE_EXT_KICKSTART(4)
+      CASE_EXT_KICKSTART(5)
+      CASE_EXT_KICKSTART(6)
+      CASE_EXT_KICKSTART(7)
+      CASE_EXT_KICKSTART(8)
+      CASE_EXT_KICKSTART(9)
+      default:
+         printf("Error: index %d -> extended kickstart is not loaded\n",config.kickstart);
+         f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+         return(2);
+   }
+   if(config.ext_kickstart!=0)
+   {
+      ret=f_open(&fil,ext_kickstart_pointer, FA_OPEN_EXISTING | FA_READ);
+      if(ret!=0)
+      {
+         printf("Error opening file \"%s\"\n",ext_kickstart_pointer);
+         f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+         return(2);
+      }
+      printf("Loading Extended Kickstart at address: 0x%08lX\n",(uint32_t)EXT_ROM);
+      unsigned int NumBytesRead;
+      unsigned int size=fil.obj.objsize;
+      printf("Extended Kickstart file size: 0x%08lX\n",(uint32_t)size);
+      f_read(&fil, EXT_ROM, size,&NumBytesRead);
+      f_close(&fil);
+      printf("File read OK\r\n");
+   }
+   Xil_L1DCacheFlush();
+   Xil_L2CacheFlush();
+   f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+//   while(1);
+#endif
+   Xil_ExceptionEnable();
+   return(1);
 }
 int last_irq=-1;
 #define IRQ_FIFO_MAX 100
@@ -160,47 +262,33 @@ void hard_reboot(void)
 extern int no_init;
 void cpu_emulator(void)
 {
-   shared->load_rom_emu=0;
-   printf("Bus Request from ARM OK\n");
+//   printf("Bus Request from ARM OK\n");
 
    video_reset();
    audio_reset();
 
    printf("Starting CPU emulator on Core1\n");
+   printf("Waiting ack from core1...\n");
    *(volatile uint32_t *)(0xFFFFFFF0)=0x30000000;
    Xil_DCacheFlush();
    Xil_ICacheInvalidate();
    __asm__("sev");
-//   m68ki_cpu_core *state= &m68ki_cpu;
    shared->shared_data=1;
-   printf("Waiting ack from core1... ");
    while(shared->shared_data==1){}
-   printf("OK\n");
-   while(shared->load_rom_emu==0){}
-   if(shared->load_rom_emu==1)
-      load_rom();
-   piscsi_init();
-   if(config.scsiboot)
-      shared->boot_rom_loaded=1;
-   else
-      shared->boot_rom_loaded=0;
-   for(int i=0;i<7;i++)
-   {
-      if(config.scsi[i][0]!=0)
-         piscsi_map_drive(config.scsi[i], i);
-   }
+//   printf("[Core 0] ACK OK\n");
 
+   usleep(10000);
+   NBR_ARM(0);        // bus request
+
+   usleep(1000);
    CPLD_RESET_ARM(1); // CPLD RUN
-
+   while(READ_NBG_ARM()==1); // make sure that we have bus control
+/*
    if(config.cpufreq <= 66)
 	   arm_write_nowait(0xFEA00000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 2
    else
 	   arm_write_nowait(0xFE500000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 4
-
-   NBR_ARM(0);
-   while(READ_NBG_ARM()==1); // make sure that we have bus control
-
-   shared->load_rom_emu=0; // start CPU emulator on core 1
+*/
 
    while(1)
    {
@@ -212,6 +300,7 @@ void cpu_emulator(void)
             uint32_t addr=shared->write_rtg_addr;
             uint32_t data=shared->write_rtg_data;
             write_rtg_register(addr,data);
+            dsb();
             shared->write_rtg=0;
          }
          else if(shared->read_rtg==1)
@@ -219,7 +308,7 @@ void cpu_emulator(void)
             uint32_t addr=shared->read_rtg_addr;
             uint32_t data=read_rtg_register(addr);
             shared->read_rtg_data=data;
-            __asm(" nop");
+            dsb();
             shared->read_rtg=0;
          }
          else if(shared->write_scsi==1)
@@ -228,6 +317,7 @@ void cpu_emulator(void)
             uint32_t addr=shared->write_scsi_addr;
             uint32_t data=shared->write_scsi_data;
             handle_piscsi_reg_write(addr,data,type);
+            dsb();
             shared->write_scsi=0;
 //            shared->write_scsi_in_progress=1;
 //            handle_piscsi_write(addr,data,type);
@@ -239,7 +329,7 @@ void cpu_emulator(void)
             int type=shared->read_scsi_type;
             uint32_t addr=shared->read_scsi_addr;
             shared->read_scsi_data=handle_piscsi_read(addr,type);
-            __asm(" nop");
+            dsb();
             shared->read_scsi=0;
          }
 //         else if(shared->read_video==1)
@@ -255,7 +345,7 @@ void cpu_emulator(void)
          else if(shared->reset_emulator==1)
          {
 //            cpu_emulator_reset();
-            __asm(" nop");
+        	 dsb();
             shared->reset_emulator=0;
          }
          else if(shared->core0_hold==1)
@@ -265,7 +355,7 @@ void cpu_emulator(void)
             {
                usleep(1000);
             }while(shared->core0_hold==1);
-            __asm(" nop");
+            dsb();
             shared->core0_hold_ack=0;
          }
       }
@@ -284,27 +374,47 @@ void cpu_emulator(void)
                piscsi_shutdown();
                int reset_time_counter=0;
                int reset_time_counter_max=60*4; // 4 seconds
+               int long_reset=0;
                while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
                {
-                  reset_run(bm,reset_time_counter,reset_time_counter_max);
+                  reset_run(bm,reset_time_counter,reset_time_counter_max,long_reset);
                   reset_time_counter++;
                   if(reset_time_counter==60) // 60 -> 1 sec
                  	 no_init=1;
                   if(reset_time_counter==reset_time_counter_max) // 60 -> reset_run waits for vblank;
                   {
-                     no_init=1;
-                     reset_time_counter=0;
-                     reset_time_counter_max=60*4; // 4 seconds
-                     bm++;
-                     if(bm>=BOOTMODE_NUM)
-                        bm=0;
-                     write_env_files(bm,sb,ar);
-                     for(int i=0;i<bm+1;i++)
+//                     no_init=1;
+                     if(long_reset==0)
                      {
-                        DiscreteSet(REG0,FPGA_BP);
-                        usleep(10000);
-                        DiscreteClear(REG0,FPGA_BP);
-                        usleep(100000);
+                        long_reset=1;
+                        reset_time_counter=0;
+                        reset_time_counter_max=60*4; // 4 seconds
+                        bm++;
+                        if(bm>=BOOTMODE_NUM)
+                           bm=0;
+                        write_env_files(bm,sb,ar,cr,ks,ext_ks);
+                        for(int i=0;i<bm+1;i++)
+                        {
+                           DiscreteSet(REG0,FPGA_BP);
+                           usleep(10000);
+                           DiscreteClear(REG0,FPGA_BP);
+                           usleep(100000);
+                        }
+                     }
+                     else // long_reset==1
+                     {
+                         delete_env_files();
+                         for(int i=0;i<5+1;i++)
+                         {
+                            DiscreteSet(REG0,FPGA_BP); // beep
+                            usleep(10000);
+                            DiscreteClear(REG0,FPGA_BP);
+                            usleep(100000);
+                         }
+                         DiscreteSet(REG0,FPGA_BP); // beep
+                         usleep(30000);
+                         DiscreteClear(REG0,FPGA_BP);
+                         hard_reboot(); //
                      }
                   }
                }

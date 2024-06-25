@@ -14,6 +14,10 @@
 #include "xdmaps.h"
 #include "xscugic.h"
 #include "xscutimer.h"
+#include "memorymap.h"
+
+#define DEFAULT_NOPS_WRITE 2
+#define DEFAULT_NOPS_READ 2
 
 #define MUSASHI_EMULATOR
 #define UAE_EMULATOR
@@ -28,6 +32,7 @@
 #include "custom.h"
 
 SHARED *shared;
+extern LOCAL local;
 extern "C" void z3660_printf(const TCHAR *format, ...)
 {
     va_list args{};
@@ -38,9 +43,15 @@ extern "C" void z3660_printf(const TCHAR *format, ...)
     shared->uart_semaphore=0;
     va_end(args);
 }
+extern uint32_t MMUTable;
+#pragma align 1024
+uint32_t MMUL2Table[256] __attribute__ ((aligned (1024)));
 void init_shared(void)
 {
     shared=(SHARED *)0xFFFF0000;
+    shared->mmu_core1_add=(uint32_t)(&MMUTable);
+    shared->nops_write=DEFAULT_NOPS_WRITE;
+	shared->nops_read=DEFAULT_NOPS_READ;
 }
 XGpioPs GpioPs;
 XGpioPs_Config *GpioPsConfigPtr;
@@ -49,15 +60,19 @@ uint32_t timeout=TIMEOUT_MAX;
 uint32_t timeoutmax=TIMEOUT_MAX;
 uint32_t data=0;
 extern uint8_t *ROM;
+extern uint8_t *EXT_ROM;
 
-extern "C" void load_rom(int load)
+extern "C" void load_rom(void)
 {
-    shared->load_rom_addr=(uint32_t)ROM;
-    if(load)
-        shared->load_rom_emu=1;
-    else
-        shared->load_rom_emu=2;
-    while(shared->load_rom_emu>0){}
+    while(shared->load_rom_emu==0){}
+    ROM=(uint8_t *)shared->load_rom_addr;
+    printf("load rom emu %d\n",shared->load_rom_emu);
+}
+extern "C" void load_romext(void)
+{
+    while(shared->load_romext_emu==0){}
+    EXT_ROM=(uint8_t *)shared->load_ext_rom_addr;
+    printf("load romext emu %d\n",shared->load_romext_emu);
 }
 int read_irq=0;
 extern "C" int intlev(void)
@@ -77,12 +92,12 @@ int last_type2=-1;
 
 extern "C" void write_rtg_register(uint16_t zaddr,uint32_t zdata)
 {
-    if(zaddr!=last_zaddr)
+//    if(zaddr!=last_zaddr)
         shared->write_rtg_addr=zaddr;
-    if(zdata!=last_zdata)
+//    if(zdata!=last_zdata)
         shared->write_rtg_data=zdata;
-    last_zaddr=zaddr;
-    last_zdata=zdata;
+//    last_zaddr=zaddr;
+//    last_zdata=zdata;
     shared->write_rtg=1;
     dsb();
     shared->shared_data=1;
@@ -90,14 +105,17 @@ extern "C" void write_rtg_register(uint16_t zaddr,uint32_t zdata)
 }
 extern "C" uint32_t read_rtg_register(uint16_t zaddr)
 {
-    if(zaddr!=last_zaddr3)
+//    if(zaddr!=last_zaddr3)
         shared->read_rtg_addr=zaddr;
-    last_zaddr3=zaddr;
+//    last_zaddr3=zaddr;
     shared->read_rtg=1;
     dsb();
     shared->shared_data=1;
     while(shared->read_rtg==1){NOP;}
-    return(shared->read_rtg_data);
+    uint32_t data=shared->read_rtg_data;
+//    if(zaddr>=0x1A0 && zaddr<=0x238)
+//    	printf("[EMU] RTG read reg 0x%03X = 0x%08X\n",zaddr,data);
+    return(data);
 }
 enum piscsi_cmds {
     PISCSI_CMD_WRITE        = 0x00,
@@ -146,31 +164,33 @@ uint32_t addr2=0;
 uint32_t addr3=0;
 extern "C" void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type)
 {
-    if(zaddr!=last_zaddr1)
+//    if(zaddr!=last_zaddr1)
         shared->write_scsi_addr=zaddr;
-    if(zdata!=last_zdata1)
+//    if(zdata!=last_zdata1)
         shared->write_scsi_data=zdata;
-    if(type!=last_type1)
+//    if(type!=last_type1)
         shared->write_scsi_type=type;
-    last_zaddr1=zaddr;
-    last_zdata1=zdata;
-    last_type1=type;
+//    last_zaddr1=zaddr;
+//    last_zdata1=zdata;
+//    last_type1=type;
     shared->write_scsi=1;
 	dsb();
     shared->shared_data=1;
     while(shared->write_scsi==1){NOP;}
 }
+
 extern "C" uint32_t read_scsi_register(uint16_t zaddr,int type)
 {
-    if(zaddr!=last_zaddr2)
+//    if(zaddr!=last_zaddr2)
         shared->read_scsi_addr=zaddr;
-    if(type!=last_type2)
+//    if(type!=last_type2)
         shared->read_scsi_type=type;
-    last_zaddr2=zaddr;
-    last_type2=type;
+//    last_zaddr2=zaddr;
+//    last_type2=type;
     shared->read_scsi=1;
 	dsb();
     shared->shared_data=1;
+
     if(zaddr < PISCSI_DBG_MSG)
     {
     	switch(zaddr)
@@ -192,8 +212,18 @@ extern "C" uint32_t read_scsi_register(uint16_t zaddr,int type)
     			break;
     		case PISCSI_CMD_ADDR2:
     			break;
+            case PISCSI_CMD_WRITE64:
+            case PISCSI_CMD_WRITE:
+            case PISCSI_CMD_WRITEBYTES:
+    			Xil_L1DCacheFlush();
+    			break;
+            case PISCSI_CMD_READ64:
+            case PISCSI_CMD_READ:
+            case PISCSI_CMD_READBYTES:
+    			Xil_L1DCacheInvalidate();
+    			break;
     		default:
-    			printf("HHH %02x\n",zaddr);
+    			printf("SCSI read command %02x\n",zaddr);
     	}
     }
     while(shared->read_scsi==1){NOP;}
@@ -241,6 +271,12 @@ void configure_gpio(void)
 
     z3660_printf("[Core1] Configured GPIO ...\n\r");
 }
+extern "C" unsigned int READ_NBG_ARM(void)
+{
+//   return(XGpioPs_ReadPin(&GpioPs, PS_MIO_15));
+	return(0);
+}
+
 int access_failure=0;
 extern u32 DataAbortAddr;
 extern "C" unsigned int read_long(unsigned int address);
@@ -354,7 +390,6 @@ void DataAbortHandler(void *data)
 
 XDmaPs DmaInstance;
 XScuGic GicInstance;
-extern uint32_t MMUTable;
 void SetTlbAttributes(INTPTR Addr, uint32_t attrib)
 {
     uint32_t *ptr;
@@ -387,12 +422,14 @@ void ipl_configure_interrupt(void)
     XScuGic_CfgInitialize(&intc, IntcConfig, IntcConfig->CpuBaseAddress);
 
     int intr_target_reg;
-#define INT_INTERRUPT_ID_0 63 // video
-#define INT_INTERRUPT_ID_1 64 // audio
+//#define INT_INTERRUPT_ID_0 63 // video
+//#define INT_INTERRUPT_ID_1 64 // audio
+#define INT_INTERRUPT_ID_2 65 // video
+/*
     intr_target_reg = XScuGic_DistReadReg(&intc,XSCUGIC_SPI_TARGET_OFFSET_CALC(INT_INTERRUPT_ID_0));
     intr_target_reg &= ~(0x000000FF << ((INT_INTERRUPT_ID_0%4)*8));
     intr_target_reg |=  (0x00000001 << ((INT_INTERRUPT_ID_0%4)*8));//CPU0
-    //intr_target_reg |=  (0x00000002 << ((INT_INTERRUPT_ID_0%4)*8));//CPU1
+    intr_target_reg |=  (0x00000002 << ((INT_INTERRUPT_ID_0%4)*8));//CPU1
     XScuGic_DistWriteReg(&intc,XSCUGIC_SPI_TARGET_OFFSET_CALC(INT_INTERRUPT_ID_0),intr_target_reg);
 
     intr_target_reg = XScuGic_DistReadReg(&intc,XSCUGIC_SPI_TARGET_OFFSET_CALC(INT_INTERRUPT_ID_1));
@@ -400,7 +437,7 @@ void ipl_configure_interrupt(void)
     intr_target_reg |=  (0x00000001 << ((INT_INTERRUPT_ID_1%4)*8));//CPU0
     //intr_target_reg |=  (0x00000002 << ((INT_INTERRUPT_ID_1%4)*8));//CPU1
     XScuGic_DistWriteReg(&intc,XSCUGIC_SPI_TARGET_OFFSET_CALC(INT_INTERRUPT_ID_1),intr_target_reg);
-
+*/
     intr_target_reg = XScuGic_DistReadReg(&intc,XSCUGIC_SPI_TARGET_OFFSET_CALC(XPAR_XGPIOPS_0_INTR));
     intr_target_reg &= ~(0x000000FF << ((XPAR_XGPIOPS_0_INTR%4)*8));
     //intr_target_reg |=  (0x00000001 << ((XPAR_XGPIOPS_0_INTR%4)*8));//CPU0
@@ -420,9 +457,44 @@ void ipl_configure_interrupt(void)
     XGpioPs_SetCallbackHandler(&GpioPs,(void *)&GpioPs,ipl_interrupt_handler);
     XScuGic_Enable(&intc,XPAR_XGPIOPS_0_INTR);
     // Interrupts are enabled for both cores, so we disable here what is not needed
-    *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
+//    *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
 //    *((volatile uint32_t*)0xF8F0183C)&=~0x02000000; // FIXME: disable interrupt for core 1
     Xil_ExceptionEnable();
+}
+#define VIDEO_FORMATTER_BASEADDR XPAR_PROCESSING_AV_SYSTEM_AUDIO_VIDEO_ENGINE_VIDEO_VIDEO_FORMATTER_0_BASEADDR
+
+inline uint32_t video_formatter_read(uint16_t op)
+{
+   return (Xil_In32(VIDEO_FORMATTER_BASEADDR+(op<<2)));
+}
+void isr_video(void *dummy)
+{
+   int vblank=video_formatter_read(0);
+   if(vblank)
+   {
+/*
+      static int c=0;
+      static int s=0;
+      c++;
+      if(c==60)
+      {
+         c=0;
+         s++;
+         printf("[Core 1] vb %d %08lX\n",s,*((volatile uint32_t*)0xF8F0183C));
+      }
+*/
+	   Xil_L1DCacheFlush();
+   }
+}
+int fpga_interrupt_connect(void)
+{
+	XScuGic_SetPriorityTriggerType(&intc,INT_INTERRUPT_ID_2, 0xA0, 0x03); // vblank priority 0xA0 (0xF8-0x00), rising edge 0x03
+	//int result=
+	XScuGic_Connect(&intc, INT_INTERRUPT_ID_2, (Xil_ExceptionHandler)isr_video,NULL);
+
+	XScuGic_Enable(&intc, INT_INTERRUPT_ID_2);
+
+	return(XST_SUCCESS);
 }
 
 int main()
@@ -440,14 +512,20 @@ int main()
 
     for(int i=0;i<0x00F;i++)     // RAM and Amiga regs, but 0x00F for kickstart
         SetTlbAttributes(i*0x100000UL,RESERVED);
+    for(int i=0;i<256;i++)
+    	MMUL2Table[i]=0;//(0x00F00000+(i<<12))|0x5BA;
+    printf("MMUL2Table = %08lx\n",((uint32_t)&MMUL2Table));
+
     for(int i=0x010;i<0x080;i++) // Mother Board RAM
         SetTlbAttributes(i*0x100000UL,RESERVED);
     for(int i=0x080;i<0x180;i++) // extended CPU RAM
         SetTlbAttributes(i*0x100000UL,NORM_WB_CACHE);
     for(int i=0x180;i<0x182;i++) // RTG Registers (2 MB reserved, framebuffer is at 0x200000)
-        SetTlbAttributes(i*0x100000UL,0x14DE2);//NORM_NONCACHE);
-    for(int i=0x182;i<0x200;i++) // RTG RAM
+        SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);
+    for(int i=0x182;i<0x1FE;i++) // RTG
         SetTlbAttributes(i*0x100000UL,NORM_WT_CACHE);//0x14de2);//NORM_NONCACHE);
+    for(int i=0x1FE;i<0x200;i++) // RTG
+        SetTlbAttributes(i*0x100000UL,NORM_NONCACHE);//0x14de2);//NORM_NONCACHE);
 //    for(int i=0x200;i<0x300;i++) // Z3 RAM
 //        SetTlbAttributes(i*0x100000UL,RESERVED);
     for(int i=0x400;i<0x780;i++)
@@ -472,11 +550,20 @@ int main()
     Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_UNDEFINED_INT     , UndefinedExceptionHandler,0);
     Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_SWI_INT           , SWInterruptHandler,0);
 
-#if IPL_INT_ON_THIS_CORE == 1
+#if INT_IPL_ON_THIS_CORE == 1
     ipl_configure_interrupt();
 #endif
+    fpga_interrupt_connect();
+    z3660_printf("[Core1] Configured Interrupts ...\n\r");
     //    for(int i=0x400,j=0;i<0x500;i++,j++)
     //        Xil_SetTlbAttributes(i*0x100000UL,(0x10000000+j*0x100000UL)|1); // mapped to 0x10000000
+
+    load_rom();
+    load_romext();
+    local.z3_enabled=shared->z3_enabled;
+
+    local.load_rom_emu   =shared->load_rom_emu;
+    local.load_romext_emu=shared->load_romext_emu;
 
     while(1)
     {
@@ -486,23 +573,18 @@ int main()
 #ifdef UAE_EMULATOR
 #ifdef MUSASHI_EMULATOR
             shared->shared_data=0; // ack to core0
+            printf("[Core1] ACK to Core0\n");
             if(shared->cfg_emu==UAEJIT)
             {
-                // Esto hay que repetirlo m�s adelante...
-                *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
                 uae_emulator(1);
             }
             else if(shared->cfg_emu==UAE_)
             {
-                // Esto hay que repetirlo m�s adelante...
-                *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
                 uae_emulator(0);
             }
             else if(shared->cfg_emu==MUSASHI)
             {
-                // Esto hay que repetirlo m�s adelante...
-                *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
-                cpu_emulator();
+                musashi_emulator();
             }
             else
             {
@@ -513,23 +595,17 @@ int main()
             shared->shared_data=0; // ack to core0
             if(shared->cfg_emu==UAEJIT)
             {
-                // Esto hay que repetirlo m�s adelante...
-                *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
                 uae_emulator(1);
             }
             else// if(shared->cfg_emu==UAE_)
             {
-                // Esto hay que repetirlo m�s adelante...
-                *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
                 uae_emulator(0);
             }
 #endif
 #else
 #ifdef MUSASHI_EMULATOR
             shared->shared_data=0; // ack to core0
-            // Esto hay que repetirlo m�s adelante...
-            *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
-            cpu_emulator();
+            musashi_emulator();
 #else
             z3660_printf("[Core1] No emulator compiled!!!\nHALT!!!\n");
             while(1);

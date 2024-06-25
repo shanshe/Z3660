@@ -2499,7 +2499,7 @@ void z3660_tasks(void);
 static inline void check_uae_int_request(void)
 {
    z3660_tasks();
-#if IPL_INT_ON_THIS_CORE == 0
+#if INT_IPL_ON_THIS_CORE == 0
    if(shared->int_available)
    {
       shared->int_available=0;

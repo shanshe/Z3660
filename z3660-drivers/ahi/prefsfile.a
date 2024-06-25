@@ -16,17 +16,17 @@ S:
 
 *** AUDN
 	dc.l	ID_AUDN
-	dc.l	.e0-.s0
-.s0:
+	dc.l	.e-.s
+.s:
 	dc.b	"z3660ax",0,0
-.e0:
+.e:
 	CNOP	0,2
 
 *** AUDM
 ModeA:
 	dc.l	ID_AUDM
-	dc.l	.e1-.s1
-.s1
+	dc.l	.e-.s
+.s
 	dc.l	AHIDB_AudioID,		$CAFE0000
 
 	dc.l	AHIDB_Volume,		TRUE
@@ -34,17 +34,17 @@ ModeA:
 	dc.l	AHIDB_Stereo,		TRUE
 	dc.l	AHIDB_HiFi,			FALSE
 
-	dc.l	AHIDB_Name,		.name1-.s1
+	dc.l	AHIDB_Name,		.name-.s
 	dc.l	TAG_DONE
-.name1	dc.b	"Z3660AX:16 bit Stereo++",0
-.e1
+.name	dc.b	"Z3660AX:16 bit Stereo++",0
+.e
 	CNOP	0,2
 
 *** AUDM
 ModeB:
 	dc.l	ID_AUDM
-	dc.l	.e2-.s2
-.s2
+	dc.l	.e-.s
+.s
 	dc.l	AHIDB_AudioID,		$CAFE0001
 
 	dc.l	AHIDB_Volume,		TRUE
@@ -52,10 +52,10 @@ ModeB:
 	dc.l	AHIDB_Stereo,		TRUE
 	dc.l	AHIDB_HiFi,			FALSE
 
-	dc.l	AHIDB_Name,		.name2-.s2
+	dc.l	AHIDB_Name,		.name-.s
 	dc.l	TAG_DONE
-.name2	dc.b	"Z3660AX:16 bit Stereo",0
-.e2
+.name	dc.b	"Z3660AX:16 bit Stereo",0
+.e
 	CNOP	0,2
 
 E:

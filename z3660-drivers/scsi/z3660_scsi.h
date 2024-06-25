@@ -4,10 +4,10 @@
 #define XSTR(s) STR(s)
 
 #define DEVICE_NAME "z3660_scsi.device"
-#define DEVICE_DATE "(27 Sep 2023)"
+#define DEVICE_DATE "(11 May 2023)"
 #define DEVICE_ID_STRING "Z3660SCSI " XSTR(DEVICE_VERSION) "." XSTR(DEVICE_REVISION) " " DEVICE_DATE
-#define DEVICE_VERSION 1
-#define DEVICE_REVISION 02
+#define DEVICE_VERSION 43
+#define DEVICE_REVISION 20
 #define DEVICE_PRIORITY 0
 
 #define ARRAY_SIZE(x) ((sizeof (x) / sizeof ((x)[0])))

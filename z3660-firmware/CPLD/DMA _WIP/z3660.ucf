@@ -47,6 +47,7 @@ NET "nAVEC"         LOC = "P16"  ;
 NET "SIZ<0>"        LOC = "P97"  ;
 NET "SIZ<1>"        LOC = "P96"  ;
 NET "nINT6"         LOC = "P22"  ;
+NET "nINT2"         LOC = "P24"  ;
 NET "nIPL<0>"       LOC = "P49"  ;
 NET "nIPL<1>"       LOC = "P50"  ;
 NET "nIPL<2>"       LOC = "P51"  ;
@@ -91,8 +92,6 @@ NET "nBGR040"       LOC = "P28"  ;
 NET "nDMACOE"       LOC = "P103" ;
 NET "nR_W040_out"   LOC = "P80"  ;
 NET "R_W040_out"    LOC = "P23"  ;
-NET "nSNOOP"        LOC = "P33"  ;
-NET "LEBUS_DMA"     LOC = "P34"  ;
 
 # ARM signals
 NET "PS_MIO_0"      LOC = "P78"  ;
@@ -101,14 +100,14 @@ NET "PS_MIO_9"      LOC = "P20"  ;
 NET "PS_MIO_12"     LOC = "P64"  ;
 NET "PS_MIO_13"     LOC = "P48"  ;
 NET "PS_MIO_15"     LOC = "P81"  ;
-NET "INT6"          LOC = "P21"  ;
+NET "INT6_ARM"      LOC = "P21"  ;
 NET "nTS_FPGA"      LOC = "P100" ;
 NET "nTBI_FPGA"     LOC = "P98"  ;
 
 # not used signals
-NET "DEBUG3"        LOC = "P105" ;
-NET "DEBUG1"        LOC = "P106" ;
-NET "DEBUG2"        LOC = "P107" ;
+NET "DBG3"          LOC = "P105" ;
+NET "DBG1"          LOC = "P106" ;
+NET "DBG2"          LOC = "P107" ;
 NET "J1"            LOC = "P44"  ;
 NET "n040CIOUT"     LOC = "P45"  ;
 NET "p040A<19>"     LOC = "P140" ;
@@ -125,8 +124,9 @@ NET "p040A<29>"     LOC = "P130" ;
 NET "p040A<30>"     LOC = "P129" ;
 NET "p040A<31>"     LOC = "P128" ;
 NET "FPGA_PRESENCE" LOC = "P82"  ;
-NET "TP3"           LOC = "P24"  ;
-NET "TP7"           LOC = "P46"  ;
+NET "nSNOOP"        LOC = "P33"  ;
+NET "LEBUS_DMA"     LOC = "P34"  ;
+NET "CPUCLK_RECVD"  LOC = "P46"  ;
 
 NET "V_DETECTOR"    LOC = "P143" ;
 
@@ -136,4 +136,4 @@ NET "V_DETECTOR"    LOC = "P143" ;
 NET "PCLK" TNM_NET = PCLK;
 TIMESPEC TS_PCLK = PERIOD "PCLK" 100 MHz HIGH 50%;
 NET "BCLK" TNM_NET = BCLK;
-TIMESPEC TS_BCLK = PERIOD "BCLK" 25 MHz HIGH 50%;
+TIMESPEC TS_BCLK = PERIOD "BCLK" 50 MHz HIGH 50%;

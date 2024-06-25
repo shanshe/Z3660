@@ -9,7 +9,9 @@
 #define SRC_MAIN_H_
 
 #define REVISION_MAJOR 1
-#define REVISION_MINOR 02
+#define REVISION_MINOR 03
+//#define REVISION_BETA 0
+#define REVISION_BETA 1
 
 #define INT_IPL_ON_THIS_CORE 0
 
@@ -66,33 +68,42 @@
 #define PS_MIO_51    51 // MIO 51
 
 typedef struct {
-	volatile uint32_t shared_data;     // 0xFFFF0000
-	volatile uint32_t write_rtg;       // 0xFFFF0004
-	volatile uint32_t write_rtg_addr;  // 0xFFFF0008
-	volatile uint32_t write_rtg_data;  // 0xFFFF000C
-	volatile uint32_t core0_hold;      // 0xFFFF0010
-	volatile uint32_t core0_hold_ack;  // 0xFFFF0014
-	volatile uint32_t irq;             // 0xFFFF0018
-	volatile uint32_t uart_semaphore;  // 0xFFFF001C
-	volatile uint32_t jit_enabled;     // 0xFFFF0020
-	volatile uint32_t reset_emulator;  // 0xFFFF0024
-	volatile uint32_t load_rom_emu;    // 0xFFFF0028
-	volatile uint32_t load_rom_addr;   // 0xFFFF002C
-	volatile uint32_t int_available;   // 0xFFFF0030
-	volatile uint32_t cfg_emu;         // 0xFFFF0034
-	volatile uint32_t write_scsi;      // 0xFFFF0038
-	volatile uint32_t write_scsi_addr; // 0xFFFF003C
-	volatile uint32_t write_scsi_data; // 0xFFFF0040
-	volatile uint32_t write_scsi_type; // 0xFFFF0044
-	volatile uint32_t read_scsi;       // 0xFFFF0048
-	volatile uint32_t read_scsi_addr;  // 0xFFFF004C
-	volatile uint32_t read_scsi_data;  // 0xFFFF0050
-	volatile uint32_t read_scsi_type;  // 0xFFFF0054
-	volatile uint32_t boot_rom_loaded; // 0xFFFF0058
+	volatile uint32_t shared_data;         // 0xFFFF0000
+	volatile uint32_t write_rtg;           // 0xFFFF0004
+	volatile uint32_t write_rtg_addr;      // 0xFFFF0008
+	volatile uint32_t write_rtg_data;      // 0xFFFF000C
+	volatile uint32_t core0_hold;          // 0xFFFF0010
+	volatile uint32_t core0_hold_ack;      // 0xFFFF0014
+	volatile uint32_t irq;                 // 0xFFFF0018
+	volatile uint32_t uart_semaphore;      // 0xFFFF001C
+	volatile uint32_t jit_enabled;         // 0xFFFF0020
+	volatile uint32_t reset_emulator;      // 0xFFFF0024
+	volatile uint32_t load_rom_emu;        // 0xFFFF0028
+	volatile uint32_t load_rom_addr;       // 0xFFFF002C
+	volatile uint32_t int_available;       // 0xFFFF0030
+	volatile uint32_t cfg_emu;             // 0xFFFF0034
+	volatile uint32_t write_scsi;          // 0xFFFF0038
+	volatile uint32_t write_scsi_addr;     // 0xFFFF003C
+	volatile uint32_t write_scsi_data;     // 0xFFFF0040
+	volatile uint32_t write_scsi_type;     // 0xFFFF0044
+	volatile uint32_t read_scsi;           // 0xFFFF0048
+	volatile uint32_t read_scsi_addr;      // 0xFFFF004C
+	volatile uint32_t read_scsi_data;      // 0xFFFF0050
+	volatile uint32_t read_scsi_type;      // 0xFFFF0054
+	volatile uint32_t scsiboot_rom_loaded; // 0xFFFF0058
 	volatile uint32_t write_scsi_in_progress; // 0xFFFF005C
-	volatile uint32_t read_rtg;        // 0xFFFF0060
-	volatile uint32_t read_rtg_addr;   // 0xFFFF0064
-	volatile uint32_t read_rtg_data;   // 0xFFFF0068
+	volatile uint32_t read_rtg;            // 0xFFFF0060
+	volatile uint32_t read_rtg_addr;       // 0xFFFF0064
+	volatile uint32_t read_rtg_data;       // 0xFFFF0068
+	volatile uint32_t mmu_core1_add;       // 0xFFFF006C
+	volatile uint32_t z3_enabled;          // 0xFFFF0070
+	volatile uint32_t load_ext_rom_addr;   // 0xFFFF0074
+	volatile uint32_t load_romext_emu;     // 0xFFFF0078
+	volatile uint32_t nops_write;          // 0xFFFF007C
+	volatile uint32_t nops_read;           // 0xFFFF0080
+	volatile uint32_t disassemble;         // 0xFFFF0088
+	volatile uint32_t musashi_step;        // 0xFFFF008C
+	volatile uint32_t reset_emulator_dis;  // 0xFFFF0090
 } SHARED;
 extern SHARED *shared;
 #define REG_BASE_ADDRESS XPAR_Z3660_0_BASEADDR
@@ -135,6 +146,7 @@ extern SHARED *shared;
 #define FPGA_TSCONDITION3             (3L<< 4)  // SAXI REG0  6..4
 #define FPGA_TSCONDITION4             (4L<< 4)  // SAXI REG0  6..4
 #define FPGA_TSCONDITION5             (5L<< 4)  // SAXI REG0  6..4
+#define FPGA_MAPROMEXT_EN             (1L<< 7)  // SAXI REG0  7
 #define FPGA_ENCONDITION_PCLK0_CLKEN0 (0L<< 8)  // SAXI REG0  9..8
 #define FPGA_ENCONDITION_PCLK1_CLKEN0 (1L<< 8)  // SAXI REG0  9..8
 #define FPGA_ENCONDITION_PCLK0        (2L<< 8)  // SAXI REG0  9..8

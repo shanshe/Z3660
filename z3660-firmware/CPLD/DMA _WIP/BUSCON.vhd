@@ -54,12 +54,12 @@ entity BUSCON is
            MAS3 : out  STD_LOGIC;
 --           nDS040 : out  STD_LOGIC;
 --           nAS040 : out  STD_LOGIC;
-           R_W040 : in STD_LOGIC;
+			  R_W040 : in STD_LOGIC;
 --           nTBI : out  STD_LOGIC;
 --           nTEA : out  STD_LOGIC;
 --           nTA : out  STD_LOGIC;
            nTS : in  STD_LOGIC
-           );
+			  );
 end BUSCON;
 
 architecture Behavioral of BUSCON is
@@ -133,32 +133,32 @@ impure function noport return std_logic is begin
 --  return (nRBERR and nRHALT); end norm_nowait;
 --
 --impure function final return std_logic is begin
---   if (   (longport='1' and (   MAS_state=A or
---                              MAS_state=F or
---                              MAS_state=G or
---                              MAS_state=K or
---                              MAS_state=L or
---                              MAS_state=M or
---                              MAS_state=N ))
---      or (wordport='1' and (    MAS_state=B or
---                              MAS_state=F or
---                              MAS_state=G or
---                              MAS_state=K or
---                              MAS_state=L or
---                              MAS_state=M or
---                              MAS_state=N ))
---      or (byteport='1' and (    MAS_state=E or
---                              MAS_state=H or
---                              MAS_state=J or
---                              MAS_state=K or
---                              MAS_state=L or
---                              MAS_state=M or
---                              MAS_state=N ))
---      or (nRAVEC='0' and nRBERR='1') ) then
---      return '1';
---   else
---      return '0';
---   end if;
+--	if (	(longport='1' and (	MAS_state=A or
+--										MAS_state=F or
+--										MAS_state=G or
+--										MAS_state=K or
+--										MAS_state=L or
+--										MAS_state=M or
+--										MAS_state=N ))
+--		or (wordport='1' and ( 	MAS_state=B or
+--										MAS_state=F or
+--										MAS_state=G or
+--										MAS_state=K or
+--										MAS_state=L or
+--										MAS_state=M or
+--										MAS_state=N ))
+--		or (byteport='1' and ( 	MAS_state=E or
+--										MAS_state=H or
+--										MAS_state=J or
+--										MAS_state=K or
+--										MAS_state=L or
+--										MAS_state=M or
+--										MAS_state=N ))
+--		or (nRAVEC='0' and nRBERR='1') ) then
+--		return '1';
+--	else
+--		return '0';
+--	end if;
 --end final;
   
 
@@ -193,297 +193,297 @@ MAS3 <= MAS3_int;
 --MAS_state <= MAS3_int & MAS2_int & MAS1_int & MAS0_int;
 --SLV_state <= SLV3_int & SLV2_int & SLV1_int & SLV0_int;
 --ADDR <= p040A1 & p040A0;
---   nTBI <= '0';-- when SLV_state=S2 and SIZ40=line else '1';
+--	nTBI <= '0';-- when SLV_state=S2 and SIZ40=line else '1';
 
---   nTA <= '0' when SLV_state=S2 else '1';
---   nTEA <= '0' when SLV_state=SB else '1';
---   nAS040 <= '0' when SLV_state=S1 or SLV_state=S0 else '1';
---   nDS040 <= '0' when (SLV_state=S1 or SLV_state=S0) and (R_W040='1') else '1';
+--	nTA <= '0' when SLV_state=S2 else '1';
+--	nTEA <= '0' when SLV_state=SB else '1';
+--	nAS040 <= '0' when SLV_state=S1 or SLV_state=S0 else '1';
+--	nDS040 <= '0' when (SLV_state=S1 or SLV_state=S0) and (R_W040='1') else '1';
 
 -- motorola way
---   process(BCLK,n040RSTI)
---   begin
---      if(n040RSTI='0') then
---         MAS_state <= I;
---      elsif(BCLK'event and  BCLK='1') then
+--	process(BCLK,n040RSTI)
+--	begin
+--		if(n040RSTI='0') then
+--			MAS_state <= I;
+--		elsif(BCLK'event and  BCLK='1') then
 --
---         case (MAS_state) is
---            when I =>
---                  if (nTS='1') then                               MAS_state <= I;
---               elsif (nTS='0' and SIZ40=line) then                MAS_state <= A;
---               elsif (nTS='0' and SIZ40=long) then                MAS_state <= A;
---               elsif (nTS='0' and SIZ40=word and ADDR=addr0) then MAS_state <= F;
---               elsif (nTS='0' and SIZ40=word and ADDR=addr2) then MAS_state <= G;
---               elsif (nTS='0' and SIZ40=byte and ADDR=addr0) then MAS_state <= K;
---               elsif (nTS='0' and SIZ40=byte and ADDR=addr1) then MAS_state <= L;
---               elsif (nTS='0' and SIZ40=byte and ADDR=addr2) then MAS_state <= M;
---               elsif (nTS='0' and SIZ40=byte and ADDR=addr3) then MAS_state <= N;
---               elsif (nTS='0' and SIZ40=word and ADDR=addr1) then MAS_state <= I; -- impossible case
---               elsif (nTS='0' and SIZ40=word and ADDR=addr3) then MAS_state <= I; -- impossible case
---               else                                               MAS_state <= I;
---               end if;
---            when A =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= A;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= A;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= C;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= B;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when B =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= B;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= B;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when C =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= C;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= C;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= D;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when D =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= D;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= D;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= E;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when E =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= E;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= E;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when F =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= F;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= F;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= H;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when G =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= G;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= G;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= J;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when H =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= H;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= H;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when J =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= J;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= J;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when K =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= K;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= K;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when L =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= L;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= L;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when M =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= M;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= M;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when N =>
---                  if (not(SLV_state=S1)) then                  MAS_state <= N;
---               elsif (SLV_state=S1 and retry='1') then         MAS_state <= N;
---               elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
---               elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
---               elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
---               else                                            MAS_state <= I;
---               end if;
---            when others =>                                     MAS_state <= I;
---         end case;
+--			case (MAS_state) is
+--				when I =>
+--						if (nTS='1') then                               MAS_state <= I;
+--					elsif (nTS='0' and SIZ40=line) then                MAS_state <= A;
+--					elsif (nTS='0' and SIZ40=long) then                MAS_state <= A;
+--					elsif (nTS='0' and SIZ40=word and ADDR=addr0) then MAS_state <= F;
+--					elsif (nTS='0' and SIZ40=word and ADDR=addr2) then MAS_state <= G;
+--					elsif (nTS='0' and SIZ40=byte and ADDR=addr0) then MAS_state <= K;
+--					elsif (nTS='0' and SIZ40=byte and ADDR=addr1) then MAS_state <= L;
+--					elsif (nTS='0' and SIZ40=byte and ADDR=addr2) then MAS_state <= M;
+--					elsif (nTS='0' and SIZ40=byte and ADDR=addr3) then MAS_state <= N;
+--					elsif (nTS='0' and SIZ40=word and ADDR=addr1) then MAS_state <= I; -- impossible case
+--					elsif (nTS='0' and SIZ40=word and ADDR=addr3) then MAS_state <= I; -- impossible case
+--					else                                               MAS_state <= I;
+--					end if;
+--				when A =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= A;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= A;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= C;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= B;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when B =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= B;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= B;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when C =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= C;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= C;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= D;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when D =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= D;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= D;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= E;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when E =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= E;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= E;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when F =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= F;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= F;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= H;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when G =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= G;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= G;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= J;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when H =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= H;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= H;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when J =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= J;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= J;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= Z;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when K =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= K;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= K;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when L =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= L;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= L;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when M =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= M;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= M;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when N =>
+--						if (not(SLV_state=S1)) then                  MAS_state <= N;
+--					elsif (SLV_state=S1 and retry='1') then         MAS_state <= N;
+--					elsif (SLV_state=S1 and bus_err='1') then       MAS_state <= Z;
+--					elsif (SLV_state=S1 and byteport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and wordport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and longport='1') then      MAS_state <= I;
+--					elsif (SLV_state=S1 and noport='1') then        MAS_state <= I; -- impossible case
+--					else                                            MAS_state <= I;
+--					end if;
+--				when others =>                                     MAS_state <= I;
+--			end case;
 ------nAS040 <= not(ASDS_state(3));
 ------nDS040 <= not(ASDS_state(2));
-----         case (ASDS_state) is
-----            when sidle =>
+----			case (ASDS_state) is
+----				when sidle =>
 ----nAS040 <= '1';
 ----nDS040 <= '1';
-----               if( nTS='0') then ASDS_state <= ts_rec;
-----               else              ASDS_state <= sidle;
-----               end if;
-----            when ts_rec =>
+----					if( nTS='0') then ASDS_state <= ts_rec;
+----					else              ASDS_state <= sidle;
+----					end if;
+----				when ts_rec =>
 ----nAS040 <= '1';
 ----nDS040 <= '1';
-----               if(R_W040='1') then                    ASDS_state <= rd_state;
-----               else                                   ASDS_state <= wr_state;
-----               end if;
-----            when rd_state =>
+----					if(R_W040='1') then                    ASDS_state <= rd_state;
+----					else                                   ASDS_state <= wr_state;
+----					end if;
+----				when rd_state =>
 ----nAS040 <= '0';
 ----nDS040 <= '0';
-----               if(nLSTERM='1') then                   ASDS_state <= wait_term;
-----               else                                   ASDS_state <= cycle_end;
-----               end if;
-----            when wr_state =>
+----					if(nLSTERM='1') then                   ASDS_state <= wait_term;
+----					else                                   ASDS_state <= cycle_end;
+----					end if;
+----				when wr_state =>
 ----nAS040 <= '0';
 ----nDS040 <= '0';
-----               if(nLSTERM='1') then                   ASDS_state <= wait_term;
-----               else                                   ASDS_state <= cycle_end;
-----               end if;
-----            when wait_term =>
+----					if(nLSTERM='1') then                   ASDS_state <= wait_term;
+----					else                                   ASDS_state <= cycle_end;
+----					end if;
+----				when wait_term =>
 ----nAS040 <= '0';
 ----nDS040 <= '0';
-----               if(nLSTERM='0' or nETERM='0') then     ASDS_state <= cycle_end;
-----               else                                   ASDS_state <= wait_term;
-----               end if;
-----            when cycle_end =>
+----					if(nLSTERM='0' or nETERM='0') then     ASDS_state <= cycle_end;
+----					else                                   ASDS_state <= wait_term;
+----					end if;
+----				when cycle_end =>
 ----nAS040 <= '1';
 ----nDS040 <= '1';
-----               if(SLV_state=S2 or SLV_state=SB) then  ASDS_state <= sidle;
-----               else
-----                  if(not(SLV_state=SR1 or SLV_state=S3)) then ASDS_state <= cycle_end;
-----                  else
-----                     if(R_W040='1') then              ASDS_state <= rd_state;
-----                     else                             ASDS_state <= wr_state;
-----                     end if;
-----                  end if;
-----               end if;
-----            when others =>
+----					if(SLV_state=S2 or SLV_state=SB) then  ASDS_state <= sidle;
+----					else
+----						if(not(SLV_state=SR1 or SLV_state=S3)) then ASDS_state <= cycle_end;
+----						else
+----							if(R_W040='1') then              ASDS_state <= rd_state;
+----							else                             ASDS_state <= wr_state;
+----							end if;
+----						end if;
+----					end if;
+----				when others =>
 ----nAS040 <= '1';
 ----nDS040 <= '1';
-----               ASDS_state <= sidle;
-----         end case;
+----					ASDS_state <= sidle;
+----			end case;
 --
---         case (SLV_state) is
---            when S3 =>
---                  if (nTS='0') then                       SLV_state <= S0;
---               elsif (MAS_state=I) then                   SLV_state <= S3;
---               elsif (MAS_state=Z) then                   SLV_state <= SB;
---               else                                       SLV_state <= S0;
---               end if;
---            when S0 =>
---                  if (first_term_sample='1' and nETERM='0' and nLSTERM='1') then SLV_state <= S1;
---               elsif (first_term_sample='0' and nETERM='0' and nLSTERM='1') then SLV_state <= S0;
---               elsif (nETERM='1' and nLSTERM='1') then                           SLV_state <= S0;
---               elsif (nLSTERM='0') then                                          SLV_state <= S1;
---               end if;
---            when S1 =>
---                  if (bus_err='1') then                   SLV_state <= SB;
---               elsif (retry='1') then                     SLV_state <= SR0;
---               elsif (norm_wait='1' and final='0') then   SLV_state <= S3W;
---               elsif (norm_wait='1' and final='1') then   SLV_state <= S2W;
---               elsif (norm_nowait='1' and final='0') then SLV_state <= S3;
---               elsif (norm_nowait='1' and final='1') then SLV_state <= S2;
---               end if;
---            when S2 =>
---                                                          SLV_state <= S3;
---            when S2W =>
---               if (nRHALT='1') then                       SLV_state <= S2;
---               else                                       SLV_state <= S2W;
---               end if;
---            when S3W =>
---               if (MAS_state=Z or MAS_state=DC) then      SLV_state <= SB;
---               else
---                  if(nRHALT='0') then                     SLV_state <= S3W;
---                  else                                    SLV_state <= S3;
---                  end if;
---               end if;
---            when SR0 =>
---               if (MAS_state=Z or MAS_state=DC) then      SLV_state <= SB;
---               else
---                  if(nRHALT='0') then                     SLV_state <= SR0;
---                  else                                    SLV_state <= SR1;
---                  end if;
---               end if;
---            when SR1 =>
---                                                          SLV_state <= S0;
---            when SB =>
---                                                          SLV_state <= S3;
---            when others => -- must be copy of S1
---                  if (bus_err='1') then                   SLV_state <= SB;
---               elsif (retry='1') then                     SLV_state <= SR0;
---               elsif (norm_wait='1' and final='0') then   SLV_state <= S3W;
---               elsif (norm_wait='1' and final='1') then   SLV_state <= S2W;
---               elsif (norm_nowait='1' and final='0') then SLV_state <= S3;
---               elsif (norm_nowait='1' and final='1') then SLV_state <= S2;
---               end if;
---         end case;
---      end if;
---   end process;
+--			case (SLV_state) is
+--				when S3 =>
+--						if (nTS='0') then                       SLV_state <= S0;
+--					elsif (MAS_state=I) then                   SLV_state <= S3;
+--					elsif (MAS_state=Z) then                   SLV_state <= SB;
+--					else                                       SLV_state <= S0;
+--					end if;
+--				when S0 =>
+--						if (first_term_sample='1' and nETERM='0' and nLSTERM='1') then SLV_state <= S1;
+--					elsif (first_term_sample='0' and nETERM='0' and nLSTERM='1') then SLV_state <= S0;
+--					elsif (nETERM='1' and nLSTERM='1') then                           SLV_state <= S0;
+--					elsif (nLSTERM='0') then                                          SLV_state <= S1;
+--					end if;
+--				when S1 =>
+--					   if (bus_err='1') then                   SLV_state <= SB;
+--					elsif (retry='1') then                     SLV_state <= SR0;
+--					elsif (norm_wait='1' and final='0') then   SLV_state <= S3W;
+--					elsif (norm_wait='1' and final='1') then   SLV_state <= S2W;
+--					elsif (norm_nowait='1' and final='0') then SLV_state <= S3;
+--					elsif (norm_nowait='1' and final='1') then SLV_state <= S2;
+--					end if;
+--				when S2 =>
+--						                                        SLV_state <= S3;
+--				when S2W =>
+--					if (nRHALT='1') then                       SLV_state <= S2;
+--					else                                       SLV_state <= S2W;
+--					end if;
+--				when S3W =>
+--					if (MAS_state=Z or MAS_state=DC) then      SLV_state <= SB;
+--					else
+--						if(nRHALT='0') then                     SLV_state <= S3W;
+--						else                                    SLV_state <= S3;
+--						end if;
+--					end if;
+--				when SR0 =>
+--					if (MAS_state=Z or MAS_state=DC) then      SLV_state <= SB;
+--					else
+--						if(nRHALT='0') then                     SLV_state <= SR0;
+--						else                                    SLV_state <= SR1;
+--						end if;
+--					end if;
+--				when SR1 =>
+--						                                        SLV_state <= S0;
+--				when SB =>
+--						                                        SLV_state <= S3;
+--				when others => -- must be copy of S1
+--					   if (bus_err='1') then                   SLV_state <= SB;
+--					elsif (retry='1') then                     SLV_state <= SR0;
+--					elsif (norm_wait='1' and final='0') then   SLV_state <= S3W;
+--					elsif (norm_wait='1' and final='1') then   SLV_state <= S2W;
+--					elsif (norm_nowait='1' and final='0') then SLV_state <= S3;
+--					elsif (norm_nowait='1' and final='1') then SLV_state <= S2;
+--					end if;
+--			end case;
+--		end if;
+--	end process;
 
 --SLV3_int <= not(
 --        ( not(SLV1_int) and SLV2_int and not(SLV0_int) )
 --     or ( SLV1_int and not(SLV2_int) and not(SLV0_int) ) );
---   process(BCLK,n040RSTI)
---   begin
---      if(n040RSTI='0') then
---         nDS040 <= '1';
---         nAS040 <= '1';
---      elsif(BCLK'event and  BCLK='1') then
---         if(nBGACK040='0') then
+--	process(BCLK,n040RSTI)
+--	begin
+--		if(n040RSTI='0') then
+--			nDS040 <= '1';
+--			nAS040 <= '1';
+--		elsif(BCLK'event and  BCLK='1') then
+--			if(nBGACK040='0') then
 --nAS040 <= not(
 --        ( not(SLV0_int) and not(SLV1_int) and SLV2_int )
 --     or ( not(SLV0_int) and SLV1_int and not(SLV2_int) ) );
 --nDS040 <= not(
 --        ( not(SLV0_int) and not(SLV1_int) and SLV2_int )
 --     or ( not(SLV0_int) and SLV1_int and not(SLV2_int) ) );
---         else
---            nAS040 <= '1';
---            nDS040 <= '1';
---         end if;
---      end if;
---   end process;
+--			else
+--				nAS040 <= '1';
+--				nDS040 <= '1';
+--			end if;
+--		end if;
+--	end process;
 
 --nAS040 <= not(
 --        ( not(SLV0_int) and not(SLV1_int) and SLV2_int )
@@ -501,15 +501,15 @@ MAS3 <= MAS3_int;
 SLV3_int <= not(
         ( not(SLV1_int) and SLV2_int and not(SLV0_int) )
      or ( SLV1_int and not(SLV2_int) and not(SLV0_int) ) );
-   process(BCLK,n040RSTI)
-   begin
-      if(n040RSTI='0') then
+	process(BCLK,n040RSTI)
+	begin
+		if(n040RSTI='0') then
          MAS0_int <= '0';
          MAS1_int <= '0';
          MAS2_int <= '0';
          MAS3_int <= '0';
-      elsif(BCLK'event and  BCLK='1') then
-         if (nBGACK040='0') then
+		elsif(BCLK'event and  BCLK='1') then
+
 --register
 MAS1_int <= (
         ( MAS1_int and MAS2_int and not(SLV0_int) )
@@ -550,18 +550,17 @@ MAS3_int <= (
      or ( MAS0_int and not(MAS2_int) and MAS3_int and nRDSACK1 and SLV0_int and not(nRDSACK0) )
      or ( not(MAS1_int) and not(MAS0_int) and MAS2_int and not(MAS3_int) and nRDSACK1 and SLV0_int and not(nRDSACK0) )
      or ( not(nTS) and not(MAS1_int) and not(p040A0) and not(MAS0_int) and not(MAS2_int) and not(SIZ40(0)) and not(MAS3_int) and SIZ40(1) ) );
-      end if;
 end if;
 end process;
-   process(BCLK,n040RSTI)
-   begin
-      if(n040RSTI='0') then
+	process(BCLK,n040RSTI)
+	begin
+		if(n040RSTI='0') then
          SLV0_int <= '0';
          SLV1_int <= '0';
          SLV2_int <= '0';
 --         SLV3_int <= '0';
-      elsif(BCLK'event and  BCLK='1') then
-         if (nBGACK040='0') then
+		elsif(BCLK'event and  BCLK='1') then
+
 --register
 SLV1_int <= (
         ( SLV1_int and not(SLV2_int) and SLV0_int and not(nRBERR) )
@@ -591,14 +590,13 @@ SLV0_int <= (
      or ( MAS0_int and not(MAS2_int) and MAS3_int and not(SLV1_int) and not(nETERM) and SLV2_int and nRDSACK1 and not(SLV0_int) )
      or ( not(MAS1_int) and MAS0_int and not(MAS2_int) and not(MAS3_int) and not(SLV1_int) and not(nETERM) and SLV2_int and not(SLV0_int) and nRDSACK0 )
      or ( not(MAS1_int) and not(MAS0_int) and MAS2_int and not(MAS3_int) and not(SLV1_int) and not(nETERM) and SLV2_int and nRDSACK1 and not(SLV0_int) ) );
-      end if;
-         end if;
-   end process;
+		end if;
+	end process;
 
 --Original from A3640
---   process(BCLK,n040RSTI)
---   begin
---      if(n040RSTI='0') then
+--	process(BCLK,n040RSTI)
+--	begin
+--		if(n040RSTI='0') then
 --         SLV0_int <= '0';
 --         SLV1_int <= '0';
 --         SLV2_int <= '0';
@@ -607,7 +605,7 @@ SLV0_int <= (
 --         MAS1_int <= '0';
 --         MAS2_int <= '0';
 --         MAS3_int <= '0';
---      elsif(BCLK'event and  BCLK='1') then
+--		elsif(BCLK'event and  BCLK='1') then
 ----register
 --MAS1_int <= (
 --        ( MAS1_int and MAS0_int and MAS2_int and not(MAS3_int) and not(SLV3_int) )
@@ -690,8 +688,8 @@ SLV0_int <= (
 --     or ( not(SLV1_int) and not(nETERM) and SLV2_int and not(nRDSACK1) and not(SLV0_int) and not(SLV3_int) and nLSTERM )
 --     or ( not(SLV1_int) and not(nETERM) and SLV2_int and not(SLV0_int) and not(SLV3_int) and not(nRBERR) and nLSTERM ) );
 --
---      end if;
---   end process;
+--		end if;
+--	end process;
 
 end Behavioral;
 

@@ -554,14 +554,14 @@ MENDFUNC(2,arm_SUB_l_ri8,(RW4 d, IM8 i))
 
 void arm_flush_cache(uintptr_t addr, uint32_t length)
 {
-        length = (length + 31) & ~31;
-        while (length)
-        {
-                __asm__ __volatile__("mcr p15, 0, %0, c7, c14, 1"::"r"(addr));
-                addr += 32;
-                length -= 32;
-        }
-        __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4"::"r"(addr));
+	length = (length + 31) & ~31;
+	while (length)
+	{
+		__asm__ __volatile__("mcr p15, 0, %0, c7, c14, 1"::"r"(addr));
+		addr += 32;
+		length -= 32;
+	}
+	__asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4"::"r"(addr));
 }
 
 void arm_icache_invalidate(uintptr_t addr, uint32_t length)

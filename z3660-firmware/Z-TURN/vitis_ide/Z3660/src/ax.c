@@ -13,6 +13,10 @@
 #include "ax.h"
 #include "rtg/gfx.h"
 #include "main.h"
+#include "console.h"
+
+extern CONSOLE con;
+void DEBUG_AUDIO(const char *format, ...);
 
 float cut_freq=2.*M_PI*23900.;
 float a1[11]={0};
@@ -44,9 +48,9 @@ void audio_init_i2s() {
    XI2stx_Config* i2s_config = XI2s_Tx_LookupConfig(XPAR_XI2STX_0_DEVICE_ID);
    int status = XI2s_Tx_CfgInitialize(&i2s, i2s_config, i2s_config->BaseAddress);
 
-   printf("[adau] I2S_TX cfg status: %d\n", status);
-   printf("[adau] I2S Dwidth: %d\n", i2s.Config.DWidth);
-   printf("[adau] I2S MaxNumChannels: %d\n", i2s.Config.MaxNumChannels);
+   DEBUG_AUDIO("[adau] I2S_TX cfg status: %d\n", status);
+   DEBUG_AUDIO("[adau] I2S Dwidth: %d\n", i2s.Config.DWidth);
+   DEBUG_AUDIO("[adau] I2S MaxNumChannels: %d\n", i2s.Config.MaxNumChannels);
 
    XI2s_Tx_JustifyEnable(&i2s, JUSTIFY_ENABLE);
    XI2s_Tx_Justify(&i2s, XI2S_TX_JUSTIFY_LEFT);
@@ -58,7 +62,7 @@ void audio_init_i2s() {
 
    status = XAudioFormatter_CfgInitialize(&audio_formatter, af_config);
 
-   printf("[adau] AudioFormatter cfg status: %d\n", status);
+   DEBUG_AUDIO("[adau] AudioFormatter cfg status: %d\n", status);
 
    // reset the goddamn register
    XAudioFormatter_WriteReg(audio_formatter.BaseAddress,
@@ -77,16 +81,16 @@ void audio_init_i2s() {
 //   XAudioFormatter_InterruptDisable(&audio_formatter, 1<<14); // timeout
 //   XAudioFormatter_InterruptDisable(&audio_formatter, XAUD_CTRL_IOC_IRQ_MASK);
 
-   printf("[adau] XAudioFormatter_InterruptEnable...\n");
+   DEBUG_AUDIO("[adau] XAudioFormatter_InterruptEnable...\n");
 
    XAudioFormatter_InterruptEnable(&audio_formatter, XAUD_CTRL_IOC_IRQ_MASK); // Interrupt On Complete
 
-   printf("[adau] XI2s_Tx_Enable...\n");
+   DEBUG_AUDIO("[adau] XI2s_Tx_Enable...\n");
    XI2s_Tx_Enable(&i2s, 1);
 
-   printf("[adau] XAudioFormatterDMAStart...\n");
+   DEBUG_AUDIO("[adau] XAudioFormatterDMAStart...\n");
    XAudioFormatterDMAStart(&audio_formatter);
-   printf("[adau] XAudioFormatterDMAStart done.\n");
+   DEBUG_AUDIO("[adau] XAudioFormatterDMAStart done.\n");
 }
 
 // returns 1 if adau1701 found, otherwise 0
@@ -106,7 +110,7 @@ void audio_debug_timer(int zdata) {
    } else {
       XTime debug_time_stop;
       XTime_GetTime(&debug_time_stop);
-      printf("%x;%09.2f us\n", (uint8_t)zdata,
+      DEBUG_AUDIO("%x;%09.2f us\n", (uint8_t)zdata,
             1.0 * (debug_time_stop-debug_time_start) / (COUNTS_PER_SECOND/1000000));
       XTime_GetTime(&debug_time_start);
    }
@@ -122,7 +126,7 @@ void isr_audio_tx(void *dummy) {
       XAUD_FORMATTER_STS + XAUD_FORMATTER_MM2S_OFFSET, val);
 /*
    if (isra_count++>100) {
-      printf("[isra]\n");
+      DEBUG_AUDIO("[isra]\n");
       isra_count = 0;
    }
 */
@@ -136,7 +140,7 @@ uint32_t audio_get_dma_transfer_count() {
 }
 
 void audio_set_interrupt_enabled(int en) {
-   printf("[audio] enable irq: %d\n", en);
+   DEBUG_AUDIO("[audio] enable irq: %d\n", en);
    interrupt_enabled_audio = en;
 
    if (!en) {
@@ -154,7 +158,7 @@ int audio_swab(uint16_t audio_buf_samples, uint32_t offset, int byteswap) {
    int16_t* sdata = (int16_t*)(audio_tx_buffer + offset);
    int audio_freq = audio_buf_samples * 50;
 
-   //printf("[audio:%d] play: %d +%lu\n", byteswap, audio_freq, offset);
+   //DEBUG_AUDIO("[audio:%d] play: %d +%lu\n", byteswap, audio_freq, offset);
 
    // byteswap and preamp
    if (byteswap) {
@@ -194,16 +198,16 @@ int audio_swab(uint16_t audio_buf_samples, uint32_t offset, int byteswap) {
    // then signal this condition so amiga can adjust
    if (abs(txcount-offset) < AUDIO_BYTES_PER_PERIOD) {
       audio_buffer_collision = 1;
-      //printf("[aswap] ring collision %d\n", abs(txcount-offset));
+      //DEBUG_AUDIO("[aswap] ring collision %d\n", abs(txcount-offset));
    } else {
       audio_buffer_collision = 0;
    }
 
    if (audio_buffer_collision) {
-      printf("[ax]:audio_buffer_collision\n");
-//      printf("[aswap] d-a: %ld\n",txcount-offset);
-//      printf("offset: %ld\n",offset);
-//      printf("txcount: %ld\n",txcount);
+      DEBUG_AUDIO("[ax]:audio_buffer_collision\n");
+//      DEBUG_AUDIO("[aswap] d-a: %ld\n",txcount-offset);
+//      DEBUG_AUDIO("offset: %ld\n",offset);
+//      DEBUG_AUDIO("txcount: %ld\n",txcount);
    }
 
    return(audio_buffer_collision);
@@ -407,13 +411,13 @@ void reset_resampling() {
 }
 
 void audio_set_tx_buffer(uint8_t* addr) {
-   printf("[audio] set tx buffer: %p\n", addr);
+   DEBUG_AUDIO("[audio] set tx buffer: %p\n", addr);
    audio_tx_buffer = addr;
    reset_resampling();
 }
 /*
 void audio_set_rx_buffer(uint8_t* addr) {
-   printf("[audio] set rx buffer: %p\n", addr);
+   DEBUG_AUDIO("[audio] set rx buffer: %p\n", addr);
    audio_rx_buffer = addr;
 }
 */
@@ -487,7 +491,7 @@ void audio_adau_set_eq_gain(int band, double gain)
    a1[band]=_a1;
    a2[band]=_a2;
 
-   printf("[bpf] f0: %8.2f Hz, band=%d\n", (float)f0, band);
+   DEBUG_AUDIO("[bpf] f0: %8.2f Hz, band=%d\n", (float)f0, band);
 
 }
 void audio_adau_set_lpf_params(int f0) {
@@ -496,7 +500,7 @@ void audio_adau_set_lpf_params(int f0) {
    if(f0<10) f0 = 10;
 //   if(f0>22050) f0 = 22050;
    cut_freq=2.*M_PI*f0;
-   printf("[lpf] f0: %8.2f Hz\n", (float)f0);
+   DEBUG_AUDIO("[lpf] f0: %8.2f Hz\n", (float)f0);
 //#define SHANSHE_FILTER
 #ifdef SHANSHE_FILTER
    double w=cut_freq;
@@ -549,15 +553,15 @@ void audio_adau_set_mixer_vol(int vol1, int vol2) {
    double v1 = ((double)vol1)/127.0;
    double v2 = ((double)vol2)/127.0;
 
-   printf("[vol] v1: %f v2: %f\n", v1, v2);
+   DEBUG_AUDIO("[vol] v1: %f v2: %f\n", v1, v2);
 }
 void audio_adau_set_vol_pan(int vol, int pan) {
    vl=vr=vol*0.02;
    if(pan>50) vl=(vl*(100-pan))*0.02;
    if(pan<50) vr=(vr*(pan-0  ))*0.02;
-   printf("[vol+pan] vl: %f vr: %f\n", vl, vr);
+   DEBUG_AUDIO("[vol+pan] vl: %f vr: %f\n", vl, vr);
 }
 void audio_adau_set_prefactor(int vol) {
    preamp=(int32_t)(pow(10,0.012*vol-0.6)*64); // 0 <-> 100 == -12dB <-> 12dB
-   printf("[preamp] p: %f\n", preamp/64.);
+   DEBUG_AUDIO("[preamp] p: %f\n", preamp/64.);
 }

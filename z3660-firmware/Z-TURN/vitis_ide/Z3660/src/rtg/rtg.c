@@ -24,6 +24,19 @@
 #include "../scsi/scsi.h"
 #include "../ltc2990/ltc2990.h"
 #include "../config_clk.h"
+#include "../console.h"
+#include "str_zzregs.h"
+
+extern CONSOLE con;
+void DEBUG_AUDIO(const char *format, ...)
+{
+	if(con.debug_audio==0)
+		return;
+	va_list args;
+	va_start(args, format);
+	vprintf(format,args);
+	va_end(args);
+}
 
 #define inline
 
@@ -42,18 +55,18 @@ Measures measures;
 
 //#define XPAR_PROCESSING_AV_SYSTEM_AUDIO_VIDEO_ENGINE_VIDEO_VIDEO_FORMATTER_0_BASEADDR 0x78C20000
 #define VIDEO_FORMATTER_BASEADDR XPAR_PROCESSING_AV_SYSTEM_AUDIO_VIDEO_ENGINE_VIDEO_VIDEO_FORMATTER_0_BASEADDR
-void write_rtg_register(uint16_t zaddr,uint32_t zdata);
-uint32_t read_rtg_register(uint16_t zaddr);
+void write_rtg_register(uint32_t zaddr,uint32_t zdata);
+uint32_t read_rtg_register(uint32_t zaddr);
 
 uint32_t gpio=0;
 uint16_t ack_request=0;
 extern uint16_t flag_cache_flush;
-extern int cpu_freq;
 uint32_t custom_vmode_param=0;
 uint32_t custom_video_mode=ZZVMODE_CUSTOM;
-int bm=0,sb=0,ar=0;
+int bm=0,sb=0,ar=0,cr=0,ks=0,ext_ks=0, scsi_num[7]={-1,-1,-1,-1,-1,-1,-1};
 void hard_reboot(void);
-int write_env_files(int bootmode, int scsiboot, int autoconfig_ram);
+int write_env_files(int bootmode, int scsiboot, int autoconfig_ram, int cpuram, int kickstart, int ext_kickstart);
+int write_env_files2(int *scsi_num);
 
 // ethernet state
 uint32_t ethernet_send_result = 0;
@@ -165,14 +178,20 @@ void rtg_init(void)
    bm=config.boot_mode;
    sb=config.scsiboot;
    ar=config.autoconfig_ram;
-
+   cr=config.cpu_ram;
+   ks=config.kickstart;
+   ext_ks=config.ext_kickstart;
+   for(int i=0;i<7;i++)
+	   scsi_num[i]=config.scsi_num[i];
+   *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_KS_TXT)=0;
+   *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_SCSI_TXT)=0;
 }
 uint32_t *address;
 uint32_t zdata;
 uint32_t op_data=0;
 uint32_t zaddr;
 
-#define ETH_BACKLOG_NAG_COUNTER_MAX 5000
+#define ETH_BACKLOG_NAG_COUNTER_MAX 1000
 int eth_backlog_nag_counter_max=ETH_BACKLOG_NAG_COUNTER_MAX;
 #ifdef CPU_EMULATOR
 #define IDLE_TASK_COUNT_MAX 300000
@@ -183,66 +202,91 @@ int idle_task_count_max=IDLE_TASK_COUNT_MAX;
 long int task_counter=0;
 void other_tasks(void)
 {
+   static int state=0;
+   static float value3=0;
    task_counter++;
-   if(task_counter==100000)
+   if(task_counter==1000000)
    {
-      measures.Core_temp=(uint32_t)(xadc_get_temperature()*10.0);
-      iic_write_ltc2990(LTC_TRIGGER_REG,0); // any value trigger a conversion
-   }
-   else if(task_counter==200000)
-   {
-      measures.Aux_volt=(uint32_t)(xadc_get_aux_voltage()*100.0);
-   }
-   else if(task_counter==300000)
-   {
-      measures.Core_volt=(uint32_t)(xadc_get_int_voltage()*100.0);
-   }
-   else if(task_counter==400000)
-   {
-      iic_read_ltc2990(LTC_TINT_MSB);
-      int data_in = ((ReadBuffer_ltc2990[0]&0x1F)<<8) | ReadBuffer_ltc2990[1];
-      float value=data_in*0.0625;
-      measures.LTC_temp=(uint32_t)(value*100.0);
-   }
-   else if(task_counter==500000)
-   {
-      iic_read_ltc2990(LTC_V1_MSB);
-      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      float value=data_in*(305.8e-6)*10.;
-      measures.LTC_3V3=(uint32_t)(value*100.0);
-   }
-   else if(task_counter==600000)
-   {
-      iic_read_ltc2990(LTC_V2_MSB);
-      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      float value=data_in*(305.8e-6)*10.;
-      measures.LTC_5V=(uint32_t)(value*100.0);
-   }
-   else if(task_counter==700000)
-   {
-      iic_read_ltc2990(LTC_V3_MSB);
-      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      float value3=data_in*(305.8e-6);
-
-      iic_read_ltc2990(LTC_V4_MSB);
-      data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      float value4=data_in*(305.8e-6)*10.;
-      // resistor calculation
-      float value=value3/(value4-value3)*9000.;
-      float real_resistor_calibrated=config.resistor*9000/(9000-config.resistor);
-      float offset=real_resistor_calibrated*((float)(1./2.8))-config.temperature;
-      value=value*((float)(1./2.8))-offset;
-      measures.LTC_060_temp=(uint32_t)(value*100.);
-   }
-   else if(task_counter==800000)
-   {
-      iic_read_ltc2990(LTC_VCC_MSB);
-      int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
-      float value=(2.5+data_in*305.18e-6);
-      measures.LTC_VCC=(uint32_t)(value*100.0);
-
       task_counter=0;
+      switch(state)
+      {
+      case 0:
+         measures.Core_temp=(uint32_t)(xadc_get_temperature()*10.0);
+         if(iic_write_ltc2990(LTC_TRIGGER_REG,0)) // any value trigger a conversion
+         {
+            state++;
+         }
+         break;
+      case 1:
+         measures.Aux_volt=(uint32_t)(xadc_get_aux_voltage()*100.0);
+         state++;
+         break;
+      case 2:
+         measures.Core_volt=(uint32_t)(xadc_get_int_voltage()*100.0);
+         state++;
+         break;
+      case 3:
+         if(iic_read_ltc2990(LTC_TINT_MSB))
+         {
+            int data_in = ((ReadBuffer_ltc2990[0]&0x1F)<<8) | ReadBuffer_ltc2990[1];
+            float value=data_in*0.0625;
+            measures.LTC_temp=(uint32_t)(value*100.0);
+            state++;
+         }
+         break;
+      case 4:
+         if(iic_read_ltc2990(LTC_V1_MSB))
+         {
+            int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+            float value=data_in*(305.8e-6)*10.;
+            measures.LTC_3V3=(uint32_t)(value*100.0);
+            state++;
+         }
+         break;
+      case 5:
+         if(iic_read_ltc2990(LTC_V2_MSB))
+         {
+            int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+            float value=data_in*(305.8e-6)*10.;
+            measures.LTC_5V=(uint32_t)(value*100.0);
+            state++;
+         }
+         break;
+      case 6:
+         if(iic_read_ltc2990(LTC_V3_MSB))
+         {
+            int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+            value3=data_in*(305.8e-6);
+            state++;
+         }
+         break;
+      case 7:
+         if(iic_read_ltc2990(LTC_V4_MSB))
+         {
+            int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+            float value4=data_in*(305.8e-6)*10.;
+            // resistor calculation
+            float value=value3/(value4-value3)*9000.;
+            float real_resistor_calibrated=config.resistor*9000/(9000-config.resistor);
+            float offset=real_resistor_calibrated*((float)(1./2.8))-config.temperature;
+            value=value*((float)(1./2.8))-offset;
+            measures.LTC_060_temp=(uint32_t)(value*100.);
+            state++;
+         }
+         break;
+      case 8:
+         if(iic_read_ltc2990(LTC_VCC_MSB))
+         {
+            int data_in = ((ReadBuffer_ltc2990[0]&0x7F)<<8) | ReadBuffer_ltc2990[1];
+            float value=(2.5+data_in*305.18e-6);
+            measures.LTC_VCC=(uint32_t)(value*100.0);
+            state=0;
+         }
+         break;
+      default:
+      }
    }
+
    if(1)
    {
       current_interrupt=amiga_interrupt_get();
@@ -277,6 +321,7 @@ void other_tasks(void)
    if (interrupt_enabled_ethernet && ethernet_backlog > 0) {
       eth_backlog_nag_counter++;
    }
+   console_loop();
 
 }
 void rtg_loop(void)
@@ -410,21 +455,44 @@ void rtg_loop(void)
    }
    other_tasks();
 }
-uint32_t read_rtg_register(uint16_t zaddr)
+uint32_t read_rtg_register(uint32_t zaddr)
 {
    uint32_t data=0;
 /*
    if(zaddr&3)
       printf("read unaligned to 0x%08X\n",zaddr);
 */
-   switch (zaddr&0x1FFFFC)
+   if(con.debug_rtg)
    {
+      printf("READ RTG reg 0x%lX %s\n",zaddr,zz_reg_offsets_string[zaddr]);
+   }
+   int address=(zaddr&0x1FFFFC);
+   if(address>=REG_ZZ_SEL_KS_TXT && address<REG_ZZ_SEL_KS_TXT+150)
+   {
+	   data=swap32(*(uint32_t *)(RTG_BASE+address));
+	   return(data);
+   }
+   if(address>=REG_ZZ_SEL_SCSI_TXT && address<REG_ZZ_SEL_SCSI_TXT+150)
+   {
+	   data=swap32(*(uint32_t *)(RTG_BASE+address));
+	   return(data);
+   }
+   switch (address)
+   {
+   case REG_ZZ_SOFT3D_OP:
+      data=swap32(*(uint32_t*)(RTG_BASE+REG_ZZ_SOFT3D_OP));
+//      printf("data read soft3d %08lx\n",data);
+      break;
    case REG_ZZ_INT_STATUS:
       data=amiga_interrupt_get();
       break;
    case REG_ZZ_FW_VERSION:
 //      data=(REVISION_MINOR << 24) | (REVISION_MAJOR << 16);
       data=(REVISION_MAJOR << 8 ) | (REVISION_MINOR      );
+      break;
+   case REG_ZZ_FW_BETA:
+      data=REVISION_BETA;
+//      printf("Read beta version number: %d\n",REVISION_BETA);
       break;
    case REG_ZZ_ETH_TX:
       data=ethernet_send_result;
@@ -452,7 +520,7 @@ uint32_t read_rtg_register(uint16_t zaddr)
 //   case REG_ZZ_VBLANK_STATUS:
 //      return(0); // this is now read directly from FPGA, so this value is not used anymore
    case REG_ZZ_CPU_FREQ:
-      data=cpu_freq; // FIXME this is for now fixed at 100MHz
+      data=config.cpufreq;
       break;
    case REG_ZZ_EMULATION_USED:
       data=config.boot_mode==UAEJIT || config.boot_mode==UAE || config.boot_mode==MUSASHI;
@@ -462,6 +530,9 @@ uint32_t read_rtg_register(uint16_t zaddr)
       break;
    case REG_ZZ_AUTOC_RAM_EN:
       data=config.autoconfig_ram==YES;
+      break;
+   case REG_ZZ_CPU_RAM_EN:
+      data=config.cpu_ram==YES;
       break;
 
    case REG_ZZ_ETH_MAC_HI: {
@@ -504,17 +575,46 @@ uint32_t read_rtg_register(uint16_t zaddr)
    case REG_ZZ_LTC_VCC:
       data=measures.LTC_VCC;
       break;
+   case REG_ZZ_KS_SEL:
+	   data=config.kickstart;
+//       printf("KICKSTART SEL READ %ld\r\n",data);
+       break;
+   case REG_ZZ_EXT_KS_SEL:
+	   data=config.ext_kickstart;
+//       printf("EXT KICKSTART SEL READ %ld\r\n",data);
+	   break;
+   case REG_ZZ_SCSI_SEL_0:
+   case REG_ZZ_SCSI_SEL_1:
+   case REG_ZZ_SCSI_SEL_2:
+   case REG_ZZ_SCSI_SEL_3:
+   case REG_ZZ_SCSI_SEL_4:
+   case REG_ZZ_SCSI_SEL_5:
+   case REG_ZZ_SCSI_SEL_6:
+	   data=config.scsi_num[(address-REG_ZZ_SCSI_SEL_0)>>2];
+       break;
    default:
-      printf("Read to 0x%X RTG register\n",zaddr);
-      return(swap32(*((uint32_t *)(RTG_BASE+zaddr))));
+      printf("Read to 0x%X RTG register\n",address);
+      return(swap32(*((uint32_t *)(RTG_BASE+address))));
    }
    return(data);
 }
-void write_rtg_register(uint16_t zaddr,uint32_t zdata)
+void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 {
    if(zaddr&3)
-      printf("write unaligned to 0x%08X\n",zaddr);
-   switch (zaddr&0x1FFFFC) {
+      printf("write unaligned to 0x%08lX\n",zaddr);
+   if(con.debug_rtg)
+   {
+      printf("WRITE RTG reg 0x%lX = %ld (0x%lX) %s\n",zaddr,zdata,zdata,zz_reg_offsets_string[zaddr]);
+      if(con.step)
+      {
+         while(!XUartPs_IsReceiveData(STDIN_BASEADDRESS)){}
+         char c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+         if(c=='C' || c=='c')
+            con.step=0;
+      }
+   }
+   uint32_t address=zaddr&0x1FFFFC;
+   switch (address) {
    // Various blitter/video registers
    case REG_ZZ_PAN:
       video_state->framebuffer_pan_offset = zdata;
@@ -683,6 +783,11 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
    // DMA RTG rendering
    case REG_ZZ_BLITTER_DMA_OP: {
       handle_blitter_dma_op(video_state,zdata);
+      break;
+   }
+   // Soft3D rendering
+   case REG_ZZ_SOFT3D_OP: {
+      handle_soft3d_op(video_state,zdata);
       break;
    }
 
@@ -966,7 +1071,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          if (zdata&(1<<15)) byteswap = 0;
          audio_offset = (zdata&0x7fff)<<8; // *256
          audio_buffer_collision = audio_swab(audio_scale, audio_offset, byteswap);
-         //               printf("audio_offset 0x%08lx\n",audio_offset);
+         //               DEBUG_AUDIO("audio_offset 0x%08lx\n",audio_offset);
          break;
       }
       case REG_ZZ_AUDIO_SCALE:
@@ -991,7 +1096,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
                break;
           */
       case REG_ZZ_AUDIO_PARAM:
-         printf("[REG_ZZ_AUDIO_PARAM] %ld\n", zdata);
+         DEBUG_AUDIO("[REG_ZZ_AUDIO_PARAM] %ld\n", zdata);
 
          // AUDIO PARAMS:
          // 0: tx buffer offset
@@ -1010,7 +1115,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          break;
       case REG_ZZ_AUDIO_VAL:
          if(audio_param>=0) {
-            printf("[REG_ZZ_AUDIO_VAL] %lx\n", zdata);
+            DEBUG_AUDIO("[REG_ZZ_AUDIO_VAL] %lx\n", zdata);
 
             audio_params[audio_param] = zdata;
             if (audio_param == AP_TX_BUF_OFFS) {
@@ -1040,11 +1145,11 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
                uint8_t* params_ptr = (uint8_t*)audio_params[AP_DSP_PARAM_OFFS];
 
                if (zdata == 0) {
-                  printf("[audio] reprogramming from 0x%p and 0x%p\n", program_ptr, params_ptr);
+                  DEBUG_AUDIO("[audio] reprogramming from 0x%p and 0x%p\n", program_ptr, params_ptr);
                   //                     audio_program_adau(program_ptr, 5120);
                   //                     audio_program_adau_params(params_ptr, 4096);
                } else {
-                  printf("[audio] programming %ld params from 0x%p\n", zdata, params_ptr);
+                  DEBUG_AUDIO("[audio] programming %ld params from 0x%p\n", zdata, params_ptr);
                   //                     audio_program_adau_params(params_ptr, zdata);
                }
             } else if (audio_param == AP_DSP_SET_LOWPASS) {
@@ -1082,7 +1187,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
       case REG_ZZ_DECODER_FIFOTX:
       {
          fifo_set_write_index(zdata);
-         //               printf("[decode:fifotx:%ld]\n",zdata);
+         //               DEBUG_AUDIO("[decode:fifotx:%ld]\n",zdata);
       }
       break;
       case REG_ZZ_DECODE:
@@ -1103,17 +1208,17 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
 
          switch(zdata) {
          case DECODE_CLEAR_FIFO:
-            printf("[decode:clear]\n");
+        	 DEBUG_AUDIO("[decode:clear]\n");
             fifo_clear();
             break;
          case DECODE_INIT: // this is used by axmp3
-            printf("[decode:mp3:%s] %p (%d) -> %p (%d)\n", decode_command_str[(int)zdata], input_buffer, input_buffer_size,
+            DEBUG_AUDIO("[decode:mp3:%s] %p (%d) -> %p (%d)\n", decode_command_str[(int)zdata], input_buffer, input_buffer_size,
                   output_buffer, output_buffer_size);
             decode_mp3_init(input_buffer, input_buffer_size);
             decoder_bytes_decoded = -1;
             break;
          case DECODE_INIT_FIFO: // this is used by mhi
-            printf("[decode:mp3:%s] %p (%d) -> %p (%d)\n", decode_command_str[(int)zdata], input_buffer, input_buffer_size,
+            DEBUG_AUDIO("[decode:mp3:%s] %p (%d) -> %p (%d)\n", decode_command_str[(int)zdata], input_buffer, input_buffer_size,
                   output_buffer, output_buffer_size);
             decode_mp3_init_fifo(input_buffer, input_buffer_size);
             decoder_bytes_decoded = -1;
@@ -1137,7 +1242,7 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
                decoder_bytes_decoded = decode_mp3_samples(output_buffer, max_samples);
             }
             //                     if(decoder_bytes_decoded>0)
-            //                        printf("[decode:mp3:%s] %p (%d) -> %p (%d) %ld %ld\n", decode_command_str[(int)zdata], input_buffer, input_buffer_size,
+            //                        DEBUG_AUDIO("[decode:mp3:%s] %p (%d) -> %p (%d) %ld %ld\n", decode_command_str[(int)zdata], input_buffer, input_buffer_size,
             //                           output_buffer, output_buffer_size,fifo_get_read_index(),swap32(*((uint32_t *)(RTG_BASE+REG_ZZ_DECODER_FIFOTX))));
             break;
          }
@@ -1329,12 +1434,39 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          {
             printf("Apply BOOTMODE %d (%s)\r\n",bm,bootmode_names[bm]);
             piscsi_shutdown();
-            if(write_env_files(bm,sb,ar)==1)
+            if(write_env_files(bm,sb,ar,cr,ks,ext_ks)==1)
                hard_reboot();
          }
          else
          {
             printf("Apply BOOTMODE magic code not valid: 0x%lx\r\n",zdata);
+         }
+         break;
+      case REG_ZZ_APPLY_SCSI:
+         if(zdata>=0x55AA)
+         {
+            printf("Apply SCSI\r\n");
+            piscsi_shutdown();
+            if(write_env_files2(scsi_num)==1)
+               hard_reboot();
+         }
+         else
+         {
+            printf("Apply SCSI magic code not valid: 0x%lx\r\n",zdata);
+         }
+         break;
+      case REG_ZZ_APPLY_ALL:
+         if(zdata>=0x55AA)
+         {
+            printf("Apply ALL\r\n");
+            piscsi_shutdown();
+            if((write_env_files(bm,sb,ar,cr,ks,ext_ks)==1)&&
+           	   (write_env_files2(scsi_num)==1))
+               hard_reboot();
+         }
+         else
+         {
+            printf("Apply ALL magic code not valid: 0x%lx\r\n",zdata);
          }
          break;
       case REG_ZZ_SCSIBOOT_EN:
@@ -1345,8 +1477,135 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata)
          ar=zdata;
          printf("AUTOCONFIG RAM %s\r\n",zdata?"enabled":"disabled");
          break;
+      case REG_ZZ_KS_SEL:
+     	 config.kickstart=zdata;
+         //printf("KICKSTART SELECT %ld\r\n",zdata);
+     	 break;
+      case REG_ZZ_EXT_KS_SEL:
+         config.ext_kickstart=zdata;
+         //printf("EXT KICKSTART SELECT %ld\r\n",zdata);
+         break;
+      case REG_ZZ_SCSI_SEL_0:
+      case REG_ZZ_SCSI_SEL_1:
+      case REG_ZZ_SCSI_SEL_2:
+      case REG_ZZ_SCSI_SEL_3:
+      case REG_ZZ_SCSI_SEL_4:
+      case REG_ZZ_SCSI_SEL_5:
+      case REG_ZZ_SCSI_SEL_6:
+     	 config.scsi_num[(address-REG_ZZ_SCSI_SEL_0)>>2]=zdata;
+         //printf("KICKSTART SELECT %ld\r\n",zdata);
+     	 break;
+      case REG_ZZ_KS_SEL_TXT:
+         {
+        	 int j=0;
+        	 char c=-1;
+        	 switch(zdata)
+        	 {
+        	 	 case 0:
+        	 	 {
+        	 		 char string[]="Amiga mother board kickstart";
+        	 		 while(c!=0)
+					 {
+        	 			 c=string[j];
+        	 			 *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j)=c;
+        	 			 j++;
+        	 			 /*printf("%c",c);*/
+					 }
+					 for(c=0;c<4-(j&3);c++)
+					 	 *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j+c)=0;
+        	 		 /*printf("\n");*/
+        	 		 break;
+        	 	 }
+#define KICKSTART(X) case X:\
+        	 		 while(c!=0)\
+					 {\
+        	 			 c=config.kickstart ## X[j];\
+        	 	 	 	 *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j)=c;\
+        	 	 	 	 j++;\
+        	 			 /*printf("%c",c);*/\
+					 }\
+					 for(c=0;c<4-(j&3);c++)\
+					 	 *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j+c)=0;\
+        	 		 /*if(j>1)\
+                        printf("\n");*/\
+        	 		 break;
+       	 		 KICKSTART(1)
+       	 		 KICKSTART(2)
+       	 		 KICKSTART(3)
+       	 		 KICKSTART(4)
+       	 		 KICKSTART(5)
+       	 		 KICKSTART(6)
+       	 		 KICKSTART(7)
+       	 		 KICKSTART(8)
+       	 		 KICKSTART(9)
+        	 }
+         }
+         break;
+      case REG_ZZ_EXT_KS_SEL_TXT:
+         {
+            int j=0;
+            char c=-1;
+            switch(zdata)
+            {
+               case 0:
+               {
+                  char string[]="Amiga mother board ext kickstart";
+                  while(c!=0)
+                  {
+                     c=string[j];
+                     *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j)=c;
+                     j++;
+                     /*printf("%c",c);*/
+                   }
+                   for(c=0;c<4-(j&3);c++)
+                      *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j+c)=0;
+                   /*printf("\n");*/
+                   break;
+               }
+#define EXT_KICKSTART(X) case X:\
+                     while(c!=0)\
+                     {\
+                         c=config.ext_kickstart ## X[j];\
+                         *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j)=c;\
+                         j++;\
+                         /*printf("%c",c);*/\
+                     }\
+                     for(c=0;c<4-(j&3);c++)\
+                        *(char*)(RTG_BASE+REG_ZZ_SEL_KS_TXT+j+c)=0;\
+           	 	     /*if(j>1)\
+                        printf("\n");*/\
+        	 		 break;
+       	 		 EXT_KICKSTART(1)
+       	 	     EXT_KICKSTART(2)
+                 EXT_KICKSTART(3)
+				 EXT_KICKSTART(4)
+				 EXT_KICKSTART(5)
+				 EXT_KICKSTART(6)
+				 EXT_KICKSTART(7)
+				 EXT_KICKSTART(8)
+				 EXT_KICKSTART(9)
+        	 }
+         }
+         break;
+      case REG_ZZ_SCSI_SEL_TXT:
+         {
+        	 int j=0;
+        	 char c=-1;
+        	 if(zdata>=0 && zdata<=19)
+        	 {
+       	 		 while(c!=0)
+				 {
+       	 			 c=config.hdf[zdata][j];
+       	 	 	 	 *(char*)(RTG_BASE+REG_ZZ_SEL_SCSI_TXT+j)=c;
+       	 	 	 	 j++;
+				 }
+				 for(c=0;c<4-(j&3);c++)
+				 	 *(char*)(RTG_BASE+REG_ZZ_SEL_SCSI_TXT+j+c)=0;
+        	 }
+         }
+         break;
       default:
-         printf("W %08x\r\n",zaddr); // write to an unknown RTG register
+         printf("W %08lx\r\n",address); // write to an unknown RTG register
          break;
    }
 }

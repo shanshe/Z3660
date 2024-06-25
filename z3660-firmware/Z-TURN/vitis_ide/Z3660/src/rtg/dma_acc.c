@@ -4,19 +4,22 @@
 #include "xil_printf.h"
 #include "compression/compression.h"
 #include "../main.h"
+#include "../console.h"
 
 #define inline
 
 extern unsigned int cur_mem_offset;
 extern uint8_t imc_tables_initialized;
 int current_c37_encoder = -1;
-
+extern CONSOLE con;
 #define Z3_OUTPUT_ADDR 0x3400000
 
 void handle_acc_op(uint16_t zdata)
 {
     struct GFXData *data = (struct GFXData*)((uint32_t)Z3_SCRATCH_ADDR);
     //int cf_bpp[MNTVA_COLOR_NUM] = { 1, 2, 4, -8, 2, };
+    if(con.debug_rtg)
+ 	   printf("acc_op 0x%X\n",zdata);
 
     switch (zdata) {
         // SURFACE BLIT OPS

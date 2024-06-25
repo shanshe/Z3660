@@ -31,6 +31,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity OEBUS_component is
     Port ( BCLK : in  STD_LOGIC;
+           nBGACK040 : in  STD_LOGIC;
            MAS0 : in  STD_LOGIC;
            MAS1 : in  STD_LOGIC;
            MAS2 : in  STD_LOGIC;
@@ -381,6 +382,7 @@ begin
 	process(BCLK)
 	begin
 		if(BCLK'event and  BCLK='1') then
+         if nBGACK040='0' then
 --register
 nDMACOE <= not(
         ( not(MAS0) and MAS1 and not(MAS2) and not(MAS3) and not(R_W040) ) );
@@ -440,7 +442,8 @@ OEBUS_int(7) <= not(
      or ( MAS1 and MAS3 and not(R_W040) )
      or ( not(nS2W) and R_W040 and not(OEBUS_int(7)) )
      or ( R_W040 and long ) );
-		end if;
+         end if;
+      end if;
 	end process;
 
 ---- original from 3640

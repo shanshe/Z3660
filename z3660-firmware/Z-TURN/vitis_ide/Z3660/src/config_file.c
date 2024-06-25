@@ -19,7 +19,28 @@ const char *config_item_names[CONFITEM_NUM] = {
       "NONE",
       "bootmode",
       "kickstart",
+      "ext_kickstart",
       "scsiboot",
+	  "hdf0",
+	  "hdf1",
+	  "hdf2",
+	  "hdf3",
+	  "hdf4",
+	  "hdf5",
+	  "hdf6",
+	  "hdf7",
+	  "hdf8",
+	  "hdf9",
+	  "hdf10",
+	  "hdf11",
+	  "hdf12",
+	  "hdf13",
+	  "hdf14",
+	  "hdf15",
+	  "hdf16",
+	  "hdf17",
+	  "hdf18",
+	  "hdf19",
       "scsi0",
       "scsi1",
       "scsi2",
@@ -28,9 +49,30 @@ const char *config_item_names[CONFITEM_NUM] = {
       "scsi5",
       "scsi6",
       "autoconfig_ram",
+      "cpu_ram",
       "resistor",
       "temperature",
 	  "cpufreq",
+      "kickstart0",
+      "kickstart1",
+      "kickstart2",
+      "kickstart3",
+      "kickstart4",
+      "kickstart5",
+      "kickstart6",
+      "kickstart7",
+      "kickstart8",
+      "kickstart9",
+      "ext_kickstart0",
+      "ext_kickstart1",
+      "ext_kickstart2",
+      "ext_kickstart3",
+      "ext_kickstart4",
+      "ext_kickstart5",
+      "ext_kickstart6",
+      "ext_kickstart7",
+      "ext_kickstart8",
+      "ext_kickstart9",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
       "CPU",
@@ -54,15 +96,38 @@ void print_line(FIL *fil, char* line_in, ...)
 void load_default_config(void)
 {
    config.boot_mode=UAEJIT;
-   sprintf(config.kickstart,"A4kOS321.rom");
+   for(int i=0;i<20;i++)
+      config.hdf[i][0]=0;
    for(int i=0;i<7;i++)
-      //sprintf(config.scsi[i],""); warning
-      config.scsi[i][0]=0;
+      config.scsi_num[i]=-1;
    config.scsiboot=0;
    config.autoconfig_ram=0;
+   config.cpu_ram=1;
    config.resistor=800.0;
    config.temperature=27.0;
    config.cpufreq=100;
+   config.kickstart=0;
+   config.kickstart0[0]=0;
+   config.kickstart1[0]=0;
+   config.kickstart2[0]=0;
+   config.kickstart3[0]=0;
+   config.kickstart4[0]=0;
+   config.kickstart5[0]=0;
+   config.kickstart6[0]=0;
+   config.kickstart7[0]=0;
+   config.kickstart8[0]=0;
+   config.kickstart9[0]=0;
+   config.ext_kickstart=0;
+   config.ext_kickstart0[0]=0;
+   config.ext_kickstart1[0]=0;
+   config.ext_kickstart2[0]=0;
+   config.ext_kickstart3[0]=0;
+   config.ext_kickstart4[0]=0;
+   config.ext_kickstart5[0]=0;
+   config.ext_kickstart6[0]=0;
+   config.ext_kickstart7[0]=0;
+   config.ext_kickstart8[0]=0;
+   config.ext_kickstart9[0]=0;
 }
 void write_config_file(char *filename)
 {
@@ -84,26 +149,43 @@ void write_config_file(char *filename)
    print_line(&fil,"\n");
    print_line(&fil,"## Emulation Configuration\n");
    print_line(&fil,"\n");
-   print_line(&fil,"# Select your kickstart file to map it on ARM's internal RAM, or comment lines to use installed Kickstart on your Amiga\n");
-   print_line(&fil,"#kickstart DiagROM.rom\n");
-   print_line(&fil,"#kickstart A4kOS31.rom\n");
-   print_line(&fil,"#kickstart A4kOS321.rom\n");
-   print_line(&fil,"kickstart A4kOS322.rom\n");
+   print_line(&fil,"# Declare up to 9 kickstarts files. (1-9)\n");
+   print_line(&fil,"kickstart1 kicks/A4kOS322.rom\n");
+   print_line(&fil,"kickstart2 kicks/DiagROM.rom\n");
+   print_line(&fil,"kickstart3 kicks/A4kOS31.rom\n");
+   print_line(&fil,"kickstart4 kicks/A4kOS321.rom\n");
+   print_line(&fil,"# Select the number (1-9) to map one of the above kickstarts on ARM's internal RAM, or 0 to use the installed kickstart on your Amiga\n");
+   print_line(&fil,"kickstart 1\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Declare up to 9 extended kickstarts files. (1-9)\n");
+   print_line(&fil,"ext_kickstart1 kicks/kick060.rom\n");
+   print_line(&fil,"# Select the number (1-9) to map one of the above extended kickstarts on ARM's internal RAM, or 0 to use the installed extended kickstart on your Amiga (if any)\n");
+   print_line(&fil,"ext_kickstart 1\n");
    print_line(&fil,"\n");
    print_line(&fil,"# Load scsi ROM on boot (boot from SCSI hdf files on SD)\n");
    print_line(&fil,"# (YES or NO, in capitals)\n");
    print_line(&fil,"scsiboot NO\n");
    print_line(&fil,"#scsiboot YES\n");
    print_line(&fil,"\n");
-   print_line(&fil,"# Select your hdf files (from scsi0 to scsi6)\n");
-   print_line(&fil,"#scsi0 hdf/A4000.hdf\n");
-   print_line(&fil,"#scsi1 hdf/ZDH0.hdf\n");
-   print_line(&fil,"#scsi2 hdf/Programs.hdf\n");
+   print_line(&fil,"# Declare your hdf files (from hdf0 to hdf19)\n");
+   print_line(&fil,"#hdf0 hdf/A4000.hdf\n");
+   print_line(&fil,"#hdf1 hdf/ZDH0.hdf\n");
+   print_line(&fil,"#hdf2 hdf/Programs.hdf\n");
+   print_line(&fil,"# Select the scsi number (scsi0 to scsi6) to assign one of the above hdf files\n");
+   print_line(&fil,"scsi0 0\n");
+   print_line(&fil,"scsi1 1\n");
+   print_line(&fil,"#scsi2 2\n");
    print_line(&fil,"\n");
    print_line(&fil,"# Autoconfig RAM Enable (256 MB Zorro III RAM)\n");
    print_line(&fil,"# (YES or NO, in capitals)\n");
    print_line(&fil,"autoconfig_ram NO\n");
    print_line(&fil,"#autoconfig_ram YES\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# CPU RAM Enable (128 MB CPU RAM)\n");
+   print_line(&fil,"# IMPORTANT NOTE: disabling CPU RAM, will also disable SCSIBOOT\n");
+   print_line(&fil,"# (YES or NO, in capitals)\n");
+   print_line(&fil,"#cpu_ram NO\n");
+   print_line(&fil,"cpu_ram YES\n");
    print_line(&fil,"\n");
    print_line(&fil,"# Temperature sensor calibration (THERM)\n");
    print_line(&fil,"# Theoretical value 780 Ohms @ 25 Celsius, but every 060 has a random offset.\n");
@@ -195,7 +277,7 @@ int get_yesno_type(char *cmd) {
 float get_float_type(char *cmd) {
   return atof(cmd);
 }
-float get_int_type(char *cmd) {
+int get_int_type(char *cmd) {
   return atoi(cmd);
 }
 
@@ -236,7 +318,30 @@ retry:
    char cur_cmd[128];
    memset(&config, 0x00, sizeof(CONFIG));
 //   sprintf(config.kickstart,""); // this produces a warning O_O
-   config.kickstart[0]=0;
+   config.kickstart0[0]=0;
+   config.kickstart1[0]=0;
+   config.kickstart2[0]=0;
+   config.kickstart3[0]=0;
+   config.kickstart4[0]=0;
+   config.kickstart5[0]=0;
+   config.kickstart6[0]=0;
+   config.kickstart7[0]=0;
+   config.kickstart8[0]=0;
+   config.kickstart9[0]=0;
+   config.ext_kickstart0[0]=0;
+   config.ext_kickstart1[0]=0;
+   config.ext_kickstart2[0]=0;
+   config.ext_kickstart3[0]=0;
+   config.ext_kickstart4[0]=0;
+   config.ext_kickstart5[0]=0;
+   config.ext_kickstart6[0]=0;
+   config.ext_kickstart7[0]=0;
+   config.ext_kickstart8[0]=0;
+   config.ext_kickstart9[0]=0;
+   for(int i=0;i<20;i++)
+	   config.hdf[i][0]=0;
+   for(int i=0;i<7;i++)
+	   config.scsi_num[i]=-1;
 
    while (!f_eof(&fil))
    {
@@ -265,8 +370,20 @@ retry:
 
       case CONFITEM_KICKSTART:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-         sprintf(config.kickstart,"%s%s", DEFAULT_ROOT, cur_cmd);
-         printf("[CFG] Kickstart file %s.\n", config.kickstart);
+         config.kickstart=get_int_type(cur_cmd);
+         if(config.kickstart==0)
+            printf("[CFG] Kickstart file selected: mobo kickstart.\n");
+         else
+            printf("[CFG] Kickstart file selected: number %d.\n", config.kickstart);
+         break;
+
+      case CONFITEM_EXT_KICKSTART:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.ext_kickstart=get_int_type(cur_cmd);
+         if(config.ext_kickstart==0)
+            printf("[CFG] Extended Kickstart file selected: mobo extended kickstart (if any).\n");
+         else
+            printf("[CFG] Extended Kickstart file selected: number %d.\n", config.ext_kickstart);
          break;
 
       case CONFITEM_SCSI_BOOT_ENABLE:
@@ -282,10 +399,36 @@ retry:
       case CONFITEM_SCSI4:
       case CONFITEM_SCSI5:
       case CONFITEM_SCSI6: {
-         int index=item-CONFITEM_SCSI0;
+    	  int index=item-CONFITEM_SCSI0;
+    	  get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+    	  config.scsi_num[index]=get_int_type(cur_cmd);
+    	  printf("[CFG] SCSI%d assigned to %s\n",index,config.hdf[config.scsi_num[index]]);
+    	  break;
+      }
+      case CONFITEM_HDF0:
+      case CONFITEM_HDF1:
+      case CONFITEM_HDF2:
+      case CONFITEM_HDF3:
+      case CONFITEM_HDF4:
+      case CONFITEM_HDF5:
+      case CONFITEM_HDF6:
+      case CONFITEM_HDF7:
+      case CONFITEM_HDF8:
+      case CONFITEM_HDF9:
+      case CONFITEM_HDF10:
+      case CONFITEM_HDF11:
+      case CONFITEM_HDF12:
+      case CONFITEM_HDF13:
+      case CONFITEM_HDF14:
+      case CONFITEM_HDF15:
+      case CONFITEM_HDF16:
+      case CONFITEM_HDF17:
+      case CONFITEM_HDF18:
+      case CONFITEM_HDF19: {
+         int index=item-CONFITEM_HDF0;
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-         sprintf(config.scsi[index],"%s%s", DEFAULT_ROOT, cur_cmd);
-         printf("[CFG] scsi%d file %s\n", index, config.scsi[index]);
+         sprintf(config.hdf[index],"%s%s", DEFAULT_ROOT, cur_cmd);
+         printf("[CFG] hdf%d file %s\n", index, config.hdf[index]);
          break;
       }
 
@@ -293,6 +436,12 @@ retry:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.autoconfig_ram=get_yesno_type(cur_cmd);
          printf("[CFG] AutoConfig RAM %s.\n", yesno_names[config.autoconfig_ram]);
+         break;
+
+      case CONFITEM_CPU_RAM_ENABLE:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.cpu_ram=get_yesno_type(cur_cmd);
+         printf("[CFG] CPU RAM %s.\n", yesno_names[config.cpu_ram]);
          break;
 
       case CONFITEM_RESISTOR:
@@ -312,6 +461,46 @@ retry:
          config.cpufreq=(get_int_type(cur_cmd)/10)*10; // 10 MHz steps for now
          printf("[CFG] 060 CPU Frequency %d MHz\n", config.cpufreq);
          break;
+
+      case CONFITEM_KICKSTART0:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         printf("[CFG] WARNING!!! Kickstart file 0 is reserved to internal kickstart!!!.\n");
+         break;
+
+#define CASE_CONFITEM_KICKSTART(x)  case CONFITEM_KICKSTART ## x:\
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');\
+         sprintf(config.kickstart ## x,"%s%s", DEFAULT_ROOT, cur_cmd);\
+         printf("[CFG] kickstart%d file %s\n", x, config.kickstart ## x);\
+         break;
+         CASE_CONFITEM_KICKSTART(1)
+         CASE_CONFITEM_KICKSTART(2)
+         CASE_CONFITEM_KICKSTART(3)
+         CASE_CONFITEM_KICKSTART(4)
+         CASE_CONFITEM_KICKSTART(5)
+         CASE_CONFITEM_KICKSTART(6)
+         CASE_CONFITEM_KICKSTART(7)
+         CASE_CONFITEM_KICKSTART(8)
+         CASE_CONFITEM_KICKSTART(9)
+
+      case CONFITEM_EXT_KICKSTART0:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         printf("[CFG] WARNING!!! Extended Kickstart file 0 is reserved to internal extended kickstart!!!.\n");
+         break;
+
+#define CASE_CONFITEM_EXT_KICKSTART(x)  case CONFITEM_EXT_KICKSTART ## x:\
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');\
+         sprintf(config.ext_kickstart ## x,"%s%s", DEFAULT_ROOT, cur_cmd);\
+         printf("[CFG] Extended kickstart%d file %s\n", x, config.ext_kickstart ## x);\
+         break;
+         CASE_CONFITEM_EXT_KICKSTART(1)
+         CASE_CONFITEM_EXT_KICKSTART(2)
+         CASE_CONFITEM_EXT_KICKSTART(3)
+         CASE_CONFITEM_EXT_KICKSTART(4)
+         CASE_CONFITEM_EXT_KICKSTART(5)
+         CASE_CONFITEM_EXT_KICKSTART(6)
+         CASE_CONFITEM_EXT_KICKSTART(7)
+         CASE_CONFITEM_EXT_KICKSTART(8)
+         CASE_CONFITEM_EXT_KICKSTART(9)
 
       case CONFITEM_NONE:
       default:
@@ -414,6 +603,25 @@ retry:
    }
    f_close(&fil);
 
+   ret=f_open(&fil,DEFAULT_ROOT "env/cpu_ram", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.cpu_ram=get_yesno_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] CPU Ram %s.\e[0m\n", yesno_names[config.cpu_ram]);
+	  }
+	  else
+		  printf("[ENV] Warning!!! CPU Ram file is empty\n");
+   }
+   f_close(&fil);
+
    ret=f_open(&fil,DEFAULT_ROOT "env/cpufreq", FA_OPEN_EXISTING | FA_READ);
    if(ret==0)
    {
@@ -433,10 +641,67 @@ retry:
    }
    f_close(&fil);
 
+   ret=f_open(&fil,DEFAULT_ROOT "env/kickstart", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.kickstart=get_int_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] kickstart selected: number %d\e[0m\n", config.kickstart);
+	  }
+	  else
+		  printf("[ENV] Warning!!! kickstart file is empty\n");
+   }
+   f_close(&fil);
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/ext_kickstart", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  char cur_cmd[128];
+		  int str_pos = 0;
+		  memset(parse_line, 0x00, 512);
+		  f_gets(parse_line, (s32)512, &fil);
+		  get_next_string(parse_line, cur_cmd, &str_pos, '\n');
+		  config.ext_kickstart=get_int_type(cur_cmd);
+		  printf("\e[30m\e[103m[ENV] Extended kickstart selected: number %d\e[0m\n", config.ext_kickstart);
+	  }
+	  else
+		  printf("[ENV] Warning!!! Extended kickstart file is empty\n");
+   }
+   f_close(&fil);
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/scsi", FA_OPEN_EXISTING | FA_READ);
+   if(ret==0)
+   {
+	  if(f_size(&fil)>0)
+	  {
+		  char parse_line[512];
+		  for(int i=0;i<7;i++)
+		  {
+			  memset(parse_line, 0x00, 512);
+			  f_gets(parse_line, (s32)512, &fil);
+			  config.scsi_num[i]=get_int_type(parse_line);
+			  printf("\e[30m\e[103m[ENV] SCSI%d assigned to %d.\e[0m\n", i,config.scsi_num[i]);
+		  }
+	  }
+	  else
+		  printf("[ENV] Warning!!! SCSI file is empty\n");
+   }
+   f_close(&fil);
+
    f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
    Xil_ExceptionEnable();
 }
-int write_env_files(int bootmode, int scsiboot, int autoconfig_ram)
+int write_env_files(int bootmode, int scsiboot, int autoconfig_ram, int cpu_ram, int kickstart, int ext_kickstart)
 {
    static FIL fil;      /* File object */
    static FATFS fatfs;
@@ -497,6 +762,20 @@ retry:
       return(0);
    }
 
+   ret=f_open(&fil,DEFAULT_ROOT "env/cpu_ram", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/cpu_ram with %s\r\n",yesno_names[cpu_ram]);
+      f_printf(&fil,"%s\n",yesno_names[cpu_ram]);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/cpu_ram\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
+
    ret=f_open(&fil,DEFAULT_ROOT "env/cpufreq", FA_CREATE_ALWAYS | FA_WRITE);
    if(ret==FR_OK)
    {
@@ -510,6 +789,121 @@ retry:
       Xil_ExceptionEnable();
       return(0);
    }
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/kickstart", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/kickstart with %d\r\n",config.kickstart);
+      f_printf(&fil,"%d\n",config.kickstart);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/kickstart\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/ext_kickstart", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/ext_kickstart with %d\r\n",config.kickstart);
+      f_printf(&fil,"%d\n",config.ext_kickstart);
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/ext_kickstart\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
+
+   usleep(10000);
+   f_mount(NULL, Path, 1); // NULL unmount, 1 immediately
+   Xil_ExceptionEnable();
+   usleep(10000);
+   return(1);
+}
+int write_env_files2(int *scsi_num)
+{
+   static FIL fil;      /* File object */
+   static FATFS fatfs;
+
+   TCHAR *Path = DEFAULT_ROOT;
+
+   Xil_ExceptionDisable();
+
+   int ret;
+retry:
+   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   if(ret!=0)
+   {
+      printf("Error opening SD media\nRetry in 5 seconds\n");
+      sleep(5);
+      goto retry;
+   }
+
+   ret=f_open(&fil,DEFAULT_ROOT "env/scsi", FA_CREATE_ALWAYS | FA_WRITE);
+   if(ret==FR_OK)
+   {
+      xil_printf("[Config] Write file env/scsi\r\n");
+      for(int i=0;i<7;i++)
+      {
+    	  f_printf(&fil,"%d\n",config.scsi_num[i]-1);
+      }
+      f_close(&fil);
+   }
+   else
+   {
+      xil_printf("[Config] ERROR Write file env/scsi\r\n");
+      Xil_ExceptionEnable();
+      return(0);
+   }
+
+   usleep(10000);
+   f_mount(NULL, Path, 1); // NULL unmount, 1 immediately
+   Xil_ExceptionEnable();
+   usleep(10000);
+   return(1);
+}
+int delete_env_files(void)
+{
+   static FIL fil;      /* File object */
+   static FATFS fatfs;
+
+   TCHAR *Path = DEFAULT_ROOT;
+
+   Xil_ExceptionDisable();
+
+   int ret;
+retry:
+   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   if(ret!=0)
+   {
+      printf("Error opening SD media\nRetry in 5 seconds\n");
+      sleep(5);
+      goto retry;
+   }
+
+#define DELETE_FILE(X) ret=f_unlink(DEFAULT_ROOT X);                         \
+                       if(ret==FR_OK)                                        \
+                       {                                                     \
+                          xil_printf("[Config] Delete file " X "\r\n");      \
+                          f_close(&fil);                                     \
+                       }                                                     \
+                       else                                                  \
+                       {                                                     \
+                          xil_printf("[Config] Can't Delete file " X "\r\n");\
+                       }
+
+   DELETE_FILE("env/bootmode")
+   DELETE_FILE("env/scsiboot");
+   DELETE_FILE("env/autoconfig_ram");
+   DELETE_FILE("env/cpu_ram");
+   DELETE_FILE("env/cpufreq");
+   DELETE_FILE("env/kickstart");
+   DELETE_FILE("env/ext_kickstart");
+   DELETE_FILE("env/scsi");
 
    usleep(10000);
    f_mount(NULL, Path, 1); // NULL unmount, 1 immediately

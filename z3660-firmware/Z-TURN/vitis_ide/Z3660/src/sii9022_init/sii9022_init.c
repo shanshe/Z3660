@@ -131,6 +131,8 @@ int iic_write_8(uint8_t a,uint8_t data)
 	return(XST_SUCCESS);
 }
 
+#define I2C_FREQ 400000
+
 int iic_master_init(void)
 {
 	int Status;
@@ -147,7 +149,7 @@ int iic_master_init(void)
 		return(XST_FAILURE);
 	}
 
-	XIicPs_SetSClk(&IicInstance, 400000);
+	XIicPs_SetSClk(&IicInstance, I2C_FREQ);
 
 	return(XST_SUCCESS);
 }

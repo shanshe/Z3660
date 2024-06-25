@@ -43,7 +43,7 @@ entity TERM is
            nRDSACK1 : out  STD_LOGIC;
            nBERR : in  STD_LOGIC;
            nRDSACK0 : out  STD_LOGIC;
-           nIACK: in STD_LOGIC;
+			  nIACK: in STD_LOGIC;
            nETERM : out  STD_LOGIC;
            nRTERM : out  STD_LOGIC);
 end TERM;
@@ -68,15 +68,15 @@ nRAVEC <= nRAVEC_int;
 ----nRDSACK0 <= nDSACK(0) and nDSACK0_D and nPLSTERM and nPLSTERM_D and nRAVEC;
 ----nRDSACK1 <= nDSACK(1) and nDSACK1_D and nPLSTERM and nPLSTERM_D;
 --nRDSACK0 <= nDSACK(0)
---         and nDSACK0_D
---         and nPLSTERM
---         and nPLSTERM_D;
-----         and nRAVEC;
+--			and nDSACK0_D
+--			and nPLSTERM
+--			and nPLSTERM_D;
+----			and nRAVEC;
 --nRDSACK1 <= nDSACK(1)
---         and nDSACK1_D
---         and nPLSTERM
---         and nPLSTERM_D;
-----         and nRAVEC;
+--			and nDSACK1_D
+--			and nPLSTERM
+--			and nPLSTERM_D;
+----			and nRAVEC;
 
 -- "original equations"
 
@@ -103,13 +103,13 @@ nRDSACK0_int <= not(
     or ( not(nRAVEC_int) )
     or ( not(nDSACK0_D) )
     or ( not(nPLSTERM_D) ) 
-    );
+	 );
 nRDSACK1_int <= not(
        ( not(nDSACK(1)) )
     or ( not(nPLSTERM) )
     or ( not(nDSACK1_D) )
     or ( not(nPLSTERM_D) ) 
-    );
+	 );
 
 -- Original from A3640
 --nETERM <= nETERM_int;
@@ -133,22 +133,22 @@ nRDSACK1_int <= not(
 --       ( not(nDSACK1_D) )
 --    or ( not(nPLSTERM_D) ) );
 
-   process(BCLK)
-   begin
-      if(BCLK'event and  BCLK='1') then
+	process(BCLK)
+	begin
+		if(BCLK'event and  BCLK='1') then
          if nBGACK='1' then
             nRAVEC_int <= nRAVEC_PRE;
             nPLSTERM_D <= nPLSTERM;
             nDSACK0_D <= nDSACK(0);
             nDSACK1_D <= nDSACK(1);
-         else
-            nRAVEC_int <= '1';
-            nPLSTERM_D <= '1';
-            nDSACK0_D <= '1';
-            nDSACK1_D <= '1';
+--         else
+--            nRAVEC_int <= '1';
+--            nPLSTERM_D <= '1';
+--            nDSACK0_D <= '1';
+--            nDSACK1_D <= '1';
          end if;
-      end if;
-   end process;
+		end if;
+	end process;
 
 end Behavioral;
 

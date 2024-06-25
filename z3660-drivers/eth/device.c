@@ -71,9 +71,6 @@ const struct NSDeviceQueryResult NSDQueryAnswer = {
 // FIXME get rid of global var!
 static ULONG ZZ9K_REGS = 0;
 
-struct Sana2DeviceStats global_stats;
-BOOL is_online;
-
 __saveds void frame_proc();
 char *frame_proc_name = "Z3660NetFramer";
 
@@ -254,8 +251,6 @@ __saveds LONG DevOpen( ASMR(a1) struct IOSana2Req *ioreq           ASMREG(a1),
       ioreq->ios2_Req.io_Unit = (struct Unit *)unit; // not a real pointer, but id integer
       ioreq->ios2_Req.io_Device = (struct Device *)db;
 
-      memset(&global_stats, 0, sizeof(global_stats));
-
       NewList(&db->db_ReadList);
       InitSemaphore(&db->db_ReadListSem);
 
@@ -416,22 +411,6 @@ __saveds BPTR DevExpunge( ASMR(a6) DEVBASEP                        ASMREG(a6) )
 	return seglist;
 }
 
-struct Device *TimerBase;
-static void set_last_start()
-{
-  struct { void *db_SysBase; } *db = (void*)0x4;
-  struct IORequest req;
-  memset(&req, 0, sizeof(req));
-  req.io_Message.mn_Length = sizeof(req);
-
-  if (OpenDevice(TIMERNAME, UNIT_MICROHZ, &req, 0) == 0)
-  {
-    TimerBase = req.io_Device;
-    GetSysTime(&global_stats.LastStart);
-    CloseDevice(&req);
-  }
-}
-
 ULONG read_frame(struct IOSana2Req *req, volatile UBYTE *frame);
 ULONG write_frame(struct IOSana2Req *req, UBYTE *frame);
 
@@ -480,7 +459,6 @@ D(("write_frame: ZZ9K_REGS+TX_FRAME_ADDRESS = 0x%lx\n",ZZ9K_REGS+TX_FRAME_ADDRES
       ioreq->ios2_WireError = S2WERR_GENERIC_ERROR;
     } else {
       ioreq->ios2_Req.io_Error = 0;
-      global_stats.PacketsSent++;
     }
     break;
   }
@@ -501,15 +479,9 @@ D(("write_frame: ZZ9K_REGS+TX_FRAME_ADDRESS = 0x%lx\n",ZZ9K_REGS+TX_FRAME_ADDRES
         ioreq = NULL;
 			}
     break;
-
-  case S2_CONFIGINTERFACE:   /* forward request */
-    /* fall through */
   case S2_ONLINE:
-    set_last_start();
-    is_online = TRUE;
-    break;
   case S2_OFFLINE:
-    is_online = FALSE;
+  case S2_CONFIGINTERFACE:   /* forward request */
     break;
 
   case S2_GETSTATIONADDRESS:
@@ -532,11 +504,6 @@ D(("write_frame: ZZ9K_REGS+TX_FRAME_ADDRESS = 0x%lx\n",ZZ9K_REGS+TX_FRAME_ADDRES
       devquery->SizeSupplied = (devquery->SizeAvailable<30?devquery->SizeAvailable:30);
     }
     break;
-  case S2_GETGLOBALSTATS:
-    {
-      if (ioreq->ios2_StatData)
-        memcpy(ioreq->ios2_StatData, &global_stats, sizeof(struct Sana2DeviceStats));
-    }
   case S2_GETSPECIALSTATS:
     {
       struct Sana2SpecialStatHeader *s2ssh = (struct Sana2SpecialStatHeader *)ioreq->ios2_StatData;
@@ -782,10 +749,8 @@ D(("Z3660Net: wait for the first packet\n"));
             Remove((struct Node*)ior);
             ReplyMsg((struct Message *)ior);
             processed = 1;
-            global_stats.PacketsReceived++;
           } else {
             D(("RERR %ld\n",res));
-	    global_stats.UnknownTypesReceived++;
           }
           break;
         }

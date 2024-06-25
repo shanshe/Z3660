@@ -1,4 +1,3 @@
-#ifdef BOOT_MENU
 #ifdef DEBUG_BOOTMENU
 #define USE_SERIAL_OUTPUT
 #endif
@@ -944,4 +943,3 @@ void exit(int humm)
 {
    while(1);
 }
-#endif

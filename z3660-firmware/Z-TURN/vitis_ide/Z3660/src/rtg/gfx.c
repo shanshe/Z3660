@@ -25,14 +25,13 @@
 
 uint32_t* fb=0;
 uint32_t fb_pitch=0;
+/*
 static void *(memcpy_rom1)(void * s1, const void * s2, u32 n)
 {
 	char *dst = (char *)s1;
 	const char *src = (char *)s2;
 
-	/*
-	 * Loop and copy
-	 */
+	// Loop and copy
 	while (n-- != 0)
 		*dst++ = *src++;
 	return s1;
@@ -42,14 +41,12 @@ static void *(memmove_rom1)(void * s1, const void * s2, u32 n)
 	char *dst = (char *)s1+n;
 	const char *src = (char *)s2+n;
 
-	/*
-	 * Loop and copy
-	 */
+	// Loop and copy
 	while (n-- != 0)
 		*dst-- = *src--;
 	return s1;
 }
-
+*/
 void set_fb(uint32_t* fb_, uint32_t pitch) {
 	fb=fb_;
 	fb_pitch=pitch;
@@ -159,6 +156,7 @@ void invert_rect(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uin
 
 void copy_rect_nomask(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint16_t rect_sx, uint16_t rect_sy, uint32_t color_format, uint32_t* sp_src, uint32_t src_pitch, uint8_t draw_mode)
 {
+	uint32_t* dp_b = fb + (rect_y1 * fb_pitch);
 	uint32_t* dp = fb + (rect_y1 * fb_pitch);
 	uint32_t* sp = sp_src + (rect_sy * src_pitch);
 	uint16_t rect_y2 = rect_y1 + h - 1;
@@ -174,6 +172,7 @@ void copy_rect_nomask(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h
 	if (rect_sy < rect_y1) {
 		line_step_d = -fb_pitch;
 		dp = fb + (rect_y2 * fb_pitch);
+		dp_b = dp;
 		line_step_s = -src_pitch;
 		sp = sp_src + ((rect_sy + h - 1) * src_pitch);
 	}
@@ -231,17 +230,21 @@ void copy_rect_nomask(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h
 					if (color_format == MNTVA_COLOR_8BIT) {
 						u8_fg = ((uint8_t *)sp)[rect_sx + x];
 						HANDLE_MINTERM_PIXEL_8(u8_fg, ((uint8_t *)dp)[rect_x1 + x]);
+/*
+						dp = (uint32_t *)((uint8_t*)dp_b + rect_x1);
+						HANDLE_MINTERM_PIXEL_8(u8_fg, ((uint8_t *)dp)[x]);
+*/
 					}
 					else {
 						if (color_format == MNTVA_COLOR_16BIT565 || color_format == MNTVA_COLOR_15BIT) {
 							fg_color = ((uint16_t *)sp)[rect_sx + x];
-							uint16_t* dpx1 = (uint16_t*)dp + rect_x1;
-							HANDLE_MINTERM_PIXEL_16_32(fg_color, dpx1);
+							dp = (uint32_t *)((uint16_t*)dp_b + rect_x1);
+							HANDLE_MINTERM_PIXEL_16(fg_color, ((uint16_t *)dp)[x]);
 						}
 						else {
 							fg_color = sp[rect_sx + x];
-							uint32_t* dpx1 = dp + rect_x1;
-							HANDLE_MINTERM_PIXEL_16_32(fg_color, dpx1);
+							dp = dp_b + rect_x1;
+							HANDLE_MINTERM_PIXEL_32(fg_color, dp[x]);
 						}
 					}
 				}
@@ -251,17 +254,21 @@ void copy_rect_nomask(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h
 					if (color_format == MNTVA_COLOR_8BIT) {
 						u8_fg = ((uint8_t *)sp)[rect_sx + x];
 						HANDLE_MINTERM_PIXEL_8(u8_fg, ((uint8_t *)dp)[rect_x1 + x]);
+/*
+						dp = (uint32_t *)((uint8_t*)dp_b + rect_x1);
+						HANDLE_MINTERM_PIXEL_8(u8_fg, ((uint8_t *)dp)[x]);
+*/
 					}
 					else {
 						if (color_format == MNTVA_COLOR_16BIT565 || color_format == MNTVA_COLOR_15BIT) {
 							fg_color = ((uint16_t *)sp)[rect_sx + x];
 							uint16_t* dpx1 = (uint16_t*)dp + rect_x1;
-							HANDLE_MINTERM_PIXEL_16_32(fg_color, dpx1);
+							HANDLE_MINTERM_PIXEL_16(fg_color, dpx1[x]);
 						}
 						else {
 							fg_color = sp[rect_sx + x];
 							uint32_t* dpx1 = dp + rect_x1;
-							HANDLE_MINTERM_PIXEL_16_32(fg_color, dpx1);
+							HANDLE_MINTERM_PIXEL_32(fg_color, dpx1[x]);
 						}
 					}
 				}
@@ -678,7 +685,7 @@ void p2d_rect(int16_t sx, int16_t sy, int16_t dx, int16_t dy, int16_t w, int16_t
 		cur_byte = base_byte;
 	}
 }
-
+/*
 void orig_p2d_rect(int16_t sx, int16_t sy, int16_t dx, int16_t dy, int16_t w, int16_t h, uint8_t draw_mode, uint8_t planes, uint8_t mask, uint8_t layer_mask, uint32_t color_mask, uint16_t src_line_pitch, uint8_t *bmp_data_src, uint32_t color_format) {
 	uint32_t *dp = fb + (dy * fb_pitch);
 
@@ -734,7 +741,7 @@ void orig_p2d_rect(int16_t sx, int16_t sy, int16_t dx, int16_t dy, int16_t w, in
 		cur_byte = base_byte;
 	}
 }
-
+*/
 #define PATTERN_FILLRECT_LOOPX \
 	tmpl_x ^= 0x01; \
 	cur_byte = (inversion) ? tmpl_data[tmpl_x] ^ 0xFF : tmpl_data[tmpl_x];

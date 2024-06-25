@@ -256,10 +256,11 @@ reg [15:0] autoConfigBaseRTG = 16'h0000;
 reg [1:0] enabled = 2'b11;
 reg cpu_ram_enable = 1'b1;
 reg maprom_enable = 1'b1;
+reg mapromext_enable = 1'b1;
 //reg ovl = 1'b1;
 wire AUTOCONFIG_RANGE = ({A060[31:16]} == {16'hFF00}) && ~&shutup[1:0] && ~&({configured[1]|~enabled[1],configured[0]|~enabled[0]});
-wire MAPROM_RANGE1 = 0;//ovl==1'b1 && (A060[31:19] == 13'b0000_0000_0000_0) && maprom_enable;
-wire MAPROM_RANGE0 = (A060[31:19] == 13'b0000000011111) && maprom_enable;
+wire MAPROMEXT_RANGE = (A060[31:19] == 13'b0000000011110) && mapromext_enable; // 0xF00000
+wire MAPROM_RANGE = (A060[31:19] == 13'b0000000011111) && maprom_enable; // 0xF80000
 wire CPU_RAM_RANGE = (A060[31:27] == 5'b00001) && cpu_ram_enable;
 wire FASTRAM_CONFIGURED_RANGE = (A060[31:28] == autoConfigBaseFastRam[15:12]) && configured[0] && enabled[0];
 wire RTG_CONFIGURED_RANGE = (A060[31:27] == {autoConfigBaseRTG[15:12],1'b0}) && configured[1] && enabled[1];
@@ -314,6 +315,7 @@ assign D040[31:0]= (ARM_BG==1'b0) ? ( (RAM_state == RAM_read2)||(RAM_state == RA
 
 reg CPURAM_start_cycle=0;
 reg MAPROM_start_cycle=0;
+reg MAPROMEXT_start_cycle=0;
 reg FASTRAM_start_cycle=0;
 reg RTG_start_cycle=0;
 reg AUTOCONFIG_start_cycle=0;
@@ -330,12 +332,12 @@ wire  AUTOCONFIG_BOOT_ROM_ENABLE = GPIO_s[27];
 // | RESET | R-W |      |    |  BOOT ROM  |    |    |    |    |    |    |    |    |    |    |    |
 // -----------------------------------------------------------------------------------------------
 //
-// ------------------------------------------------------------------------------------------
-// | 15 | 14 |   13-12    | 11 | 10 |   9-8     |    7    |   6-5-4    |   3    |  2-1  |   0     |
-// ------------------------------------------------------------------------------------------
-// |    |    |  RTG-RAM   |    |    |    EN     |    |     TS     | MAPROM |  W-R  | CPU RAM |
-// |    |    | AUTOC. EN  |    |    | CONDITION |    |  CONDITION | ENABLE | BURST | ENABLE  |
-// ------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------
+// | 15 | 14 |   13-12    | 11 | 10 |   9-8     |    7      |   6-5-4    |   3    |  2-1  |   0     |
+// -------------------------------------------------------------------------------------------------
+// |    |    |  RTG-RAM   |    |    |    EN     | MAPROMEXT |     TS     | MAPROM |  W-R  | CPU RAM |
+// |    |    | AUTOC. EN  |    |    | CONDITION |   ENABLE  |  CONDITION | ENABLE | BURST | ENABLE  |
+// --------------------------------------------------------------------------------------------------
 
 always @(posedge m00_axi_aclk) begin
     nTA1 <= 1'bz;
@@ -362,9 +364,11 @@ always @(posedge m00_axi_aclk) begin
         enabled[1:0] <={GPIO_s[13],GPIO_s[12]};
         cpu_ram_enable<=GPIO_s[0];
         maprom_enable<=GPIO_s[3];
+        mapromext_enable<=GPIO_s[7];
 //        ovl<=1'b1;
         CPURAM_start_cycle<=0;
         MAPROM_start_cycle<=0;
+        MAPROMEXT_start_cycle<=0;
         FASTRAM_start_cycle<=0;
         RTG_start_cycle<=0;
         AUTOCONFIG_start_cycle<=0;
@@ -377,8 +381,11 @@ always @(posedge m00_axi_aclk) begin
                     if (CPU_RAM_RANGE==1'b1 ) begin                 // CPU-RAM  128Mb
                         CPURAM_start_cycle<=1;
                     end
-                    else if (MAPROM_RANGE1==1'b1 || MAPROM_RANGE0==1'b1 ) begin             // MAPROM   512kb
+                    else if (MAPROM_RANGE==1'b1) begin             // MAPROM   512kb
                         MAPROM_start_cycle<=1;
+                    end
+                    else if (MAPROMEXT_RANGE==1'b1) begin           // MAPROMEXT   512kb
+                        MAPROMEXT_start_cycle<=1;
                     end
                     else if (FASTRAM_CONFIGURED_RANGE==1'b1) begin  // Z3 RAM   256Mb
                         FASTRAM_start_cycle<=1;
@@ -501,6 +508,34 @@ always @(posedge m00_axi_aclk) begin
                         RAM_state <= RAM_write3;
                     end
                     else begin  // MAPROM Read Cycle
+                        RAM_state <= RAM_read1b;
+                        m00_axi_araddr[31:0]  <= {A060[31:2],2'b00};// + {MAPROM_DDR_OFFSET};
+                        m00_axi_arvalid  <= 1'b1;
+                        if((SIZ40[1:0]==2'b11) && (GPIO_c[1]==1)) begin // BURST READ ENABLE
+                            nTBI<=1'b0;
+                            m00_axi_arlen <= 'h3;
+                            m00_axi_arburst <= 'h2; // 0=fixed, 1=inc, 2=wrap (060 makes address wrap)
+                        end else begin
+                            nTBI<=1'b1;
+                            m00_axi_arlen <= 'h0;
+                            m00_axi_arburst <= 'h0;
+                        end
+//                        wait_finish_ARM_cycle<=1;
+//                        GPIO_OUT[31:0] <= {2'b01,SIZ40[1:0],A060[27:0]};
+//                        RAM_state <= RAM_read3;
+                    end
+                end
+                else if (MAPROMEXT_start_cycle==1) begin
+                    nTBI<=1'b1;
+                    MAPROMEXT_start_cycle<=0;
+                    wait_finish_ARM_cycle<=0;
+                    ack<=0;
+                    if (R_W040==0) begin  // MAPROMEXT Write cycle
+                        wait_finish_ARM_cycle<=1;
+                        GPIO_OUT[31:0] <= {2'b10,SIZ40[1:0],A060[27:0]};
+                        RAM_state <= RAM_write3;
+                    end
+                    else begin  // MAPROMEXT Read Cycle
                         RAM_state <= RAM_read1b;
                         m00_axi_araddr[31:0]  <= {A060[31:2],2'b00};// + {MAPROM_DDR_OFFSET};
                         m00_axi_arvalid  <= 1'b1;
@@ -1545,15 +1580,15 @@ end
               end else if(s00_axi_awaddr[27:26]==2'b01) begin
                   s00_slv_reg2 <= {ARM_BANK[7:0],s00_axi_awaddr[25:2]};
                   s00_slv_reg3 <= S00_AXI_WDATA;
-                  s00_slv_reg4 <= {24'h0,8'b00010001}; // long
+                  s00_slv_reg4 <= {24'h0,6'b000100,s00_axi_awaddr[28],1'b1}; // long
               end else if(s00_axi_awaddr[27:26]==2'b10) begin
                   s00_slv_reg2 <= {ARM_BANK[7:0],s00_axi_awaddr[25:2]};
                   s00_slv_reg3 <= S00_AXI_WDATA;
-                  s00_slv_reg4 <= {24'h0,8'b00011001}; // word
+                  s00_slv_reg4 <= {24'h0,6'b000110,s00_axi_awaddr[28],1'b1}; // word
               end else /*if(s00_axi_awaddr[27:26]==2'b11)*/ begin
                   s00_slv_reg2 <= {ARM_BANK[7:0],s00_axi_awaddr[25:2]};
                   s00_slv_reg3 <= S00_AXI_WDATA;
-                  s00_slv_reg4 <= {24'h0,8'b00010101}; // byte
+                  s00_slv_reg4 <= {24'h0,6'b000101,s00_axi_awaddr[28],1'b1}; // byte
               end
           end
           if(clean_arm_command) begin

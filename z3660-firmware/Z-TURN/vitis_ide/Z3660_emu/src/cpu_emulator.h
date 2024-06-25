@@ -13,7 +13,7 @@
 
 #include <inttypes.h>
 
-extern "C" void cpu_emulator(void);
+extern "C" void musashi_emulator(void);
 /*
 #define be16toh(A) (A)
 #define htobe16(A) (A)

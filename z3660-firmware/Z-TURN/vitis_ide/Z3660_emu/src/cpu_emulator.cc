@@ -29,8 +29,9 @@ void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type);
 uint32_t read_scsi_register(uint16_t zaddr,int type);
 void reset_autoconfig(void);
 extern "C" void init_ovl_chip_ram_bank(void);
-extern "C" void init_z3_ram_bank(void);
-extern "C" void init_rtg_bank(void);
+extern "C" void init_z3_ram_bank(unsigned int ini);
+extern "C" void init_rtg_bank(unsigned int ini);
+extern "C" unsigned int READ_NBG_ARM(void);
 
 extern "C" unsigned int rtg_regs_read_32(uaecptr address);
 extern "C" unsigned int rtg_regs_read_16(uaecptr address);
@@ -43,15 +44,16 @@ extern XGpioPs GpioPs;
 int cpu_type=M68K_CPU_TYPE_68030;
 char disasm_buf[4096];
 uint8_t *ROM=(uint8_t *)0x00F80000;
-void load_rom(int load);
+uint8_t *EXT_ROM=(uint8_t *)0x00F00000;
+void load_rom(void);
+void load_romext(void);
 volatile uint8_t *RAM=(volatile uint8_t *)0x08000000;
 volatile uint8_t *Z3660_RTG_BASE=(volatile uint8_t *)RTG_BASE;
 volatile uint8_t *Z3660_Z3RAM_BASE=(volatile uint8_t *)0x20000000;
 int disasm_enable=0;
 int ovl=1;
 extern SHARED *shared;
-
-#define MAP_ROM
+extern LOCAL local;
 
 void cpu_emulator_reset_core0(void);
 void cpu_emulator_reset(void)
@@ -68,7 +70,6 @@ void cpu_emulator_reset(void)
 //int last_cpu_level=0;
 //int last_irq=-1;
 //int mask0=0,mask1=0;
-void other_tasks(void);
 #define BIT0  (1<<0)
 #define BIT8  (1<<8)
 #define BIT9  (1<<9)
@@ -79,14 +80,9 @@ void other_tasks(void);
 int intlev(void);
 extern "C" void z3660_printf(const TCHAR *format, ...);
 
-void cpu_emulator(void)
+void musashi_emulator(void)
 {
-#ifdef MAP_ROM
-   load_rom(1); // Load ROM
-#else
-   load_rom(2); // Do not load ROM
-#endif
-   z3660_printf("[Core1] Starting emulator\n");
+   z3660_printf("[Core1] Starting Musashi emulator\n");
 //   m68ki_cpu_core *state= &m68ki_cpu;
    m68k_set_cpu_type(cpu_type);
    m68k_init();
@@ -111,7 +107,18 @@ void cpu_emulator(void)
                   m68k_get_reg(NULL, M68K_REG_D4), m68k_get_reg(NULL, M68K_REG_D5), m68k_get_reg(NULL, M68K_REG_D6), m68k_get_reg(NULL, M68K_REG_D7));
              z3660_printf("%.8X (%.8X)]] %s\n", m68k_get_reg(NULL, M68K_REG_PC), (m68k_get_reg(NULL, M68K_REG_PC) & 0xFFFFFF), disasm_buf);
              m68k_execute(1);
+             while(shared->musashi_step==0);
+             if(shared->musashi_step!=0xFFFFFFFF)
+             {
+                shared->musashi_step=0;
+             }
+             if(shared->reset_emulator_dis)
+             {
+                cpu_emulator_reset();
+                shared->reset_emulator_dis=0;
+             }
       }
+   	  disasm_enable=shared->disassemble;
 /*
       if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
       {
@@ -133,7 +140,6 @@ void cpu_emulator(void)
 uint32_t autoConfigBaseFastRam=0;
 uint32_t autoConfigBaseRTG=0;
 int configured=0;
-int enabled=1+2; // enabled RAM and RTG autoconfig
 int shutup=0;
 void reset_autoconfig(void)
 {
@@ -141,6 +147,7 @@ void reset_autoconfig(void)
    autoConfigBaseFastRam=0;
    autoConfigBaseRTG=0;
    shutup=0;
+   local.z3_enabled=shared->z3_enabled;
 }
 #define MANUF_ID 0x144B // Double H Tech
 #define AUTOC_NIBBLE(CODE,NIBBLE) ((~(unsigned long)CODE)<<(28-NIBBLE*4))|0x0FFFFFFFUL
@@ -153,36 +160,36 @@ extern "C" uint32_t read_autoconfig(uint32_t address)
    switch(address&0xFFFF)
    {
       case 0x0000:
-         if((configured&1) == 0 && (enabled&1) == 1) data = 0xAFFFFFFF; // 0b1010 zorro 3 (10), pool link (1), autoboot ROM no (0)
+         if((configured&1) == 0 && (local.z3_enabled&1) == 1) data = 0xAFFFFFFF; // 0b1010 zorro 3 (10), pool link (1), autoboot ROM no (0)
          else
          {
-            if(shared->boot_rom_loaded)
+            if(shared->scsiboot_rom_loaded)
             {
-               if((configured&2) == 0 && (enabled&2) == 2) data = 0x9FFFFFFF; // 0b1001 zorro 3 (10), no pool link (0), autoboot ROM yes (0)
+               if((configured&2) == 0 && (local.z3_enabled&2) == 2) data = 0x9FFFFFFF; // 0b1001 zorro 3 (10), no pool link (0), autoboot ROM yes (0)
             }
             else
             {
-               if((configured&2) == 0 && (enabled&2) == 2) data = 0x8FFFFFFF; // 0b1000 zorro 3 (10), no pool link (0), autoboot ROM no (0)
+               if((configured&2) == 0 && (local.z3_enabled&2) == 2) data = 0x8FFFFFFF; // 0b1000 zorro 3 (10), no pool link (0), autoboot ROM no (0)
             }
          }
          break;
       case 0x0100:
-         if((configured&1) == 0 && (enabled&1) == 1) data = 0x4FFFFFFF; // 0b0100 next board unrelated (0), 256MB FastRAM
+         if((configured&1) == 0 && (local.z3_enabled&1) == 1) data = 0x4FFFFFFF; // 0b0100 next board unrelated (0), 256MB FastRAM
          else
-         if((configured&2) == 0 && (enabled&2) == 2) data = 0xBFFFFFFF; // 0b1011 next board unrelated (0), 128MB RTG
+         if((configured&2) == 0 && (local.z3_enabled&2) == 2) data = 0xBFFFFFFF; // 0b1011 next board unrelated (0), 128MB RTG
          break;
       case 0x0004:
          data = 0xFFFFFFFF; // 0b1111 product number
          break;
       case 0x0104:
-         if((configured&1) == 0 && (enabled&1) == 1) data = 0xDFFFFFFF; // 0b1101 2 for the 256MB Z3 Fast
+         if((configured&1) == 0 && (local.z3_enabled&1) == 1) data = 0xDFFFFFFF; // 0b1101 2 for the 256MB Z3 Fast
          else
-         if((configured&2) == 0 && (enabled&2) == 2) data = 0xEFFFFFFF; // 0b1110 1 for the RTG PIC
+         if((configured&2) == 0 && (local.z3_enabled&2) == 2) data = 0xEFFFFFFF; // 0b1110 1 for the RTG PIC
          break;
       case 0x0008:
-         if((configured&1) == 0 && (enabled&1) == 1) data = 0x8FFFFFFF; // 0b1000 flags inverted 0111 io,shutup,extension,reserved(1)
+         if((configured&1) == 0 && (local.z3_enabled&1) == 1) data = 0x8FFFFFFF; // 0b1000 flags inverted 0111 io,shutup,extension,reserved(1)
          else
-         if((configured&2) == 0 && (enabled&2) == 2) data = 0x8FFFFFFF; // 0b1000 flags inverted 0111 io,shutup,extension,reserved(1)
+         if((configured&2) == 0 && (local.z3_enabled&2) == 2) data = 0x8FFFFFFF; // 0b1000 flags inverted 0111 io,shutup,extension,reserved(1)
          break;
       case 0x0108:
          data = 0xFFFFFFFF; // inverted zero
@@ -195,10 +202,10 @@ extern "C" uint32_t read_autoconfig(uint32_t address)
       case 0x0014: data = AUTOC_NIBBLE(MANUF_ID,1); break; // manufacturer low byte
       case 0x0114: data = AUTOC_NIBBLE(MANUF_ID,0); break; //
 
-      case 0x0028: data = shared->boot_rom_loaded?0x9FFFFFFF:0xFFFFFFFF; break; // autoboot rom vector (er_InitDiagVec)
-      case 0x0128: data = shared->boot_rom_loaded?0xFFFFFFFF:0xFFFFFFFF; break; // ~0x6000
-      case 0x002C: data = shared->boot_rom_loaded?0xFFFFFFFF:0xFFFFFFFF; break; //
-      case 0x012C: data = shared->boot_rom_loaded?0xFFFFFFFF:0xFFFFFFFF; break; //
+      case 0x0028: data = shared->scsiboot_rom_loaded?0x9FFFFFFF:0xFFFFFFFF; break; // autoboot rom vector (er_InitDiagVec)
+      case 0x0128: data = shared->scsiboot_rom_loaded?0xFFFFFFFF:0xFFFFFFFF; break; // ~0x6000
+      case 0x002C: data = shared->scsiboot_rom_loaded?0xFFFFFFFF:0xFFFFFFFF; break; //
+      case 0x012C: data = shared->scsiboot_rom_loaded?0xFFFFFFFF:0xFFFFFFFF; break; //
 
       default: data = 0xFFFFFFFF;
    }
@@ -229,7 +236,7 @@ void finish_MMU_OP(void)
    mtcp(XREG_CP15_INVAL_BRANCH_ARRAY, 0U);
 
    dsb(); /* ensure completion of the BP and TLB invalidation */
-    isb(); /* synchronize context on this processor */
+   isb(); /* synchronize context on this processor */
 }
 extern "C" void write_autoconfig(uint32_t address, uint32_t data)
 {
@@ -238,58 +245,59 @@ extern "C" void write_autoconfig(uint32_t address, uint32_t data)
    {
       case 0x44:
 
-            if ((configured&1) == 0 && (enabled&1) == 1)
-            {
-                autoConfigBaseFastRam = data&0xFFFF0000;     // FastRAM
-                configured|=1;
-                unsigned int ini=(autoConfigBaseFastRam>>20)&0xFFF; // should be 0x400
-                  z3660_printf("Warning: autoconfig Z3 RAM to 0x%03X (should be 0x400)\n",ini);
-                unsigned int end=ini+0x100; // +256 MByte
-                // The following MMU operation hangs the access of the core0
-                // so we hold here core0
-              shared->core0_hold=1;
-                shared->shared_data=1;
-                while(shared->core0_hold_ack==0);
-                for(unsigned int i=ini,j=0;i<end;i++,j++)
-                   setMMU(i*0x100000UL,(0x20000000+j*0x100000UL)|NORM_WB_CACHE|SHAREABLE); // mapped to 0x20000000
-                finish_MMU_OP();
-                init_z3_ram_bank();
+         if ((configured&1) == 0 && (local.z3_enabled&1) == 1)
+         {
+            autoConfigBaseFastRam = data&0xFFFF0000;     // FastRAM
+            configured|=1;
+            unsigned int ini=(autoConfigBaseFastRam>>20)&0xFFF;
+            z3660_printf("[Core1] Autoconfig Z3 RAM to 0x%03X\n",ini);
+            unsigned int end=ini+0x100; // +256 MByte
+            // The following MMU operation hangs the access of the core0
+            // so we hold here core0
+            shared->core0_hold=1;
+            shared->shared_data=1;
+            while(shared->core0_hold_ack==0);
+            for(unsigned int i=ini,j=0;i<end;i++,j++)
+               setMMU(i*0x100000UL,(0x20000000+j*0x100000UL)|NORM_WB_CACHE|SHAREABLE); // mapped to 0x20000000
+            finish_MMU_OP();
+            init_z3_ram_bank(ini);
             // core0 continues
-                shared->core0_hold=0;
-            }
-            else if ((configured&2) == 0 && (enabled&2) == 2)
+            shared->core0_hold=0;
+         }
+         else if ((configured&2) == 0 && (local.z3_enabled&2) == 2)
+         {
+            autoConfigBaseRTG = data&0xFFFF0000;         // RTG
+            configured|=2;
+            unsigned int ini=(autoConfigBaseRTG>>20)&0xFFF;
+            z3660_printf("[Core1] Autoconfig RTG to 0x%03X\n",ini);
+            unsigned int end=ini+0x080; // +128 MByte
+            // The following MMU operation hangs the access of the core0
+            // so we hold here core0
+            shared->core0_hold=1;
+            shared->shared_data=1;
+            while(shared->core0_hold_ack==0);
+            // +2 -> don't use RTG registers with MMU (write to RTG registers is emulated)
+            for(unsigned int i=ini+2,j=2;i<end;i++,j++)
             {
-                autoConfigBaseRTG = data&0xFFFF0000;         // RTG
-                configured|=2;
-                unsigned int ini=(autoConfigBaseRTG>>20)&0xFFF; // should be 0x500
-                  z3660_printf("Warning: autoconfig RTG RAM to 0x%03X (should be 0x500)\n",ini);
-                unsigned int end=ini+0x080; // +128 MByte
-                // The following MMU operation hangs the access of the core0
-                // so we hold here core0
-              shared->core0_hold=1;
-                shared->shared_data=1;
-                while(shared->core0_hold_ack==0);
-                // +2 -> don't use RTG registers with MMU (write to RTG registers is emulated)
-                for(unsigned int i=ini+2,j=2;i<end;i++,j++)
-                {
-                   uint32_t address=(RTG_BASE+j*0x100000UL);
-                   setMMU(address,address|NORM_WB_CACHE);      // mapped to RTG_BASE
-                   setMMU(i*0x100000UL,address|NORM_WT_CACHE); // mapped to RTG_BASE
-                }
-               setMMU((end-2)*0x100000UL,0x1FE00000|STRONG_ORDERED); // mapped to RTG_BASE
-//               setMMU((end-1)*0x100000UL,0x1FF00000|STRONG_ORDERED); // mapped to RTG_BASE
-                finish_MMU_OP();
-                init_rtg_bank();
-                // core0 continues
-                shared->core0_hold=0;
-
+               uint32_t address=(RTG_BASE+j*0x100000UL);
+               setMMU(address,address|NORM_WT_CACHE);      // mapped to RTG_BASE
+               setMMU(i*0x100000UL,address|NORM_WT_CACHE); // mapped to RTG_BASE
             }
-            break;
+            //ETHERNET
+            setMMU((end-2)*0x100000UL,0x1FE00000|NORM_NONCACHE); // mapped to RTG_BASE
+            setMMU((end-1)*0x100000UL,0x1FF00000|NORM_NONCACHE); // mapped to RTG_BASE
+            finish_MMU_OP();
+            init_rtg_bank(ini);
+            // core0 continues
+            shared->core0_hold=0;
+
+         }
+         break;
 
       case 0x4C:
-            if (configured&1) shutup|=1;   // FastRAM
-            if (configured&2) shutup|=2;   // RTG
-            break;
+         if (configured&1) shutup|=1;   // FastRAM
+         if (configured&2) shutup|=2;   // RTG
+         break;
    }
 #endif
 }
@@ -319,21 +327,52 @@ inline int not_decode(uint32_t address)
    return(0);
 #endif
 }
-
+extern LOCAL local;
 unsigned int read_long(unsigned int address)
 {
    uint32_t data;
-#ifdef MAP_ROM
-   if(ovl==1 && address<0x00080000)
+   if(local.load_rom_emu==1)
    {
-      return(swap32(*(uint32_t*)(ROM+address)));
+      if(ovl==1 && address<0x00080000)
+      {
+         return(swap32(*(uint32_t*)(ROM+address)));
+      }
+      if(address>=0x00f80000 && address<0x1000000)
+      {
+         uint32_t add=address-0x00f80000;
+         return(swap32(*(uint32_t*)(ROM+add)));
+      }
    }
-   if(address>=0x00f80000 && address<0x1000000)
+   else
    {
-      uint32_t add=address-0x00f80000;
-      return(swap32(*(uint32_t*)(ROM+add)));
+ //     static int first=1;
+ //     if(first==1)
+//         printf("Read long from mobo kickstart\n");
+//      first=0;
+      if(address<0x00080000)
+      {
+         return(ps_read_32(address));
+      }
+      if(address>=0x00f80000 && address<0x1000000)
+      {
+         return(ps_read_32(address));
+      }
    }
-#endif
+   if(local.load_romext_emu==1)
+   {
+      if(address>=0x00f00000 && address<0x00f80000)
+      {
+         uint32_t add=address-0x00f00000;
+         return(swap32(*(uint32_t*)(EXT_ROM+add)));
+      }
+   }
+   else
+   {
+      if(address>=0x00f00000 && address<0x00f80000)
+      {
+         return(ps_read_32(address));
+      }
+   }
    if(address<0x00E00000) // CHIP and Amiga Resources
    {
       return(ps_read_32(address));
@@ -385,7 +424,7 @@ unsigned int read_long(unsigned int address)
    {
       z3660_printf("[Core1] Autoconfig: Read LONG 0x%08lX\n",address);
 #ifdef AUTOCONFIG_ENABLED
-      if((configured&enabled)!=enabled)
+      if((configured&local.z3_enabled)!=local.z3_enabled)
          return(read_autoconfig(address));
 #else
       return(ps_read_32(address));
@@ -396,17 +435,48 @@ unsigned int read_long(unsigned int address)
 unsigned int read_word(unsigned int address)
 {
    uint32_t data;
-#ifdef MAP_ROM
-   if(ovl==1 && address<0x00080000)
+   if(local.load_rom_emu==1)
    {
-      return(swap16(*(uint16_t *)(ROM+address)));
+      if(ovl==1 && address<0x00080000)
+      {
+         return(swap16(*(uint16_t *)(ROM+address)));
+      }
+      if(address>=0x00f80000 && address<0x01000000)
+      {
+         uint32_t add=address-0x00f80000;
+         return(swap16(*(uint16_t *)(ROM+add)));
+      }
    }
-   if(address>=0x00f80000 && address<0x01000000)
+   else
    {
-      uint32_t add=address-0x00f80000;
-      return(swap16(*(uint16_t *)(ROM+add)));
+//      static int first=1;
+//      if(first==1)
+//         printf("Read word from mobo kickstart\n");
+//      first=0;
+      if(address<0x00080000)
+      {
+         return(ps_read_16(address));
+      }
+      if(address>=0x00f80000 && address<0x01000000)
+      {
+         return(ps_read_16(address));
+      }
    }
-#endif
+   if(local.load_romext_emu==1)
+   {
+      if(address>=0x00f00000 && address<0x00f80000)
+      {
+         uint32_t add=address-0x00f00000;
+         return(swap16(*(uint16_t *)(EXT_ROM+add)));
+      }
+   }
+   else
+   {
+      if(address>=0x00f00000 && address<0x00f80000)
+      {
+         return(ps_read_16(address));
+      }
+   }
    if(address<0x00E00000) // CHIP and Amiga Resources
    {
       return(ps_read_16(address));
@@ -451,7 +521,7 @@ unsigned int read_word(unsigned int address)
    {
       z3660_printf("[Core1] Autoconfig: Read WORD 0x%08lX\n",address);
 #ifdef AUTOCONFIG_ENABLED
-      if((configured&enabled)!=enabled)
+      if((configured&local.z3_enabled)!=local.z3_enabled)
          return(read_autoconfig(address)>>16);
 #else
       return(ps_read_16(address));
@@ -462,19 +532,51 @@ unsigned int read_word(unsigned int address)
 unsigned int read_byte(unsigned int address)
 {
    uint32_t data;
-#ifdef MAP_ROM
-   if(ovl==1 && address<0x00080000)
+   if(local.load_rom_emu==1)
    {
-      data=ROM[address];
-      return(data);
+      if(ovl==1 && address<0x00080000)
+      {
+         data=ROM[address];
+         return(data);
+      }
+      if(address>=0x00f80000 && address<0x1000000)
+      {
+         uint32_t add=address-0x00f80000;
+         data=ROM[add];
+         return(data);
+      }
    }
-   if(address>=0x00f80000 && address<0x1000000)
+   else
    {
-      uint32_t add=address-0x00f80000;
-      data=ROM[add];
-      return(data);
+//      static int first=1;
+//      if(first==1)
+//         printf("Read byte from mobo kickstart\n");
+//      first=0;
+      if(ovl==1 && address<0x00080000)
+      {
+         return(ps_read_8(address));
+      }
+      if(address>=0x00f80000 && address<0x1000000)
+      {
+         return(ps_read_8(address));
+      }
    }
-#endif
+   if(local.load_romext_emu==1)
+   {
+      if(address>=0x00f00000 && address<0x00f80000)
+      {
+         uint32_t add=address-0x00f00000;
+         data=EXT_ROM[add];
+         return(data);
+      }
+   }
+   else
+   {
+      if(address>=0x00f00000 && address<0x00f80000)
+      {
+         return(ps_read_8(address));
+      }
+   }
    if(address<0x00E00000) // CHIP and Amiga Resources
    {
       return(ps_read_8(address));
@@ -534,7 +636,7 @@ unsigned int read_byte(unsigned int address)
    {
 //      z3660_printf("Autoconfig: Read 0x%08lX\n",address);
 #ifdef AUTOCONFIG_ENABLED
-      if((configured&enabled)!=enabled)
+      if((configured&local.z3_enabled)!=local.z3_enabled)
          return(read_autoconfig(address)>>24);
 #else
       return(ps_read_8(address));
@@ -556,7 +658,6 @@ unsigned int  m68k_read_memory_32(unsigned int address)
 }
 void m68k_write_memory_8(unsigned int address, unsigned int value)
 {
-#ifdef MAP_ROM
 #define CIAAPRA 0xBFE001
    if(address==CIAAPRA)
    {
@@ -574,11 +675,10 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
    {
       return;
    }
-   if(address>=0x00F80000 && address<0x01000000)
+   if(address>=0x00F00000 && address<0x01000000)
    {
       return;
    }
-#endif
    if(address<0x00E00000) // CHIP and Amiga Resources
    {
       ps_write_8(address,value);
@@ -626,7 +726,7 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
    if(address>=0xFF000000 && address<0xFF010000)
    {
       z3660_printf("[Core1] Autoconfig: Write 0x%08X 0x%08X\n",address,value);
-      if((configured&enabled)!=enabled)
+      if((configured&local.z3_enabled)!=local.z3_enabled)
       {
 #ifdef AUTOCONFIG_ENABLED
          write_autoconfig(address,value<<24);
@@ -641,16 +741,14 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
 //void m68k_write_memory_16(uint32_t address, uint32_t value)
 void m68k_write_memory_16(unsigned int address, unsigned int value)
 {
-#ifdef MAP_ROM
    if(ovl==1 && address<0x00800000)
    {
       return;
    }
-   if(address>=0x00F80000 && address<0x01000000)
+   if(address>=0x00F00000 && address<0x01000000)
    {
       return;
    }
-#endif
    if(address<0x00E00000) // CHIP and Amiga Resources
    {
       ps_write_16(address,value);
@@ -698,7 +796,7 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
    if(address>=0xFF000000 && address<0xFF010000)
    {
       z3660_printf("[Core1] Autoconfig: Write 0x%08X 0x%08X\n",address,value);
-      if((configured&enabled)!=enabled)
+      if((configured&local.z3_enabled)!=local.z3_enabled)
       {
 #ifdef AUTOCONFIG_ENABLED
          write_autoconfig(address,value<<16);
@@ -713,16 +811,14 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
 //void m68k_write_memory_32(uint32_t address, uint32_t value)
 void m68k_write_memory_32(unsigned int address, unsigned int value)
 {
-#ifdef MAP_ROM
    if(ovl==1 && address<0x00800000)
    {
       return;
    }
-   if(address>=0x00F80000 && address<0x01000000)
+   if(address>=0x00F00000 && address<0x01000000)
    {
       return;
    }
-#endif
    if(address<0x00E00000) // CHIP and Amiga Resources
    {
       ps_write_32(address,value);
@@ -770,7 +866,7 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
    if(address>=0xFF000000 && address<0xFF010000)
    {
       z3660_printf("[Core1] Autoconfig: Write 0x%08X 0x%08X\n",address,value);
-      if((configured&enabled)!=enabled)
+      if((configured&local.z3_enabled)!=local.z3_enabled)
       {
 #ifdef AUTOCONFIG_ENABLED
          write_autoconfig(address,value);
@@ -782,63 +878,22 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
    }
    ps_write_32(address,value);
 }
-#define NOPX_WRITE \
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*860ns*/NOP;NOP;NOP;NOP;NOP;\
-/*860ns*/NOP;NOP;NOP;NOP;NOP;\
-/*860ns*/NOP;NOP;NOP;NOP;NOP;\
-/**/NOP;NOP;NOP;NOP;NOP;\
-/**///NOP;NOP;NOP;NOP;NOP;\
-/**/NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;
-
-uint32_t nop_read_max=24;
-uint32_t nop_write_max=0;
-
 #define NOP asm(" nop")
 
-#define NOPX_READ2 do {for(int i=nop_read_max;i>0;i--) NOP;}while(0)
-#define NOPX_WRITE2 do {for(int i=nop_write_max;i>0;i--) NOP;}while(0)
-#define NOPX_READ \
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-/*890ns*/NOP;NOP;NOP;NOP;NOP;\
-/*870ns*/NOP;NOP;NOP;NOP;NOP;\
-/*880ns*/NOP;NOP;NOP;NOP;NOP;\
-/**/NOP;NOP;NOP;NOP;NOP;\
-/**///NOP;NOP;NOP;NOP;NOP;\
-/**/NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;\
-      NOP;NOP;NOP;NOP;NOP;
-
-// max 1.70 ???
-// # of NOPS in NOPX   Sysinfo Chip Speed vs A600
-// 55                   -> 1.66
-// 50                   -> 1.70
-// 45                   -> 1.66
-// 40                   -> 1.66
-// 35                   -> 1.64
-// 30                   -> 1.61
-// 25                   ->
-// 20                   ->
-// 15                   ->
-// 10                   ->
-//  5                   ->
-//  3                   ->
-//  1                   -> 1.69
-//  0                   -> 1.70 <---------------
+void NOPX_WRITE(void)
+{
+	for(int i=shared->nops_write;i>0;i--)
+	{
+		NOP;
+	}
+}
+void NOPX_READ(void)
+{
+	for(int i=shared->nops_read;i>0;i--)
+	{
+		NOP;
+	}
+}
 #define check_bus_error(A,B)
 /*
 void check_bus_error(uint32_t v,uint32_t address)
@@ -851,25 +906,29 @@ void check_bus_error(uint32_t v,uint32_t address)
 }
 */
 #define WRITE_FINISH_DELAYED
+//#define READ_THROUGH_REGS
 //#define WRITE_THROUGH_REGS
 
 int write_pending=0;
 uint32_t last_bank=-1;
 inline void arm_write_amiga_long(uint32_t address, uint32_t data)
 {
+   while(READ_NBG_ARM()!=0);
+#ifndef WRITE_THROUGH_REGS
    uint32_t bank=(address>>24)&0xFF;
    if(bank!=last_bank)
    {
 	  write_reg(0x18,bank);
 	  last_bank=bank;
    }
+#endif
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
       while(read_reg(0x14)==0) // read ack
       {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       check_bus_error(read_reg(0x14),address);
    }
@@ -893,7 +952,7 @@ inline void arm_write_amiga_long(uint32_t address, uint32_t data)
    {
       write_pending=0;
       do {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       while(read_reg(0x14)==0);        // read ack
       check_bus_error(read_reg(0x14),address);
@@ -902,19 +961,22 @@ inline void arm_write_amiga_long(uint32_t address, uint32_t data)
 }
 inline void arm_write_amiga_word(uint32_t address, uint32_t data)
 {
+   while(READ_NBG_ARM()!=0);
+#ifndef WRITE_THROUGH_REGS
    uint32_t bank=(address>>24)&0xFF;
    if(bank!=last_bank)
    {
 	  write_reg(0x18,bank);
 	  last_bank=bank;
    }
+#endif
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
       while(read_reg(0x14)==0) // read ack
       {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       check_bus_error(read_reg(0x14),address);
    }
@@ -938,7 +1000,7 @@ inline void arm_write_amiga_word(uint32_t address, uint32_t data)
    {
       write_pending=0;
       do {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       while(read_reg(0x14)==0);        // read ack
       check_bus_error(read_reg(0x14),address);
@@ -947,19 +1009,22 @@ inline void arm_write_amiga_word(uint32_t address, uint32_t data)
 }
 inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
 {
+   while(READ_NBG_ARM()!=0);
+#ifndef WRITE_THROUGH_REGS
    uint32_t bank=(address>>24)&0xFF;
    if(bank!=last_bank)
    {
 	  write_reg(0x18,bank);
 	  last_bank=bank;
    }
+#endif
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
       while(read_reg(0x14)==0) // read ack
       {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       check_bus_error(read_reg(0x14),address);
    }
@@ -983,7 +1048,7 @@ inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
    {
       write_pending=0;
       do {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       while(read_reg(0x14)==0);        // read ack
       check_bus_error(read_reg(0x14),address);
@@ -992,22 +1057,38 @@ inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
 }
 inline uint32_t arm_read_amiga_long(uint32_t address)
 {
+   while(READ_NBG_ARM()!=0);
+#ifdef READ_THROUGH_REGS
    write_reg(0x08,address);           // address
+#else
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+	  write_reg(0x18,bank);
+	  last_bank=bank;
+   }
+#endif
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
       while(read_reg(0x14)==0) // read ack
       {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       check_bus_error(read_reg(0x14),address);
    }
 #endif
+#ifdef READ_THROUGH_REGS
    NOP;
    write_reg(0x10,0x11|READ_|LONG_);  // command read
+#else
+   NOP;
+   read_mem32(address);
+   NOP;
+#endif
    do {
-      NOPX_READ;
+      NOPX_READ();
    }
    while(read_reg(0x14)==0);          // read ack
    check_bus_error(read_reg(0x14),address);
@@ -1016,22 +1097,38 @@ inline uint32_t arm_read_amiga_long(uint32_t address)
 }
 inline uint32_t arm_read_amiga_word(uint32_t address)
 {
+   while(READ_NBG_ARM()!=0);
+#ifdef READ_THROUGH_REGS
    write_reg(0x08,address);           // address
+#else
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+	  write_reg(0x18,bank);
+	  last_bank=bank;
+   }
+#endif
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
       while(read_reg(0x14)==0) // read ack
       {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       check_bus_error(read_reg(0x14),address);
    }
 #endif
+#ifdef READ_THROUGH_REGS
    NOP;
    write_reg(0x10,0x11|READ_|WORD_);  // command read
+#else
+   NOP;
+   read_mem16(address);
+   NOP;
+#endif
    do {
-      NOPX_READ;
+      NOPX_READ();
    }
    while(read_reg(0x14)==0);          // read ack
    check_bus_error(read_reg(0x14),address);
@@ -1040,22 +1137,38 @@ inline uint32_t arm_read_amiga_word(uint32_t address)
 }
 inline uint32_t arm_read_amiga_byte(uint32_t address)
 {
+   while(READ_NBG_ARM()!=0);
+#ifdef READ_THROUGH_REGS
    write_reg(0x08,address);           // address
+#else
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+	  write_reg(0x18,bank);
+	  last_bank=bank;
+   }
+#endif
 #ifdef WRITE_FINISH_DELAYED
    if(write_pending)
    {
       write_pending=0;
       while(read_reg(0x14)==0) // read ack
       {
-         NOPX_WRITE;
+         NOPX_WRITE();
       }
       check_bus_error(read_reg(0x14),address);
    }
 #endif
+#ifdef READ_THROUGH_REGS
    NOP;
    write_reg(0x10,0x11|READ_|BYTE_);  // command read
+#else
+   NOP;
+   read_mem8(address);
+   NOP;
+#endif
    do {
-      NOPX_READ;
+      NOPX_READ();
    }
    while(read_reg(0x14)==0);          // read ack
    check_bus_error(read_reg(0x14),address);

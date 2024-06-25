@@ -82,9 +82,9 @@ zz_video_mode preset_video_modes[ZZVMODE_NUM] = {
     {     640,      480,     656,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             0,      15, 1, 60 },
     {    1024,      768,    1048,   1184,   1344,    771,    777,    806,    0,          65,     65000000,       60,             0,      13, 1, 20 },
     {    1280,     1024,    1328,   1440,   1688,   1025,   1028,   1066,    0,         108,    108000000,       60,             0,      54, 5, 10 },
-    {    1920,     1080,    2008,   2052,   2200,   1084,   1089,   1125,    0,         148,    148500000,       60,             0,      49, 1, 33 },
+    {    1920,     1080,    2008,   2052,   2200,   1084,   1089,   1125,    0,         148,    148500000,       60,             0,      27, 1, 18 },
     {     720,      576,     732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,             0,      45, 2, 83 },
-    {    1920,     1080,    2448,   2492,   2640,   1084,   1089,   1125,    0,         148,    148500000,       50,             0,      49, 1, 33 },
+    {    1920,     1080,    2448,   2492,   2640,   1084,   1089,   1125,    0,         148,    148500000,       50,             0,      27, 1, 18 },
     {     720,      480,     720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             0,      19, 1, 75 },
     {     640,      512,     840,    968,   1056,    601,    605,    628,    0,          40,     40000000,       60,             0,      14, 1, 35 },
     {    1600,     1200,    1704,   1880,   2160,   1201,   1204,   1242,    0,         161,     16089999,       60,             0,      21, 1, 13 },
@@ -123,7 +123,7 @@ void handle_cache_flush(uint32_t address,uint32_t size)
 {
 #ifndef NO_L1_CACHE_FLUSH
 #ifdef L1_CACHE_ENABLED
-	Xil_L1DCacheFlush();
+   Xil_L1DCacheFlush();
 #endif
 #endif
 #ifndef NO_L2_CACHE_FLUSH
@@ -294,7 +294,8 @@ void play_init(int bm)
    f_rewind(&fil);
    f_read(&fil, ENCODED + RTG_BASE, filesize, &NumBytesRead);
 
-   Xil_DCacheFlush();
+   Xil_L1DCacheFlush();
+   Xil_L2CacheFlush();
    f_close(&fil);
    f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
    write_rtg_register(REG_ZZ_AUDIO_PARAM, 0);
@@ -360,7 +361,7 @@ void play_sound(void)
    }
 }
 int no_init=0;
-void reset_run(int cpu_boot_mode, int counter, int counter_max)
+void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
 {
    static int16_t iteration=0;
    iteration++;
@@ -584,8 +585,15 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max)
    if(bm>=BOOTMODE_NUM) bm=0;
    message[0]=0;
    Font20.TextColor=0x00FFFFFF; // white
-   strcat(message,"Will change to ");
-   strcat(message,bootmode_names[bm]);
+   if(long_reset==0)
+   {
+      strcat(message,"Will change to ");
+      strcat(message,bootmode_names[bm]);
+   }
+   else
+   {
+      strcat(message,"Will delete all env files");
+   }
    strcat(message," after full bar");
    displayStringAt(0,h/2+42,(uint8_t*)message,CENTER_MODE);
 
@@ -743,12 +751,25 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
 int toggle=0;
 int vblank=0;
-extern int state68k;
 uint32_t ticks=0;
 void isr_video(void *dummy)
 {
    vblank=video_formatter_read(0);
-
+   int vblank=video_formatter_read(0);
+/*
+   static int c=0;
+   static int s=0;
+   if(vblank)
+   {
+	   c++;
+	   if(c==60)
+	   {
+		   c=0;
+		   s++;
+		   printf("[Core 0] vb %d %08lX\n",s,*((volatile uint32_t*)0xF8F0183C));
+	   }
+   }
+*/
    if (!vblank) {
       // if this is not the vblank interrupt, set up the split buffer
       // TODO: VDMA doesn't seem to like switching buffers in the middle of a frame.
@@ -780,8 +801,16 @@ void isr_video(void *dummy)
 
    if(vblank)
    {
-      if(state68k==M68K_RUNNING) {
+      if(config.boot_mode==CPU) {
          handle_cache_flush(((uint32_t)vs.framebuffer) + vs.framebuffer_pan_offset,vs.framebuffer_size);
+      }
+      else
+      {
+#ifndef NO_L1_CACHE_FLUSH
+#ifdef L1_CACHE_ENABLED
+    	  Xil_L1DCacheFlush();
+#endif
+#endif
       }
       if (sprite_request_show) {
          vs.sprite_showing = 1;

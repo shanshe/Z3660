@@ -1,0 +1,23 @@
+#define STRINGIZER_(exp) #exp
+#define STRINGIZER(exp) STRINGIZER_(exp)
+
+char *dma_op_string[]={
+   STRINGIZER(OP_NONE               ),
+   STRINGIZER(OP_DRAWLINE           ),
+   STRINGIZER(OP_FILLRECT           ),
+   STRINGIZER(OP_COPYRECT           ),
+   STRINGIZER(OP_COPYRECT_NOMASK    ),
+   STRINGIZER(OP_RECT_TEMPLATE      ),
+   STRINGIZER(OP_RECT_PATTERN       ),
+   STRINGIZER(OP_P2C                ),
+   STRINGIZER(OP_P2D                ),
+   STRINGIZER(OP_INVERTRECT         ),
+   STRINGIZER(OP_PAN                ),
+   STRINGIZER(OP_SPRITE_XY          ),
+   STRINGIZER(OP_SPRITE_COLOR       ),
+   STRINGIZER(OP_SPRITE_BITMAP      ),
+   STRINGIZER(OP_SPRITE_CLUT_BITMAP ),
+   STRINGIZER(OP_ETH_USB_OFFSETS    ),
+   STRINGIZER(OP_SET_SPLIT_POS      ),
+   STRINGIZER(OP_NUM                ),
+};

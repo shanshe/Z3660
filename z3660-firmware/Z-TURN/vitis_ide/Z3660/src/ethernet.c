@@ -261,8 +261,8 @@ int ethernet_init() {
 	 * address range that starts at address 0x0FF00000 is made uncached.
 	 */
 
-	Xil_SetTlbAttributes(RTG_BASE+TX_BD_LIST_START_ADDRESS, STRONG_ORDERED);
-	Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, STRONG_ORDERED);
+//	Xil_SetTlbAttributes(RTG_BASE+TX_BD_LIST_START_ADDRESS, STRONG_ORDERED);
+//	Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, STRONG_ORDERED);
 //	Xil_SetTlbAttributes(RTG_BASE+RX_BACKLOG_ADDRESS, STRONG_ORDERED);
 	//Xil_SetTlbAttributes(RTG_BASE+RX_FRAME_ADDRESS, 0xc02);
 	//Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, 0xc02);
@@ -434,7 +434,8 @@ static void xEmacPsRecvHandler(void *Callback)
 			//printf("EMAC: RX: %d [%d] bd_idx: %d\n", frame_serial, rx_bytes, bd_idx);
 
 //			Xil_DCacheInvalidateRange((UINTPTR)frame_ptr, FRAME_SIZE);
-			Xil_DCacheFlushRange((UINTPTR)frame_ptr, FRAME_SIZE);
+			Xil_L1DCacheFlushRange((UINTPTR)frame_ptr, FRAME_SIZE);
+			Xil_L2CacheFlushRange((UINTPTR)frame_ptr, FRAME_SIZE);
 
 			if (frames_backlog<FRAME_MAX_BACKLOG) {
 				// copy the frame to the backlog (frames that amiga hasn't fetched yet)
@@ -917,7 +918,8 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
 	uint32_t old_frames_tx = FramesTx;
 
 //	Xil_DCacheInvalidateRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
-	Xil_DCacheFlushRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
+	Xil_L1DCacheFlushRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
+	Xil_L2CacheFlushRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
 
 //	printf("ethernet_send_frame: %lu %d\n",old_frames_tx,frame_size);
 /*
@@ -950,7 +952,8 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
 		return(3);
 	}
 
-	Xil_DCacheFlushRange((UINTPTR)BdTxPtr, 128);
+	Xil_L1DCacheFlushRange((UINTPTR)BdTxPtr, 128);
+	Xil_L2CacheFlushRange((UINTPTR)BdTxPtr, 128);
 
 	XEmacPs_Transmit(EmacPsInstancePtr);
 
