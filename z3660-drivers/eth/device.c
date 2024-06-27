@@ -31,6 +31,7 @@
 #include <exec/tasks.h>
 #include <hardware/intbits.h>
 #include <string.h>
+#include <proto/timer.h>
 
 #ifdef HAVE_VERSION_H
 #include "version.h"
@@ -170,20 +171,23 @@ __saveds struct Device *DevInit( ASMR(d0) DEVBASEP                  ASMREG(d0),
           ZZ9K_REGS = (ULONG)cd->cd_BoardAddr;
 
           // Thanks to https://grandcentrix.team
-          HW_MAC[0]=0x68;
-          HW_MAC[1]=0x82;
-          HW_MAC[2]=0xF2;
+          // 68:82:F2
+          // Commodore International
+          // 00:80:10 
+          HW_MAC[0]=0x00;// 0x68;
+          HW_MAC[1]=0x80;// 0x82;
+          HW_MAC[2]=0x10;// 0xF2;
           HW_MAC[3]=0x00;
           HW_MAC[4]=0x01;
           HW_MAC[5]=0x00;
 
-          if ((fh=Open("ENV:ZZ9K_MAC",MODE_OLDFILE))) {
+          if ((fh=Open("ENV:Z3660_MAC",MODE_OLDFILE))) {
             UBYTE char_buf[32];
             char* res = FGets(fh,char_buf,18);
             if (!res || strlen(char_buf)<17) {
-              D(("Z3660Net: MAC address in ENV:ZZ9K_MAC has invalid syntax.\n"));
+              D(("Z3660Net: MAC address in ENV:Z3660_MAC has invalid syntax.\n"));
             } else {
-              D(("Z3660Net: Setting MAC address from ENV:ZZ9K_MAC.\n"));
+              D(("Z3660Net: Setting MAC address from ENV:Z3660_MAC.\n"));
               set_mac_from_string(char_buf);
             }
             Close(fh);
@@ -416,7 +420,7 @@ __saveds BPTR DevExpunge( ASMR(a6) DEVBASEP                        ASMREG(a6) )
 	return seglist;
 }
 
-struct Device *TimerBase;
+struct Library *TimerBase;
 static void set_last_start()
 {
   struct { void *db_SysBase; } *db = (void*)0x4;
@@ -426,7 +430,7 @@ static void set_last_start()
 
   if (OpenDevice(TIMERNAME, UNIT_MICROHZ, &req, 0) == 0)
   {
-    TimerBase = req.io_Device;
+    TimerBase = (struct Library *)req.io_Device;
     GetSysTime(&global_stats.LastStart);
     CloseDevice(&req);
   }
