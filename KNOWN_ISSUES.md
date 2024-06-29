@@ -14,10 +14,17 @@ There is a bug in hunk relocation code that makes that one hdf grows upto fill t
  1) Copying data between partitions of different hdf files, will result in an unformatted partition and all data will be lost (on the written partition).
 <br> Copying data between partitions on the same hdf file, doesn't seem to be affected by this issue.
 <br>
-<br> 2) The only working filesystem is FFS (DOSx identifiers). Others are not working due a bug in hunk relocation code.
-
+ 2) The only working filesystem is FFS (DOSx identifiers). Others are not working due a bug in hunk relocation code.
+<br><br>
+ * v1.03 beta 4 FPGA/ARM versions<br>
+ The issues in v1.02 has been fixed. You can copy between partitions and use any filesystems.
+ But still please use with caution, make always a backup of your files... WIP...
+ 
 ##DMA and Zorro III bus bastmer
  * v1.02 CPLD and FPGA/ARM versions<br>
 The CPLD firmware doesn't implement DMA accesses, so you can't use busmaster Zorro III boards (like the A4091).
 Also A4000T and A3000(T) will not work with any SCSI attached unit.
 <br>A4000T can boot, but not use the internal SCSI, if you use the A4000D kickstart.
+<br><br>
+ * v1.03 beta 2 CPLD and FPGA/ARM versions<br>
+The CPLD firmware implement DMA accesses, but EMU has not been implemented yet. So you can use DMA boards only with a 060 CPU.
