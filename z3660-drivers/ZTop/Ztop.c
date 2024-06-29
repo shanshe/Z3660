@@ -1301,7 +1301,6 @@ int main(void)
 	struct Screen *new_screen;
 #endif
 	Object *objects[OID_LAST];
-printf("prubea\n");
 	if (!(ExpansionBase = (struct Library*)OpenLibrary((CONST_STRPTR)"expansion.library",0L))) {
 		errorMessage("Requires expansion.library");
 		return 0;
