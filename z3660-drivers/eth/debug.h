@@ -18,6 +18,7 @@ extern void KPrintF(char *, ...), KGetChar(void);
 #else  /* DEBUG */
 
 #define D(x)
+#define KPrintF(...)
 
 #endif /* DEBUG */
 

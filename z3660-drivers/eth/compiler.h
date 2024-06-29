@@ -22,13 +22,13 @@
 #ifdef __SASC
 
 #define ASM __asm
-#define ASMR(x) register __ ## x 
-#define ASMREG(x) 
+#define ASMR(x) register __ ## x
+#define ASMREG(x)
 #define SAVEDS __saveds
-#define STRUCTOFFSET OFFSET /* exec/initializers.h */
+#define STRUCTOFFSET OFFSET	/* exec/initializers.h */
 #define INLINE __inline static
 
-#else /* __SASC */
+#else				/* __SASC */
 
 #ifdef __GNUC__
 
@@ -37,10 +37,10 @@
 #define ASMREG(x) __asm("" #x "")
 //#define SAVEDS __saveds
 #define SAVEDS
-#define STRUCTOFFSET OFFSET /* exec/initializers.h */
-#define INLINE static inline 
+#define STRUCTOFFSET OFFSET	/* exec/initializers.h */
+#define INLINE static inline
 
-#else /* __GNUC__ */
+#else				/* __GNUC__ */
 
 #ifdef __VBCC__
 
@@ -48,18 +48,17 @@
 #define ASMR(x) __reg("" #x "")
 #define ASMREG(x)
 #define SAVEDS __saveds
-#define STRUCTOFFSET(_a_,_b_) offsetof(struct _a_, _b_) /* stddef.h */
+#define STRUCTOFFSET(_a_,_b_) offsetof(struct _a_, _b_)	/* stddef.h */
 #include <stddef.h>
 /* sorry, I ran into some issues inlining stuff with VBCC, disabling it */
-#define INLINE 
+#define INLINE
 
-#else /* __VBCC__ */
+#else				/* __VBCC__ */
 
 #error "Compiler not supported yet in compiler.h"
 
-#endif /* __VBCC__ */
-#endif /* __GNUC__ */
-#endif /* __SASC */
+#endif				/* __VBCC__ */
+#endif				/* __GNUC__ */
+#endif				/* __SASC */
 
-
-#endif /* _INC_ASMINTERFACE_H */
+#endif				/* _INC_ASMINTERFACE_H */

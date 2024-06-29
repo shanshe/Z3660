@@ -21,11 +21,6 @@
 #include "compiler.h"
 #include "device.h"
 
-/* Enable this if you want pure C for the device. (disable compilation of romtag.asm in that case)
-   I personally prefer the small ASM blob to steer away from linking challenges.
-*/
-#if  1
-
 ASM LONG LibNull( void )
 {
 	return 0;
@@ -47,7 +42,3 @@ static const struct Resident _00RomTag = {
 	(char*)DeviceVersionString+6,
 	(APTR)DeviceInitTab
 };
-#endif
-
-
-
