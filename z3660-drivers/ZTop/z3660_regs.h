@@ -149,6 +149,7 @@ enum zz_reg_offsets {
    REG_ZZ_APPLY_ALL      = 0x26C,
 
    REG_ZZ_SOFT3D_OP      = 0x270,
+   REG_ZZ_TEST_ENABLE    = 0x274,
 
    REG_ZZ_FW_BETA        = 0x280,
 
@@ -274,16 +275,7 @@ enum gfxdata_u8_types {
 
 #pragma pack(4)
 struct GFXData {
-    uint32_t offset[2];
-    uint32_t rgb[2];
-    uint16_t x[4], y[4];
-    uint16_t user[4];
-    uint16_t pitch[4];
-    uint8_t u8_user[8];
-    uint8_t op, mask, minterm, u8offset;
-    uint32_t u32_user[8];
-    uint8_t clut1[768];
-    uint8_t clut2[768];
-    uint8_t clut3[768];
-    uint8_t clut4[768];
+    volatile uint32_t offset[2];
+    volatile uint32_t rgb[2];
+    volatile uint16_t x[4], y[4];
 };

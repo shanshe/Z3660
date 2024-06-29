@@ -1,0 +1,5 @@
+OPTIMIZE
+LINK
+INCLUDEDIR=ndk32:Include_H
+LIBRARY=ndk39:Include/linker_libs/reaction.lib
+LIBRARY=sc:lib/scm.lib

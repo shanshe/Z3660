@@ -9,7 +9,7 @@ quit
  **
  **  Best viewed with TabSize = 2, or = 4.
  **/
-#define UAETEST
+//#define UAETEST
 //#define CPU_FREQ_STEP 5
 //#define CPU_FREQ_THRESHOLD 3
 #define CPU_FREQ_STEP 50
@@ -22,6 +22,7 @@ quit
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <libraries/gadtools.h>
+#include <pragmas/gadtools_pragmas.h>
 #include <intuition/intuition.h>
 #include <intuition/gadgetclass.h>
 #include <graphics/gfxbase.h>
@@ -87,11 +88,6 @@ quit
 #include <string.h>
 
 #define SPACE LAYOUT_AddChild, SpaceObject, End
-#define LABEL_CENTERED(A) LAYOUT_AddChild, VLayoutObject,\
-                             LAYOUT_AddChild, SpaceObject, SPACE_MinHeight,2,End,\
-                             LAYOUT_AddImage, LabelObject, LABEL_Text,A,LABEL_VerticalSpacing,2, LabelEnd,\
-                             LAYOUT_AddChild, SpaceObject, SPACE_MinHeight,0,End,\
-                          LayoutEnd
 
 #define ListViewObject NewObject(LISTVIEW_GetClass(), NULL
 
@@ -103,7 +99,8 @@ IMPORT struct Library *ButtonBase,
                       *LayoutBase,
                       *ListBrowserBase,
                       *StringBase,
-                      *WindowBase;
+                      *WindowBase,
+                      *GadToolsBase;
 
 struct Library *ListViewBase;
 struct Library* ExpansionBase;
@@ -111,11 +108,14 @@ struct Library* ExpansionBase;
 struct List dlist;
 struct List *kickstarts_list;
 struct List *ext_kickstarts_list;
+struct List *scsis_list;
+int scsi[7]={0,0,0,0,0,0,0};
 
 struct ConfigDev* zz_cd;
 volatile UBYTE* zz_regs;
 
 char txt_buf[64];
+char window_title[64]="";
 
 #define INFO_STR_WIDTH 50
 
@@ -127,17 +127,6 @@ enum
 
 	GID_ALIGN1,
 	GID_ALIGN2,
-
-	GID_ALIGNED_LEFT0,
-	GID_ALIGNED_LEFT1,
-	GID_ALIGNED_LEFT2,
-	GID_ALIGNED_LEFT3,
-	GID_ALIGNED_LEFT4,
-	GID_ALIGNED_LEFT5,
-	GID_ALIGNED_LEFT6,
-	GID_ALIGNED_LEFT7,
-	GID_ALIGNED_LEFT8,
-	GID_ALIGNED_LEFT9,
 
 	GID_PAGELAY1,
 	GID_PAGELAY2,
@@ -160,14 +149,23 @@ enum
 	GID_BOOT_CPU_FREQ,
 	GID_BOOT_LIST_BOOTMODE,
 	GID_BOOT_SCSIBOOT,
+	GID_BOOT_ENABLETEST,
 	GID_BOOT_AUTOCONFIG_RAM,
 	GID_BOOT_LIST_KICKSTART,
 	GID_BOOT_LIST_EXT_KICKSTART,
 	GID_BOOT_BTN_APPLY_BOOTMODE,
+	GID_BOOT_BTN_APPLY_ALL,
 
-	GID_SCSI_LABEL,
+	GID_SCSI0,
+	GID_SCSI1,
+	GID_SCSI2,
+	GID_SCSI3,
+	GID_SCSI4,
+	GID_SCSI5,
+	GID_SCSI6,
+	GID_SCSI_BTN_APPLY_SCSI,
+	GID_SCSI_BTN_APPLY_ALL,
 
-	GID_QUIT,
 	GID_LAST
 };
 struct Gadget *gadgets[GID_LAST];
@@ -194,12 +192,12 @@ enum {
 };
 char bootmode_names[NUM_BOOTMODES][25]={
 //	"XXXXXXXXXXXXXXXXXXX",
-	"   060 real CPU    ",
-	"  030 MUSASHI emu  ",
-	"    040 UAE emu    ",
-	"  040 UAE JIT emu  ",
+	"060 real CPU   ",
+	"030 MUSASHI emu",
+	"040 UAE emu    ",
+	"040 UAE JIT emu",
 };
-struct ListLabelNode dnode[NUM_BOOTMODES];
+
 #define KS_CHARS "012345678901234567890123456789"
 char *kickstarts[] = {
 	"0" KS_CHARS "\0" KS_CHARS KS_CHARS,
@@ -225,6 +223,31 @@ char *ext_kickstarts[] = {
 	"07" KS_CHARS "\0" KS_CHARS KS_CHARS,
 	"08" KS_CHARS "\0" KS_CHARS KS_CHARS,
 	"09" KS_CHARS "\0" KS_CHARS KS_CHARS,
+	NULL
+};
+#define SCSI_CHARS "012345678901234567890123456789"
+char *scsis[] = {
+	"Disabled" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 0" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 1" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 2" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 3" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 4" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 5" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 6" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 7" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 8" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	" 9" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"10" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"11" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"12" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"13" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"14" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"15" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"16" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"17" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"18" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	"19" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
 	NULL
 };
 /* Try opening the class library from a number of common places */
@@ -308,6 +331,11 @@ uint32_t zz_get_scsiboot_enable(void)
 	return zz_get_reg(REG_ZZ_SCSIBOOT_EN);
 }
 
+uint32_t zz_get_test_enable(void)
+{
+	return zz_get_reg(REG_ZZ_TEST_ENABLE);
+}
+
 uint32_t zz_get_autoconfig_ram_enable(void)
 {
 	return zz_get_reg(REG_ZZ_AUTOC_RAM_EN);
@@ -334,11 +362,27 @@ uint32_t zz_get_selected_bootmode(void)
 }
 uint32_t zz_get_selected_kickstart(void)
 {
+#ifndef UAETEST
 	return zz_get_reg(REG_ZZ_KS_SEL);
+#else
+	return(1);
+#endif
 }
 uint32_t zz_get_selected_ext_kickstart(void)
 {
+#ifndef UAETEST
 	return zz_get_reg(REG_ZZ_EXT_KS_SEL);
+#else
+	return(2);
+#endif
+}
+uint32_t zz_get_selected_scsi(int scsi)
+{
+#ifndef UAETEST
+	return zz_get_reg(REG_ZZ_SCSI_SEL_0+scsi*4);
+#else
+	return(scsi*2UL);
+#endif
 }
 
 uint32_t zz_get_usb_status(void)
@@ -359,6 +403,11 @@ void zz_set_jit_enabled(uint16_t enable)
 void zz_set_scsiboot_enabled(uint16_t enable)
 {
 	zz_set_reg(REG_ZZ_SCSIBOOT_EN, !!enable);
+}
+
+void zz_set_test_enabled(uint16_t enable)
+{
+	zz_set_reg(REG_ZZ_TEST_ENABLE, !!enable);
 }
 
 void zz_set_autoconfig_ram_enabled(uint16_t enable)
@@ -391,6 +440,10 @@ void zz_set_selected_ext_kickstart(uint16_t ks)
 {
 	zz_set_reg(REG_ZZ_EXT_KS_SEL, ks);
 }
+void zz_set_selected_scsi(uint32_t index,uint16_t scsi)
+{
+	zz_set_reg(REG_ZZ_SCSI_SEL_0+(index<<2), scsi);
+}
 void zz_set_selected_kickstart_txt(uint16_t ks)
 {
 	zz_set_reg(REG_ZZ_KS_SEL_TXT, ks);
@@ -398,6 +451,10 @@ void zz_set_selected_kickstart_txt(uint16_t ks)
 void zz_set_selected_ext_kickstart_txt(uint16_t ks)
 {
 	zz_set_reg(REG_ZZ_EXT_KS_SEL_TXT, ks);
+}
+void zz_set_selected_scsi_txt(uint16_t scsi)
+{
+	zz_set_reg(REG_ZZ_SCSI_SEL_TXT, scsi);
 }
 
 void zz_set_apply_bootmode(void)
@@ -408,6 +465,33 @@ void zz_set_apply_bootmode(void)
 	GetAttrs((Object *)gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, &ext_kickstart, TAG_END);
 	zz_set_selected_ext_kickstart(ext_kickstart);
 	zz_set_reg(REG_ZZ_APPLY_BOOTMODE, 0x55AA);
+}
+void zz_set_apply_scsi(void)
+{
+	int scsi[7];
+	int i;
+	for(i=0;i<7;i++)
+	{
+		GetAttrs((Object *)gadgets[GID_SCSI0+i], CHOOSER_Selected, &scsi[i], TAG_END);
+		zz_set_selected_scsi(i,scsi[i]);
+	}
+	zz_set_reg(REG_ZZ_APPLY_SCSI, 0x55AA);
+}
+void zz_set_apply_all(void)
+{
+	int scsi[7];
+	int i;
+	int kickstart=0,ext_kickstart=0;
+	GetAttrs((Object *)gadgets[GID_BOOT_LIST_KICKSTART], CHOOSER_Selected, &kickstart, TAG_END);
+	zz_set_selected_kickstart(kickstart);
+	GetAttrs((Object *)gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, &ext_kickstart, TAG_END);
+	zz_set_selected_ext_kickstart(ext_kickstart);
+	for(i=0;i<7;i++)
+	{
+		GetAttrs((Object *)gadgets[GID_SCSI0+i], CHOOSER_Selected, &scsi[i], TAG_END);
+		zz_set_selected_scsi(i,scsi[i]);
+	}
+	zz_set_reg(REG_ZZ_APPLY_ALL, 0x55AA);
 }
 typedef struct {
 	float m;
@@ -435,7 +519,8 @@ void init_measures(void)
 
 }
 unsigned int num_kickstarts=0,num_ext_kickstarts=0;
-void refresh_zz_info(void)
+unsigned int num_scsis=0;
+void refresh_zz_info(struct Window *win)
 {
 	int i;
 	int emulation_used;
@@ -443,14 +528,26 @@ void refresh_zz_info(void)
 	int cpu_freq;
 	int bootmode;
 	int scsiboot;
+	int test_enable;
 	int autoconfig_ram;
 	int kickstart;
 	int ext_kickstart;
+	uint32_t beta;
 	
 	uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
 
 	int fwrev_major = fwrev>>8;
 	int fwrev_minor = fwrev&0xff;
+#ifdef UAETEST
+	SetWindowTitles(win,"Z3660 ZTop 1.03 UAETEST",(CONST_STRPTR)-1);
+#else
+	beta = zz_get_reg(REG_ZZ_FW_BETA);
+	if(beta)
+	{
+		sprintf(window_title, "Z3660 ZTop 1.03 (BETA %d FIRMWARE DETECTED)", beta);
+		SetWindowTitles(win,window_title,(CONST_STRPTR)-1);
+	}
+#endif
 	t.m = zz_get_temperature();
 	vaux.m = zz_get_voltage_aux();
 	vint.m = zz_get_voltage_int();
@@ -463,9 +560,14 @@ void refresh_zz_info(void)
 	cpu_freq=zz_get_cpu_freq();
 	bootmode=zz_get_selected_bootmode();
 	scsiboot=zz_get_scsiboot_enable();
+	test_enable=zz_get_test_enable();
 	autoconfig_ram=zz_get_autoconfig_ram_enable();
 	kickstart=zz_get_selected_kickstart();
+	ext_kickstart=zz_get_selected_ext_kickstart();
+	for(i=0;i<7;i++)
+		scsi[i]=zz_get_selected_scsi(i)+1;
 
+#ifndef UAETEST
 	for(i=0;i<10;i++)
 	{
 		int j=0;
@@ -508,9 +610,15 @@ void refresh_zz_info(void)
 	kickstarts[10][1]='\0';
 	kickstarts[10][2]='\0';
 	kickstarts[10][3]='\0';
+#else
+	num_kickstarts=8;
+	kickstarts[8][0]='\0';
+	kickstarts[8][1]='\0';
+	kickstarts[8][2]='\0';
+	kickstarts[8][3]='\0';
+#endif
 
-	ext_kickstart=zz_get_selected_ext_kickstart();
-
+#ifndef UAETEST
 	for(i=0;i<10;i++)
 	{
 		int j=0;
@@ -553,7 +661,75 @@ void refresh_zz_info(void)
 	ext_kickstarts[10][1]='\0';
 	ext_kickstarts[10][2]='\0';
 	ext_kickstarts[10][3]='\0';
-
+#else
+	num_ext_kickstarts=5;
+	ext_kickstarts[5][0]='\0';
+	ext_kickstarts[5][1]='\0';
+	ext_kickstarts[5][2]='\0';
+	ext_kickstarts[5][3]='\0';
+#endif
+	scsis[0][0]='D';
+	scsis[0][1]='i';
+	scsis[0][2]='s';
+	scsis[0][3]='a';
+	scsis[0][4]='b';
+	scsis[0][5]='l';
+	scsis[0][6]='e';
+	scsis[0][7]='d';
+	scsis[0][8]='\0';
+	scsis[0][9]='\0';
+	scsis[0][10]='\0';
+	scsis[0][11]='\0';
+#ifndef UAETEST
+	for(i=1;i<21;i++)
+	{
+		int j=0;
+		zz_set_selected_scsi_txt(i-1);
+		while(1)
+		{
+			uint32_t data=*((volatile uint32_t*)(zz_regs+REG_ZZ_SEL_SCSI_TXT+j));
+			char hh=data>>24;
+			char hl=data>>16;
+			char lh=data>>8;
+			char ll=data;
+			scsis[i][j++]=hh;
+			if(hh==0)
+				break;
+			scsis[i][j++]=hl;
+			if(hl==0)
+				break;
+			scsis[i][j++]=lh;
+			if(lh==0)
+				break;
+			scsis[i][j++]=ll;
+			if(ll==0)
+				break;
+		}
+		if(j==1)
+		{
+			num_scsis=i;
+			scsis[i][1]='\0';
+			scsis[i][2]='\0';
+			scsis[i][3]='\0';
+			i++;
+			scsis[i][0]='\0';
+			scsis[i][1]='\0';
+			scsis[i][2]='\0';
+			scsis[i][3]='\0';
+			break;
+		}
+	}
+	scsis[21][0]='\0';
+	scsis[21][1]='\0';
+	scsis[21][2]='\0';
+	scsis[21][3]='\0';
+#else
+	num_scsis=20;
+	scsis[21][0]='\0';
+	scsis[21][1]='\0';
+	scsis[21][2]='\0';
+	scsis[21][3]='\0';
+#endif
 	filter(&t);
 	filter(&vaux);
 	filter(&vint);
@@ -602,6 +778,12 @@ void refresh_zz_info(void)
 		SetAttrs(gadgets[GID_BOOT_SCSIBOOT], CHECKBOX_Checked, FALSE, TAG_END);
 	}
 	
+	if (test_enable) {
+		SetAttrs(gadgets[GID_BOOT_ENABLETEST], CHECKBOX_Checked, TRUE, TAG_END);
+	} else {
+		SetAttrs(gadgets[GID_BOOT_ENABLETEST], CHECKBOX_Checked, FALSE, TAG_END);
+	}
+	
 	if (autoconfig_ram) {
 		SetAttrs(gadgets[GID_BOOT_AUTOCONFIG_RAM], CHECKBOX_Checked, TRUE, TAG_END);
 	} else {
@@ -615,6 +797,22 @@ void refresh_zz_info(void)
 	SetAttrs(gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, ext_kickstart,
 	                                               CHOOSER_MaxLabels, num_ext_kickstarts,
 	                                               TAG_END);
+
+#define SCSI_LABELS(A) SetAttrs(gadgets[GID_SCSI ## A], CHOOSER_Selected, scsi[A],\
+	                             CHOOSER_MaxLabels, num_scsis,\
+	                             TAG_END);
+	SCSI_LABELS(0);
+	SCSI_LABELS(1);
+	SCSI_LABELS(2);
+	SCSI_LABELS(3);
+	SCSI_LABELS(4);
+	SCSI_LABELS(5);
+	SCSI_LABELS(6);
+	if(win!=NULL)
+	{
+		RefreshGadgets(gadgets[GID_MAIN], win, NULL);
+	}
+
 }
 
 ULONG zz_perform_memtest(uint32_t offset)
@@ -622,15 +820,15 @@ ULONG zz_perform_memtest(uint32_t offset)
 	uint32_t errors=0;
 	volatile uint32_t* bufferl = (volatile uint32_t*)((uint32_t)zz_cd->cd_BoardAddr+offset);
 	volatile uint16_t* bufferw = (volatile uint16_t*)bufferl;
-	uint32_t i = 0;
+	uint32_t i;
 	uint32_t rep=1024*256;
 
 	printf("zz_perform_memtest...\n");
 
 	for (i=0; i<rep; i++) {
-		uint32_t v2 = 0;
+		uint32_t v2;
 		uint32_t v = (i%2)?0xaaaa5555:0x33337777;
-		uint16_t v4 = 0;
+		uint16_t v4;
 		uint16_t v3 = (i%2)?0xffff:0x0000;
 
 		if ((i % (32*1024)) == 0) {
@@ -982,12 +1180,12 @@ ULONG zz_perform_memtest_multi(void) {
 
 	return 0;
 }
-VOID handleGadgetEvent(int gad, UWORD code)
+VOID handleGadgetEvent(struct Window *win,int gad, UWORD code)
 {
 	switch (gad)
 	{
 		case GID_INFO_BTN_REFRESH: {
-			refresh_zz_info();
+			refresh_zz_info(win);
 			break;
 		}
 		case GID_INFO_BTN_TEST: {
@@ -998,8 +1196,10 @@ VOID handleGadgetEvent(int gad, UWORD code)
 			if(zz_get_emulation_used())
 				zz_set_jit_enabled(code);
 			else
-				SetAttrs(gadgets[GID_INFO_JIT], CHECKBOX_Checked, FALSE, TAG_END);
-//				refresh_zz_info();
+				SetGadgetAttrs(gadgets[GID_INFO_JIT],windows[WID_MAIN], NULL,
+				                                     CHECKBOX_Checked, FALSE,
+				                                     TAG_END);
+			refresh_zz_info(win);
 			break;
 		}
 		case GID_INFO_LPF: {
@@ -1014,7 +1214,8 @@ VOID handleGadgetEvent(int gad, UWORD code)
 //			SetAttrs(gadgets[GID_INFO_CPU_FREQ], STRINGA_TextVal, txt_buf, TAG_END);
 
 			SetGadgetAttrs(gadgets[GID_BOOT_CPU_FREQ],windows[WID_MAIN], NULL,
-                                                      SLIDER_Level, code, TAG_DONE);
+                                                      SLIDER_Level, code,
+                                                      TAG_DONE);
 			zz_set_cpu_freq(code);
 			break;
 		}
@@ -1040,8 +1241,21 @@ VOID handleGadgetEvent(int gad, UWORD code)
 			zz_set_apply_bootmode();
 			break;
 		}
+		case GID_SCSI_BTN_APPLY_SCSI: {
+			zz_set_apply_scsi();
+			break;
+		}
+		case GID_BOOT_BTN_APPLY_ALL:
+		case GID_SCSI_BTN_APPLY_ALL: {
+			zz_set_apply_all();
+			break;
+		}
 		case GID_BOOT_SCSIBOOT: {
 			zz_set_scsiboot_enabled(code);
+			break;
+		}
+		case GID_BOOT_ENABLETEST: {
+			zz_set_test_enabled(code);
 			break;
 		}
 		case GID_BOOT_AUTOCONFIG_RAM: {
@@ -1050,6 +1264,25 @@ VOID handleGadgetEvent(int gad, UWORD code)
 		}
 	}
 }
+VOID free_listview_list(struct List *list)
+{
+	struct Node *node, *nextnode;
+
+	node = list->lh_Head;
+	while (nextnode = node->ln_Succ)
+	{
+		FreeVec(node);
+		node = nextnode;
+	}
+	NewList(list);
+}
+//#include <exec/types.h>
+#include <intuition/intuition.h>
+#include <intuition/screens.h>
+ 
+#include <proto/exec.h>
+#include <proto/dos.h>
+#include <proto/intuition.h>
 
 int main(void)
 {
@@ -1057,10 +1290,18 @@ int main(void)
 	int bootmode=0;
 	int kickstart=0;
 	int ext_kickstart=0;
+	int font_height,font_width;
 	struct MsgPort *AppPort;
-
+	struct Screen *my_screen;
+	struct DrawInfo *drinfo;
+//#define NEWSCREEN__
+#ifdef NEWSCREEN__
+	uint16_t pens[] = { 0xFFFF };
+	struct IntuitionIFace *IIntuition;
+	struct Screen *new_screen;
+#endif
 	Object *objects[OID_LAST];
-
+printf("prubea\n");
 	if (!(ExpansionBase = (struct Library*)OpenLibrary((CONST_STRPTR)"expansion.library",0L))) {
 		errorMessage("Requires expansion.library");
 		return 0;
@@ -1077,11 +1318,36 @@ int main(void)
 
 	zz_regs = (UBYTE*)zz_cd->cd_BoardAddr;
 	CloseLibrary(ExpansionBase);
+	my_screen = ((struct IntuitionBase *)IntuitionBase)->FirstScreen;
+	drinfo = GetScreenDrawInfo(my_screen);
+
+	font_height=drinfo->dri_Font->tf_YSize;
+	font_width=drinfo->dri_Font->tf_XSize;
+#ifdef NEWSCREEN__
+	new_screen=NULL;
+	
+	if(my_screen->Width<500 || my_screen->Height<=200)
+	{
+		new_screen = OpenScreenTags(NULL,
+			SA_Pens, pens,
+			SA_Depth, 2,
+			SA_Width, 640,
+			SA_Height,480,
+			SA_AutoScroll, TRUE,
+			SA_OffScreenDragging, TRUE,
+			TAG_END);
+		if (new_screen != NULL)
+    	{ 
+			/* screen successfully opened */
+		}
+	}
+ #endif
 
 	NewList(&dlist);
 	
 	kickstarts_list = ChooserLabelsA(kickstarts);
 	ext_kickstarts_list = ChooserLabelsA(ext_kickstarts);
+	scsis_list = ChooserLabelsA(scsis);
 
 	ListViewBase = openclass ("gadgets/listview.gadget", 0L);
 	/* special case - reference buttonbase to make sure it autoinit!
@@ -1094,12 +1360,6 @@ int main(void)
 
 		if (tablabels)
 		{
-			struct List CustomersList, OrdersList, DetailsList;
-
-			NewList(&CustomersList);
-			NewList(&OrdersList);
-			NewList(&DetailsList);
-
 			/* Create the window object.
 			 */
 			objects[OID_MAIN] = WindowObject,
@@ -1110,9 +1370,13 @@ int main(void)
 				WA_DragBar, TRUE,
 				WA_CloseGadget, TRUE,
 				WA_SizeGadget, FALSE,
-				WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_REFRESHWINDOW |
+#ifdef NEWSCREEN__
+				WA_CustomScreen,	new_screen,
+#endif				
+				WA_IDCMP, IDCMP_GADGETUP | IDCMP_CLOSEWINDOW | IDCMP_REFRESHWINDOW |
 				          IDCMP_VANILLAKEY | SLIDERIDCMP | STRINGIDCMP |
 				          BUTTONIDCMP,
+				WA_Flags, WFLG_SIMPLE_REFRESH,
 				WINDOW_IconifyGadget, TRUE,
 				WINDOW_IconTitle, "Z3660 Ztop",
 				WINDOW_AppPort, AppPort,
@@ -1138,151 +1402,118 @@ int main(void)
 								LAYOUT_SpaceOuter, TRUE,
 								LAYOUT_SpaceInner, TRUE,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT0] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_CPU_FREQ] = StringObject,
-										GA_ID, GID_INFO_CPU_FREQ,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"CPU Frequency", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("MHz"),
-									SPACE,
-								LayoutEnd,
+								LAYOUT_AddChild, HLayoutObject,
+									LAYOUT_AddChild, VLayoutObject,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT1] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_FWVER] = StringObject,
-										GA_ID, GID_INFO_FWVER,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"Firmware Version", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("   "),
-									SPACE,
-								LayoutEnd,
+										LAYOUT_AddChild, gadgets[GID_INFO_FWVER] = StringObject,
+											GA_ID, GID_INFO_FWVER,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"Firmware Version", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT2] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_TEMP] = StringObject,
-										GA_ID, GID_INFO_TEMP,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"FPGA Core Temp", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("C  "),
-									SPACE,
-								LayoutEnd,
+										LAYOUT_AddChild, gadgets[GID_INFO_VAUX] = StringObject,
+											GA_ID, GID_INFO_VAUX,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"Aux Voltage (V)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT3] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_VAUX] = StringObject,
-										GA_ID, GID_INFO_VAUX,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"Aux Voltage", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("V  "),
-									SPACE,
-								LayoutEnd,
+										LAYOUT_AddChild, gadgets[GID_INFO_VINT] = StringObject,
+											GA_ID, GID_INFO_VINT,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"Core Voltage (V)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT4] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_VINT] = StringObject,
-										GA_ID, GID_INFO_VINT,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"Core Voltage", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("V  "),
-									SPACE,
-								LayoutEnd,
+										LAYOUT_AddChild, gadgets[GID_INFO_LTC_V1] = StringObject,
+											GA_ID, GID_INFO_LTC_V1,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"LTC (3V3) Vdd (V)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT5] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_LTC_TEMP] = StringObject,
-										GA_ID, GID_INFO_LTC_TEMP,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"LTC Temp", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("C  "),
-									SPACE,
-								LayoutEnd,
+										LAYOUT_AddChild, gadgets[GID_INFO_LTC_V2] = StringObject,
+											GA_ID, GID_INFO_LTC_V2,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"LTC (5V) Vcc (V)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT6] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_LTC_V1] = StringObject,
-										GA_ID, GID_INFO_LTC_V1,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"LTC (3V3) Vdd", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("V  "),
-									SPACE,
-								LayoutEnd,
+									LayoutEnd,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT7] = HLayoutObject,
 									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_LTC_V2] = StringObject,
-										GA_ID, GID_INFO_LTC_V2,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"LTC (5V) Vcc", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("V  "),
-									SPACE,
-								LayoutEnd,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT8] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_LTC_060_TEMP] = StringObject,
-										GA_ID, GID_INFO_LTC_060_TEMP,
-										GA_RelVerify, TRUE,
-										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, "",
-										STRINGA_Justification, GACT_STRINGCENTER,
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"LTC (060 THERM)", LabelEnd,
-									CHILD_MinWidth, INFO_STR_WIDTH,
-									LABEL_CENTERED("C  "),
-									SPACE,
-								LayoutEnd,
+									LAYOUT_AddChild, VLayoutObject,
 
-								LAYOUT_AddChild, gadgets[GID_ALIGNED_LEFT9] = HLayoutObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_INFO_JIT] = CheckBoxObject,
-										GA_ID, GID_INFO_JIT,
-										GA_RelVerify, TRUE,
-										GA_Text, "JIT Enabled",
-										CHECKBOX_TextPlace, PLACETEXT_LEFT,
-									CheckBoxEnd,
-									CHILD_WeightedHeight, 0,
-									SPACE,
+										LAYOUT_AddChild, gadgets[GID_INFO_CPU_FREQ] = StringObject,
+											GA_ID, GID_INFO_CPU_FREQ,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"CPU Frequency (MHz)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
+
+										LAYOUT_AddChild, gadgets[GID_INFO_TEMP] = StringObject,
+											GA_ID, GID_INFO_TEMP,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"FPGA Core Temp (C)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
+
+										LAYOUT_AddChild, gadgets[GID_INFO_LTC_TEMP] = StringObject,
+											GA_ID, GID_INFO_LTC_TEMP,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"LTC Temp (C)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
+
+										LAYOUT_AddChild, gadgets[GID_INFO_LTC_060_TEMP] = StringObject,
+											GA_ID, GID_INFO_LTC_060_TEMP,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 48,
+											STRINGA_TextVal, "",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"LTC (060 THERM) (C)", LabelEnd,
+										CHILD_MinWidth, INFO_STR_WIDTH,
+
+										LAYOUT_AddChild, HLayoutObject,
+											SPACE,
+											LAYOUT_AddChild, gadgets[GID_INFO_JIT] = CheckBoxObject,
+												GA_ID, GID_INFO_JIT,
+												GA_RelVerify, TRUE,
+												GA_Text, "JIT Enabled",
+												CHECKBOX_TextPlace, PLACETEXT_LEFT,
+											CheckBoxEnd,
+											CHILD_WeightedHeight, 0,
+											SPACE,
+										LayoutEnd,
+
+									LayoutEnd,
 								LayoutEnd,
 
 								LAYOUT_AddChild, gadgets[GID_INFO_LPF] = SliderObject,
@@ -1293,8 +1524,7 @@ int main(void)
                     				SLIDER_Level,    23900,
                     				SLIDER_Orientation,  SLIDER_HORIZONTAL,
                     				SLIDER_LevelPlace,   PLACETEXT_ABOVE,
-                    				SLIDER_LevelMaxLen,  10,
-//                    SLIDER_LevelJustify, SLJ_CENTER,
+                    				SLIDER_LevelMaxLen,  8,
                     				SLIDER_LevelFormat,  "%ld Hz",
                     				SLIDER_Ticks,        25,
 				                    SLIDER_ShortTicks,   TRUE,
@@ -1331,95 +1561,104 @@ int main(void)
 								LAYOUT_SpaceOuter, TRUE,
 								LAYOUT_SpaceInner, TRUE,
 
-								LAYOUT_AddChild, gadgets[GID_BOOT_CPU_FREQ] = SliderObject,
-									GA_ID, GID_BOOT_CPU_FREQ,
-									GA_RelVerify, TRUE,
-                    				SLIDER_Min,       50,
-                    				SLIDER_Max,      100,
-                    				SLIDER_Level,    100,
-                    				SLIDER_Orientation,  SLIDER_HORIZONTAL,
-                    				SLIDER_LevelPlace,   PLACETEXT_ABOVE,
-                    				SLIDER_LevelMaxLen,  10,
-									SLIDER_KnobDelta,     CPU_FREQ_STEP,
-//                    SLIDER_LevelJustify, SLJ_CENTER,
-                    				SLIDER_LevelFormat,  "%ld MHz",
-                    				SLIDER_Ticks,        11,
-				                    SLIDER_ShortTicks,   TRUE,
-								SliderEnd,
-				                Label("CPU Frequency"),
-								CHILD_WeightedHeight, 0,
-
-								SPACE,
-
-								LAYOUT_AddChild, VGroupObject,
 									LAYOUT_AddChild,  HGroupObject,
-										SPACE,
-										LAYOUT_AddImage, LabelObject,
-							            	LABEL_Text,  "Boot Mode",
-	            						LabelEnd,  // Label
-										SPACE,
-									LayoutEnd,
-									LAYOUT_AddChild,  HGroupObject,
-										SPACE,
-            							LAYOUT_AddChild, gadgets[GID_BOOT_LIST_BOOTMODE] = ListBrowserObject,
-											GA_ID, GID_BOOT_LIST_BOOTMODE,
-											GA_RelVerify, TRUE,
-											LISTBROWSER_Labels, &dlist,
-											LISTBROWSER_ShowSelected, TRUE,
-											LISTBROWSER_VerticalProp, FALSE,
-											LISTBROWSER_AutoFit,		TRUE,
+										LAYOUT_AddChild, VGroupObject,
+											LAYOUT_AddChild,  HGroupObject,
+												SPACE,
+												LAYOUT_AddImage, LabelObject,
+									            	LABEL_Text,  "Boot Mode Selection",
+	            								LabelEnd,  // Label
+													SPACE,
+											LayoutEnd,
+											LAYOUT_AddChild,  HGroupObject,
+
+											SPACE,
+	            							LAYOUT_AddChild, gadgets[GID_BOOT_LIST_BOOTMODE] = ListBrowserObject,
+												GA_ID, GID_BOOT_LIST_BOOTMODE,
+												GA_RelVerify, TRUE,
+												LISTBROWSER_Labels, &dlist,
+												LISTBROWSER_ShowSelected, TRUE,
+												LISTBROWSER_VerticalProp, FALSE,
+												LISTBROWSER_AutoFit, TRUE,
+											LayoutEnd,
+											CHILD_MinWidth,  (1+font_width)*15,
+											CHILD_MaxWidth,  (1+font_width)*15,
+											CHILD_MinHeight, (1+font_height)*NUM_BOOTMODES,
+											CHILD_MaxHeight, (1+font_height)*NUM_BOOTMODES,
+											SPACE,
+
 										LayoutEnd,
-										CHILD_MinWidth, 20*8,
-										CHILD_MaxWidth, 20*8,
-										CHILD_MinHeight, 9*NUM_BOOTMODES,
-										CHILD_MaxHeight, 9*NUM_BOOTMODES,
-										SPACE,
+									LayoutEnd,
+									CHILD_WeightedHeight, 0,
+
+									LAYOUT_AddChild, VGroupObject,
+
+										LAYOUT_AddChild, gadgets[GID_BOOT_CPU_FREQ] = SliderObject,
+											GA_ID, GID_BOOT_CPU_FREQ,
+											GA_RelVerify, TRUE,
+    		                				SLIDER_Min,       50,
+        		            				SLIDER_Max,      100,
+            		        				SLIDER_Level,    100,
+                		    				SLIDER_Orientation,  SLIDER_HORIZONTAL,
+                    						SLIDER_LevelPlace,   PLACETEXT_ABOVE,
+                    						SLIDER_LevelMaxLen,  7,
+											SLIDER_KnobDelta,     CPU_FREQ_STEP,
+                    						SLIDER_LevelFormat,  "%ld MHz",
+                    						SLIDER_Ticks,        11,
+						                    SLIDER_ShortTicks,   TRUE,
+										SliderEnd,
+						                Label("CPU Frequency"),
+										CHILD_WeightedHeight, 0,
+
+										LAYOUT_AddChild, gadgets[GID_ALIGN1] = HGroupObject,
+											SPACE,
+											LAYOUT_AddChild, gadgets[GID_BOOT_SCSIBOOT] = CheckBoxObject,
+												GA_ID, GID_BOOT_SCSIBOOT,
+												GA_RelVerify, TRUE,
+												GA_TabCycle, TRUE,
+												STRINGA_MaxChars, 24,
+												GA_Text, "SCSI BOOT enabled",
+												CHECKBOX_TextPlace, PLACETEXT_LEFT,
+											CheckBoxEnd,
+											CHILD_WeightedWidth, 0,
+											SPACE,
+										LayoutEnd,
+										CHILD_WeightedHeight, 0,
+
+										LAYOUT_AddChild, gadgets[GID_ALIGN2] = HGroupObject,
+											SPACE,
+											LAYOUT_AddChild, gadgets[GID_BOOT_AUTOCONFIG_RAM] = CheckBoxObject,
+												GA_ID, GID_BOOT_AUTOCONFIG_RAM,
+												GA_RelVerify, TRUE,
+												GA_TabCycle, TRUE,
+												STRINGA_MaxChars, 24,
+												GA_Text, "AUTOC RAM enabled",
+												CHECKBOX_TextPlace, PLACETEXT_LEFT,
+											CheckBoxEnd,
+											CHILD_WeightedWidth, 0,
+											SPACE,
+										LayoutEnd,
+										CHILD_WeightedHeight, 0,
+
+										LAYOUT_AddChild, gadgets[GID_ALIGN2] = HGroupObject,
+											SPACE,
+											LAYOUT_AddChild, gadgets[GID_BOOT_ENABLETEST] = CheckBoxObject,
+												GA_ID, GID_BOOT_ENABLETEST,
+												GA_RelVerify, TRUE,
+												GA_TabCycle, TRUE,
+												STRINGA_MaxChars, 24,
+												GA_Text, "     TEST enabled",
+												CHECKBOX_TextPlace, PLACETEXT_LEFT,
+											CheckBoxEnd,
+											CHILD_WeightedWidth, 0,
+											SPACE,
+										LayoutEnd,
+										CHILD_WeightedHeight, 0,
+
 									LayoutEnd,
 								LayoutEnd,
-								CHILD_WeightedHeight, 0,
-
-								LAYOUT_AddChild, gadgets[GID_ALIGN1] = HGroupObject,
-									SPACE,
-									LAYOUT_AddChild, gadgets[GID_BOOT_SCSIBOOT] = CheckBoxObject,
-										GA_ID, GID_BOOT_SCSIBOOT,
-										GA_RelVerify, TRUE,
-										GA_TabCycle, TRUE,
-										STRINGA_MaxChars, 24,
-										GA_Text, "SCSI BOOT enabled",
-										CHECKBOX_TextPlace, PLACETEXT_LEFT,
-									CheckBoxEnd,
-									CHILD_WeightedWidth, 0,
-									SPACE,
-								LayoutEnd,
-								CHILD_WeightedHeight, 0,
-
-								LAYOUT_AddChild, gadgets[GID_ALIGN2] = HGroupObject,
-									SPACE,
-//									LAYOUT_BevelStyle, BVS_SBAR_VERT,
-//									LAYOUT_TopSpacing, 2,
-
-									LAYOUT_AddChild, gadgets[GID_BOOT_AUTOCONFIG_RAM] = CheckBoxObject,
-										GA_ID, GID_BOOT_AUTOCONFIG_RAM,
-										GA_RelVerify, TRUE,
-										GA_TabCycle, TRUE,
-										STRINGA_MaxChars, 48,
-										GA_Text, "AUTOC RAM enabled",
-										CHECKBOX_TextPlace, PLACETEXT_LEFT,
-									CheckBoxEnd,
-									CHILD_WeightedWidth, 0,
-									SPACE,
-								LayoutEnd,
-								CHILD_WeightedHeight, 0,
 
 								SPACE,
-								LAYOUT_AddChild, HGroupObject,
-									SPACE,
-									LAYOUT_AddImage, LabelObject,
-									LABEL_Text,"Kickstart",
-									LabelEnd,
-									SPACE,
-								LayoutEnd,
-								CHILD_WeightedHeight, 0,
 
 								LAYOUT_AddChild, HGroupObject,
 									LAYOUT_SpaceInner, TRUE,
@@ -1432,16 +1671,8 @@ int main(void)
 										CHOOSER_DropDown, FALSE,
 										CHOOSER_AutoFit, FALSE,
 									ChooserEnd,
-								LayoutEnd,
-								CHILD_WeightedHeight, 0,
-								
-								SPACE,
-								LAYOUT_AddChild, HGroupObject,
-									SPACE,
-									LAYOUT_AddImage, LabelObject,
-									LABEL_Text,"Ext Kickstart",
-									LabelEnd,
-									SPACE,
+									CHILD_NominalSize, TRUE,
+									CHILD_Label, LabelObject, LABEL_Text, "Kickstart ", LabelEnd,
 								LayoutEnd,
 								CHILD_WeightedHeight, 0,
 
@@ -1456,6 +1687,8 @@ int main(void)
 										CHOOSER_DropDown, FALSE,
 										CHOOSER_AutoFit, FALSE,
 									ChooserEnd,
+									CHILD_NominalSize, TRUE,
+									CHILD_Label, LabelObject, LABEL_Text, "Ext Kicks.", LabelEnd,
 								LayoutEnd,
 								CHILD_WeightedHeight, 0,
 								
@@ -1472,6 +1705,16 @@ int main(void)
 									ButtonEnd,
 									CHILD_WeightedWidth, 0,
 									SPACE,
+									LAYOUT_AddChild, gadgets[GID_BOOT_BTN_APPLY_ALL] = ButtonObject,
+										GA_ID, GID_BOOT_BTN_APPLY_ALL,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Apply ALL",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
 								LayoutEnd,
 								CHILD_WeightedHeight, 0,
 
@@ -1482,35 +1725,59 @@ int main(void)
 								LAYOUT_SpaceOuter, TRUE,
 								LAYOUT_SpaceInner, TRUE,
 
-								LAYOUT_AddChild, HLayoutObject,
-									LAYOUT_AddChild, gadgets[GID_SCSI_LABEL] = StringObject,
-										GA_ID, GID_SCSI_LABEL,
+#define SCSI_CHOOSER(A,B)		LAYOUT_AddChild, HGroupObject,\
+									LAYOUT_SpaceInner, TRUE,\
+									LAYOUT_AddChild, gadgets[GID_SCSI ## A] = ChooserObject,\
+										GA_ID, GID_SCSI0,\
+										GA_RelVerify, TRUE,\
+										CHOOSER_Labels, scsis_list,\
+										CHOOSER_Active, scsi[A],\
+										/*CHOOSER_Selected, scsis[A],*/\
+										CHOOSER_PopUp, TRUE,\
+										CHOOSER_DropDown, FALSE,\
+										CHOOSER_AutoFit, FALSE,\
+									ChooserEnd,\
+									CHILD_NominalSize, TRUE,\
+									CHILD_Label, LabelObject, LABEL_Text, B, LabelEnd,\
+								LayoutEnd,\
+								CHILD_WeightedHeight, 0
+
+								SCSI_CHOOSER(0,"SCSI0"),
+								SCSI_CHOOSER(1,"SCSI1"),
+								SCSI_CHOOSER(2,"SCSI2"),
+								SCSI_CHOOSER(3,"SCSI3"),
+								SCSI_CHOOSER(4,"SCSI4"),
+								SCSI_CHOOSER(5,"SCSI5"),
+								SCSI_CHOOSER(6,"SCSI6"),
+
+								SPACE,
+								LAYOUT_AddChild, HGroupObject,
+									SPACE,
+									LAYOUT_AddChild, gadgets[GID_SCSI_BTN_APPLY_SCSI] = ButtonObject,
+										GA_ID, GID_SCSI_BTN_APPLY_SCSI,
 										GA_RelVerify, TRUE,
 										STRINGA_MaxChars, 48,
-										STRINGA_TextVal, " Under Construction... ",
-									StringEnd,
-									CHILD_Label, LabelObject, LABEL_Text,"SCSI", LabelEnd,
-									CHILD_MinWidth, 200,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Apply SCSI",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
+									LAYOUT_AddChild, gadgets[GID_SCSI_BTN_APPLY_ALL] = ButtonObject,
+										GA_ID, GID_SCSI_BTN_APPLY_ALL,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Apply ALL",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
 									SPACE,
 								LayoutEnd,
+								CHILD_WeightedHeight, 0,
 							PageEnd,
 
-
 						ClickTabEnd,
-					LayoutEnd,
-
-					SPACE,
-					LAYOUT_AddChild, HGroupObject,
-
-						SPACE,
-						LAYOUT_AddChild, ButtonObject,
-							GA_ID, GID_QUIT,
-							GA_RelVerify, TRUE,
-							GA_Text,"_Quit",
-						ButtonEnd,
-						CHILD_WeightedHeight, 0,
-						CHILD_WeightedWidth, 0,
-						SPACE,
 					LayoutEnd,
 
 				EndGroup,
@@ -1525,17 +1792,6 @@ int main(void)
 				SetAttrs( gadgets[GID_ALIGN1], LAYOUT_AlignLabels, gadgets[GID_ALIGN2], TAG_DONE);
 				SetAttrs( gadgets[GID_ALIGN2], LAYOUT_AlignLabels, gadgets[GID_ALIGN1], TAG_DONE);
 
-				SetAttrs( gadgets[GID_ALIGNED_LEFT0], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT1], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT1], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT2], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT2], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT3], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT3], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT4], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT4], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT5], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT5], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT6], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT6], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT7], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT7], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT8], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT8], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT9], TAG_DONE);
-				SetAttrs( gadgets[GID_ALIGNED_LEFT9], LAYOUT_AlignLabels, gadgets[GID_ALIGNED_LEFT0], TAG_DONE);
-
 				for(i=0;i<NUM_BOOTMODES;i++)
 				{
 					LBAddNode(gadgets[GID_BOOT_LIST_BOOTMODE], NULL, NULL, (struct Node *)~0,
@@ -1548,8 +1804,7 @@ int main(void)
 				SetAttrs(gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, ext_kickstart, TAG_END);
 
 				init_measures();
-				refresh_zz_info();
-//				RefreshWindow(mywin, NULL);
+//refresh_zz_info(windows[WID_MAIN]);
 
 				/*  Open the window.
 				 */
@@ -1560,6 +1815,7 @@ int main(void)
 					ULONG result;
 					UWORD code;
 
+refresh_zz_info(windows[WID_MAIN]);
 				 	/* Obtain the window wait signal mask.
 					 */
 					GetAttr(WINDOW_SigMask, objects[OID_MAIN], &signal);
@@ -1589,20 +1845,9 @@ int main(void)
 										done = TRUE;
 										break;
 
-									case WMHI_MOUSEMOVE:
+//									case WMHI_MOUSEMOVE:
 									case WMHI_GADGETUP:
-										switch (result & WMHI_GADGETMASK)
-										{
-/*											case GID_COMPANY:
-											//	printf( "Company: %s\n", ((struct StringInfo *)(gadgets[GID_COMPANY]->SpecialInfo))->Buffer);
-												break;
-*/
-											case GID_QUIT:
-												done = TRUE;
-												break;
-											default:
-												handleGadgetEvent(result & WMHI_GADGETMASK, code);
-										}
+										handleGadgetEvent(windows[WID_MAIN],result & WMHI_GADGETMASK, code);
 										break;
 
 									case WMHI_ICONIFY:
@@ -1645,8 +1890,11 @@ int main(void)
 		 */
 		DeleteMsgPort(AppPort);
 	}
-//			free_listview_list(dlist);
+	free_listview_list(&dlist);
 	CloseLibrary ((struct Library *) ListViewBase);
-
+#ifdef NEWSCREEN__
+	if(new_screen!=NULL)
+		CloseScreen(new_screen);
+#endif
 	return(0);
 }
