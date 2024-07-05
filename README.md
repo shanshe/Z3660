@@ -26,7 +26,7 @@ In this version you can see that I have used a 3V3 DCDC converter, instead of ol
 <br>
 <br>Note on RTG status: RTG is full working now. It has all features that ZZ9000 has (except obviously scandoubler). Due limitations of Z-turn, output video is limited to 16 bit.
 <br>Manufacturer ID was asigned to 5195 decimal, 0x144B hexadecimal (thanks to Olaf Barthel).
-<br>All RTG, AHI and MHI are based on ZZ9000 RTG (https://source.mnt.re/explore).
+<br>All RTG, AHI and MHI are based on [ZZ9000 RTG](https://source.mnt.re/explore).
 It has the same band-pass filters as the AX module, but made in software by one of the ARMs.
 <br>
 <br><b>And finally, a checkmate move...</b>
@@ -42,3 +42,4 @@ It has the same band-pass filters as the AX module, but made in software by one 
 <br>
 <br><b>Documents to read before using your Z3660</b><br>
 <br> You should read the "KNOWN_ISSUES.md" and "CHANGES.md" files to know the latest news.
+<br> Thanks to ByteMavericks we have now the [wiki](https://github.com/shanshe/Z3660/wiki)
