@@ -1,4 +1,4 @@
-51144570254281
+61554920366406
 Z3660_v02
 CP_Elec_6.3x3.9
 SMD capacitor, aluminum electrolytic, Nichicon, 6.3x3.9mm
@@ -45,6 +45,13 @@ Z3660_v02
 LED_1206_3216Metric_Pad1.42x1.75mm_HandSolder
 LED SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator
 LED handsolder
+0
+2
+2
+Z3660_v02
+L_Bourns_SRP7028A_7.3x6.6mm
+Shielded Power Inductors (https://www.bourns.com/docs/product-datasheets/srp7028a.pdf)
+Shielded Inductors Bourns SMD SRP7028A
 0
 2
 2
@@ -119,6 +126,13 @@ Through hole pin header THT 2x40 1.27mm double row
 80
 80
 Z3660_v02
+PinHeader_2x40_P1.27mm_Vertical_CN3
+Through hole straight pin header, 2x40, 1.27mm pitch, double rows
+Through hole pin header THT 2x40 1.27mm double row
+0
+80
+80
+Z3660_v02
 R_0805_2012Metric_Pad1.20x1.40mm_HandSolder
 Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator
 resistor handsolder
@@ -140,6 +154,13 @@ TO-220-3 Vertical RM 2.54mm
 4
 4
 Z3660_v02
+SOIC-8-1EP_3.9x4.9mm_P1.27mm_EP2.514x3.2mm
+SOIC, 8 Pin (https://www.renesas.com/eu/en/www/doc/datasheet/hip2100.pdf#page=13), generated with kicad-footprint-generator ipc_gullwing_generator.py
+SOIC SO
+0
+9
+9
+Z3660_v02
 SOIC-14_3.9x8.7mm_P1.27mm
 SOIC, 14 Pin (JEDEC MS-012AB, https://www.analog.com/media/en/package-pcb-resources/package/pkg_pdf/soic_narrow-r/r_14.pdf), generated with kicad-footprint-generator ipc_gullwing_generator.py
 SOIC SO
@@ -160,6 +181,20 @@ SOT-89-3 Handsoldering
 0
 3
 3
+Z3660_v02
+SSOP-20_4.4x6.5mm_P0.65mm
+SSOP20: plastic shrink small outline package; 20 leads; body width 4.4 mm; (see NXP SSOP-TSSOP-VSO-REFLOW.pdf and sot266-1_po.pdf)
+SSOP 0.65
+0
+20
+20
+Z3660_v02
+SolderJumper-1_4_P1.3mm_Open_RoundedPad1.0x1.5mm
+SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open
+solder jumper open
+0
+5
+5
 Z3660_v02
 SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm
 SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open
@@ -202,6 +237,13 @@ test point THT pad rectangle square
 0
 1
 1
+Z3660_v02
+small_SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm
+SMD Solder Jumper, 1x1.5mm, rounded Pads, 0.3mm gap, open
+solder jumper open
+0
+2
+2
 Z3660_v02
 xIP-200
 

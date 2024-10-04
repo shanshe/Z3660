@@ -1,0 +1,6 @@
+Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
+C1,100nF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,152.6,-46.9,180.0,top
+J3,Conn_02x07_Odd_Even,PinSocket_2x07_P2.54mm_Vertical,141.08,-44.81,270.0,bottom
+R1,5K1,R_0805_2012Metric_Pad1.20x1.40mm_HandSolder,142.45,-50.25,-90.0,top
+R2,5K1,R_0805_2012Metric_Pad1.20x1.40mm_HandSolder,136.65,-50.25,-90.0,top
+U1,PCF8574TS,SSOP-20_4.4x6.5mm_P0.65mm,150.7,-51.75,-90.0,top

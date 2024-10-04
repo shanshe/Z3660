@@ -26,3 +26,8 @@ v0.21a
  
  v.021d
  * Changed the footprints for two fans to 3 pin and right angle.
+ * Z3660_CPLD_prog is a tiny PCB to make v.021x versions to have the CPLD programmer.
+ 
+ v.022
+ * Added an I2C gpio expander (PCF8574) to program the CPLD from the ARM.
+ 
