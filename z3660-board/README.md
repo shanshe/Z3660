@@ -30,4 +30,4 @@ v0.21a
  
  v.022
  * Added an I2C gpio expander (PCF8574) to program the CPLD from the ARM.
- 
+ * Added optional onboard voltage regulator based on torsti76's µVRM v0.1 design.

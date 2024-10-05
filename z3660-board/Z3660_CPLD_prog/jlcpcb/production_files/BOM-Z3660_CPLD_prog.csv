@@ -1,6 +1,6 @@
 Comment,Designator,Footprint,LCSC
+5K1,"R1,R2",R_0805_2012Metric_Pad1.20x1.40mm_HandSolder,C27834
 100nF,C1,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,C49678
 PCF8574TS,U1,SSOP-20_4.4x6.5mm_P0.65mm,C57790
 Conn_02x07_Odd_Even,J3,PinSocket_2x07_P2.54mm_Vertical,C718229
-5K1,"R1,R2",R_0805_2012Metric_Pad1.20x1.40mm_HandSolder,C84375
 22-14-2044,J1,22142044,
