@@ -1,0 +1,4 @@
+FROM LIB:c.o "ZTop.o"
+TO "ZTop"
+LIB ndk39:Include/linker_libs/reaction.lib sc:lib/scm.lib LIB:sc.lib LIB:amiga.lib
+

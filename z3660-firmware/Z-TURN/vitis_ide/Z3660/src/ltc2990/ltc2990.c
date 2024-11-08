@@ -23,9 +23,9 @@ extern XIicPs IicInstance;      /* The instance of the IIC device. */
 
 #define IIC_DEVICE_ID   XPAR_XIICPS_0_DEVICE_ID
 
-volatile uint8_t WriteBuffer_ltc2990[2];
+uint8_t WriteBuffer_ltc2990[2];
 
-volatile uint8_t ReadBuffer_ltc2990[2];   /* Read buffer for reading a page. */
+uint8_t ReadBuffer_ltc2990[2];   /* Read buffer for reading a page. */
 
 void DEBUG_I2C(const char *format, ...)
 {
@@ -40,7 +40,7 @@ void DEBUG_I2C(const char *format, ...)
 int i2c_ltc2990=0;
 int iic_write_ltc2990(uint8_t command,uint8_t data)
 {
-   static int state=0;
+   static int i2c_w_state=0;
    int Status;
    if(i2c_ltc2990==100 || debug_console.stop_i2c)
    {
@@ -52,7 +52,7 @@ int iic_write_ltc2990(uint8_t command,uint8_t data)
       i2c_ltc2990++;
       return(1);
    }
-   switch(state)
+   switch(i2c_w_state)
    {
    case 0:
       WriteBuffer_ltc2990[0]   =   command;
@@ -65,13 +65,13 @@ int iic_write_ltc2990(uint8_t command,uint8_t data)
          DEBUG_I2C("[I2C] write1 error %d\n",i2c_ltc2990);
          return(1);
       }
-      state=1;
+      i2c_w_state=1;
       DEBUG_I2C("[I2C] write1 ok\n");
       break;
    case 1:
       Status=XIicPs_BusIsBusy(&IicInstance);
       if(Status==XST_SUCCESS) {
-    	  state=0;
+    	  i2c_w_state=0;
           DEBUG_I2C("[I2C] write slave:%02x cmd:%02x data:%02x ok\n", LTC_I2C_ADDRESS, command, data);
     	  return(1);
       }
@@ -84,7 +84,7 @@ int iic_write_ltc2990(uint8_t command,uint8_t data)
 }
 int iic_read_ltc2990(uint8_t command)
 {
-   static int state=0;
+   static int i2c_r_state=0;
    int Status;
    if(i2c_ltc2990==100 || debug_console.stop_i2c)
    {
@@ -96,7 +96,7 @@ int iic_read_ltc2990(uint8_t command)
       i2c_ltc2990++;
       return(1);
    }
-   switch(state)
+   switch(i2c_r_state)
    {
    case 0:
       WriteBuffer_ltc2990[0]   =   command;
@@ -107,36 +107,36 @@ int iic_read_ltc2990(uint8_t command)
          DEBUG_I2C("[I2C] write2 error %d\n",i2c_ltc2990);
          return(1);
       }
-      state=1;
+      i2c_r_state=1;
       DEBUG_I2C("[I2C] write2 ok\n");
       break;
    case 1:
       Status=XIicPs_BusIsBusy(&IicInstance);
       if(Status==XST_SUCCESS) {
-    	  state=2;
+    	  i2c_r_state=2;
           DEBUG_I2C("[I2C] write slave:%02x cmd:%02x ok\n", LTC_I2C_ADDRESS, command);
       }
       DEBUG_I2C("[I2C] waiting bus busy (write (read command))\n");
       break;
    case 2:
-      ReadBuffer_ltc2990[0]   =   0;
-      ReadBuffer_ltc2990[1]   =   0;
+//      ReadBuffer_ltc2990[0]   =   0;
+//      ReadBuffer_ltc2990[1]   =   0;
 
       Status = XIicPs_MasterRecvPolled(&IicInstance, ReadBuffer_ltc2990,
                  2, LTC_I2C_ADDRESS);
       if (Status != XST_SUCCESS) {
          i2c_ltc2990++;
          printf("[I2C] read error %d\n",i2c_ltc2990);
-         state=0;
+         i2c_r_state=0;
          return(1);
       }
-      state=3;
+      i2c_r_state=3;
       DEBUG_I2C("[I2C] read ok\n");
       break;
    case 3:
       Status=XIicPs_BusIsBusy(&IicInstance);
       if(Status==XST_SUCCESS) {
-         state=0;
+         i2c_r_state=0;
          DEBUG_I2C("[I2C] write slave:%02x cmd:%02x data:%02x%02x ok\n", LTC_I2C_ADDRESS, command, ReadBuffer_ltc2990[0],ReadBuffer_ltc2990[1]);
          return(1);
       }

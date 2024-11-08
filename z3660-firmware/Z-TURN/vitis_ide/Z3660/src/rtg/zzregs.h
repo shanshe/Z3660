@@ -136,21 +136,33 @@ enum zz_reg_offsets {
 
    REG_ZZ_SOFT3D_OP      = 0x270,
    REG_ZZ_TEST_ENABLE    = 0x274,
+   REG_ZZ_BPTON          = 0x278,
+   REG_ZZ_BPTOFF         = 0x27C,
 
    REG_ZZ_FW_BETA        = 0x280,
    REG_ZZ_FW_ALFA        = 0x284,
+   REG_ZZ_AUTOC_RTG_EN   = 0x288,
+   REG_ZZ_APPLY_MISC     = 0x28C,
 
-   //NOT USED 0x284 - 0x2FC
+   REG_ZZ_APPLY_PRESET   = 0x290,
+   REG_ZZ_PRESET_SEL     = 0x294,
+   REG_ZZ_PRESET_SEL_TXT = 0x298,
+   REG_ZZ_DELETE_PRESET  = 0x29C,
+
+   //NOT USED 0x2A0 - 0x2FC
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
    REG_ZZ_OP_NOP         = 0x308,
    REG_ZZ_OP_CAPTUREMODE = 0x30C,
 
+   //NOT USED 0x310 - 0x4FC
+
    REG_ZZ_SEL_KS_TXT     = 0x500,
    REG_ZZ_SEL_SCSI_TXT   = 0x600,
+   REG_ZZ_SEL_PRESET_TXT = 0x700,
 
-   //   REG_ZZ_RX_BUFF        = 0x2000,
+//   REG_ZZ_RX_BUFF        = 0x2000,
 //   REG_ZZ_TX_BUFF        = 0x8000
 /*
    REG_ZZ_ARM_RUN_HI     = 0x90,
@@ -207,6 +219,7 @@ enum gfx_soft3d_op {
   OP_CLEARZBUFFER,
   OP_READZSPAN,
   OP_WRITEZSPAN,
+  OP_DEBUG,
   OP_SOFT3D_NUM,
 };
 #endif

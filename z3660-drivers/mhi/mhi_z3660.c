@@ -505,7 +505,6 @@ void i_MHIPlay(REGA3(APTR mhi_handle), REGA6(struct MHI_LibBase *MHI_LibBase)) {
 				setDecoderParam(mp, 1, FIFOSIZE);
 				setDecoderParam(mp, 2, mp->decode_offset);
 				setDecoderParam(mp, 3, mp->decode_chunk_sz);
-
 				// ZZ_DECODE (init)
 				setRegister(mp, REG_ZZ_DECODE, DECODE_INIT_FIFO);
 
@@ -577,7 +576,7 @@ ULONG i_MHIQuery(REGD1( ULONG mhi_query), REGA6(struct MHI_LibBase *MHI_LibBase)
 
 	switch(mhi_query) {
 		case MHIQ_CAPABILITIES:
-			return (ULONG)"audio/mpeg{audio/mp3}"; // We currently only support mp3 contained in a raw MPEG stream.
+			return (ULONG)"audio/mpeg{audio/mp3},audio/ogg{audio/vorbis,audio/opus,audio/flac},audio/flac"; // We currently only support mp3 contained in a raw MPEG stream.
 
 		case MHIQ_DECODER_NAME:
 			return (ULONG)"Z3660AX";

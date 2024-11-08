@@ -15,6 +15,27 @@ int iic_write_8(uint8_t a,uint8_t data);
 int iic_master_init(void);
 int sii9022_init(zz_video_mode *vmode);
 
+/* Video */
+#define SII9022_PIXEL_CLK_LSB_REG             0x00
+#define SII9022_PIXEL_CLK_MSB_REG             0x01
+#define SII9022_VFREQ_LSB_REG                 0x02
+#define SII9022_VFREQ_MSB_REG                 0x03
+#define SII9022_PIXELS_LSB_REG                0x04
+#define SII9022_PIXELS_MSB_REG                0x05
+#define SII9022_LINES_LSB_REG                 0x06
+#define SII9022_LINES_MSB_REG                 0x07
+
+#define SII9022_PIXEL_REPETITION_REG          0x08
+#define SII9022_AVI_IN_FORMAT_REG             0x09
+#define SII9022_AVI_OUT_FORMAT_REG            0x0a
+
+#define SII9022_SYS_CTRL_DATA_REG             0x1a
+#define SII902X_SYS_CTRL_DDC_BUS_GRANTED      (1 << 1)
+#define SII902X_SYS_CTRL_DDC_BUS_REQUEST      (1 << 2)
+
+#define SII9022_POWER_STATE_CTRL_REG          0x1e
+#define SII9022_IRQ_ENABLE_REG                0x3c
+
 /* Audio  */
 #define SII902X_TPI_I2S_ENABLE_MAPPING_REG    0x1f
 #define SII902X_TPI_I2S_CONFIG_FIFO0           (0 << 0)
@@ -49,8 +70,11 @@ int sii9022_init(zz_video_mode *vmode);
 #define SII902X_TPI_I2S_SCK_EDGE_FALLING       (0 << 7)
 #define SII902X_TPI_I2S_SCK_EDGE_RISING        (1 << 7)
 
-#define SII902X_TPI_I2S_STRM_HDR_BASE    0x21
-#define SII902X_TPI_I2S_STRM_HDR_SIZE    5
+#define SII902X_TPI_I2S_STRM_HDR_0_REG        0x21
+#define SII902X_TPI_I2S_STRM_HDR_1_REG        0x22
+#define SII902X_TPI_I2S_STRM_HDR_2_REG        0x23
+#define SII902X_TPI_I2S_STRM_HDR_3_REG        0x24
+#define SII902X_TPI_I2S_STRM_HDR_4_REG        0x25
 
 #define SII902X_TPI_AUDIO_CONFIG_BYTE2_REG    0x26
 #define SII902X_TPI_AUDIO_CODING_STREAM_HEADER (0 << 0)

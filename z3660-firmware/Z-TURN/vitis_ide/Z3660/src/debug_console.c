@@ -170,10 +170,14 @@ void dump_mem(uint32_t address, uint32_t length, int swap)
 	}
 }
 #define ESC 27
-void debug_console_loop(void)
+#include "pt/pt.h"
+int debug_thread(struct pt *pt)
 {
-	if(XUartPs_IsReceiveData(STDIN_BASEADDRESS))
+	PT_BEGIN(pt);
+
+	while(1)
 	{
+		PT_WAIT_UNTIL(pt,XUartPs_IsReceiveData(STDIN_BASEADDRESS));
 		char c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
 		if(debug_console.subcmd==0)
 		{
@@ -758,6 +762,7 @@ void debug_console_loop(void)
 		}
 
 	}
+	PT_END(pt);
 }
 void debug_console_help(void)
 {

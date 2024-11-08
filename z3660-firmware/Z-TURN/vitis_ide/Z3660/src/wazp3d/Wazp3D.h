@@ -334,14 +334,15 @@ struct state3D    /* v52: now all is described in a drawing state */
         uint8_t b[4];
     } BackRGBA;
 
-    unsigned long PointSize;
-    unsigned long LineSize;
-    unsigned long primitive;
+    ULONG PointSize;
+    ULONG LineSize;
+    ULONG primitive;
     float FogZmin;
     float FogZmax;
     float FogDensity;
+    ULONG gltex;    /* GL texture */
     void* ST;
-    unsigned long gltex;    /* GL texture */
+    void* ST2;
 };
 /*==================================================================================*/
 struct vertex3D{

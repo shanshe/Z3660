@@ -1,4 +1,5 @@
 #include "config_clk.h"
+#include "config_file.h"
 #include "main.h"
 #include <stdio.h>
 
@@ -6,96 +7,111 @@ XClk_Wiz clkwiz0;
 XClk_Wiz_Config conf0;
 
 clock_data cd[]={
-{//100 MHz OK
-		.clk            =100, .M            =  30, .D                =  5,
-		.axi.divider    =  6, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 12, .pclk.phase   =  35, .pclk.dutycycle   = 50,
-		.clken.divider  = 24, .clken.phase  =  63, .clken.dutycycle  = 50,
-		.bclk.divider   = 48, .bclk.phase   =  41, .bclk.dutycycle   = 50,
-		.clk90.divider  = 48, .clk90.phase  = 270+41, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 48, .cpuclk.phase = 180+41, .cpuclk.dutycycle = 50},
-{// 95 MHz +-
-		.clk            = 95, .M            =  16, .D                =  1,
+	{// 50 MHz
+			.clk            = 50, .M            =      8, .D                =  1,
+			.axi.divider    = 16, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 32, .pclk.phase   =    -20, .pclk.dutycycle   = 50,
+			.clken.divider  = 64, .clken.phase  =     60, .clken.dutycycle  = 50,
+			.bclk.divider   = 64, .bclk.phase   =     40, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 64, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 50,
+			.clk90.divider  = 64, .clk90.phase  = 270+40, .clk90.dutycycle  = 50},
+	{// 55 MHz
+			.clk            = 55, .M            =     11, .D                =  4,
 		.axi.divider    =  5, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 10, .pclk.phase   =   5, .pclk.dutycycle   = 45,
-		.clken.divider  = 20, .clken.phase  =  60, .clken.dutycycle  = 50,
-		.bclk.divider   = 40, .bclk.phase   =   5, .bclk.dutycycle   = 50,
-		.clk90.divider  = 40, .clk90.phase  = 270, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 40, .cpuclk.phase = 180, .cpuclk.dutycycle = 50},
-{// 90 MHz OK
-		.clk            = 90, .M            =  27, .D                =  5,
-		.axi.divider    =  6, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 12, .pclk.phase   =  30, .pclk.dutycycle   = 45,
-		.clken.divider  = 24, .clken.phase  =  60, .clken.dutycycle  = 50,
-		.bclk.divider   = 48, .bclk.phase   =  40, .bclk.dutycycle   = 45,
-		.clk90.divider  = 48, .clk90.phase  = 270+40, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 48, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 45},
-{// 85 MHz OK
-		.clk            = 85, .M            =  16, .D                =  1,
-		.axi.divider    =  5, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 10, .pclk.phase   =   5, .pclk.dutycycle   = 42,
-		.clken.divider  = 20, .clken.phase  =  60, .clken.dutycycle  = 50,
-		.bclk.divider   = 40, .bclk.phase   =   5, .bclk.dutycycle   = 50,
-		.clk90.divider  = 40, .clk90.phase  = 270, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 40, .cpuclk.phase = 180, .cpuclk.dutycycle = 45},
-{// 80 MHz OK
-		.clk            = 80, .M            =  24, .D                =  5,
-		.axi.divider    =  6, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 12, .pclk.phase   =  30, .pclk.dutycycle   = 45,
-		.clken.divider  = 24, .clken.phase  =  60+180, .clken.dutycycle  = 50,
-		.bclk.divider   = 48, .bclk.phase   =  40, .bclk.dutycycle   = 50,
-		.clk90.divider  = 48, .clk90.phase  = 270+40, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 48, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 45},
-{// 75 MHz OK
-		.clk            = 75, .M            =  16, .D                =  1,
-		.axi.divider    =  5, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 10, .pclk.phase   =  30, .pclk.dutycycle   = 45,
-		.clken.divider  = 20, .clken.phase  =  60, .clken.dutycycle  = 50,
-		.bclk.divider   = 40, .bclk.phase   =  10, .bclk.dutycycle   = 50,
-		.clk90.divider  = 40, .clk90.phase  = 270, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 40, .cpuclk.phase = 180, .cpuclk.dutycycle = 50},
-{// 70 MHz OK
-		.clk            = 70, .M            =  28, .D                =  5,
-		.axi.divider    =  8, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 16, .pclk.phase   =  30, .pclk.dutycycle   = 45,
-		.clken.divider  = 32, .clken.phase  =  60, .clken.dutycycle  = 50,
-		.bclk.divider   = 64, .bclk.phase   =  40, .bclk.dutycycle   = 50,
-		.clk90.divider  = 64, .clk90.phase  = 270+40, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 64, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 45},
-{// 65 MHz OK
-		.clk            = 65, .M            =  26, .D                =  5,
-		.axi.divider    =  8, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 16, .pclk.phase   =  35, .pclk.dutycycle   = 45,
-		.clken.divider  = 32, .clken.phase  =  69, .clken.dutycycle  = 50,
-		.bclk.divider   = 32, .bclk.phase   =  12, .bclk.dutycycle   = 45,
-		.clk90.divider  = 32, .clk90.phase  = 311, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 32, .cpuclk.phase = 207, .cpuclk.dutycycle = 50},
-{// 60 MHz OK
-		.clk            = 60, .M            = 120, .D                = 25,
-		.axi.divider    =  8, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 16, .pclk.phase   =  35, .pclk.dutycycle   = 50,
-		.clken.divider  = 32, .clken.phase  =  70, .clken.dutycycle  = 50,
-		.bclk.divider   = 32, .bclk.phase   =  11, .bclk.dutycycle   = 45,
-		.clk90.divider  = 32, .clk90.phase  = 297, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 32, .cpuclk.phase = 198, .cpuclk.dutycycle = 45},
-{// 55 MHz --
-		.clk            = 55, .M            =  21, .D                =  5,
-		.axi.divider    =  8, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 16, .pclk.phase   =  30, .pclk.dutycycle   = 50,
-		.clken.divider  = 32, .clken.phase  =  70, .clken.dutycycle  = 50,
-		.bclk.divider   = 32, .bclk.phase   =  10, .bclk.dutycycle   = 50,
-		.clk90.divider  = 32, .clk90.phase  = 270, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 32, .cpuclk.phase = 180, .cpuclk.dutycycle = 50},
-{// 50 MHz OK
-		.clk            = 50, .M            =   8, .D                =  1,
-		.axi.divider    = 16, .axi.phase    =   0, .axi.dutycycle    = 50,
-		.pclk.divider   = 32, .pclk.phase   = -20, .pclk.dutycycle   = 50,
-		.clken.divider  = 64, .clken.phase  =  60, .clken.dutycycle  = 50,
-		.bclk.divider   = 64, .bclk.phase   =  40, .bclk.dutycycle   = 50,
-		.clk90.divider  = 64, .clk90.phase  = 270+40, .clk90.dutycycle  = 50,
-		.cpuclk.divider = 64, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 50},
+			.pclk.divider   = 10, .pclk.phase   =    -20, .pclk.dutycycle   = 50,
+			.clken.divider  = 20, .clken.phase  =     60, .clken.dutycycle  = 50,
+			.bclk.divider   = 40, .bclk.phase   =     40, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 40, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 50,
+			.clk90.divider  = 40, .clk90.phase  = 270+40, .clk90.dutycycle  = 50},
+	{// 60 MHz
+			.clk            = 60, .M            =     24, .D                =  5,
+			.axi.divider    =  8, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 16, .pclk.phase   =    -20, .pclk.dutycycle   = 50,
+			.clken.divider  = 32, .clken.phase  =     60, .clken.dutycycle  = 50,
+			.bclk.divider   = 64, .bclk.phase   =     40, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 64, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 50,
+			.clk90.divider  = 64, .clk90.phase  = 270+40, .clk90.dutycycle  = 50},
+	{// 65 MHz
+			.clk            = 65, .M            =     13, .D                =  4,
+			.axi.divider    =  5, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 10, .pclk.phase   =    -10, .pclk.dutycycle   = 50,
+			.clken.divider  = 20, .clken.phase  =     65, .clken.dutycycle  = 50,
+			.bclk.divider   = 40, .bclk.phase   =     45, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 40, .cpuclk.phase = 180+45, .cpuclk.dutycycle = 50,
+			.clk90.divider  = 40, .clk90.phase  = 270+45, .clk90.dutycycle  = 50},
+	{// 70 MHz
+			.clk            = 70, .M            =     28, .D                =  5,
+			.axi.divider    =  8, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 16, .pclk.phase   =    -20, .pclk.dutycycle   = 45,
+			.clken.divider  = 32, .clken.phase  =     60, .clken.dutycycle  = 50,
+			.bclk.divider   = 64, .bclk.phase   =     40, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 64, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 45,
+			.clk90.divider  = 64, .clk90.phase  = 270+40, .clk90.dutycycle  = 50},
+	{// 75 MHz
+			.clk            = 75, .M            =     15, .D                =  4,
+			.axi.divider    =  5, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 10, .pclk.phase   =     30, .pclk.dutycycle   = 45,
+			.clken.divider  = 20, .clken.phase  =     60, .clken.dutycycle  = 50,
+			.bclk.divider   = 40, .bclk.phase   =     40, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 40, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 45,
+			.clk90.divider  = 40, .clk90.phase  = 270+40, .clk90.dutycycle  = 50},
+	{// 80 MHz
+			.clk            = 80, .M            =     24, .D                =  5,
+			.axi.divider    =  6, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 12, .pclk.phase   =     30, .pclk.dutycycle   = 45,
+			.clken.divider  = 24, .clken.phase  =     60, .clken.dutycycle  = 50,
+			.bclk.divider   = 48, .bclk.phase   =     40, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 48, .cpuclk.phase = 180+40, .cpuclk.dutycycle = 45,
+			.clk90.divider  = 48, .clk90.phase  = 270+40, .clk90.dutycycle  = 50},
+	{// 85 MHz
+			.clk            = 85, .M            =     17, .D                =  4,
+			.axi.divider    =  5, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 10, .pclk.phase   =     35, .pclk.dutycycle   = 45,
+			.clken.divider  = 20, .clken.phase  =     65, .clken.dutycycle  = 50,
+			.bclk.divider   = 40, .bclk.phase   =     45, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 40, .cpuclk.phase = 180+45, .cpuclk.dutycycle = 45,
+			.clk90.divider  = 40, .clk90.phase  = 270+45, .clk90.dutycycle  = 50},
+	{// 90 MHz
+			.clk            = 90, .M            =     27, .D                =  5,
+			.axi.divider    =  6, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 12, .pclk.phase   =    -30, .pclk.dutycycle   = 45,
+			.clken.divider  = 24, .clken.phase  =      0, .clken.dutycycle  = 50,
+			.bclk.divider   = 48, .bclk.phase   =     20, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 48, .cpuclk.phase = 180+20, .cpuclk.dutycycle = 45,
+			.clk90.divider  = 48, .clk90.phase  = 270+20, .clk90.dutycycle  = 50},
+	{// 95 MHz
+			.clk            = 95, .M            =     19, .D                =  4,
+			.axi.divider    =  5, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   = 10, .pclk.phase   =     35, .pclk.dutycycle   = 45,
+			.clken.divider  = 20, .clken.phase  =     65, .clken.dutycycle  = 50,
+			.bclk.divider   = 40, .bclk.phase   =     45, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 40, .cpuclk.phase = 180+45, .cpuclk.dutycycle = 45,
+			.clk90.divider  = 40, .clk90.phase  = 270+45, .clk90.dutycycle  = 50},
+	{//100 MHz
+			.clk            =100, .M            =    30, .D                 =  5,
+			.axi.divider    =  6, .axi.phase    =     0, .axi.dutycycle     = 50,
+			.pclk.divider   = 12, .pclk.phase   =   -10, .pclk.dutycycle    = 50,
+			.clken.divider  = 24, .clken.phase  =    60, .clken.dutycycle   = 50,
+			.bclk.divider   = 48, .bclk.phase   =    41, .bclk.dutycycle    = 50,
+			.cpuclk.divider = 48, .cpuclk.phase = 180+41, .cpuclk.dutycycle = 50,
+			.clk90.divider  = 48, .clk90.phase  = 270+41, .clk90.dutycycle  = 50},
+	{//105 MHz
+			.clk            =105, .M            =     21, .D                =  5,
+			.axi.divider    =  4, .axi.phase    =      0, .axi.dutycycle    = 50,
+			.pclk.divider   =  8, .pclk.phase   =    -15, .pclk.dutycycle   = 45,
+			.clken.divider  = 16, .clken.phase  =     30, .clken.dutycycle  = 50,
+			.bclk.divider   = 32, .bclk.phase   =     45, .bclk.dutycycle   = 50,
+			.cpuclk.divider = 32, .cpuclk.phase = 180+45, .cpuclk.dutycycle = 45,
+			.clk90.divider  = 32, .clk90.phase  = 270+45, .clk90.dutycycle  = 50},
+	{//110 MHz
+			.clk            =110, .M            =    22, .D                 =  5,
+			.axi.divider    =  4, .axi.phase    =     0, .axi.dutycycle     = 50,
+			.pclk.divider   =  8, .pclk.phase   =   -15, .pclk.dutycycle    = 50,
+			.clken.divider  = 16, .clken.phase  =    30, .clken.dutycycle   = 50,
+			.bclk.divider   = 32, .bclk.phase   =    41, .bclk.dutycycle    = 50,
+			.cpuclk.divider = 32, .cpuclk.phase = 180+41, .cpuclk.dutycycle = 50,
+			.clk90.divider  = 32, .clk90.phase  = 270+41, .clk90.dutycycle  = 50},
 };
-
 void print_clkinfo(char * str,uint32_t base,uint32_t address)
 {
    int32_t temp=XClk_Wiz_ReadReg(base, 0x200);
@@ -116,33 +132,37 @@ uint32_t clken=1;
 unsigned int get_clock_index(int clk)
 {
    unsigned int ind;
-   if(clk>95) ind=0;
-   else if(clk>90) ind=1;
-   else if(clk>85) ind=2;
-   else if(clk>80) ind=3;
-   else if(clk>75) ind=4;
+
+   if(clk>105) ind=12;
+   else if(clk>100) ind=11;
+   else if(clk>95) ind=10;
+   else if(clk>90) ind=9;
+   else if(clk>85) ind=8;
+   else if(clk>80) ind=7;
+   else if(clk>75) ind=6;
    else if(clk>70) ind=5;
-   else if(clk>65) ind=6;
-   else if(clk>60) ind=7;
-   else if(clk>55) ind=8;
-   else if(clk>50) ind=9;
-   else ind=10;
+   else if(clk>65) ind=4;
+   else if(clk>60) ind=3;
+   else if(clk>55) ind=2;
+   else if(clk>50) ind=1;
+   else ind=0;
    return ind;
 }
 void configure_clk(int clk, int verbose, int nbr)
 {
 #ifndef CPU_FIXED_FREQUENCY
-   if(clk>100)
-      clk=100;
-   else if(clk<50)
-      clk=50;
+   if(clk>CPUFREQ_MAX)
+      clk=CPUFREQ_MAX;
+   else if(clk<CPUFREQ_MIN)
+      clk=CPUFREQ_MIN;
 
 // unstable frequencies: mapped to stable ones
    unsigned int ind;
    ind=get_clock_index(clk);
    clk=cd[ind].clk;
 
-   printf("Clock index %d\n",ind);
+   if(verbose)
+      printf("Clock index %d\n",ind);
 
    XClk_Wiz_CfgInitialize(&clkwiz0, &conf0, XPAR_CLK_WIZ_0_BASEADDR);
 /*
@@ -152,6 +172,9 @@ void configure_clk(int clk, int verbose, int nbr)
    uint32_t clkbase_remainder=0;
    uint32_t M=((uint32_t)cd[ind].M)*256;
    uint32_t D=cd[ind].D;
+
+// force CLKEN to 0
+//   cd[ind].clken.dutycycle=0;
 
    XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, (clkbase_remainder)+ M + D); // M=8 D=1 -> 8*200 / 1 -> 1600MHz VCO
    XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x208,(uint32_t)( cd[ind].axi.divider          )); //   5h= 5 -> 200 MHz AXI

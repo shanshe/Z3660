@@ -286,6 +286,7 @@ enum gfx_soft3d_op {
     OP_CLEARZBUFFER,
     OP_READZSPAN,
     OP_WRITEZSPAN,
+    OP_DEBUG,
     OP_SOFT3D_NUM,
 };
 #pragma pack(4)

@@ -14,7 +14,7 @@
 int iic_write_ltc2990(uint8_t command,uint8_t data);
 int iic_read_ltc2990(uint8_t command);
 int ltc2990_init(void);
-extern volatile uint8_t ReadBuffer_ltc2990[2];
+extern uint8_t ReadBuffer_ltc2990[2];
 
 #define LTC_CONTROL_REG 0x01
 #define LTC_TRIGGER_REG 0x02

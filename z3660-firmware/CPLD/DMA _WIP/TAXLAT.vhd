@@ -147,9 +147,9 @@ nIACK <= '0' when (address="11" and TT=intack) else '1';
 --				end if;
 --			end if;
 --		else
---			A <= "HHHH";
---			SIZ <= "HH";
---			FC <= "HHH";
+--			A <= "ZZZZ";
+--			SIZ <= "ZZ";
+--			FC <= "ZZZ";
 --		end if;
 --	end process;
 

@@ -163,9 +163,11 @@
                         					
                     </folderInfo>
                     					
+                    <fileInfo id="xilinx.gnu.armv7.exe.debug.78277449.1641599819" name="miniaudio.h" rcbsApplicability="disable" resourcePath="src/mp3/miniaudio.h" toolsToInvoke=""/>
+                    					
                     <sourceEntries>
                         						
-                        <entry excluding="_ide" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        <entry excluding="src/mp3/miniaudio.h|src/mp3/stb_vorbis.c|_ide" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
                         					
                     </sourceEntries>
                     				

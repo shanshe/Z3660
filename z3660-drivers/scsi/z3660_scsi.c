@@ -10,6 +10,7 @@
 #include <exec/execbase.h>
 
 #include <libraries/expansion.h>
+#include <libraries/expansionbase.h>
 
 #include <devices/trackdisk.h>
 #include <devices/timer.h>
@@ -28,7 +29,6 @@
 #include <string.h>
 
 #include "z3660_scsi.h"
-#include "z3660_regs.h"
 
 #pragma pack(4)
 struct piscsi_base {
@@ -51,8 +51,6 @@ struct piscsi_base {
 };
 
 struct ExecBase *SysBase;
-uint8_t *saved_seg_list;
-uint8_t is_open;
 
 //#define WRITESHORT(cmd, val) *(unsigned short *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + cmd)) = val;
 #define WRITELONG(cmd, val) *(volatile unsigned long *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + (cmd))) = (val);
@@ -106,7 +104,6 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io);
 
 struct piscsi_base *dev_base = NULL;
 ULONG Z3660_REGS=0;
-void boot_menu(void);
 static struct Library __attribute__((used)) *init_device(uint8_t *seg_list asm("a0"), struct Library *dev asm("d0"))
 {
     struct Library* ExpansionBase;
@@ -125,9 +122,17 @@ static struct Library __attribute__((used)) *init_device(uint8_t *seg_list asm("
             ok = 1;
             debug_z3660("Z3660_SCSI: Z3660 found.\n");
             Z3660_REGS = (ULONG)cd->cd_BoardAddr;
-
+            struct BootNode *bn = (struct BootNode*)((struct ExpansionBase*)ExpansionBase)->MountList.lh_Head;
+            while (bn->bn_Node.ln_Succ) {
+		        struct DeviceNode *dn = bn->bn_DeviceNode;
+		        const UBYTE *bname2 = BADDR(dn->dn_Name);
+                WRITELONG(PISCSI_CMD_EXPBASE,(uint32_t)(bname2));
+                bn = (struct BootNode*)bn->bn_Node.ln_Succ;
+            }
             for (int i = 0; i < NUM_UNITS; i++) {
                 uint32_t r = 0;
+                if(i>=8 && i<10)
+                    continue;
                 WRITELONG(PISCSI_CMD_DRVNUM, (i));
                 dev_base->units[i].regs_ptr = Z3660_REGS + PISCSI_OFFSET;
                 READLONG(PISCSI_CMD_DRVTYPE, r);
@@ -182,7 +187,7 @@ static void __attribute__((used)) open(struct Library *dev asm("a6"), struct IOE
     debugval(PISCSI_DBG_VAL3, num);
     debug(PISCSI_DBG_MSG, DBG_OPENDEV);
 
-    if (iotd && unit_num < NUM_UNITS) {
+    if (iotd && unit_num < NUM_UNITS && (unit_num<8 || unit_num>=10)) {
         if (dev_base->units[unit_num].enabled && dev_base->units[unit_num].present) {
             io_err = 0;
             iotd->iotd_Req.io_Unit = (struct Unit*)&dev_base->units[unit_num].unit;
@@ -194,8 +199,6 @@ static void __attribute__((used)) open(struct Library *dev asm("a6"), struct IOE
     iotd->iotd_Req.io_Error = io_err;
 //    int counter=
     ((struct Library *)dev_base->pi_dev)->lib_OpenCnt++;
-//    if(counter==1)
-//        boot_menu();
 
 }
 
@@ -264,6 +267,30 @@ uint32_t get_blocksize(uint8_t unit_num)
         case 7:
             READLONG(PISCSI_CMD_BLOCKSIZE7, block_size);
             break;
+        case 10:
+            READLONG(PISCSI_CMD_BLOCKSIZE10, block_size);
+            break;
+        case 11:
+            READLONG(PISCSI_CMD_BLOCKSIZE11, block_size);
+            break;
+        case 12:
+            READLONG(PISCSI_CMD_BLOCKSIZE12, block_size);
+            break;
+        case 13:
+            READLONG(PISCSI_CMD_BLOCKSIZE13, block_size);
+            break;
+        case 14:
+            READLONG(PISCSI_CMD_BLOCKSIZE14, block_size);
+            break;
+        case 15:
+            READLONG(PISCSI_CMD_BLOCKSIZE15, block_size);
+            break;
+        case 16:
+            READLONG(PISCSI_CMD_BLOCKSIZE16, block_size);
+            break;
+        case 17:
+            READLONG(PISCSI_CMD_BLOCKSIZE17, block_size);
+            break;
         default:
             block_size=0;
     }
@@ -296,6 +323,30 @@ uint32_t get_blocks(uint8_t unit_num)
             break;
         case 7:
             READLONG(PISCSI_CMD_BLOCKS7, blocks);
+            break;
+        case 10:
+            READLONG(PISCSI_CMD_BLOCKS10, blocks);
+            break;
+        case 11:
+            READLONG(PISCSI_CMD_BLOCKS11, blocks);
+            break;
+        case 12:
+            READLONG(PISCSI_CMD_BLOCKS12, blocks);
+            break;
+        case 13:
+            READLONG(PISCSI_CMD_BLOCKS13, blocks);
+            break;
+        case 14:
+            READLONG(PISCSI_CMD_BLOCKS14, blocks);
+            break;
+        case 15:
+            READLONG(PISCSI_CMD_BLOCKS15, blocks);
+            break;
+        case 16:
+            READLONG(PISCSI_CMD_BLOCKS16, blocks);
+            break;
+        case 17:
+            READLONG(PISCSI_CMD_BLOCKS17, blocks);
             break;
         default:
             blocks=0;
@@ -464,7 +515,7 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
                     case 0: // SCSI device type: direct-access device
                         val = (0 << 5) | 0;
                         break;
-                    case 1: // RMB = 1
+                    case 1: // RMB = 1 (removable medium)
                         val = (1 << 7);
 //                        val = 0;
                         break;
@@ -481,7 +532,12 @@ uint8_t piscsi_scsi(struct piscsi_unit *u, struct IORequest *io)
                         if (i >= 8 && i < 44)
                         {
                             if(i-8==18)
-                                val= '0'+u->unit_num;
+                            {
+                                if(u->unit_num<10)
+                                    val= '0'+u->unit_num;
+                                else
+                                    val= 'A'+u->unit_num-10;
+                            }
                             else
                                 val = PISCSI_ID_STRING[i - 8];
                         }
@@ -605,7 +661,7 @@ scsireadwrite:;
 //            WRITELONG(PISCSI_CMD_DRVNUM, (u->unit_num));
 //            READLONG(PISCSI_CMD_BLOCKS, maxblocks);
             maxblocks=get_blocks(u->unit_num);
-            (blocks = (maxblocks - 1) & 0xFFFFFF);
+            blocks = (maxblocks - 1) & 0xFFFFFF;
 //            if (maxblocks > (1 << 24))
 //                blocks = 0xffffff;
 //            else

@@ -10,8 +10,12 @@
 
 #include "cpu_emulator.h"
 #include <inttypes.h>
-extern int configured;
-extern int enabled;
+extern int configured_z3;
+extern int enabled_z3;
+extern int configured_z2;
+extern int enabled_z2;
+extern int shutup_z3;
+extern int shutup_z2;
 
 #define INT_IPL_ON_THIS_CORE 1
 #define AUTOCONFIG_ENABLED
@@ -87,6 +91,7 @@ typedef struct {
 	volatile uint32_t disassemble;         // 0xFFFF0088
 	volatile uint32_t musashi_step;        // 0xFFFF008C
 	volatile uint32_t reset_emulator_dis;  // 0xFFFF0090
+	volatile uint32_t z2_enabled;          // 0xFFFF0094
 } SHARED;
 
 enum BOOTMODE{
@@ -100,5 +105,6 @@ typedef struct {
    uint32_t load_rom_emu;
    uint32_t load_romext_emu;
    uint32_t z3_enabled;
+   uint32_t z2_enabled;
 } LOCAL;
 #endif /* SRC_MAIN_H_ */

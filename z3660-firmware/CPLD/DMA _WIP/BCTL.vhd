@@ -47,6 +47,8 @@ end BCTL;
 
 architecture Behavioral of BCTL is
 signal bus_state: STD_LOGIC_VECTOR(3 downto 0);
+attribute fsm_encoding : string;
+attribute fsm_encoding of bus_state : signal is "compact";
 signal bus_state_c: STD_LOGIC_VECTOR(3 downto 0);
 -- State Values
 -- CONSTANT B00: std_logic_vector(3 downto 0):= "1111";
@@ -179,7 +181,10 @@ begin
                 end if;
             when B11 =>
                 if(nBR_ARM='1') then         bus_state_c <= B00;
-                else                         bus_state_c <= B11;
+                else
+					     if(nSBR030='0' or nSBGACK030='0') then bus_state_c <= B01;
+                    else                     bus_state_c <= B11;
+						  end if;
                 end if;
             when others =>                   bus_state_c <= B00;
         end case;

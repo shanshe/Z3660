@@ -25,6 +25,12 @@ void ps_write_8(unsigned int address, unsigned int value);
 uint32_t ps_read_8(uint32_t address);
 uint32_t ps_read_16(uint32_t address);
 uint32_t ps_read_32(uint32_t address);
+void test_write_32(unsigned int address, unsigned int value);
+void test_write_16(unsigned int address, unsigned int value);
+void test_write_8(unsigned int address, unsigned int value);
+uint32_t test_read_8(uint32_t address);
+uint32_t test_read_16(uint32_t address);
+uint32_t test_read_32(uint32_t address);
 
 unsigned int READ_IPL(void);
 unsigned int READ_NBG_ARM(void);

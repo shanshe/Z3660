@@ -409,7 +409,7 @@ MIDFUNC(2,jnf_ADDA_l_imm,(RW4 d, IM32 v))
 	
 	if (CHECK32((uae_s32)v)) {
     ADD_rri(d, d, v);
-	} else {
+   } else {
     LOAD_U32(REG_WORK1, v);
   	ADD_rrr(d, d, REG_WORK1);
 	}
@@ -4781,7 +4781,7 @@ MIDFUNC(3,jnf_MVMEL_w,(W4 d, RR4 s, IM8 offset))
 	d = writereg(d);
 
 	LDRH_rRI(REG_WORK1, s, offset);
-  REVSH_rr(d, REG_WORK1);
+  REV16_rr(d, REG_WORK1);
   SXTH_rr(d, d);
 
 	unlock2(d);
@@ -7959,7 +7959,13 @@ MIDFUNC(2,jnf_MEM_READ_OFF_w,(W4 d, RR4 adr))
   
   LDRH_rRR(REG_WORK1, adr, R_MEMSTART);
   REV16_rr(d, REG_WORK1);
-  
+//  ADD_rrr(REG_WORK2, adr, R_MEMSTART);
+//  LDRB_rRI(REG_WORK1, REG_WORK2, 0);
+//  MOV_rr(REG_WORK3,REG_WORK1);
+//  LDRB_rRI(REG_WORK1, REG_WORK2, 1);
+//  LSL_rri(REG_WORK3, REG_WORK3,8);
+//  ORR_rrr(d, REG_WORK1, REG_WORK3);
+
   unlock2(d);
   unlock2(adr);
 }

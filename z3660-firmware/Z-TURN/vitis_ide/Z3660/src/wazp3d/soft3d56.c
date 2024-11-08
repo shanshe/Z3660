@@ -313,6 +313,10 @@ void handle_soft3d_op(uint16_t zdata)
 							  (uint32_t *)local_data.offset[1],
 							  (uint32_t *)local_data.offset[2]);
     		break;
+    	case OP_DEBUG:
+    		local_data.offset[0]=swap32(data3d->offset[0]);
+    		DEBUG_SOFT3D("SOFT3D_Debug 0x%08lx\n",local_data.offset[0]);
+    		break;
         default:
             break;
     }

@@ -2502,9 +2502,11 @@ int pissoff_int=1024;
 //int pissoff_int=-1024000000;
 int set_special_var=1;
 void z3660_tasks(void);
+extern "C" void ipl_main_read(void);
 static inline void check_uae_int_request(void)
 {
    z3660_tasks();
+   ipl_main_read();
 #if INT_IPL_ON_THIS_CORE == 0
    if(shared->int_available)
    {
@@ -3415,7 +3417,7 @@ void do_nothing (void)
 {
 //   if (!currprefs.cpu_thread) {
       /* What did you expect this to do? */
-      do_cycles (0);
+//      do_cycles (0);
       /* I bet you didn't expect *that* ;-) */
 //   }
 }
@@ -3935,7 +3937,6 @@ void m68k_go (int may_quit)
 
    in_m68k_go--;
 }
-
 #ifdef SAVESTATE
 
 /* CPU save/restore code */
@@ -4559,12 +4560,12 @@ bool cpureset (void)
             addr += 0xf80000;
          write_log (_T("reset/jmp (ax) combination at %08x emulated -> %x\n"), pc, addr+2);
          m68k_setpc_normal (addr +2 - 2);
-         reset_loop_counter++;
-         if(reset_loop_counter>=5)
-         {
-        	 printf("Emulator reset loop detected -> Hard reboot\n");
-        	 hard_reboot();
-         }
+//         reset_loop_counter++;
+//         if(reset_loop_counter>=5)
+//         {
+//        	 printf("Emulator reset loop detected -> Hard reboot\n");
+//        	 hard_reboot();
+//         }
          return false;
       }
    }

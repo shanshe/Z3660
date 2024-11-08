@@ -260,6 +260,8 @@ void resample_s16(int16_t *input, int16_t *output, int in_sample_rate,
    resample_psampl = (double) (input[in_pos2 * 2 + 0]);
    resample_psampr = (double) (input[in_pos2 * 2 + 1]);
 }
+float lpf_wl1=0.,lpf_wl2=0.;
+float lpf_wr1=0.,lpf_wr2=0.;
 void lowpass_filter(int16_t *output, int output_samples)
 {
    // low pass filter
@@ -299,8 +301,6 @@ void lowpass_filter(int16_t *output, int output_samples)
    }
 #endif
 #ifdef DIRECT_FORM_II
-   static float wl1=0.,wl2=0.;
-   static float wr1=0.,wr2=0.;
    float el,er;
    float sl,sr;
    for (uint32_t i = 0; i < output_samples; i++)
@@ -308,12 +308,12 @@ void lowpass_filter(int16_t *output, int output_samples)
       el =output[2*i+0];
       er =output[2*i+1];
 
-      sl = b0[10]*el          +wl1;
-      wl1= b1[10]*el+a1[10]*sl+wl2;
-      wl2= b2[10]*el+a2[10]*sl;
-      sr = b0[10]*er          +wr1;
-      wr1= b1[10]*er+a1[10]*sr+wr2;
-      wr2= b2[10]*er+a2[10]*sr;
+      sl     = b0[10]*el          +lpf_wl1;
+      lpf_wl1= b1[10]*el+a1[10]*sl+lpf_wl2;
+      lpf_wl2= b2[10]*el+a2[10]*sl;
+      sr     = b0[10]*er          +lpf_wr1;
+      lpf_wr1= b1[10]*er+a1[10]*sr+lpf_wr2;
+      lpf_wr2= b2[10]*er+a2[10]*sr;
 
       // output gain
       int32_t ol=sl*vl;
@@ -328,6 +328,8 @@ void lowpass_filter(int16_t *output, int output_samples)
    }
 #endif
 }
+float bpf_wl1[10]={0.},bpf_wl2[10]={0.};
+float bpf_wr1[10]={0.},bpf_wr2[10]={0.};
 void bandpass_filter(int band, int16_t *output, int output_samples)
 {
    // low pass filter
@@ -367,8 +369,6 @@ void bandpass_filter(int band, int16_t *output, int output_samples)
    }
 #endif
 #ifdef DIRECT_FORM_II
-   static float wl1[10]={0.},wl2[10]={0.};
-   static float wr1[10]={0.},wr2[10]={0.};
    float el,er;
    float sl,sr;
    for (uint32_t i = 0; i < output_samples; i++)
@@ -376,12 +376,12 @@ void bandpass_filter(int band, int16_t *output, int output_samples)
       el =output[2*i+0];
       er =output[2*i+1];
 
-      sl       = b0[band]*el            +wl1[band];
-      wl1[band]= b1[band]*el+a1[band]*sl+wl2[band];
-      wl2[band]= b2[band]*el+a2[band]*sl;
-      sr       = b0[band]*er            +wr1[band];
-      wr1[band]= b1[band]*er+a1[band]*sr+wr2[band];
-      wr2[band]= b2[band]*er+a2[band]*sr;
+      sl           = b0[band]*el            +bpf_wl1[band];
+      bpf_wl1[band]= b1[band]*el+a1[band]*sl+bpf_wl2[band];
+      bpf_wl2[band]= b2[band]*el+a2[band]*sl;
+      sr           = b0[band]*er            +bpf_wr1[band];
+      bpf_wr1[band]= b1[band]*er+a1[band]*sr+bpf_wr2[band];
+      bpf_wr2[band]= b2[band]*er+a2[band]*sr;
 
       // output gain is 1.0
       int32_t ol=sl;
@@ -425,6 +425,13 @@ void audio_set_rx_buffer(uint8_t* addr) {
 void audio_silence() {
    memset(audio_tx_buffer, 0, AUDIO_TX_BUFFER_SIZE);
    reset_resampling();
+   lpf_wl1=0.;lpf_wl2=0.;
+   lpf_wr1=0.;lpf_wr2=0.;
+   for(int i=0;i<10;i++)
+   {
+	   bpf_wl1[i]=0.;bpf_wl2[i]=0.;
+	   bpf_wr1[i]=0.;bpf_wr2[i]=0.;
+   }
 }
 
 // sources:

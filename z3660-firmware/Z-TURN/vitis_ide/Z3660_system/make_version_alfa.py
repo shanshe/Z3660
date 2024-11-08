@@ -13,8 +13,9 @@ DST_PATH = "Z:/z3660/alfa/"
 SRC_PATH = "Alfa/sd_card/"
 BOOT_NAME = "BOOT.BIN"
 SCSI_NAME = "z3660_scsi.rom"
-SOURCE = "C:/Users/shanshe/workspace/Z3660/src/main.h"
+SOURCE = "C:/Users/shanshe/workspace/Z3660/src/version.h"
 SOURCE_ALFA = "C:/Users/shanshe/workspace/Z3660/src/alfa.txt"
+JED_NAME  =  "z3660.jed"
 
 def buscarDefine(clave, archivo):
     claveCompleta = "#define " + clave
@@ -56,6 +57,7 @@ def main():
     
     shutil.copy2(SRC_PATH + BOOT_NAME,DST_PATH)
     shutil.copy2(SRC_PATH + "../../z3660_scsi.rom",DST_PATH)
+    shutil.copy2(SRC_PATH + "../../z3660.jed",DST_PATH)
 
     file = open(SOURCE, 'r', encoding='utf-8')
     V_MAJOR        = getValor("REVISION_MAJOR", file)
@@ -80,6 +82,9 @@ def main():
         print("Making DST_PATH ...")
         os.mkdir(DST_PATH)
     
+    #########################
+    # BOOT.BIN
+    #########################
     delete(DST_PATH + "version.txt")
     text_file = open(DST_PATH + "version.txt", "w")
     version = "" + V_MAJOR + "."
@@ -100,6 +105,9 @@ def main():
     text_file.write("checksum32=" + str_checksum32 + "\r")
     text_file.close()
 
+    #########################
+    # Z3660_SCSI.ROM
+    #########################
     delete(DST_PATH + "scsirom_version.txt")
     text_file = open(DST_PATH + "scsirom_version.txt", "w")
     
@@ -107,7 +115,7 @@ def main():
         s = f.read()
         pos=s.find(b"$VER")
         f.seek(pos+35)
-        bytes = f.read(3)
+        bytes = f.read(4)
         version_scsirom = "".join(map(chr,bytes))
 
     text_file.write("version=" + version_scsirom + "\r")
@@ -121,6 +129,31 @@ def main():
     text_file.close()
     
     print("z3660_scsi.rom checksum-32 " + str_checksum32)
+
+    #########################
+    # Z3660.JED
+    #########################
+    delete(DST_PATH + "jed_version.txt")
+    text_file = open(DST_PATH + "jed_version.txt", "w")
+    
+    with open(DST_PATH + JED_NAME, 'rb') as f:
+        s = f.read()
+        pos=s.find(b"Date")
+        f.seek(pos+16)
+        bytes = f.read(24)
+        version_jed = "".join(map(chr,bytes))
+
+    text_file.write("version=" + version_jed + "\r")
+    str_len = "%d" % os.path.getsize(DST_PATH + JED_NAME)
+    text_file.write("length=" + str_len + "\r")
+    checksum32=0
+    for eachdata in crc32(JED_NAME):
+        checksum32 = eachdata + checksum32
+    str_checksum32 = "%08lX" % (checksum32 & 0xFFFFFFFF)
+    text_file.write("checksum32=" + str_checksum32 + "\r")
+    text_file.close()
+    print("z3660.jed Date: " + version_jed)
+    print("z3660.jed checksum-32 " + str_checksum32)
 
 main()
 

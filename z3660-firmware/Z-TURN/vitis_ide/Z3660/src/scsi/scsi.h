@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-
+#ifndef _SCSI_H_
+#define _SCSI_H_
 #include <stdint.h>
 
 #include "hunk-reloc.h"
-//#include "../mpg/ff.h"
-#include <ff.h>
+//#include <ff.h>
 #include "../defines.h"
 
 #define be16toh(val) __builtin_bswap16(val)
@@ -14,45 +14,45 @@
 
 #define MAX_NUM_MAPPED_ITEMS 8
 
-#define	TDF_EXTCOM (1<<15)
+#define TDF_EXTCOM (1<<15)
 
-#define CMD_INVALID	0
-#define CMD_RESET	1
-#define CMD_READ	2
-#define CMD_WRITE	3
-#define CMD_UPDATE	4
-#define CMD_CLEAR	5
-#define CMD_STOP	6
-#define CMD_START	7
-#define CMD_FLUSH	8
-#define CMD_NONSTD	9
+#define CMD_INVALID 0
+#define CMD_RESET   1
+#define CMD_READ    2
+#define CMD_WRITE   3
+#define CMD_UPDATE  4
+#define CMD_CLEAR   5
+#define CMD_STOP    6
+#define CMD_START   7
+#define CMD_FLUSH   8
+#define CMD_NONSTD  9
 
-#define	TD_MOTOR	(CMD_NONSTD+0)      // 9
-#define	TD_SEEK		(CMD_NONSTD+1)      // 10
-#define	TD_FORMAT	(CMD_NONSTD+2)      // 11
-#define	TD_REMOVE	(CMD_NONSTD+3)      // 12
-#define	TD_CHANGENUM	(CMD_NONSTD+4)  // 13
-#define	TD_CHANGESTATE	(CMD_NONSTD+5)  // 15
-#define	TD_PROTSTATUS	(CMD_NONSTD+6)  // 16
-#define	TD_RAWREAD	(CMD_NONSTD+7)      // 17
-#define	TD_RAWWRITE	(CMD_NONSTD+8)      // 18
-#define	TD_GETDRIVETYPE	(CMD_NONSTD+9)  // 19
-#define	TD_GETNUMTRACKS	(CMD_NONSTD+10) // 20
-#define	TD_ADDCHANGEINT	(CMD_NONSTD+11) // 21
-#define	TD_REMCHANGEINT	(CMD_NONSTD+12) // 22
-#define TD_GETGEOMETRY	(CMD_NONSTD+13) // 23
-#define TD_EJECT	(CMD_NONSTD+14)     // 24
-#define	TD_LASTCOMM	(CMD_NONSTD+15)     // 25
+#define TD_MOTOR       ( CMD_NONSTD+0)  // 9
+#define TD_SEEK         (CMD_NONSTD+1)  // 10
+#define TD_FORMAT       (CMD_NONSTD+2)  // 11
+#define TD_REMOVE       (CMD_NONSTD+3)  // 12
+#define TD_CHANGENUM    (CMD_NONSTD+4)  // 13
+#define TD_CHANGESTATE  (CMD_NONSTD+5)  // 15
+#define TD_PROTSTATUS   (CMD_NONSTD+6)  // 16
+#define TD_RAWREAD      (CMD_NONSTD+7)  // 17
+#define TD_RAWWRITE     (CMD_NONSTD+8)  // 18
+#define TD_GETDRIVETYPE (CMD_NONSTD+9)  // 19
+#define TD_GETNUMTRACKS (CMD_NONSTD+10) // 20
+#define TD_ADDCHANGEINT (CMD_NONSTD+11) // 21
+#define TD_REMCHANGEINT (CMD_NONSTD+12) // 22
+#define TD_GETGEOMETRY  (CMD_NONSTD+13) // 23
+#define TD_EJECT        (CMD_NONSTD+14) // 24
+#define TD_LASTCOMM     (CMD_NONSTD+15) // 25
 
-#define	ETD_WRITE	(CMD_WRITE|TDF_EXTCOM)
-#define	ETD_READ	(CMD_READ|TDF_EXTCOM)
-#define	ETD_MOTOR	(TD_MOTOR|TDF_EXTCOM)
-#define	ETD_SEEK	(TD_SEEK|TDF_EXTCOM)
-#define	ETD_FORMAT	(TD_FORMAT|TDF_EXTCOM)
-#define	ETD_UPDATE	(CMD_UPDATE|TDF_EXTCOM)
-#define	ETD_CLEAR	(CMD_CLEAR|TDF_EXTCOM)
-#define	ETD_RAWREAD	(TD_RAWREAD|TDF_EXTCOM)
-#define	ETD_RAWWRITE	(TD_RAWWRITE|TDF_EXTCOM)
+#define ETD_WRITE    (CMD_WRITE|TDF_EXTCOM)
+#define ETD_READ     (CMD_READ|TDF_EXTCOM)
+#define ETD_MOTOR    (TD_MOTOR|TDF_EXTCOM)
+#define ETD_SEEK     (TD_SEEK|TDF_EXTCOM)
+#define ETD_FORMAT   (TD_FORMAT|TDF_EXTCOM)
+#define ETD_UPDATE   (CMD_UPDATE|TDF_EXTCOM)
+#define ETD_CLEAR    (CMD_CLEAR|TDF_EXTCOM)
+#define ETD_RAWREAD  (TD_RAWREAD|TDF_EXTCOM)
+#define ETD_RAWWRITE (TD_RAWWRITE|TDF_EXTCOM)
 
 #define HD_SCSICMD 28
 
@@ -69,15 +69,16 @@
 // PART
 #define PART_IDENTIFIER 0x50415254
 // FSHD
-#define	FS_IDENTIFIER 0x46534844
+#define FS_IDENTIFIER 0x46534844
 
 #define PISCSI_DRIVER_OFFSET 0x1000
 #define NUM_FILESYSTEMS 32
 
-struct piscsi_dev {
+typedef struct piscsi_dev_ {
     uint32_t c;
     uint16_t h, s;
-    FSIZE_t fs;
+    uint64_t fs;
+    uint64_t start_block;
     FIL *fd;
     uint32_t lba;
     uint32_t num_partitions;
@@ -86,43 +87,66 @@ struct piscsi_dev {
     struct PartitionBlock *pb[16];
     struct RigidDiskBlock *rdb;
     DWORD SeekTbl[64];
-};
+    uint32_t pb_addres[16];
+} PISCSI_DEV;
+typedef struct hunk_reloc_ {
+    uint32_t src_hunk;
+    uint32_t target_hunk;
+    uint32_t offset;
+} HUNK_RELOC;
+typedef struct hunk_info_ {
+    uint16_t current_hunk;
+    uint16_t num_libs;
+    uint8_t *libnames[256];
+    uint32_t table_size, byte_size, alloc_size;
+    uint32_t base_offset;
+    uint32_t first_hunk, last_hunk, num_hunks, header_size;
+    uint32_t reloc_hunks;
+    uint32_t *hunk_offsets;
+    uint32_t *hunk_sizes;
+} HUNK_INFO;
+int process_hunk(uint32_t index, HUNK_INFO *info, FIL *f, HUNK_RELOC *r);
+int load_lseg(PISCSI_DEV *d, uint8_t **buf_p, HUNK_INFO *i, HUNK_RELOC *relocs, uint32_t block_size);
 
-struct piscsi_fs {
+void reloc_hunk(HUNK_RELOC *h, uint8_t *buf, HUNK_INFO *i);
+void process_hunks(FIL *in, HUNK_INFO *h_info, HUNK_RELOC *r, uint32_t offset);
+void reloc_hunks(HUNK_RELOC *r, uint8_t *buf, HUNK_INFO *h_info);
+
+typedef struct piscsi_fs_ {
    struct FileSysHeaderBlock * fhb;
    uint32_t FS_ID;
    uint32_t handler;
-   struct hunk_reloc relocs[4096];
-   struct hunk_info h_info;
+   HUNK_RELOC relocs[4096];
+   HUNK_INFO h_info;
    uint8_t *binary_data;
-};
+} PISCSI_FS;
 
 //  .long 0 /* dos disk name */
 //  .long 0 /* device file name */
 //  .long 0 /* unit */
 //  .long 0 /* flags */
 struct DosEnvec {
-    uint32_t de_TableSize;	     /* Size of Environment vector */
-    uint32_t de_SizeBlock;	     /* in longwords: standard value is 128 */
-    uint32_t de_SecOrg;	     /* not used; must be 0 */
-    uint32_t de_Surfaces;	     /* # of heads (surfaces). drive specific */
+    uint32_t de_TableSize;      /* Size of Environment vector */
+    uint32_t de_SizeBlock;      /* in longwords: standard value is 128 */
+    uint32_t de_SecOrg;         /* not used; must be 0 */
+    uint32_t de_Surfaces;       /* # of heads (surfaces). drive specific */
     uint32_t de_SectorPerBlock; /* not used; must be 1 */
     uint32_t de_BlocksPerTrack; /* blocks per track. drive specific */
-    uint32_t de_Reserved;	     /* DOS reserved blocks at start of partition. */
-    uint32_t de_PreAlloc;	     /* DOS reserved blocks at end of partition */
+    uint32_t de_Reserved;       /* DOS reserved blocks at start of partition. */
+    uint32_t de_PreAlloc;       /* DOS reserved blocks at end of partition */
     uint32_t de_Interleave;     /* usually 0 */
-    uint32_t de_LowCyl;	     /* starting cylinder. typically 0 */
-    uint32_t de_HighCyl;	     /* max cylinder. drive specific */
+    uint32_t de_LowCyl;         /* starting cylinder. typically 0 */
+    uint32_t de_HighCyl;        /* max cylinder. drive specific */
     uint32_t de_NumBuffers;     /* Initial # DOS of buffers.  */
     uint32_t de_BufMemType;     /* type of mem to allocate for buffers */
     uint32_t de_MaxTransfer;    /* Max number of bytes to transfer at a time */
-    uint32_t de_Mask;	     /* Address Mask to block out certain memory */
-    int32_t  de_BootPri;	     /* Boot priority for autoboot */
-    uint32_t de_DosType;	     /* ASCII (HEX) string showing filesystem type;
-			      * 0X444F5300 is old filesystem,
-			      * 0X444F5301 is fast file system */
-    uint32_t de_Baud;	     /* Baud rate for serial handler */
-    uint32_t de_Control;	     /* Control word for handler/filesystem */
+    uint32_t de_Mask;           /* Address Mask to block out certain memory */
+    int32_t  de_BootPri;        /* Boot priority for autoboot */
+    uint32_t de_DosType;        /* ASCII (HEX) string showing filesystem type;
+                                 * 0X444F5300 is old filesystem,
+                                 * 0X444F5301 is fast file system */
+    uint32_t de_Baud;           /* Baud rate for serial handler */
+    uint32_t de_Control;        /* Control word for handler/filesystem */
     uint32_t de_BootBlocks;     /* Number of blocks containing boot code */
 
 };
@@ -199,7 +223,7 @@ struct DeviceNode {
     uint32_t    dn_Type;
     uint32_t    dn_Task;
     uint32_t    dn_Lock;
-    uint8_t	    *dn_Handler;
+    uint8_t     *dn_Handler;
     uint32_t    dn_StackSize;
     int32_t     dn_Priority;
     uint32_t    dn_Startup;
@@ -275,14 +299,15 @@ typedef enum {
 
 int piscsi_init();
 void piscsi_shutdown();
-void piscsi_map_drive(char *filename, uint8_t index);
+void piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len);
 void piscsi_unmap_drive(uint8_t index);
-struct piscsi_dev *piscsi_get_dev(uint8_t index);
+PISCSI_DEV *piscsi_get_dev(uint8_t index);
 
 void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type);
 uint32_t handle_piscsi_read(uint32_t addr, uint8_t type);
 
-void piscsi_find_filesystems(struct piscsi_dev *d);
+void piscsi_find_filesystems(PISCSI_DEV *d);
 void piscsi_refresh_drives();
 
-int load_fs(struct piscsi_fs *fs, char *dosID);
+int load_fs(PISCSI_FS *fs, char *dosID);
+#endif // _SCSI_H_

@@ -13,7 +13,6 @@
 #include "../memorymap.h"
 
 LOCAL local;
-extern int ovl;
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -51,7 +50,7 @@ uae_u32 do_get_mem_long(uae_u32* a)
 //    uint8_t* b = (uint8_t*)a;
 
 //    return (*b << 24) | (*(b + 1) << 16) | (*(b + 2) << 8) | (*(b + 3));
-    return((uae_u32)memory_get_long((uint32_t)a));
+   return((uae_u32)memory_get_long((uint32_t)a));
 }
 
 uint16_t do_get_mem_word(uint16_t* a)
@@ -65,7 +64,7 @@ uint16_t do_get_mem_word(uint16_t* a)
 uint8_t do_get_mem_byte(uint8_t* a)
 {
 //    return *a;
-    return((uint8_t)memory_get_byte((uint32_t)a));
+   return((uint8_t)memory_get_byte((uint32_t)a));
 }
 
 void do_put_mem_long(uae_u32* a, uae_u32 v)
@@ -76,7 +75,7 @@ void do_put_mem_long(uae_u32* a, uae_u32 v)
 //    *(b + 1) = v >> 16;
 //    *(b + 2) = v >> 8;
 //    *(b + 3) = v;
-    memory_put_long((unsigned int)a, (unsigned int)v);
+   memory_put_long((unsigned int)a, (unsigned int)v);
 }
 
 void do_put_mem_word(uint16_t* a, uint16_t v)
@@ -118,10 +117,25 @@ bool is_cycle_ce(uaecptr address)
 }
 unsigned int direct_read_32(uaecptr add)
 {
+   if(add&3)
+   {
+//      printf("r32 unaligned\n");
+      return(
+            ((*(uint8_t *)(add  ))<<24)|
+            ((*(uint8_t *)(add+1))<<16)|
+            ((*(uint8_t *)(add+2))<<8)|
+            ((*(uint8_t *)(add+3)))
+            );
+   }
    return(swap32(*(uint32_t *)add));
 }
 unsigned int direct_read_16(uaecptr add)
 {
+   if(add&1)
+   {
+//      printf("r16 unaligned\n");
+   return((*(uint8_t *)(add+1))|((*(uint8_t *)(add))<<8));
+   }
    return(swap16(*(uint16_t *)add));
 }
 unsigned int direct_read_8(uaecptr add)
@@ -130,10 +144,26 @@ unsigned int direct_read_8(uaecptr add)
 }
 void direct_write_32(uaecptr add, unsigned int data)
 {
+   if(add&3)
+   {
+//      printf("w32 unaligned\n");
+      *(uint8_t *)(add  )=(uint8_t)(data>>24);
+      *(uint8_t *)(add+1)=(uint8_t)(data>>16);
+      *(uint8_t *)(add+2)=(uint8_t)(data>>8 );
+      *(uint8_t *)(add+3)=(uint8_t)(data    );
+      return;
+   }
    *(uint32_t *)add=swap32(data);
 }
 void direct_write_16(uaecptr add, unsigned int data)
 {
+   if(add&1)
+   {
+//      printf("w16 unaligned\n");
+      *(uint8_t *)(add  )=(uint8_t)(data>>8);
+      *(uint8_t *)(add+1)=(uint8_t)(data   );
+      return;
+   }
    *(uint16_t *)add=swap16(data);
 }
 void direct_write_8(uaecptr add, unsigned int data)
@@ -144,7 +174,123 @@ extern uint32_t autoConfigBaseFastRam;
 extern uint32_t autoConfigBaseRTG;
 extern volatile uint8_t *Z3660_RTG_BASE;
 extern volatile uint8_t *Z3660_Z3RAM_BASE;
+extern uint32_t autoConfigBaseSCSI;
 
+unsigned int z2scsi_read_32(uaecptr address)
+{
+   uint32_t add=address-autoConfigBaseSCSI;
+   if(add<0x6000)
+   {
+      if(add<0x2000)
+         return(0xFFFFFFFF);
+      else
+      {
+         uint32_t data=read_scsi_register(add-0x2000,2);
+//         printf("scsi read32 %08X %08X\n",add,data);
+         return(data);
+      }
+   }
+   if(add>=0x80000)
+      return(swap32(*(uint32_t*)(Z3660_RTG_BASE+add)));
+   else
+   {
+      uint32_t data=read_scsi_register(add-0x2000,2);
+//      printf("scsi read32 %08X %08X\n",add,data);
+      return(data);
+   }
+}
+unsigned int z2scsi_read_16(uaecptr address)
+{
+   uint32_t add=address-autoConfigBaseSCSI;
+   if(add<0x6000)
+   {
+      if(add<0x2000)
+         return(0xFFFFFFFF);
+      else
+      {
+         uint32_t data=read_scsi_register(add-0x2000,1);
+//         printf("scsi read16 %08X %08X\n",add,data);
+         return(data);
+      }
+   }
+   if(add>=0x80000)
+      return(swap16(*(uint16_t*)(Z3660_RTG_BASE+add)));
+   else
+   {
+      uint32_t data=read_scsi_register(add-0x2000,1);
+//      printf("scsi read16 %08X %08X\n",add,data);
+      return(data);
+   }
+}
+unsigned int z2scsi_read_8(uaecptr address)
+{
+   uint32_t add=address-autoConfigBaseSCSI;
+   if(add<0x6000)
+   {
+      if(add<0x2000)
+         return(0xFFFFFFFF);
+      else
+      {
+         uint32_t data=read_scsi_register(add-0x2000,0);
+//         printf("scsi read8 %08X %08X\n",add,data);
+         return(data);
+      }
+   }
+   if(add>=0x80000)
+      return(Z3660_RTG_BASE[add]);
+   else
+   {
+      uint32_t data=read_scsi_register(add-0x2000,0);
+//      printf("scsi read8 %08X %08X\n",add,data);
+      return(data);
+   }
+}
+void z2scsi_write_32(uaecptr address, unsigned int data)
+{
+   uint32_t add=address-autoConfigBaseSCSI;
+   *(uint32_t *)(Z3660_RTG_BASE+add)=swap32(data);
+   if(add<0x6000)
+   {
+      if(add<0x2000)
+         write_rtg_register(add,data);
+      else
+      {
+//   	     printf("scsi write32 %08X %08X\n",add,data);
+         write_scsi_register(add-0x2000,data,2);
+      }
+   }
+}
+
+void z2scsi_write_16(uaecptr address, unsigned int data)
+{
+   uint32_t add=address-autoConfigBaseSCSI;
+   *(uint16_t *)(Z3660_RTG_BASE+add)=swap16(data);
+   if(add<0x6000)
+   {
+      if(add<0x2000)
+         write_rtg_register(add,data);
+      else
+      {
+//	      printf("scsi write16 %08X %08X\n",add,data);
+         write_scsi_register(add-0x2000,data,1);
+      }
+   }
+}
+void z2scsi_write_8(uaecptr address, unsigned int data)
+{
+   uint32_t add=address-autoConfigBaseSCSI;
+   Z3660_RTG_BASE[add]=data;
+   if(add<0x6000)
+   {
+      if(add<0x2000)
+         write_rtg_register(add,data);
+      else
+      {
+//	      printf("scsi write8 %08X %08X\n",add,data);
+         write_scsi_register(add-0x2000,data,0);
+      }
+   }
+}
 unsigned int z3ram_read_32(uaecptr address)
 {
    uint32_t add=address-autoConfigBaseFastRam;
@@ -175,78 +321,152 @@ void z3ram_write_8(uaecptr address, unsigned int data)
    uint32_t add=address-autoConfigBaseFastRam;
    *(uint8_t *)(Z3660_Z3RAM_BASE+add)=data&0xFF;
 }
-extern "C" uint32_t read_autoconfig(uint32_t address);
-unsigned int auto_read_32(uaecptr address)
+extern "C" uint32_t read_autoconfig_z2(uint32_t address);
+extern "C" uint32_t read_autoconfig_z3(uint32_t address);
+unsigned int auto_read_32_z2(uaecptr address)
 {
-   z3660_printf("[Core1] Autoconfig BANK: Read LONG 0x%08lX\n",address);
+//   z3660_printf("[Core1] Autoconfig Z2 BANK: Read32 LONG 0x%08lX\n",address);
 #ifdef AUTOCONFIG_ENABLED
-   if((configured&local.z3_enabled)!=local.z3_enabled)
-      return(read_autoconfig(address));
+   if(((configured_z2|shutup_z2)&local.z2_enabled)!=local.z2_enabled)
+      return(read_autoconfig_z2(address));
    else
       return(ps_read_32(address));
 #else
    return(ps_read_32(address));
 #endif
 }
-unsigned int auto_read_16(uaecptr address)
+unsigned int auto_read_16_z2(uaecptr address)
 {
-   z3660_printf("[Core1] Autoconfig BANK: Read WORD 0x%08lX\n",address);
+//   z3660_printf("[Core1] Autoconfig Z2 BANK: Read16 WORD 0x%08lX\n",address);
 #ifdef AUTOCONFIG_ENABLED
-   if((configured&local.z3_enabled)!=local.z3_enabled)
-      return(read_autoconfig(address)>>16);
+   if(((configured_z2|shutup_z2)&local.z2_enabled)!=local.z2_enabled)
+      return(read_autoconfig_z2(address)>>16);
    else
       return(ps_read_16(address));
 #else
    return(ps_read_16(address));
 #endif
 }
-unsigned int auto_read_8(uaecptr address)
+unsigned int auto_read_8_z2(uaecptr address)
 {
-//   z3660_printf("Autoconfig BANK: Read 0x%08lX\n",address);
+//   z3660_printf("Autoconfig Z2 BANK: Read8 0x%08lX Z2\n",address);
 #ifdef AUTOCONFIG_ENABLED
-   if((configured&local.z3_enabled)!=local.z3_enabled)
-      return(read_autoconfig(address)>>24);
+   if(((configured_z2|shutup_z2)&local.z2_enabled)!=local.z2_enabled)
+      return(read_autoconfig_z2(address)>>24);
    else
       return(ps_read_8(address));
 #else
    return(ps_read_8(address));
 #endif
 }
-extern "C" void write_autoconfig(uint32_t address, uint32_t data);
-void auto_write_32(uaecptr address, unsigned int data)
+unsigned int auto_read_32_z3(uaecptr address)
 {
-   z3660_printf("[Core1] Autoconfig BANK: Write 0x%08X 0x%08X\n",address,data);
+//   z3660_printf("[Core1] Autoconfig Z3 BANK: Read32 LONG 0x%08lX\n",address);
 #ifdef AUTOCONFIG_ENABLED
-   if((configured&local.z3_enabled)!=local.z3_enabled)
-      write_autoconfig(address,data);
+   if(((configured_z3|shutup_z3)&local.z3_enabled)!=local.z3_enabled)
+      return(read_autoconfig_z3(address));
+   else
+      return(ps_read_32(address));
+#else
+   return(ps_read_32(address));
+#endif
+}
+unsigned int auto_read_16_z3(uaecptr address)
+{
+//   z3660_printf("[Core1] Autoconfig Z3 BANK: Read16 WORD 0x%08lX\n",address);
+#ifdef AUTOCONFIG_ENABLED
+   if(((configured_z3|shutup_z3)&local.z3_enabled)!=local.z3_enabled)
+      return(read_autoconfig_z3(address)>>16);
+   else
+      return(ps_read_16(address));
+#else
+   return(ps_read_16(address));
+#endif
+}
+unsigned int auto_read_8_z3(uaecptr address)
+{
+//   z3660_printf("Autoconfig Z3 BANK: Read8 0x%08lX\n",address);
+#ifdef AUTOCONFIG_ENABLED
+   if(((configured_z3|shutup_z3)&local.z3_enabled)!=local.z3_enabled)
+      return(read_autoconfig_z3(address)>>24);
+   else
+      return(ps_read_8(address));
+#else
+   return(ps_read_8(address));
+#endif
+}
+extern "C" void write_autoconfig_z2(uint32_t address, uint32_t data);
+extern "C" void write_autoconfig_z3(uint32_t address, uint32_t data);
+void auto_write_32_z2(uaecptr address, unsigned int data)
+{
+   z3660_printf("[Core1] Autoconfig Z2 BANK: Write32 0x%08X 0x%08X\n",address,data);
+#ifdef AUTOCONFIG_ENABLED
+   if(((configured_z2|shutup_z2)&local.z2_enabled)!=local.z2_enabled)
+      write_autoconfig_z2(address,data);
    else
       ps_write_32(address,data);
 #else
+   ps_write_32(address,data);
+#endif
+}
+void auto_write_16_z2(uaecptr address, unsigned int data)
+{
+   z3660_printf("[Core1] Autoconfig Z2 BANK: Write16 0x%08X 0x%08X\n",address,data);
+#ifdef AUTOCONFIG_ENABLED
+   if(((configured_z2|shutup_z2)&local.z2_enabled)!=local.z2_enabled)
+      write_autoconfig_z2(address,data<<16);
+   else
+      ps_write_16(address,data);
+#else
+   ps_write_16(address,data);
+#endif
+}
+void auto_write_8_z2(uaecptr address, unsigned int data)
+{
+#ifdef AUTOCONFIG_ENABLED
+   z3660_printf("[Core1] Autoconfig Z2 BANK: Write8 0x%08X 0x%08X\n",address,data);
+   if(((configured_z2|shutup_z2)&local.z2_enabled)!=local.z2_enabled)
+      write_autoconfig_z2(address,data<<24);
+   else
+      ps_write_8(address,data);
+#else
+   ps_write_8(address,data);
+#endif
+}
+void auto_write_32_z3(uaecptr address, unsigned int data)
+{
+   z3660_printf("[Core1] Autoconfig Z3 BANK: Writ32e 0x%08X 0x%08X\n",address,data);
+#ifdef AUTOCONFIG_ENABLED
+   if(((configured_z3|shutup_z3)&local.z3_enabled)!=local.z3_enabled)
+      write_autoconfig_z3(address,data);
+   else
       ps_write_32(address,data);
+#else
+   ps_write_32(address,data);
 #endif
 }
-void auto_write_16(uaecptr address, unsigned int data)
+void auto_write_16_z3(uaecptr address, unsigned int data)
 {
-   z3660_printf("[Core1] Autoconfig BANK: Write 0x%08X 0x%08X\n",address,data);
+   z3660_printf("[Core1] Autoconfig Z3 BANK: Write16 0x%08X 0x%08X\n",address,data);
 #ifdef AUTOCONFIG_ENABLED
-   if((configured&local.z3_enabled)!=local.z3_enabled)
-      write_autoconfig(address,data<<16);
+   if(((configured_z3|shutup_z3)&local.z3_enabled)!=local.z3_enabled)
+      write_autoconfig_z3(address,data<<16);
    else
       ps_write_16(address,data);
 #else
-      ps_write_16(address,data);
+   ps_write_16(address,data);
 #endif
 }
-void auto_write_8(uaecptr address, unsigned int data)
+void auto_write_8_z3(uaecptr address, unsigned int data)
 {
 #ifdef AUTOCONFIG_ENABLED
-   z3660_printf("[Core1] Autoconfig BANK: Write 0x%08X 0x%08X\n",address,data);
-   if((configured&local.z3_enabled)!=local.z3_enabled)
-      write_autoconfig(address,data<<24);
+   z3660_printf("[Core1] Autoconfig Z3 BANK: Write8 0x%08X 0x%08X\n",address,data);
+   if(((configured_z3|shutup_z3)&local.z3_enabled)!=local.z3_enabled)
+      write_autoconfig_z3(address,data<<24);
    else
       ps_write_8(address,data);
 #else
-      ps_write_8(address,data);
+   ps_write_8(address,data);
 #endif
 }
 unsigned int rtg_regs_read_32(uaecptr address)
@@ -261,58 +481,82 @@ unsigned int rtg_regs_read_32(uaecptr address)
    }
    if(add<0x6000)
    {
-      if(add>=0x2000)
-         return(read_scsi_register(add-0x2000,2));
-      else
+      if(add<0x2000)
          return(read_rtg_register(add));
+      else
+      {
+         uint32_t data=read_scsi_register(add-0x2000,2);
+//         printf("scsi read32 %08X %08X\n",add,data);
+         return(data);
+      }
    }
    if(add>=0x80000)
       return(swap32(*(uint32_t*)(Z3660_RTG_BASE+add)));
    else
-      return(read_scsi_register(add-0x2000,2));
+   {
+      uint32_t data=read_scsi_register(add-0x2000,2);
+//      printf("scsi read32 %08X %08X\n",add,data);
+      return(data);
+   }
 }
 unsigned int rtg_regs_read_16(uaecptr address)
 {
    uint32_t add=address-autoConfigBaseRTG;
    if(add<0x6000)
    {
-      if(add>=0x2000)
-         return(read_scsi_register(add-0x2000,1));
-      else
+      if(add<0x2000)
          return(read_rtg_register(add));
+      else
+      {
+         uint32_t data=read_scsi_register(add-0x2000,1);
+//         printf("scsi read16 %08X %08X\n",add,data);
+         return(data);
+      }
    }
    if(add>=0x80000)
       return(swap16(*(uint16_t*)(Z3660_RTG_BASE+add)));
    else
-      return(read_scsi_register(add-0x2000,1));
+   {
+      uint32_t data=read_scsi_register(add-0x2000,1);
+//      printf("scsi read16 %08X %08X\n",add,data);
+      return(data);
+   }
 }
 unsigned int rtg_regs_read_8(uaecptr address)
 {
    uint32_t add=address-autoConfigBaseRTG;
    if(add<0x6000)
    {
-      if(add>=0x2000)
-	     return(read_scsi_register(add-0x2000,0));
-      else
+      if(add<0x2000)
       {
          uint32_t data=read_rtg_register(add&0x1FFFFC);
          switch(add&0x3)
          {
-            case 0:
-               return((data>>24)&0xFF);
-            case 1:
-            	return((data>>16)&0xFF);
-            case 2:
-            	return((data>>8 )&0xFF);
-            case 3:
-            	return((data    )&0xFF);
-	     }
+         case 0:
+            return((data>>24)&0xFF);
+         case 1:
+            return((data>>16)&0xFF);
+         case 2:
+            return((data>>8 )&0xFF);
+         case 3:
+            return((data    )&0xFF);
+         }
+      }
+      else
+      {
+         uint32_t data=read_scsi_register(add-0x2000,0);
+//         printf("scsi read8 %08X %08X\n",add,data);
+         return(data);
       }
    }
    if(add>=0x80000)
-	   return(Z3660_RTG_BASE[add]);
+      return(Z3660_RTG_BASE[add]);
    else
-	   return(read_scsi_register(add-0x2000,0));
+   {
+      uint32_t data=read_scsi_register(add-0x2000,0);
+//      printf("scsi read8 %08X %08X\n",add,data);
+      return(data);
+   }
 }
 void rtg_regs_write_32(uaecptr address, unsigned int data)
 {
@@ -320,10 +564,13 @@ void rtg_regs_write_32(uaecptr address, unsigned int data)
    *(uint32_t *)(Z3660_RTG_BASE+add)=swap32(data);
    if(add<0x6000)
    {
-	   if(add<0x2000)
-		  write_rtg_register(add,data);
-	   else
-		  write_scsi_register(add-0x2000,data,2);
+      if(add<0x2000)
+         write_rtg_register(add,data);
+      else
+      {
+//         printf("scsi write32 %08X %08X\n",add,data);
+         write_scsi_register(add-0x2000,data,2);
+      }
    }
 }
 void rtg_regs_write_16(uaecptr address, unsigned int data)
@@ -332,10 +579,13 @@ void rtg_regs_write_16(uaecptr address, unsigned int data)
    *(uint16_t *)(Z3660_RTG_BASE+add)=swap16(data);
    if(add<0x6000)
    {
-	   if(add<0x2000)
-		  write_rtg_register(add,data);
-	   else
-		  write_scsi_register(add-0x2000,data,1);
+      if(add<0x2000)
+         write_rtg_register(add,data);
+      else
+      {
+//         printf("scsi write16 %08X %08X\n",add,data);
+         write_scsi_register(add-0x2000,data,1);
+      }
    }
 }
 void rtg_regs_write_8(uaecptr address, unsigned int data)
@@ -344,10 +594,13 @@ void rtg_regs_write_8(uaecptr address, unsigned int data)
    Z3660_RTG_BASE[add]=data;
    if(add<0x6000)
    {
-	   if(add<0x2000)
-		   write_rtg_register(add,data);
-	   else
-		   write_scsi_register(add-0x2000,data,0);
+      if(add<0x2000)
+         write_rtg_register(add,data<<24);
+      else
+      {
+//         printf("scsi write8 %08X %08X\n",add,data);
+         write_scsi_register(add-0x2000,data,0);
+      }
    }
 }
 unsigned int rtg_read_32(uaecptr address)
@@ -371,36 +624,39 @@ unsigned int rtg_read_16(uaecptr address)
 unsigned int rtg_read_8(uaecptr address)
 {
    uint32_t add=address-autoConfigBaseRTG;
-   uint32_t data=Z3660_RTG_BASE[add];
+   uint32_t data=(uint32_t)(Z3660_RTG_BASE[add]&0xFF);
 //   printf("read rtg (%08lX) = %08lX\n",add,data);
    return(data);
 }
 void rtg_write_32(uaecptr address, unsigned int data)
 {
    uint32_t add=address-autoConfigBaseRTG;
+   *(uint32_t *)(Z3660_RTG_BASE+add)=swap32(data);
 //   printf("write32 rtg (%08lX) = %08lX\n",add,data);
-//   if(add&3)
-//      printf("rtg_write32 unaligned to 0x%08X\n",add);
+/*
+   if(add&3)
+      printf("rtg_write32 unaligned to 0x%08X\n",add);
    switch(add&3)
    {
-      case 0:
-         *(uint32_t *)(Z3660_RTG_BASE+add)=swap32(data);
-         break;
-      case 1:
-         Z3660_RTG_BASE[add]=data>>24;
-         *(uint16_t *)(Z3660_RTG_BASE+add+1)=swap16(data>>8);
-         Z3660_RTG_BASE[add+3]=data;
-         break;
-      case 2:
-         *(uint16_t *)(Z3660_RTG_BASE+add)=swap16(data>>16);
-         *(uint16_t *)(Z3660_RTG_BASE+add+2)=swap16(data);
-         break;
-      case 3:
-         Z3660_RTG_BASE[add]=data>>24;
-         *(uint16_t *)(Z3660_RTG_BASE+add+1)=swap16(data>>8);
-         Z3660_RTG_BASE[add+3]=data;
-         break;
+   case 0:
+      *(uint32_t *)(Z3660_RTG_BASE+add)=swap32(data);
+      break;
+   case 1:
+      Z3660_RTG_BASE[add]=data>>24;
+      *(uint16_t *)(Z3660_RTG_BASE+add+1)=swap16(data>>8);
+      Z3660_RTG_BASE[add+3]=data;
+      break;
+   case 2:
+      *(uint16_t *)(Z3660_RTG_BASE+add)=swap16(data>>16);
+      *(uint16_t *)(Z3660_RTG_BASE+add+2)=swap16(data);
+      break;
+   case 3:
+      Z3660_RTG_BASE[add]=data>>24;
+      *(uint16_t *)(Z3660_RTG_BASE+add+1)=swap16(data>>8);
+      Z3660_RTG_BASE[add+3]=data;
+      break;
    }
+*/
 }
 void rtg_write_16(uaecptr address, unsigned int data)
 {
@@ -414,7 +670,7 @@ void rtg_write_8(uaecptr address, unsigned int data)
 {
    uint32_t add=address-autoConfigBaseRTG;
 //   printf("write8 rtg (%08lX) = %08lX\n",add,data);
-   Z3660_RTG_BASE[add]=data;
+   Z3660_RTG_BASE[add]=data&0xFF;
 }
 unsigned int dummy_read(uaecptr add)
 {
@@ -437,7 +693,7 @@ int slow_check(uaecptr add, uae_u32)
 }
 int dflt_check(uaecptr add, uae_u32)
 {
-   return(1);
+   return(0);
 }
 int auto_check(uaecptr add, uae_u32)
 {
@@ -452,6 +708,10 @@ int drct_check(uaecptr add, uae_u32)
    return(1);
 }
 int romd_check(uaecptr add, uae_u32)
+{
+   return(1);
+}
+int z2scsi_check(uaecptr add, uae_u32)
 {
    return(1);
 }
@@ -486,13 +746,27 @@ addrbank prom_bank = {
       prom_read_long, prom_read_word,
       ABFLAG_NONE, MB_READ, MB_WRITE
 };
-*/
-addrbank auto_bank = {
-      auto_read_32, auto_read_16, auto_read_8,
-      auto_write_32, auto_write_16, auto_write_8,
+ */
+addrbank auto_z2_bank = {
+      auto_read_32_z2, auto_read_16_z2, auto_read_8_z2,
+      auto_write_32_z2, auto_write_16_z2, auto_write_8_z2,
       dummy_xlate, auto_check, NULL, NULL, NULL,
-      auto_read_32, auto_read_16,
+      auto_read_32_z2, auto_read_16_z2,
       ABFLAG_NONE, MB_READ, MB_WRITE
+};
+addrbank auto_z3_bank = {
+      auto_read_32_z3, auto_read_16_z3, auto_read_8_z3,
+      auto_write_32_z3, auto_write_16_z3, auto_write_8_z3,
+      dummy_xlate, auto_check, NULL, NULL, NULL,
+      auto_read_32_z3, auto_read_16_z3,
+      ABFLAG_NONE, MB_READ, MB_WRITE
+};
+addrbank test_bank = {
+      test_read_32, test_read_16, test_read_8,
+      test_write_32, test_write_16, test_write_8,
+      dummy_xlate, mobo_check, NULL, NULL, NULL,
+      test_read_32, test_read_16,
+      ABFLAG_IO, MB_READ, MB_WRITE
 };
 addrbank mobo_bank = {
       ps_read_32, ps_read_16, ps_read_8,
@@ -520,13 +794,14 @@ addrbank drct_bank = {
       direct_write_32, direct_write_16, direct_write_8,
       dummy_xlate, drct_check, NULL, NULL, NULL,
       direct_read_32, direct_read_16,
+//      ABFLAG_NONE, MB_READ, MB_WRITE,
       ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special_mem"
       NULL, // sub_banks
       0xFFFFFFFF, //mask
       0, // startmask
       0, // start
-      0x08000000, // allocated_size 256 MByte
-      0x08000000, // reserved_size 256 MByte
+      0x08000000, // allocated_size 128 MByte
+      0x08000000, // reserved_size 128 MByte
       (uae_u8*)0x08000000, // baseaddr_direct_r
       (uae_u8*)0x08000000, // baseaddr_direct_w
       0x08000000, // startaccessmask
@@ -563,6 +838,15 @@ addrbank rome_bank = {
       (uae_u8*)0, // baseaddr_direct_w
       0x00F00000, // startaccessmask
 };
+
+addrbank z2scsi_bank = {
+      z2scsi_read_32, z2scsi_read_16, z2scsi_read_8,
+      z2scsi_write_32, z2scsi_write_16, z2scsi_write_8,
+      dummy_xlate, z2scsi_check, NULL, NULL, NULL,
+      z2scsi_read_32, z2scsi_read_16,
+      ABFLAG_NONE, MB_READ, MB_WRITE
+};
+
 addrbank z3ram_bank = {
       z3ram_read_32, z3ram_read_16, z3ram_read_8,
       z3ram_write_32, z3ram_write_16, z3ram_write_8,
@@ -591,8 +875,8 @@ addrbank rtg_bank = {
       rtg_write_32, rtg_write_16, rtg_write_8,
       dummy_xlate, rtg_check, NULL, NULL, NULL,
       rtg_read_32, rtg_read_16,
-      ABFLAG_NONE, MB_READ, MB_WRITE
-/*      ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special_mem"
+//      ABFLAG_NONE, MB_READ, MB_WRITE,
+      ABFLAG_RAM | ABFLAG_DIRECTACCESS, 0, 0, // <--- Direct memory is faster if it's NOT "special_mem"
       NULL, // sub_banks
       0xFFFFFFFF, //mask
       0, // startmask
@@ -602,7 +886,6 @@ addrbank rtg_bank = {
       (uae_u8*)RTG_BASE, // baseaddr_direct_r
       (uae_u8*)RTG_BASE, // baseaddr_direct_w
       RTG_BASE, // startaccessmask
-      */
 };
 addrbank dmmy_bank = {
       dummy_read, dummy_read, dummy_read,
@@ -624,6 +907,11 @@ extern "C" void init_ovl_chip_ram_bank(void)
 {
    RANGE_MAP(0x0000,0x0008,chpr_bank);
 }
+extern "C" void init_z2_scsi_bank(unsigned int ini)
+{
+   uint32_t dir=ini;
+   RANGE_MAP(dir,dir+0x0001,z2scsi_bank); // 2 MB
+}
 extern "C" void init_z3_ram_bank(unsigned int ini)
 {
    uint32_t dir=ini<<4;
@@ -636,7 +924,6 @@ extern "C" void init_rtg_bank(unsigned int ini)
    RANGE_MAP(dir+0x0020,dir+0x0800,rtg_bank); // RTG RAM
 }
 int maxcycles = 64*512; //256*512
-extern void init_mem_banks (void);
 extern void finish_Attributes(void);
 extern uint32_t MMUTable;
 extern uint32_t MMUL2Table[];
@@ -691,7 +978,10 @@ void uae_emulator(int enable_jit)
    RANGE_MAP(0x00DC,0x00DD,mobo_bank); // Mother Board bank ( RTC, SCSI, Mobo Resources & Custom chips)
    RANGE_MAP(0x00DD,0x00DE,slow_bank); // Mother Board bank ( RTC, SCSI, Mobo Resources & Custom chips)
    RANGE_MAP(0x00DE,0x00E0,mobo_bank); // Mother Board bank ( RTC, SCSI, Mobo Resources & Custom chips)
-   RANGE_MAP(0x00E8,0x00F0,mobo_bank); // Mother Board bank ( Zorro II Autoconfig )
+   RANGE_MAP(0x00E8,0x00E9,auto_z2_bank); // Z2 Autoconfig bank ( Zorro II AutoConfig )
+   RANGE_MAP(0x00E9,0x00EA,mobo_bank); // Mother Board bank ( Zorro II Autoconfig )
+//   RANGE_MAP(0x00EA,0x00EB,test_bank); // Z2 Autoconfig bank ( Zorro II AutoConfig )
+   RANGE_MAP(0x00EA,0x00F0,mobo_bank); // Mother Board bank ( Zorro II Autoconfig )
    if(local.load_rom_emu==1)
    {
       for(int i=128;i<256;i++)
@@ -716,43 +1006,45 @@ void uae_emulator(int enable_jit)
          MMUL2Table[i]=0;
       RANGE_MAP(0x00F0,0x00F8,slow_bank);//mobo_bank); // Mother Board bank ( Mobo ROM )
    }
-   RANGE_MAP(0x0100,0x0800,dmmy_bank);//mbrm_bank); // Mother Board bank ( Mother board RAM )
+   RANGE_MAP(0x0100,0x0800,slow_bank);//mbrm_bank); // Mother Board bank ( Mother board RAM )
+//   RANGE_MAP(0x0100,0x0800,dmmy_bank);//mbrm_bank); // Mother Board bank ( Mother board RAM )
    RANGE_MAP(0x0800,0x1000,drct_bank); // Direct bank ( CPU RAM )
-   RANGE_MAP(0x1000,0x1800,dflt_bank); // Direct bank ( extended CPU RAM )
-   RANGE_MAP(0x1800,0x4000,dmmy_bank); // Slow bank ( Z3 Expansion space )
+   RANGE_MAP(0x1000,0x1800,dmmy_bank); // dummy
+//   RANGE_MAP(0x1000,0x1800,dflt_bank); // Direct bank ( extended CPU RAM )
+   RANGE_MAP(0x1800,0x4000,dmmy_bank); // dummy
    RANGE_MAP(0x4000,0x8000,slow_bank); // Slow bank ( Z3 Expansion space )
-   RANGE_MAP(0xFF00,0xFF01,auto_bank); // Autoconfig bank ( Z3660 and Z3 AutoConfig )
+   RANGE_MAP(0xFF00,0xFF01,auto_z3_bank); // Z3 Autoconfig bank ( Z3660 and Z3 AutoConfig )
    RANGE_MAP(0xFFFF,0xFFFF,dmmy_bank); // dummy
    uint32_t *ptr;
-       ptr = &MMUTable;
+   ptr = &MMUTable;
    ptr[0x00F]=((uint32_t)&MMUL2Table)|0x1E1;
 
    finish_Attributes();
 #ifdef SHOW_MMU_TABLES
    {
-   	printf("Core 1 MMUTable 0x%08lX\n",(uint32_t)(&MMUTable));
-   	for(uint32_t i=0;i<0x100;i++)
-   	{
-   		printf("0x%03lX ",i*8);
-   		for(uint32_t j=0;j<8;j++)
-   		{
-   			uint32_t data=*((uint32_t *)(&MMUTable+(i*8+j)));
-   			printf("%08lX ",data);
-   		}
-   		printf("\n");
-   	}
-   	printf("\n");
-   	printf("Core 1 MMUL2Table 0x%08lX\n",(uint32_t)(&MMUL2Table));
-   	for(uint32_t i=0;i<0x20;i++)
-   	{
-   		printf("0x%03lX ",i*8);
-   		for(uint32_t j=0;j<8;j++)
-   		{
-   			uint32_t data=*((uint32_t *)((&MMUL2Table[0])+(i*8+j)));
-   			printf("%08lX ",data);
-   		}
-   		printf("\n");
-   	}
+      printf("Core 1 MMUTable 0x%08lX\n",(uint32_t)(&MMUTable));
+      for(uint32_t i=0;i<0x100;i++)
+      {
+         printf("0x%03lX ",i*8);
+         for(uint32_t j=0;j<8;j++)
+         {
+            uint32_t data=*((uint32_t *)(&MMUTable+(i*8+j)));
+            printf("%08lX ",data);
+         }
+         printf("\n");
+      }
+      printf("\n");
+      printf("Core 1 MMUL2Table 0x%08lX\n",(uint32_t)(&MMUL2Table));
+      for(uint32_t i=0;i<0x20;i++)
+      {
+         printf("0x%03lX ",i*8);
+         for(uint32_t j=0;j<8;j++)
+         {
+            uint32_t data=*((uint32_t *)((&MMUL2Table[0])+(i*8+j)));
+            printf("%08lX ",data);
+         }
+         printf("\n");
+      }
    }
 #endif
 
@@ -774,15 +1066,13 @@ void uae_emulator(int enable_jit)
    }
 
 }
-extern XGpioPs GpioPs;
-extern volatile uae_atomic uae_int_requested;
 extern SHARED *shared;
 int jit_enabled_last=-1;
 void z3660_tasks(void)
 {
-   static long int count=1000000;
+   static long int count=100000000;
    if(--count>0) return;
-   count=1000000;
+   count=100000000;
    int jit_enabled=shared->jit_enabled;
    if(jit_enabled!=jit_enabled_last)
    {
@@ -803,7 +1093,7 @@ void z3660_tasks(void)
    if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
    {
 
-      //      z3660_printf("Reset active (DOWN)...\n\r");
+//      z3660_printf("Reset active (DOWN)...\n\r");
       while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0){}
 //      z3660_printf("Reset inactive (UP)...\n\r");
       cpu_emulator_reset_core0();

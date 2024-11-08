@@ -21,6 +21,8 @@
  * https://spdx.org/licenses/GPL-3.0-or-later.html
  */
 
+//#define COMPILE_FOR_FSUAE
+
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <exec/libraries.h>
@@ -478,7 +480,10 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
 
 	//b->AllocCardMem = (void *)NULL;
 	//b->FreeCardMem = (void *)NULL;
-//	b->SetSwitch = (void *)SetSwitch;
+#ifdef COMPILE_FOR_FSUAE
+	// FSUAE Z3660 emulation needs the switch
+	b->SetSwitch = (void *)SetSwitch;
+#endif
 	b->SetColorArray = (void *)SetColorArray;
 	b->SetDAC = (void *)SetDAC;
 	b->SetGC = (void *)SetGC;
@@ -585,8 +590,16 @@ void init_modeline(uint32_t* registers, uint16 w, uint16 h, uint8 colormode, uin
 		mode = 10;
 	} else if (w == 2560 && h == 1440) {
 		mode = 11;
+	} else if (w == 1280 && h == 800) {
+		mode = 17;
+	} else if (w == 1920 && h == 1200) {
+		mode = 18;
+	} else if (w == 1600 && h == 900) {
+		mode = 19;
+	} else if (w == 1680 && h == 1050) {
+		mode = 20;
 	}
-
+	
 /* TODO: custom video mode
     else {
 		mode = 12; // custom mode
@@ -652,14 +665,18 @@ void SetGC(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __
 }
 
 //z3660 -> no scandoubler :(
-#if 0 
-int setswitch = -1;
+#ifdef COMPILE_FOR_FSUAE
+#warning ---------------------------
+#warning ---------------------------
+#warning -- Compiled for UAE !!!! --
+#warning ---------------------------
+#warning ---------------------------
 UWORD SetSwitch(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
     uint32_t* registers = (uint32_t*)b->RegisterBase;
 
 	if (enabled == 0) {
 		// capture 24 bit amiga video to 0xe00000
-
+/*
 		if (scandoubler_800x600) {
 			// slightly adjusted centering
 			ZZ_REGS_WRITE(REG_ZZ_PAN, 0x00dff2f8);

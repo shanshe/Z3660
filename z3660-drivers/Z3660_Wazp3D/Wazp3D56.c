@@ -527,7 +527,7 @@ REM(SetTexStates)
         WC->state.UseTex=FALSE;
         WT=NULL;
         WC->WT=WT;
-        WC->state.ST=NULL;
+        WC->state.ST=(ULONG)NULL;
         WC->uresize=1.0;
         WC->vresize=1.0;
         WC->state.TexEnvMode=0;                /* default = no tex ==> no TexEnv effect */
@@ -537,7 +537,7 @@ REM(SetTexStates)
         WC->state.UseTex= (StateON(W3D_TEXMAPPING));
         WT=texture->driver;
         WC->WT=WT;
-        WC->state.ST=WT->ST;
+        WC->state.ST=(ULONG)WT->ST;
         WC->uresize=1.0/(float)(WT->large);
         WC->vresize=1.0/(float)(WT->high );
         WC->state.TexEnvMode=WT->TexEnv;                    /* texture's texture-env-mode  */
@@ -669,6 +669,11 @@ VAR(WC->state.BlendMode)
 #endif
 
     SOFT3D_SetDrawState(WC->SC,&WC->state);
+    SOFT3D_Debug(&WC->state);
+    SOFT3D_Debug(&WC->state.ST);
+    SOFT3D_Debug((APTR)WC->state.ST);
+    struct state3D *state2=&WC->state;
+    SOFT3D_Debug((APTR)state2->ST);
     WC->state.Changed=FALSE;            /* change done */
 }
 #ifdef WAZP3DDEBUG
@@ -2059,7 +2064,7 @@ void DebugTextureOnScreen(W3D_Context *context)
     flatstate.UseGouraud=FALSE;
     flatstate.UseTex=TRUE;
     flatstate.UseFog=FALSE;
-    flatstate.ST=WT->ST;
+    flatstate.ST=(ULONG)WT->ST;
     flatstate.Changed=TRUE;
 
     SOFT3D_SetDrawState(WC->SC,&flatstate);
@@ -2473,7 +2478,7 @@ VAR(sizeof(struct state3D))
     WC->state.FogDensity=0.0;
 
     WC->state.UseTex=FALSE;
-    WC->state.ST=NULL;
+    WC->state.ST=(ULONG)NULL;
     WC->state.Changed=TRUE;
 
     if(Wazp3D->IndirectMode.ON)
@@ -3415,6 +3420,7 @@ UBYTE TexFlags;
     TextureAlphaUsage(WT);        /* analyze if the tex really got transparent pixels */
     TexFlags=(Wazp3D->UseFiltering.ON*2+Wazp3D->DoMipMaps.ON*1);
     WT->ST=SOFT3D_CreateTexture(WC->SC,WT->pt,WT->large,WT->high,WT->format,TexFlags);
+    SOFT3D_Debug(WT->ST);
     if(WT->ST==NULL)
         { *error=W3D_NOMEMORY;PrintError(*error);return(NULL);}
 

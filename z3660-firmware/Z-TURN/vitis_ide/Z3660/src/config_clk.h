@@ -7,17 +7,17 @@ typedef struct {
 	int divider;
 	int phase;
 	int dutycycle;
-} clock;
+} clock_st;
 typedef struct {
 	int clk;
 	int M;
 	int D;
-	clock axi;
-	clock pclk;
-	clock clken;
-	clock bclk;
-	clock clk90;
-	clock cpuclk;
+	clock_st axi;
+	clock_st pclk;
+	clock_st clken;
+	clock_st bclk;
+	clock_st cpuclk;
+	clock_st clk90;
 } clock_data;
 
 void configure_clk(int clk, int verbose, int nbr);

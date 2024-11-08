@@ -7,7 +7,7 @@
 
 #define UNIMPLEMENTED \
     do { \
-        fprintf(stderr, "%s:%d: %s is not implemented yet\n", \
+        printf("%s:%d: %s is not implemented yet\n", \
                 __FILE__, __LINE__, __func__); \
         abort(); \
     } while(0)

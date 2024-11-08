@@ -34,7 +34,7 @@
 
 #define DEVF_INT2MODE 1
 
-static const char version[] = "$VER: axmp3 1.12\n\r";
+static const char version[] = "$VER: axmp3 1.03\n\r";
 static const char procname[] = "axmp3";
 
 #define ZZ_BYTES_PER_PERIOD 3840
@@ -98,7 +98,7 @@ void WorkerProcess()
 
         *((volatile uint32_t *)(ax->hw_addr + REG_ZZ_DECODER_PARAM)) = 2;
         *((volatile uint32_t *)(ax->hw_addr + REG_ZZ_DECODER_VAL)) = (ax->decode_offset + buf_offset);
-        *((volatile uint32_t *)(ax->hw_addr + REG_ZZ_DECODER_PARAM)) = 0;
+//        *((volatile uint32_t *)(ax->hw_addr + REG_ZZ_DECODER_PARAM)) = 0;
         // ZZ_DECODE (task)
         *((volatile uint32_t *)(ax->hw_addr + REG_ZZ_DECODE)) = DECODE_RUN;
 

@@ -141,6 +141,11 @@ void *SOFT3D_CreateTexture(APTR sc,APTR pt,UWORD large,UWORD high,UWORD format,U
     uint32_t *a=(uint32_t *)ZZ_REGS_READ(REG_ZZ_SOFT3D_OP);
     return(a);
 }
+void SOFT3D_Debug(APTR txt)
+{
+    soft3ddata->offset[0]=(uint32_t)txt;
+    ZZ_REGS_WRITE(REG_ZZ_SOFT3D_OP, OP_DEBUG);
+}
 void SOFT3D_FreeTexture(APTR sc,APTR st)
 {
     soft3ddata->offset[0]=(uint32_t)sc;

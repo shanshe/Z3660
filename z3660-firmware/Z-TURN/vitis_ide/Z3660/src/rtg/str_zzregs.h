@@ -121,6 +121,7 @@ char *zz_reg_offsets_string[]={
 
    [REG_ZZ_FW_BETA        ] = STRINGIZER(REG_ZZ_FW_BETA        ),// 0x280,
    [REG_ZZ_FW_ALFA        ] = STRINGIZER(REG_ZZ_FW_ALFA        ),// 0x284,
+   [REG_ZZ_AUTOC_RTG_EN   ] = STRINGIZER(REG_ZZ_AUTOC_RTG_EN   ),// 0x288,
 
    //NOT USED 0x240 - 0x2FC
 

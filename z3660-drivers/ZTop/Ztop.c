@@ -10,10 +10,10 @@ quit
  **  Best viewed with TabSize = 2, or = 4.
  **/
 //#define UAETEST
-//#define CPU_FREQ_STEP 5
-//#define CPU_FREQ_THRESHOLD 3
-#define CPU_FREQ_STEP 50
-#define CPU_FREQ_THRESHOLD 25
+#define CPU_FREQ_STEP 5
+#define CPU_FREQ_THRESHOLD 3
+//#define CPU_FREQ_STEP 50
+//#define CPU_FREQ_THRESHOLD 25
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,6 +87,8 @@ quit
 #include "z3660_regs.h"
 #include <string.h>
 
+void refresh_zz_info(struct Window *win);
+
 #define SPACE LAYOUT_AddChild, SpaceObject, End
 
 #define ListViewObject NewObject(LISTVIEW_GetClass(), NULL
@@ -118,6 +120,7 @@ char txt_buf[64];
 char window_title[64]="";
 
 #define INFO_STR_WIDTH 50
+#define PRESET_STR_WIDTH 50
 
 enum
 {
@@ -131,6 +134,8 @@ enum
 	GID_PAGELAY1,
 	GID_PAGELAY2,
 	GID_PAGELAY3,
+	GID_PAGELAY4,
+	GID_PAGELAY5,
 
 	GID_INFO_CPU_FREQ,
 	GID_INFO_FWVER,
@@ -141,6 +146,7 @@ enum
 	GID_INFO_LTC_V1,
 	GID_INFO_LTC_V2,
 	GID_INFO_LTC_060_TEMP,
+	GID_INFO_BTN_HARDREBOOT,
 	GID_INFO_BTN_TEST,
 	GID_INFO_BTN_REFRESH,
 	GID_INFO_JIT,
@@ -150,7 +156,9 @@ enum
 	GID_BOOT_LIST_BOOTMODE,
 	GID_BOOT_SCSIBOOT,
 	GID_BOOT_ENABLETEST,
+	GID_CPURAM_ENABLE,
 	GID_BOOT_AUTOCONFIG_RAM,
+	GID_BOOT_AUTOCONFIG_RTG,
 	GID_BOOT_LIST_KICKSTART,
 	GID_BOOT_LIST_EXT_KICKSTART,
 	GID_BOOT_BTN_APPLY_BOOTMODE,
@@ -165,6 +173,36 @@ enum
 	GID_SCSI6,
 	GID_SCSI_BTN_APPLY_SCSI,
 	GID_SCSI_BTN_APPLY_ALL,
+
+	GID_MISC_MAC,
+	GID_MISC_BPTON,
+	GID_MISC_BPTOFF,
+	GID_MISC_BTN_APPLY_MISC,
+	GID_MISC_BTN_APPLY_ALL,
+
+
+	GID_PRESET0,
+	GID_PRESET1,
+	GID_PRESET2,
+	GID_PRESET3,
+	GID_PRESET4,
+	GID_PRESET5,
+	GID_PRESET6,
+	GID_PRESET7,
+	GID_PRESET8,
+	GID_PRESET_CB0,
+	GID_PRESET_CB1,
+	GID_PRESET_CB2,
+	GID_PRESET_CB3,
+	GID_PRESET_CB4,
+	GID_PRESET_CB5,
+	GID_PRESET_CB6,
+	GID_PRESET_CB7,
+	GID_PRESET_CB8,
+	GID_PRESET_BTN_APPLY_PRESET,
+	GID_PRESET_BTN_DELETE_PRESET,
+	GID_PRESET_BTN_APPLY_ALL,
+
 
 	GID_LAST
 };
@@ -248,6 +286,18 @@ char *scsis[] = {
 	"17" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
 	"18" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
 	"19" SCSI_CHARS "\0" SCSI_CHARS SCSI_CHARS,
+	NULL
+};
+#define PRESET_CHARS "012345678901234567890123456789"
+char *presets[] = {
+	" 0 " PRESET_CHARS,
+	" 1 " PRESET_CHARS,
+	" 2 " PRESET_CHARS,
+	" 3 " PRESET_CHARS,
+	" 4 " PRESET_CHARS,
+	" 5 " PRESET_CHARS,
+	" 6 " PRESET_CHARS,
+	" 7 " PRESET_CHARS,
 	NULL
 };
 /* Try opening the class library from a number of common places */
@@ -336,16 +386,26 @@ uint32_t zz_get_test_enable(void)
 	return zz_get_reg(REG_ZZ_TEST_ENABLE);
 }
 
+uint32_t zz_get_cpuram_enable(void)
+{
+	return zz_get_reg(REG_ZZ_CPU_RAM_EN);
+}
+
 uint32_t zz_get_autoconfig_ram_enable(void)
 {
 	return zz_get_reg(REG_ZZ_AUTOC_RAM_EN);
+}
+
+uint32_t zz_get_autoconfig_rtg_enable(void)
+{
+	return zz_get_reg(REG_ZZ_AUTOC_RTG_EN);
 }
 
 uint32_t zz_get_emulation_used(void)
 {
 	return zz_get_reg(REG_ZZ_EMULATION_USED);
 }
-/* ax is always preset :)
+/* ax is always present :)
 uint32_t zz_get_ax_present(void)
 {
 	return zz_get_reg(REG_ZZ_AUDIO_CONFIG);
@@ -384,6 +444,30 @@ uint32_t zz_get_selected_scsi(int scsi)
 	return(scsi*2UL);
 #endif
 }
+uint32_t zz_get_bpton(void)
+{
+#ifndef UAETEST
+	return zz_get_reg(REG_ZZ_BPTON);
+#else
+	return(1);
+#endif
+}
+
+uint32_t zz_get_bptoff(void)
+{
+#ifndef UAETEST
+	return zz_get_reg(REG_ZZ_BPTOFF);
+#else
+	return(1);
+#endif
+}
+
+void zz_get_mac(char *mac)
+{
+	uint32_t data_hi=zz_get_reg(REG_ZZ_ETH_MAC_HI);
+	uint32_t data_lo=zz_get_reg(REG_ZZ_ETH_MAC_LO);
+	sprintf(mac,"%02X:%02X:%02X:%02X:%02X:%02X",(data_hi>>8)&0xFF,(data_hi)&0xFF,(data_lo>>24)&0xFF,(data_lo>>16)&0xFF,(data_lo>>8)&0xFF,(data_lo)&0xFF);
+}
 
 uint32_t zz_get_usb_status(void)
 {
@@ -410,9 +494,19 @@ void zz_set_test_enabled(uint16_t enable)
 	zz_set_reg(REG_ZZ_TEST_ENABLE, !!enable);
 }
 
+void zz_set_cpuram_enabled(uint16_t enable)
+{
+	zz_set_reg(REG_ZZ_CPU_RAM_EN, !!enable);
+}
+
 void zz_set_autoconfig_ram_enabled(uint16_t enable)
 {
 	zz_set_reg(REG_ZZ_AUTOC_RAM_EN, !!enable);
+}
+
+void zz_set_autoconfig_rtg_enabled(uint16_t enable)
+{
+	zz_set_reg(REG_ZZ_AUTOC_RTG_EN, !!enable);
 }
 
 void zz_set_lpf_freq(uint16_t freq)
@@ -420,6 +514,15 @@ void zz_set_lpf_freq(uint16_t freq)
 	zz_set_reg(REG_ZZ_AUDIO_PARAM, 9);
 	zz_set_reg(REG_ZZ_AUDIO_VAL, freq);
 //	zz_set_reg(REG_ZZ_AUDIO_PARAM, 0);
+}
+void zz_set_bpton(uint16_t value)
+{
+	zz_set_reg(REG_ZZ_BPTON, value);
+}
+
+void zz_set_bptoff(uint16_t value)
+{
+	zz_set_reg(REG_ZZ_BPTOFF, value);
 }
 
 void zz_set_cpu_freq(uint16_t freq)
@@ -431,7 +534,6 @@ void zz_set_selected_bootmode(uint16_t bm)
 {
 	zz_set_reg(REG_ZZ_BOOTMODE, bm);
 }
-
 void zz_set_selected_kickstart(uint16_t ks)
 {
 	zz_set_reg(REG_ZZ_KS_SEL, ks);
@@ -444,6 +546,12 @@ void zz_set_selected_scsi(uint32_t index,uint16_t scsi)
 {
 	zz_set_reg(REG_ZZ_SCSI_SEL_0+(index<<2), scsi);
 }
+void zz_set_selected_preset(struct Window *win,int index)
+{
+	zz_set_reg(REG_ZZ_PRESET_SEL,index);
+	refresh_zz_info(win);
+}
+
 void zz_set_selected_kickstart_txt(uint16_t ks)
 {
 	zz_set_reg(REG_ZZ_KS_SEL_TXT, ks);
@@ -456,15 +564,45 @@ void zz_set_selected_scsi_txt(uint16_t scsi)
 {
 	zz_set_reg(REG_ZZ_SCSI_SEL_TXT, scsi);
 }
+void zz_set_selected_preset_txt(int index)
+{
+	zz_set_reg(REG_ZZ_PRESET_SEL_TXT,index);
+}
 
 void zz_set_apply_bootmode(void)
 {
-	int kickstart=0,ext_kickstart=0;
+	int bootmode;
+	int cpufreq;
+	int kickstart,ext_kickstart;
+	int scsiboot;
+	int test_enable;
+	int cpuram_enable;
+	int autoconfig_ram;
+	int autoconfig_rtg;
+
+	GetAttrs((Object *)gadgets[GID_BOOT_LIST_BOOTMODE], LISTBROWSER_Selected, &bootmode, TAG_END);
+	zz_set_selected_bootmode(bootmode);
+	GetAttrs((Object *)gadgets[GID_BOOT_CPU_FREQ], SLIDER_Level, &cpufreq, TAG_DONE);
+	zz_set_cpu_freq(cpufreq);
 	GetAttrs((Object *)gadgets[GID_BOOT_LIST_KICKSTART], CHOOSER_Selected, &kickstart, TAG_END);
 	zz_set_selected_kickstart(kickstart);
 	GetAttrs((Object *)gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, &ext_kickstart, TAG_END);
 	zz_set_selected_ext_kickstart(ext_kickstart);
-	zz_set_reg(REG_ZZ_APPLY_BOOTMODE, 0x55AA);
+
+	GetAttrs((Object *)gadgets[GID_BOOT_SCSIBOOT], CHECKBOX_Checked, &scsiboot, TAG_END);
+	zz_set_scsiboot_enabled(scsiboot);
+	GetAttrs((Object *)gadgets[GID_BOOT_AUTOCONFIG_RAM], CHECKBOX_Checked, &autoconfig_ram, TAG_END);
+	zz_set_autoconfig_ram_enabled(autoconfig_ram);
+	GetAttrs((Object *)gadgets[GID_BOOT_AUTOCONFIG_RTG], CHECKBOX_Checked, &autoconfig_rtg, TAG_END);
+	zz_set_autoconfig_rtg_enabled(autoconfig_rtg);
+	GetAttrs((Object *)gadgets[GID_BOOT_ENABLETEST], CHECKBOX_Checked, &test_enable, TAG_END);
+	zz_set_test_enabled(test_enable);
+	GetAttrs((Object *)gadgets[GID_CPURAM_ENABLE], CHECKBOX_Checked, &cpuram_enable, TAG_END);
+	zz_set_cpuram_enabled(cpuram_enable);
+}
+void zz_set_hardreboot(void)
+{
+	zz_set_reg(REG_ZZ_APPLY_BOOTMODE, 0x5A5A); // ARM hard reboot
 }
 void zz_set_apply_scsi(void)
 {
@@ -475,22 +613,100 @@ void zz_set_apply_scsi(void)
 		GetAttrs((Object *)gadgets[GID_SCSI0+i], CHOOSER_Selected, &scsi[i], TAG_END);
 		zz_set_selected_scsi(i,scsi[i]);
 	}
-	zz_set_reg(REG_ZZ_APPLY_SCSI, 0x55AA);
 }
+uint8_t hex2int(char c1, char c2)
+{
+	uint8_t data=0;
+	if(c1>='a' && c1<'f') c1=c1-'a'+'A';
+	if(c2>='a' && c2<'f') c2=c2-'a'+'A';
+
+	if(c1>='0' && c1<='9')
+		data|=(c1-'0')<<4;
+	else if(c1>='A' && c1<='F')
+		data|=(c1-'A'+10)<<4;
+
+	if(c2>='0' && c2<='9')
+		data|=c2-'0';
+	else if(c2>='A' && c2<='F')
+		data|=c2-'A'+10;
+	return data;
+}
+void zz_set_apply_misc(void)
+{
+	int bpton,bptoff;
+	char mac[18];
+	uint32_t data;
+	GetAttrs((Object *)gadgets[GID_MISC_MAC], SLIDER_Level, mac, TAG_END);
+	data =((uint32_t)hex2int(mac[ 0],mac[ 1]))<<8;
+	data|=((uint32_t)hex2int(mac[ 3],mac[ 4]));
+	zz_set_reg(REG_ZZ_ETH_MAC_HI,data);
+	data =((uint32_t)hex2int(mac[ 6],mac[ 7]))<<24;
+	data|=((uint32_t)hex2int(mac[ 9],mac[10]))<<16;
+	data|=((uint32_t)hex2int(mac[12],mac[13]))<<8;
+	data|=((uint32_t)hex2int(mac[15],mac[16]));
+	zz_set_reg(REG_ZZ_ETH_MAC_LO,data);
+
+	GetAttrs((Object *)gadgets[GID_MISC_BPTON], SLIDER_Level, &bpton, TAG_END);
+	zz_set_reg(REG_ZZ_BPTON,bpton);
+	GetAttrs((Object *)gadgets[GID_MISC_BPTOFF], SLIDER_Level, &bptoff, TAG_END);
+	zz_set_reg(REG_ZZ_BPTOFF,bptoff);
+}
+uint32_t zz_get_selected_preset(void)
+{
+	return zz_get_reg(REG_ZZ_PRESET_SEL);
+}
+
+void 
+zz_set_apply_preset(void)
+{
+	STRPTR name=NULL;
+	int preset=zz_get_selected_preset();
+	switch(preset)
+	{
+		case 0:
+			GetAttrs((Object *)gadgets[GID_PRESET0], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		case 1:
+			GetAttrs((Object *)gadgets[GID_PRESET1], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		case 2:
+			GetAttrs((Object *)gadgets[GID_PRESET2], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		case 3:
+			GetAttrs((Object *)gadgets[GID_PRESET3], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		case 4:
+			GetAttrs((Object *)gadgets[GID_PRESET4], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		case 5:
+			GetAttrs((Object *)gadgets[GID_PRESET5], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		case 6:
+			GetAttrs((Object *)gadgets[GID_PRESET6], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		case 7:
+			GetAttrs((Object *)gadgets[GID_PRESET7], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+			break;
+		default:
+		case 8:
+			name=NULL;
+	}
+
+//	GetAttrs((Object *)gadgets[GID_PRESET0], STRINGA_TextVal, (ULONG*)&name, TAG_END);
+	if(name!=NULL)
+	{
+//		printf("%s\n",name);
+		strcpy((char *)(zz_regs+REG_ZZ_SEL_PRESET_TXT),name);
+	}
+}
+
 void zz_set_apply_all(void)
 {
-	int scsi[7];
-	int i;
-	int kickstart=0,ext_kickstart=0;
-	GetAttrs((Object *)gadgets[GID_BOOT_LIST_KICKSTART], CHOOSER_Selected, &kickstart, TAG_END);
-	zz_set_selected_kickstart(kickstart);
-	GetAttrs((Object *)gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, &ext_kickstart, TAG_END);
-	zz_set_selected_ext_kickstart(ext_kickstart);
-	for(i=0;i<7;i++)
-	{
-		GetAttrs((Object *)gadgets[GID_SCSI0+i], CHOOSER_Selected, &scsi[i], TAG_END);
-		zz_set_selected_scsi(i,scsi[i]);
-	}
+	zz_set_apply_bootmode();
+	zz_set_apply_scsi();
+	zz_set_apply_misc();
+	zz_set_apply_preset();
+
 	zz_set_reg(REG_ZZ_APPLY_ALL, 0x55AA);
 }
 typedef struct {
@@ -529,10 +745,16 @@ void refresh_zz_info(struct Window *win)
 	int bootmode;
 	int scsiboot;
 	int test_enable;
+	int cpuram_enable;
 	int autoconfig_ram;
+	int autoconfig_rtg;
 	int kickstart;
 	int ext_kickstart;
 	uint32_t beta;
+	int bpton;
+	int bptoff;
+	char mac[18];
+	int selected_preset;
 	
 	uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
 
@@ -561,11 +783,17 @@ void refresh_zz_info(struct Window *win)
 	bootmode=zz_get_selected_bootmode();
 	scsiboot=zz_get_scsiboot_enable();
 	test_enable=zz_get_test_enable();
+	cpuram_enable=zz_get_cpuram_enable();
 	autoconfig_ram=zz_get_autoconfig_ram_enable();
+	autoconfig_rtg=zz_get_autoconfig_rtg_enable();
 	kickstart=zz_get_selected_kickstart();
 	ext_kickstart=zz_get_selected_ext_kickstart();
 	for(i=0;i<7;i++)
 		scsi[i]=zz_get_selected_scsi(i)+1;
+	bpton=zz_get_bpton();
+	bptoff=zz_get_bptoff();
+	zz_get_mac(mac);
+	selected_preset=(int)zz_get_selected_preset();
 
 #ifndef UAETEST
 	for(i=0;i<10;i++)
@@ -730,6 +958,51 @@ void refresh_zz_info(struct Window *win)
 	scsis[21][2]='\0';
 	scsis[21][3]='\0';
 #endif
+
+#ifndef UAETEST
+	for(i=0;i<8;i++)
+	{
+		int j=0;
+		int k;
+		zz_set_selected_preset_txt(i);
+		while(1)
+		{
+			uint32_t data=*((volatile uint32_t*)(zz_regs+REG_ZZ_SEL_PRESET_TXT+j));
+			char hh=data>>24;
+			char hl=data>>16;
+			char lh=data>>8;
+			char ll=data;
+			presets[i][j++]=hh;
+			if(hh==0)
+				break;
+			presets[i][j++]=hl;
+			if(hl==0)
+				break;
+			presets[i][j++]=lh;
+			if(lh==0)
+				break;
+			presets[i][j++]=ll;
+			if(ll==0)
+				break;
+			if(j>48)
+			break;
+		}
+		for(k=j;k<4;k++)
+			presets[i][k]='\0';
+	}
+	presets[8][0]='\0';
+	presets[8][1]='\0';
+	presets[8][2]='\0';
+	presets[8][3]='\0';
+#else
+	presets[8][0]='\0';
+	presets[8][1]='\0';
+	presets[8][2]='\0';
+	presets[8][3]='\0';
+#endif
+
+
+
 	filter(&t);
 	filter(&vaux);
 	filter(&vint);
@@ -784,10 +1057,22 @@ void refresh_zz_info(struct Window *win)
 		SetAttrs(gadgets[GID_BOOT_ENABLETEST], CHECKBOX_Checked, FALSE, TAG_END);
 	}
 	
+	if (cpuram_enable) {
+		SetAttrs(gadgets[GID_CPURAM_ENABLE], CHECKBOX_Checked, TRUE, TAG_END);
+	} else {
+		SetAttrs(gadgets[GID_CPURAM_ENABLE], CHECKBOX_Checked, FALSE, TAG_END);
+	}
+	
 	if (autoconfig_ram) {
 		SetAttrs(gadgets[GID_BOOT_AUTOCONFIG_RAM], CHECKBOX_Checked, TRUE, TAG_END);
 	} else {
 		SetAttrs(gadgets[GID_BOOT_AUTOCONFIG_RAM], CHECKBOX_Checked, FALSE, TAG_END);
+	}
+
+	if (autoconfig_rtg) {
+		SetAttrs(gadgets[GID_BOOT_AUTOCONFIG_RTG], CHECKBOX_Checked, TRUE, TAG_END);
+	} else {
+		SetAttrs(gadgets[GID_BOOT_AUTOCONFIG_RTG], CHECKBOX_Checked, FALSE, TAG_END);
 	}
 
 	SetAttrs(gadgets[GID_BOOT_LIST_BOOTMODE], LISTBROWSER_Selected, bootmode, TAG_END);
@@ -797,6 +1082,10 @@ void refresh_zz_info(struct Window *win)
 	SetAttrs(gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, ext_kickstart,
 	                                               CHOOSER_MaxLabels, num_ext_kickstarts,
 	                                               TAG_END);
+
+	SetAttrs(gadgets[GID_MISC_BPTON], SLIDER_Level, bpton, TAG_END);
+	SetAttrs(gadgets[GID_MISC_BPTOFF], SLIDER_Level, bptoff, TAG_END);
+	SetAttrs(gadgets[GID_MISC_MAC], STRINGA_TextVal, mac, TAG_END);
 
 #define SCSI_LABELS(A) SetAttrs(gadgets[GID_SCSI ## A], CHOOSER_Selected, scsi[A],\
 	                             CHOOSER_MaxLabels, num_scsis,\
@@ -808,11 +1097,39 @@ void refresh_zz_info(struct Window *win)
 	SCSI_LABELS(4);
 	SCSI_LABELS(5);
 	SCSI_LABELS(6);
+
+	switch(selected_preset)
+	{
+#define PRESET(A)   case A: \
+						SetAttrs(gadgets[GID_PRESET_CB ## A], CHECKBOX_Checked, TRUE, TAG_END); \
+						break
+		PRESET(0);
+		PRESET(1);
+		PRESET(2);
+		PRESET(3);
+		PRESET(4);
+		PRESET(5);
+		PRESET(6);
+		PRESET(7);
+		default:
+		PRESET(8);
+	}
+	SetAttrs(gadgets[GID_PRESET0], STRINGA_TextVal, presets[0], TAG_END);
+	SetAttrs(gadgets[GID_PRESET1], STRINGA_TextVal, presets[1], TAG_END);
+	SetAttrs(gadgets[GID_PRESET2], STRINGA_TextVal, presets[2], TAG_END);
+	SetAttrs(gadgets[GID_PRESET3], STRINGA_TextVal, presets[3], TAG_END);
+	SetAttrs(gadgets[GID_PRESET4], STRINGA_TextVal, presets[4], TAG_END);
+	SetAttrs(gadgets[GID_PRESET5], STRINGA_TextVal, presets[5], TAG_END);
+	SetAttrs(gadgets[GID_PRESET6], STRINGA_TextVal, presets[6], TAG_END);
+	SetAttrs(gadgets[GID_PRESET7], STRINGA_TextVal, presets[7], TAG_END);
+
+	for(i=0;i<GID_LAST;i++)
+		RefreshGadgets(gadgets[i], win, NULL);
+
 	if(win!=NULL)
 	{
 		RefreshGadgets(gadgets[GID_MAIN], win, NULL);
 	}
-
 }
 
 ULONG zz_perform_memtest(uint32_t offset)
@@ -1239,14 +1556,39 @@ VOID handleGadgetEvent(struct Window *win,int gad, UWORD code)
 		}
 		case GID_BOOT_BTN_APPLY_BOOTMODE: {
 			zz_set_apply_bootmode();
+			zz_set_apply_preset();
+			zz_set_reg(REG_ZZ_APPLY_BOOTMODE, 0x55AA);
+			break;
+		}
+		case GID_INFO_BTN_HARDREBOOT: {
+			zz_set_hardreboot();
 			break;
 		}
 		case GID_SCSI_BTN_APPLY_SCSI: {
 			zz_set_apply_scsi();
+			zz_set_apply_preset();
+			zz_set_reg(REG_ZZ_APPLY_SCSI, 0x55AA);
+			break;
+		}
+		case GID_MISC_BTN_APPLY_MISC: {
+			zz_set_apply_misc();
+			zz_set_apply_preset();
+			zz_set_reg(REG_ZZ_APPLY_MISC, 0x55AA);
+			break;
+		}
+		case GID_PRESET_BTN_APPLY_PRESET: {
+			zz_set_apply_preset();
+			zz_set_reg(REG_ZZ_APPLY_PRESET, 0x55AA);
+			break;
+		}
+		case GID_PRESET_BTN_DELETE_PRESET: {
+			zz_set_reg(REG_ZZ_DELETE_PRESET, 0x55AA);
 			break;
 		}
 		case GID_BOOT_BTN_APPLY_ALL:
-		case GID_SCSI_BTN_APPLY_ALL: {
+		case GID_SCSI_BTN_APPLY_ALL:
+		case GID_MISC_BTN_APPLY_ALL:
+		case GID_PRESET_BTN_APPLY_ALL: {
 			zz_set_apply_all();
 			break;
 		}
@@ -1258,8 +1600,53 @@ VOID handleGadgetEvent(struct Window *win,int gad, UWORD code)
 			zz_set_test_enabled(code);
 			break;
 		}
+		case GID_CPURAM_ENABLE: {
+			zz_set_cpuram_enabled(code);
+			break;
+		}
 		case GID_BOOT_AUTOCONFIG_RAM: {
 			zz_set_autoconfig_ram_enabled(code);
+			break;
+		}
+		case GID_BOOT_AUTOCONFIG_RTG: {
+			zz_set_autoconfig_rtg_enabled(code);
+			break;
+		}
+		case GID_MISC_MAC: {
+//			zz_set_lpf_freq(code);
+			break;
+		}
+		case GID_MISC_BPTON: {
+//			code=code-(code%100);
+//			SetAttrs( gadgets[GID_MISC_BPTON], SLIDER_Level,  code, TAG_DONE);
+			if(code==0)
+				SetAttrs( gadgets[GID_MISC_BPTON], SLIDER_LevelFormat,  " Disabled", TAG_DONE);
+			else
+				SetAttrs( gadgets[GID_MISC_BPTON], SLIDER_LevelFormat,  "%4ld.0 us", TAG_DONE);
+			RefreshGadgets(gadgets[GID_MISC_BPTON], win, NULL);
+			zz_set_bpton(code);
+			break;
+		}
+		case GID_MISC_BPTOFF: {
+			zz_set_bptoff(code);
+			break;
+		}
+		case GID_PRESET_CB0:
+		case GID_PRESET_CB1:
+		case GID_PRESET_CB2:
+		case GID_PRESET_CB3:
+		case GID_PRESET_CB4:
+		case GID_PRESET_CB5:
+		case GID_PRESET_CB6:
+		case GID_PRESET_CB7:
+		case GID_PRESET_CB8: {
+			int i;
+			for(i=0;i<9;i++)
+				SetAttrs( gadgets[i+GID_PRESET_CB0], CHECKBOX_Checked, FALSE, TAG_DONE);
+			SetAttrs( gadgets[gad], CHECKBOX_Checked, TRUE, TAG_DONE);
+			for(i=0;i<9;i++)
+				RefreshGadgets(gadgets[i+GID_PRESET_CB0], win, NULL);
+			zz_set_selected_preset(win, gad-GID_PRESET_CB0);
 			break;
 		}
 	}
@@ -1287,9 +1674,6 @@ VOID free_listview_list(struct List *list)
 int main(void)
 {
 	int i;
-	int bootmode=0;
-	int kickstart=0;
-	int ext_kickstart=0;
 	int font_height,font_width;
 	struct MsgPort *AppPort;
 	struct Screen *my_screen;
@@ -1355,7 +1739,7 @@ int main(void)
 		return(30);
 	else if ( AppPort = CreateMsgPort() )
 	{
-		struct List *tablabels = ClickTabs("Info","Boot","SCSI", NULL);
+		struct List *tablabels = ClickTabs("Info","Boot","SCSI","Misc","Preset", NULL);
 
 		if (tablabels)
 		{
@@ -1535,6 +1919,16 @@ int main(void)
 
 								LAYOUT_AddChild, HGroupObject,
 									SPACE,
+									LAYOUT_AddChild, gadgets[GID_INFO_BTN_HARDREBOOT] = ButtonObject,
+										GA_ID, GID_INFO_BTN_HARDREBOOT,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Hard Reboot",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
 									LAYOUT_AddChild, gadgets[GID_INFO_BTN_TEST] = ButtonObject,
 										GA_ID, GID_INFO_BTN_TEST,
 										GA_Width,  40,
@@ -1641,12 +2035,42 @@ int main(void)
 
 										LAYOUT_AddChild, gadgets[GID_ALIGN2] = HGroupObject,
 											SPACE,
+											LAYOUT_AddChild, gadgets[GID_BOOT_AUTOCONFIG_RTG] = CheckBoxObject,
+												GA_ID, GID_BOOT_AUTOCONFIG_RTG,
+												GA_RelVerify, TRUE,
+												GA_TabCycle, TRUE,
+												STRINGA_MaxChars, 24,
+												GA_Text, "AUTOC RTG enabled",
+												CHECKBOX_TextPlace, PLACETEXT_LEFT,
+											CheckBoxEnd,
+											CHILD_WeightedWidth, 0,
+											SPACE,
+										LayoutEnd,
+										CHILD_WeightedHeight, 0,
+
+										LAYOUT_AddChild, gadgets[GID_ALIGN2] = HGroupObject,
+											SPACE,
 											LAYOUT_AddChild, gadgets[GID_BOOT_ENABLETEST] = CheckBoxObject,
 												GA_ID, GID_BOOT_ENABLETEST,
 												GA_RelVerify, TRUE,
 												GA_TabCycle, TRUE,
 												STRINGA_MaxChars, 24,
 												GA_Text, "     TEST enabled",
+												CHECKBOX_TextPlace, PLACETEXT_LEFT,
+											CheckBoxEnd,
+											CHILD_WeightedWidth, 0,
+											SPACE,
+										LayoutEnd,
+										CHILD_WeightedHeight, 0,
+
+										LAYOUT_AddChild, gadgets[GID_ALIGN2] = HGroupObject,
+											SPACE,
+											LAYOUT_AddChild, gadgets[GID_CPURAM_ENABLE] = CheckBoxObject,
+												GA_ID, GID_CPURAM_ENABLE,
+												GA_RelVerify, TRUE,
+												GA_TabCycle, TRUE,
+												STRINGA_MaxChars, 24,
+												GA_Text, "  CPU RAM enabled",
 												CHECKBOX_TextPlace, PLACETEXT_LEFT,
 											CheckBoxEnd,
 											CHILD_WeightedWidth, 0,
@@ -1665,7 +2089,7 @@ int main(void)
 										GA_ID, GID_BOOT_LIST_KICKSTART,
 										GA_RelVerify, TRUE,
 										CHOOSER_Labels, kickstarts_list,
-										CHOOSER_Selected, kickstart,
+										CHOOSER_Selected, 0,
 										CHOOSER_PopUp, TRUE,
 										CHOOSER_DropDown, FALSE,
 										CHOOSER_AutoFit, FALSE,
@@ -1681,7 +2105,7 @@ int main(void)
 										GA_ID, GID_BOOT_LIST_EXT_KICKSTART,
 										GA_RelVerify, TRUE,
 										CHOOSER_Labels, ext_kickstarts_list,
-										CHOOSER_Selected, ext_kickstart,
+										CHOOSER_Selected, 0,
 										CHOOSER_PopUp, TRUE,
 										CHOOSER_DropDown, FALSE,
 										CHOOSER_AutoFit, FALSE,
@@ -1776,6 +2200,187 @@ int main(void)
 								CHILD_WeightedHeight, 0,
 							PageEnd,
 
+							PAGE_Add, gadgets[GID_PAGELAY4] = VGroupObject,
+								LAYOUT_SpaceOuter, TRUE,
+								LAYOUT_SpaceInner, TRUE,
+
+								LAYOUT_AddChild, HLayoutObject,
+									LAYOUT_AddChild, VLayoutObject,
+
+										LAYOUT_AddChild, gadgets[GID_MISC_MAC] = StringObject,
+											GA_ID, GID_INFO_FWVER,
+											GA_RelVerify, TRUE,
+											STRINGA_MaxChars, 18,
+											STRINGA_TextVal, "00:00:00:00:00:00",
+											STRINGA_Justification, GACT_STRINGCENTER,
+										StringEnd,
+										CHILD_Label, LabelObject, LABEL_Text,"MAC Address", LabelEnd,
+										CHILD_MaxWidth, 150+16,
+
+										SPACE,
+
+										LAYOUT_AddChild, gadgets[GID_MISC_BPTON] = SliderObject,
+											GA_ID, GID_MISC_BPTON,
+											GA_RelVerify, TRUE,
+											SLIDER_Min,          0,
+											SLIDER_Max,       2000,
+											SLIDER_Level,        0,
+											SLIDER_Orientation,  SLIDER_HORIZONTAL,
+											SLIDER_LevelPlace,   PLACETEXT_RIGHT,
+											SLIDER_KnobDelta,  100,
+											SLIDER_LevelMaxLen,  9,
+											SLIDER_LevelFormat,  "%4ld.0 us",
+											SLIDER_Ticks,       21,
+											SLIDER_ShortTicks,   TRUE,
+										SliderEnd,
+										Label("Beeper Ton "),
+										CHILD_WeightedHeight, 0,
+										CHILD_MaxWidth, 280,
+
+										SPACE,
+
+										LAYOUT_AddChild, gadgets[GID_MISC_BPTOFF] = SliderObject,
+											GA_ID, GID_MISC_BPTOFF,
+											GA_RelVerify, TRUE,
+											SLIDER_Min,          0,
+											SLIDER_Max,         20,
+											SLIDER_Level,        0,
+											SLIDER_Orientation,  SLIDER_HORIZONTAL,
+											SLIDER_LevelPlace,   PLACETEXT_RIGHT,
+											SLIDER_KnobDelta,    1,
+											SLIDER_LevelMaxLen,  9,
+											SLIDER_LevelFormat,  "%4ld.0 ms",
+											SLIDER_Ticks,       21,
+											SLIDER_ShortTicks,   TRUE,
+										SliderEnd,
+										Label("Bepper Toff"),
+										CHILD_WeightedHeight, 0,
+										CHILD_MaxWidth, 280,
+
+									LayoutEnd,
+									CHILD_WeightedHeight, 0,
+								LayoutEnd,
+								CHILD_WeightedHeight, 0,
+
+								SPACE,
+								LAYOUT_AddChild, HGroupObject,
+									SPACE,
+									LAYOUT_AddChild, gadgets[GID_MISC_BTN_APPLY_MISC] = ButtonObject,
+										GA_ID, GID_MISC_BTN_APPLY_MISC,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Apply Misc",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
+									LAYOUT_AddChild, gadgets[GID_MISC_BTN_APPLY_ALL] = ButtonObject,
+										GA_ID, GID_MISC_BTN_APPLY_ALL,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Apply ALL",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
+								LayoutEnd,
+								CHILD_WeightedHeight, 0,
+
+							PageEnd,
+
+							PAGE_Add, gadgets[GID_PAGELAY5] = VGroupObject,
+								LAYOUT_SpaceOuter, TRUE,
+								LAYOUT_SpaceInner, TRUE,
+
+								LAYOUT_AddChild, HLayoutObject,
+									LAYOUT_AddChild, VLayoutObject,
+#define PRESET_TEXT(A,B)                LAYOUT_AddChild, HLayoutObject, \
+											LAYOUT_AddChild, gadgets[GID_PRESET ## A] = StringObject,               \
+												GA_ID, GID_INFO_FWVER,                                              \
+												GA_RelVerify, TRUE,                                                 \
+												STRINGA_MaxChars, 48,                                               \
+												STRINGA_TextVal, "",                                                \
+												STRINGA_Justification, GACT_STRINGLEFT,                             \
+											StringEnd,                                                              \
+											CHILD_Label, LabelObject, LABEL_Text, B, LabelEnd, \
+											CHILD_MinWidth, 280, \
+											SPACE, \
+											LAYOUT_AddChild, gadgets[GID_PRESET_CB ## A] = CheckBoxObject, \
+												GA_ID, GID_PRESET_CB ## A, \
+												GA_RelVerify, TRUE, \
+												GA_TabCycle, TRUE, \
+												STRINGA_MaxChars, 0, \
+												GA_Text, "", \
+												CHECKBOX_TextPlace, PLACETEXT_LEFT, \
+											CheckBoxEnd, \
+											CHILD_WeightedWidth, 0, \
+										LayoutEnd
+
+											PRESET_TEXT(0,"Preset 0 Name"),
+											PRESET_TEXT(1,"Preset 1 Name"),
+											PRESET_TEXT(2,"Preset 2 Name"),
+											PRESET_TEXT(3,"Preset 3 Name"),
+											PRESET_TEXT(4,"Preset 4 Name"),
+											PRESET_TEXT(5,"Preset 5 Name"),
+											PRESET_TEXT(6,"Preset 6 Name"),
+											PRESET_TEXT(7,"Preset 7 Name"),
+										
+										LAYOUT_AddChild, HLayoutObject,
+											LAYOUT_AddChild, gadgets[GID_PRESET_CB8] = CheckBoxObject,
+												GA_ID, GID_PRESET_CB8,
+												GA_RelVerify, TRUE,
+												GA_TabCycle, TRUE,
+												STRINGA_MaxChars, 0,
+												GA_Text, "No Preset (will use z3660cfg.txt file as default)",
+												CHECKBOX_TextPlace, PLACETEXT_LEFT,
+											CheckBoxEnd,
+											CHILD_WeightedWidth, 0,
+										LayoutEnd,
+									LayoutEnd,
+									CHILD_WeightedHeight, 0,
+
+								LayoutEnd,
+								CHILD_WeightedHeight, 0,
+
+								SPACE,
+								LAYOUT_AddChild, HGroupObject,
+									SPACE,
+									LAYOUT_AddChild, gadgets[GID_PRESET_BTN_APPLY_PRESET] = ButtonObject,
+										GA_ID, GID_PRESET_BTN_APPLY_PRESET,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Apply Preset",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
+									LAYOUT_AddChild, gadgets[GID_PRESET_BTN_DELETE_PRESET] = ButtonObject,
+										GA_ID, GID_PRESET_BTN_DELETE_PRESET,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Delete Preset",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
+									LAYOUT_AddChild, gadgets[GID_PRESET_BTN_APPLY_ALL] = ButtonObject,
+										GA_ID, GID_PRESET_BTN_APPLY_ALL,
+										GA_RelVerify, TRUE,
+										STRINGA_MaxChars, 48,
+										GA_Width,  40,
+										GA_Height, 14,
+										GA_Text, "Apply ALL",
+									ButtonEnd,
+									CHILD_WeightedWidth, 0,
+									SPACE,
+								LayoutEnd,
+								CHILD_WeightedHeight, 0,
+
+							PageEnd,
 						ClickTabEnd,
 					LayoutEnd,
 
@@ -1798,9 +2403,9 @@ int main(void)
 								LBNCA_Text, bootmode_names[i],
 								TAG_DONE);
 				}
-				SetAttrs(gadgets[GID_BOOT_LIST_BOOTMODE], LISTBROWSER_Selected, bootmode, TAG_END);
-				SetAttrs(gadgets[GID_BOOT_LIST_KICKSTART], CHOOSER_Selected, kickstart, TAG_END);
-				SetAttrs(gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, ext_kickstart, TAG_END);
+//				SetAttrs(gadgets[GID_BOOT_LIST_BOOTMODE], LISTBROWSER_Selected, bootmode, TAG_END);
+//				SetAttrs(gadgets[GID_BOOT_LIST_KICKSTART], CHOOSER_Selected, kickstart, TAG_END);
+//				SetAttrs(gadgets[GID_BOOT_LIST_EXT_KICKSTART], CHOOSER_Selected, ext_kickstart, TAG_END);
 
 				init_measures();
 //refresh_zz_info(windows[WID_MAIN]);

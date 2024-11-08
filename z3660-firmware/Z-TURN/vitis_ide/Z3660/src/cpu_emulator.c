@@ -28,7 +28,7 @@ void init_shared(void)
 
 void other_tasks(void);
 extern CONFIG config;
-extern ENV_FILE_VARS env_file_vars_temp;
+extern ENV_FILE_VARS env_file_vars_temp[9]; // really size 8
 //extern int bm,sb,ar,cr,ks,ext_ks,*scsi_num;
 
 int load_rom(void)
@@ -48,7 +48,7 @@ retry:
    if(ret!=0)
    {
       printf("Error opening SD media\nRetry in 5 seconds\n");
-      sleep(5);
+      usleep(5000000);
       goto retry;
    }
    char *kickstart_pointer=0;
@@ -178,7 +178,7 @@ retry:
    if(ret!=0)
    {
       printf("Error opening SD media\nRetry in 5 seconds\n");
-      sleep(5);
+      usleep(5000000);
       goto retry;
    }
    char *ext_kickstart_pointer=0;
@@ -239,13 +239,14 @@ void cpu_emulator_reset(void)
 {
 //   mux.nbr_arm=0;
    CPLD_RESET_ARM(0);
-   usleep(1000);
-   CPLD_RESET_ARM(1);
+//   usleep(1000);
+//   CPLD_RESET_ARM(1);
 //   printf("Resetting...\n");
 }
 
 void hard_reboot(void)
 {
+	usleep(10000);
 //   cpu_emulator_reset();
    CPLD_RESET_ARM(0);
 #define PS_RST_CTRL_REG         (XPS_SYS_CTRL_BASEADDR + 0x244)
@@ -262,169 +263,138 @@ void hard_reboot(void)
    while(1);
 }
 extern int no_init;
-void cpu_emulator(void)
+#include "pt/pt.h"
+int emulator_thread(struct pt *pt)
 {
-//   printf("Bus Request from ARM OK\n");
-
-//   video_reset();
-   audio_reset();
-
-   printf("Starting CPU emulator on Core1\n");
-   printf("Waiting ack from core1...\n");
-   *(volatile uint32_t *)(0xFFFFFFF0)=0x30000000;
-   Xil_DCacheFlush();
-   Xil_ICacheInvalidate();
-   __asm__("sev");
-   shared->shared_data=1;
-   while(shared->shared_data==1){}
-//   printf("[Core 0] ACK OK\n");
-
-   usleep(10000);
-   NBR_ARM(0);        // bus request
-
-   usleep(1000);
-   CPLD_RESET_ARM(1); // CPLD RUN
-   while(READ_NBG_ARM()==1); // make sure that we have the bus control
 /*
    if(config.cpufreq <= 66)
 	   arm_write_nowait(0xFEA00000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 2
    else
 	   arm_write_nowait(0xFE500000,0); // write when CPLD_RESET = 0 => PCLK/BCLK = 4
 */
+   PT_BEGIN(pt);
 
    while(1)
    {
-      if(shared->shared_data==1)
+      PT_WAIT_UNTIL(pt,shared->shared_data==1);
+      shared->shared_data=0;
+      if(shared->write_rtg==1)
       {
-         shared->shared_data=0;
-         if(shared->write_rtg==1)
-         {
-            uint32_t addr=shared->write_rtg_addr;
-            uint32_t data=shared->write_rtg_data;
-            write_rtg_register(addr,data);
-            dsb();
-            shared->write_rtg=0;
-         }
-         else if(shared->read_rtg==1)
-         {
-            uint32_t addr=shared->read_rtg_addr;
-            uint32_t data=read_rtg_register(addr);
-            shared->read_rtg_data=data;
-            dsb();
-            shared->read_rtg=0;
-         }
-         else if(shared->write_scsi==1)
-         {
-            int type=shared->write_scsi_type;
-            uint32_t addr=shared->write_scsi_addr;
-            uint32_t data=shared->write_scsi_data;
-            handle_piscsi_reg_write(addr,data,type);
-            dsb();
-            shared->write_scsi=0;
-//            shared->write_scsi_in_progress=1;
-//            handle_piscsi_write(addr,data,type);
-//            shared->write_scsi_in_progress=0;
-//            shared->write_scsi=0;
-         }
-         else if(shared->read_scsi==1)
-         {
-            int type=shared->read_scsi_type;
-            uint32_t addr=shared->read_scsi_addr;
-            shared->read_scsi_data=handle_piscsi_read(addr,type);
-            dsb();
-            shared->read_scsi=0;
-         }
-//         else if(shared->read_video==1)
-//         {
-//            shared->read_video_data=video_formatter_read(0);
-//            shared->read_video=0;
-//         }
-//         else if(shared->set_fc==1)
-//         {
-//            cpu_set_fc(shared->set_fc_data);
-//            shared->set_fc=0;
-//         }
-         else if(shared->reset_emulator==1)
-         {
-//            cpu_emulator_reset();
-        	 dsb();
-            shared->reset_emulator=0;
-         }
-         else if(shared->core0_hold==1)
-         {
-            shared->core0_hold_ack=1;
-            do
-            {
-               usleep(1000);
-            }while(shared->core0_hold==1);
-            dsb();
-            shared->core0_hold_ack=0;
-         }
+         uint32_t addr=shared->write_rtg_addr;
+         uint32_t data=shared->write_rtg_data;
+         write_rtg_register(addr,data);
+         dsb();
+         shared->write_rtg=0;
       }
-//      else
+      else if(shared->read_rtg==1)
       {
-         other_tasks();
-         static int counter=0;
-         counter++;
-         if(counter==10240)
+         uint32_t addr=shared->read_rtg_addr;
+         uint32_t data=read_rtg_register(addr);
+         shared->read_rtg_data=data;
+         dsb();
+         shared->read_rtg=0;
+      }
+      else if(shared->write_scsi==1)
+      {
+         int type=shared->write_scsi_type;
+         uint32_t addr=shared->write_scsi_addr;
+         uint32_t data=shared->write_scsi_data;
+         handle_piscsi_reg_write(addr,data,type);
+         dsb();
+         shared->write_scsi=0;
+//         shared->write_scsi_in_progress=1;
+//         handle_piscsi_write(addr,data,type);
+//         shared->write_scsi_in_progress=0;
+//         shared->write_scsi=0;
+      }
+      else if(shared->read_scsi==1)
+      {
+         int type=shared->read_scsi_type;
+         uint32_t addr=shared->read_scsi_addr;
+         shared->read_scsi_data=handle_piscsi_read(addr,type);
+         dsb();
+         shared->read_scsi=0;
+      }
+      else if(shared->reset_emulator==1)
+      {
+         cpu_emulator_reset();
+         dsb();
+         shared->reset_emulator=0;
+      }
+      else if(shared->core0_hold==1)
+      {
+         shared->core0_hold_ack=1;
+         do
          {
-            counter=0;
-            if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
-            {
-               printf("[Core1] Reset active (DOWN)...\n");
-               reset_init();
-               piscsi_shutdown();
-               int reset_time_counter=0;
-               int reset_time_counter_max=60*4; // 4 seconds
-               int long_reset=0;
-               while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
-               {
-                  reset_run(env_file_vars_temp.bootmode,reset_time_counter,reset_time_counter_max,long_reset);
-                  reset_time_counter++;
-                  if(reset_time_counter==60) // 60 -> 1 sec
-                 	 no_init=1;
-                  if(reset_time_counter==reset_time_counter_max) // 60 -> reset_run waits for vblank;
-                  {
-//                     no_init=1;
-                     if(long_reset==0)
-                     {
-                        long_reset=1;
-                        reset_time_counter=0;
-                        reset_time_counter_max=60*4; // 4 seconds
-                        env_file_vars_temp.bootmode++;
-                        if(env_file_vars_temp.bootmode>=BOOTMODE_NUM)
-                        	env_file_vars_temp.bootmode=0;
-                        write_env_files(env_file_vars_temp);
-                        for(int i=0;i<env_file_vars_temp.bootmode+1;i++)
-                        {
-                           DiscreteSet(REG0,FPGA_BP);
-                           usleep(10000);
-                           DiscreteClear(REG0,FPGA_BP);
-                           usleep(100000);
-                        }
-                     }
-                     else // long_reset==1
-                     {
-                         delete_env_files();
-                         for(int i=0;i<5+1;i++)
-                         {
-                            DiscreteSet(REG0,FPGA_BP); // beep
-                            usleep(10000);
-                            DiscreteClear(REG0,FPGA_BP);
-                            usleep(100000);
-                         }
-                         DiscreteSet(REG0,FPGA_BP); // beep
-                         usleep(30000);
-                         DiscreteClear(REG0,FPGA_BP);
-                         hard_reboot(); //
-                     }
-                  }
-               }
-//               printf("[Core1] Reset inactive (UP)...\n");
-               hard_reboot();
-            }
-         }
+            usleep(1000);
+         }while(shared->core0_hold==1);
+         dsb();
+         shared->core0_hold_ack=0;
       }
    }
+   PT_END(pt);
+}
+int emulator_reset_thread(struct pt *pt)
+{
+   PT_BEGIN(pt);
+   while(1)
+   {
+      PT_WAIT_UNTIL(pt,XGpioPs_ReadPin(&GpioPs, n040RSTI)==0);
+      {
+         piscsi_shutdown();
+         printf("[Core1] Reset active (DOWN)...\n");
+         reset_init();
+         CPLD_RESET_ARM(1);
+         int reset_time_counter=0;
+         int reset_time_counter_max=60*4; // 4 seconds
+         int long_reset=0;
+         while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
+         {
+            reset_run(env_file_vars_temp[preset_selected].boot_mode,reset_time_counter,reset_time_counter_max,long_reset);
+            reset_time_counter++;
+            if(reset_time_counter==60) // 60 -> 1 sec
+               no_init=1;
+            if(reset_time_counter==reset_time_counter_max) // 60 -> reset_run waits for vblank;
+            {
+//               no_init=1;
+            	if(long_reset==0)
+            	{
+                   long_reset=1;
+                   reset_time_counter=0;
+                   reset_time_counter_max=60*4; // 4 seconds
+                   env_file_vars_temp[preset_selected].boot_mode++;
+                   if(env_file_vars_temp[preset_selected].boot_mode>=BOOTMODE_NUM)
+                      env_file_vars_temp[preset_selected].boot_mode=0;
+                   write_env_files(&env_file_vars_temp[preset_selected]);
+                   for(int i=0;i<env_file_vars_temp[preset_selected].boot_mode+1;i++)
+                   {
+                      DiscreteSet(REG0,FPGA_BP);
+                      usleep(10000);
+                      DiscreteClear(REG0,FPGA_BP);
+                      usleep(100000);
+                   }
+            	}
+            	else // long_reset==1
+            	{
+                   delete_env_files();
+                   for(int i=0;i<5+1;i++)
+                   {
+                      DiscreteSet(REG0,FPGA_BP); // beep
+                      usleep(10000);
+                      DiscreteClear(REG0,FPGA_BP);
+                      usleep(100000);
+                   }
+                   DiscreteSet(REG0,FPGA_BP); // beep
+                   usleep(30000);
+                   DiscreteClear(REG0,FPGA_BP);
+                   hard_reboot(); //
+            	}
+            }
+         }
+//         printf("[Core1] Reset inactive (UP)...\n");
+         hard_reboot();
+      }
+   }
+   PT_END(pt);
 }
 

@@ -45,7 +45,7 @@
 #define LWIP_COMPAT_SOCKETS 0
 #define LWIP_NETCONN 0
 
-#define NO_SYS_NO_TIMERS 1
+#define NO_SYS_NO_TIMERS 0
 
 #define LWIP_TCP_KEEPALIVE 0
 

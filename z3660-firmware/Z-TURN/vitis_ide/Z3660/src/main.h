@@ -8,10 +8,7 @@
 #ifndef SRC_MAIN_H_
 #define SRC_MAIN_H_
 
-#define REVISION_MAJOR 1
-#define REVISION_MINOR 3 // 03
-//#define REVISION_BETA 0
-#define REVISION_BETA 4
+#include "version.h"
 
 #define INT_IPL_ON_THIS_CORE 0
 
@@ -28,11 +25,12 @@
 #include "xil_cache.h"
 #include "xil_cache_l.h"
 #include "xil_exception.h"
+#define sleep sleep_seconds
 #include "xclk_wiz.h"
+#undef sleep
 #include "xadcps.h"
 #include "xuartps.h"
 
-//#include "mpg/ff.h"
 #include <ff.h>
 
 #include "xaxivdma.h"
@@ -49,6 +47,8 @@
 #include "xpseudo_asm.h"
 #include <xparameters.h>
 
+#define ETH_BACKLOG_NAG_COUNTER_MAX 300
+
 // comment out if you don't want to compile CPU emulators (Musashi and UAE)
 #define CPU_EMULATOR
 
@@ -56,6 +56,8 @@
 #define OP_PALETTE_HI 19
 
 #define PS_MIO_0      0 // MIO  0
+#define PS_MIO_4      4 // MIO  4
+#define PS_MIO_5      5 // MIO  5
 #define PS_MIO_8      8 // MIO  8
 #define PS_MIO_9      9 // MIO  9
 #define PS_MIO_10    10 // MIO 10
@@ -103,6 +105,7 @@ typedef struct {
 	volatile uint32_t disassemble;         // 0xFFFF0088
 	volatile uint32_t musashi_step;        // 0xFFFF008C
 	volatile uint32_t reset_emulator_dis;  // 0xFFFF0090
+	volatile uint32_t z2_enabled;          // 0xFFFF0094
 } SHARED;
 extern SHARED *shared;
 #define REG_BASE_ADDRESS XPAR_Z3660_0_BASEADDR
@@ -122,6 +125,8 @@ extern SHARED *shared;
 #define CPLD_RESET_ARM(X) do{ XGpioPs_WritePin(&GpioPs, PS_MIO_13, X);} while(0)
 unsigned int READ_NBG_ARM(void);
 
+#define JP1_PIN      PS_MIO_4  // MIO 4  (ZTURN JP1)
+#define JP2_PIN      PS_MIO_5  // MIO 5  (ZTURN JP2)
 #define n040RSTI     PS_MIO_10 // MIO 10
 #define LED1         PS_MIO_11 // MIO 11 (Z3660's green led)
 
@@ -132,7 +137,7 @@ unsigned int READ_NBG_ARM(void);
 #define REG0 0x00
 #define REG1 0x04
 #define REG2 0x08
-//#define REG3 0x0C
+#define REG3 0x0C
 //#define REG4 0x10
 #define REG5 0x14
 
@@ -153,6 +158,7 @@ unsigned int READ_NBG_ARM(void);
 #define FPGA_ENCONDITION_PCLK1        (3L<< 8)  // SAXI REG0  9..8
 #define FPGA_256MB_AUTOCONFIG_EN      (1L<<12)  // SAXI REG0 12
 #define FPGA_RTG_AUTOCONFIG_EN        (1L<<13)  // SAXI REG0 13
+#define FPGA_SCSI_AUTOCONFIG_EN       (1L<<14)  // SAXI REG0 14
 #define FPGA_AUTOCONFIG_BOOT_EN       (1L<<27)  // SAXI REG0 27
 #define FPGA_BP                       (1L<<28)  // SAXI REG0 28
 #define FPGA_INT6                     (1L<<29)  // SAXI REG0 29
@@ -222,6 +228,12 @@ void arm_write_nowait(uint32_t address, uint32_t data);
 #define M68K_RESET   1
 #include "defines.h"
 
-#define ACTIVITY_LED_OFF do{XGpioPs_WritePin(&GpioPs, LED1, 1);}while(0)
-#define ACTIVITY_LED_ON do{XGpioPs_WritePin(&GpioPs, LED1, 0);}while(0)
+//#define ACTIVITY_LED_OFF do{XGpioPs_WritePin(&GpioPs, LED1, 1);}while(0)
+//#define ACTIVITY_LED_ON do{XGpioPs_WritePin(&GpioPs, LED1, 0);}while(0)
+#define ACTIVITY_LED_OFF do{*(uint32_t *)0xE000A000=0xF7FF0800;\
+   }while(0)
+#define ACTIVITY_LED_ON do{*(uint32_t *)0xE000A000=0xF7FF0000;\
+   DiscreteSet(REG0,FPGA_BP);\
+   DiscreteClear(REG0,FPGA_BP);\
+   }while(0)
 #endif /* SRC_MAIN_H_ */

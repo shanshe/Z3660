@@ -40,6 +40,11 @@ static int fpu_prec;
 //#define FE_UPWARD       0x00400000
 #define FE_MASK         0x00C00000
 
+//#define debug_f1(A) printf("%lf %s %lf ",a->fp,A,b->fp)
+//#define debug_f2 printf("= %lf\n",a->fp);
+#define debug_f1(A)
+#define debug_f2
+
 static void fesetround(uint32_t v)
 {
 	int fpscr_value;
@@ -356,7 +361,9 @@ static void fpp_getman(fpdata *a, fpdata *b)
 }
 static void fpp_div(fpdata *a, fpdata *b, int prec)
 {
+	debug_f1("/");
 	a->fp = a->fp / b->fp;
+	debug_f2;
 	if (prec == PREC_FLOAT)
 		fpp_round_single(a);
 }
@@ -524,19 +531,25 @@ static void fpp_cos(fpdata *a, fpdata *b)
 }
 static void fpp_sub(fpdata *a, fpdata *b, int prec)
 {
+	debug_f1("-");
 	a->fp = a->fp - b->fp;
+	debug_f2;
 	if (prec == PREC_FLOAT)
 		fpp_round_single(a);
 }
 static void fpp_add(fpdata *a, fpdata *b, int prec)
 {
+	debug_f1("+");
 	a->fp = a->fp + b->fp;
+	debug_f2;
 	if (prec == PREC_FLOAT)
 		fpp_round_single(a);
 }
 static void fpp_mul(fpdata *a, fpdata *b, int prec)
 {
+	debug_f1("*");
 	a->fp = a->fp * b->fp;
+	debug_f2;
 	if (prec == PREC_FLOAT)
 		fpp_round_single(a);
 }

@@ -34,9 +34,4 @@ volatile uint8_t* ethernet_current_receive_ptr();
 int ethernet_get_backlog();
 void ethernet_task();
 
-#define FRAME_MAX_BACKLOG 32
-
-#define RXBD_CNT       1	/* Number of RxBDs to use */
-#define TXBD_CNT       2	/* Number of TxBDs to use */
-
 #endif

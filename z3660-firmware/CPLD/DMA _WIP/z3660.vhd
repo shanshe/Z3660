@@ -115,7 +115,6 @@ architecture Behavioral of z3660 is
    COMPONENT OEBUS_component
    PORT(
          BCLK : in  STD_LOGIC;
---         nBGACK040 : in  STD_LOGIC;
          MAS0 : in  STD_LOGIC;
          MAS1 : in  STD_LOGIC;
          MAS2 : in  STD_LOGIC;
@@ -249,18 +248,12 @@ architecture Behavioral of z3660 is
    COMPONENT LEBUS_component
    PORT (
          BCLK : in  STD_LOGIC;
---         nBGACK040 : in  STD_LOGIC;
          MAS0 : in  STD_LOGIC;
          MAS1 : in  STD_LOGIC;
          MAS2 : in  STD_LOGIC;
          MAS3 : in  STD_LOGIC;
-         SLV0 : in  STD_LOGIC;
-         SLV1 : in  STD_LOGIC;
-         SLV2 : in  STD_LOGIC;
-         SLV3 : in  STD_LOGIC;
          nRTERM : in  STD_LOGIC;
          nLSTERM : in  STD_LOGIC;
-         R_W040 : in STD_LOGIC;
          LEBUS : out  STD_LOGIC_VECTOR (7 downto 0)
          );
    END COMPONENT;
@@ -358,6 +351,7 @@ TYPE dma_fsm IS (
             DMA_START_TS1,
             DMA_START_TS2,
             DMA_WAIT_TA,
+            DMA_WAIT_TA2,
             DMA_LATCH_BUS_AND_TERM,
             DMA_TERM_WITH_DSACK,
             DMA_TERM_WITH_DSACK2,
@@ -420,7 +414,7 @@ begin
    nR_W040_out_int <= not R_W040;
     R_W040_out_int <=     R_W040;
 
-   DMA_select <= '1' when (nBGACK='0' and nBG_ARM = '1' and RAM_select='1' and DMA_enable='1') else '0';
+   DMA_select <= '1' when (nBGACK='0' and nBG_ARM = '1' and RAM_select='1' and DMA_enable='1' and nAS040='0') else '0';
 
    nR_W040_out <=  R_W040_out_int when DMA_select='1' else nR_W040_out_int;
    R_W040_out  <= nR_W040_out_int when DMA_select='1' else  R_W040_out_int;
@@ -449,115 +443,226 @@ begin
 
    nBB040 <= '0' when DMA_BUSY='1' else 'Z';
 
-   TM(2 downto 0) <= "000" when DMA_BUSY='1' else--"001" when DMA_select='1' else
+   TM(2 downto 0) <= "000" when DMA_BUSY = '1' else--"001" when DMA_select='1' else
                      "000" when nBG_ARM = '0' else
                      "ZZZ";
-   TT(1 downto 0) <=  "00" when DMA_BUSY='1' else
-                      "00" when nBG_ARM = '0' else
-                      "ZZ";
+   TT(1 downto 0) <= "00" when DMA_BUSY = '1' else
+                     "00" when nBG_ARM = '0' else
+                     "ZZ";
 
    nSTERM <= nDMA_STERM                when (DMA_BUSY='1' and finish_with_STERM='1') else 'Z';
    nDSACK <= (nDMA_DSACK & nDMA_DSACK) when (DMA_BUSY='1' and finish_with_STERM='0') else "ZZ";
 
-   SIZ40_int <= "00" when SIZ="11" else SIZ;
+   SIZ40_int <= "00" when SIZ = "11" else SIZ;
    p040A0_int <= A(0);
    p040A1_int <= A(1);
    p040A2_int <= A(2);
    p040A3_int <= A(3);
 
    DMA_BUSY <= '0' when DMA_state=DMA_IDLE else '1';
+	
+---- this works with A4091 but doesn't work with AA3000 scsi at 100 MHz
+---- but it doesn't work with A4091 at 50 MHz
+--   process(PCLK)
+--   begin
+--      if(PCLK'event and PCLK='1') then
+--      -- DMA state machine
+--         if(n040RSTI_int='0') then
+--            DMA_state<=DMA_IDLE;
+--            nTS_int <= '1';
+--            LEBUS_DMA_int <= '0';
+--            nDMA_STERM <= '1';
+--            nDMA_DSACK <= '1';
+--         else
+--            BCLK_m <= BCLK_int;
+--            BCLK_d <= BCLK_m;
+--            nTS_int <= '1';
+--            LEBUS_DMA_int <= '0';
+--            nDMA_STERM <= '1';
+--            nDMA_DSACK <= '1';
+--            case (DMA_state) is
+--               when DMA_IDLE =>
+--                  if(BCLK_d = '1' and BCLK_m = '0') then
+--                     if (DMA_select='1' and nAS040='0') then
+--                        DMA_state<=DMA_DELAY_TS;
+----                        DMA_state<=DMA_START_TS;
+--                     end if;
+--                  end if;
+--               when DMA_DELAY_TS =>
+--                  if(BCLK_d = '1' and BCLK_m = '0') then
+--                     DMA_state<=DMA_START_TS;
+--                  end if;
+--               when DMA_START_TS =>
+--                  nTS_int <= '0';
+--                  DMA_state<=DMA_START_TS1;
+--               when DMA_START_TS1 =>
+--                  nTS_int <= '0';
+--                  DMA_state<=DMA_START_TS2;
+--                  if(nTA='0') then
+--                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
+--							LEBUS_DMA_int <= '1';
+--						end if;
+--               when DMA_START_TS2 =>
+--                  nTS_int <= '0';
+--                  DMA_state<=DMA_WAIT_TA;
+--                  if(nTA='0') then
+--                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
+--							LEBUS_DMA_int <= '1';
+--						end if;
+--               when DMA_WAIT_TA =>
+--                  if(nTA='0') then
+--                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
+--							LEBUS_DMA_int <= '1';
+--                  end if;
+--               when DMA_LATCH_BUS_AND_TERM =>
+--                  LEBUS_DMA_int <= '1';
+--                  if finish_with_STERM='1' then
+---- STERM
+--                     nDMA_STERM <= '0';
+--                     if(nAS040/='0') then
+----                        DMA_state<=DMA_IDLE;
+--								DMA_state<=DMA_TERM_DELAY2;
+--                     end if;
+--                  else
+---- DSACK
+--                     nDMA_DSACK <= '0';
+--                     if(BCLK_d = '1' and BCLK_m = '0') then
+--                        DMA_state<=DMA_TERM_WITH_DSACK;
+--                     end if;
+--                  end if;
+--               when DMA_TERM_DELAY2 =>
+--                  LEBUS_DMA_int <= '1';
+--                  nDMA_STERM <= '0';
+--                  if(BCLK_d = '0' and BCLK_m = '1') then
+--                     DMA_state<=DMA_IDLE;
+--                  end if;
+--               when DMA_TERM_WITH_DSACK =>
+--                  LEBUS_DMA_int <= '1';
+--                  nDMA_DSACK <= '0';
+--                  if(BCLK_d = '1' and BCLK_m = '0') then
+--                     DMA_state<=DMA_TERM_WITH_DSACK2;
+--                  end if;
+--               when DMA_TERM_WITH_DSACK2 =>
+--                  LEBUS_DMA_int <= '1';
+--                  nDMA_DSACK <= '0';
+--                  if(nAS040/='0') then
+----                     DMA_state<=DMA_IDLE;
+--                     DMA_state<=DMA_TERM_DELAY;
+--                  end if;
+--               when DMA_TERM_DELAY =>
+--                  LEBUS_DMA_int <= '1';
+--                  nDMA_DSACK <= '0';
+--                  if(BCLK_d = '1' and BCLK_m = '0') then
+--                     DMA_state<=DMA_IDLE;
+--                  end if;
+--               when others =>
+--                  DMA_state<=DMA_IDLE;
+--            end case;
+--         end if;
+--      end if;
+--   end process;
+---- end DMA
 
+-- this works with AA3000 scsi but with some read/write errors
+-- it doesn't detect A4091 at 50 MHz, and has a lot of errors in AA3000 at 50 MHz
+-- it works with A4091 at 100 MHz
+--   process(PCLK)
+--   begin
+--      if(PCLK'event and PCLK='1') then
+--      -- DMA state machine
+--         nTS_int <= '1';
+--         LEBUS_DMA_int <= '0';
+--         nDMA_STERM <= '1';
+--         nDMA_DSACK <= '1';
+--         if(n040RSTI_int='0') then
+--            DMA_state<=DMA_IDLE;
+--         else
+--            BCLK_m <= BCLK_int;
+--            BCLK_d <= BCLK_m;
+--            case (DMA_state) is
+--               when DMA_IDLE =>
+--                  if(BCLK_d = '0' and BCLK_m = '1') then
+--                     if (DMA_select='1' and nAS040='0') then
+--                        DMA_state<=DMA_DELAY_TS;
+--							end if;
+--                  end if;
+--               when DMA_DELAY_TS =>
+--                  if(BCLK_d = '0' and BCLK_m = '1') then
+--                     DMA_state<=DMA_START_TS1;
+--                  end if;
+--               when DMA_START_TS1 =>
+--                  nTS_int <= '0';
+--                  if(BCLK_d = '0' and BCLK_m = '1') then
+--							DMA_state<=DMA_WAIT_TA;
+--                  end if;
+--               when DMA_WAIT_TA =>
+--						if(nTA='0') then
+--							DMA_state<=DMA_LATCH_BUS_AND_TERM;
+--						end if;
+--               when DMA_LATCH_BUS_AND_TERM =>
+--                  LEBUS_DMA_int <= '1';
+--						if(nAS040/='0') then
+--							DMA_state<=DMA_IDLE;
+--						end if;
+--                  if finish_with_STERM='1' then
+---- STERM
+--                     nDMA_STERM <= '0';
+--                  else
+---- DSACK
+--                     nDMA_DSACK <= '0';
+--                  end if;
+--               when others =>
+--                  DMA_state<=DMA_IDLE;
+--            end case;
+--         end if;
+--      end if;
+--   end process;
+----end DMA
+
+-- this works with AA3000 scsi at 50 and 100 MHz
+-- it doesn't detect A4091 at 50 MHz, but this maybe is a problem of my firebird...
+-- it works with A4091 at 100 MHz
    process(PCLK)
    begin
       if(PCLK'event and PCLK='1') then
       -- DMA state machine
+         nTS_int <= '1';
+         LEBUS_DMA_int <= '0';
+         nDMA_STERM <= '1';
+         nDMA_DSACK <= '1';
          if(n040RSTI_int='0') then
             DMA_state<=DMA_IDLE;
-            nTS_int <= '1';
-            LEBUS_DMA_int <= '0';
-            nDMA_STERM <= '1';
-            nDMA_DSACK <= '1';
          else
             BCLK_m <= BCLK_int;
             BCLK_d <= BCLK_m;
-            nTS_int <= '1';
-            LEBUS_DMA_int <= '0';
-            nDMA_STERM <= '1';
-            nDMA_DSACK <= '1';
             case (DMA_state) is
                when DMA_IDLE =>
-                  if(BCLK_d = '1' and BCLK_m = '0') then
-                     if (DMA_select='1' and nAS040='0') then
-                        DMA_state<=DMA_DELAY_TS;
---                        DMA_state<=DMA_START_TS;
-                     end if;
+                  if(BCLK_d = '0' and BCLK_m = '1') then
+                     if (DMA_select='1') then
+                        DMA_state<=DMA_START_TS1;
+							end if;
                   end if;
-               when DMA_DELAY_TS =>
-                  if(BCLK_d = '1' and BCLK_m = '0') then
-                     DMA_state<=DMA_START_TS;
-                  end if;
-               when DMA_START_TS =>
-                  nTS_int <= '0';
-                  DMA_state<=DMA_START_TS1;
                when DMA_START_TS1 =>
                   nTS_int <= '0';
-                  DMA_state<=DMA_START_TS2;
-                  if(nTA='0') then
-                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
-							LEBUS_DMA_int <= '1';
-						end if;
-               when DMA_START_TS2 =>
-                  nTS_int <= '0';
-                  DMA_state<=DMA_WAIT_TA;
-                  if(nTA='0') then
-                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
-							LEBUS_DMA_int <= '1';
-						end if;
-               when DMA_WAIT_TA =>
-                  if(nTA='0') then
-                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
-							LEBUS_DMA_int <= '1';
+                  if(BCLK_d = '0' and BCLK_m = '1') then
+							DMA_state<=DMA_WAIT_TA;
                   end if;
+               when DMA_WAIT_TA =>
+						if(nTA='0') then
+							DMA_state<=DMA_LATCH_BUS_AND_TERM;
+							LEBUS_DMA_int <= '1';
+						end if;
                when DMA_LATCH_BUS_AND_TERM =>
                   LEBUS_DMA_int <= '1';
+						if(nAS040/='0') then
+							DMA_state<=DMA_IDLE;
+						end if;
                   if finish_with_STERM='1' then
 -- STERM
                      nDMA_STERM <= '0';
-                     if(nAS040/='0') then
---                        DMA_state<=DMA_IDLE;
-								DMA_state<=DMA_TERM_DELAY2;
-                     end if;
                   else
 -- DSACK
                      nDMA_DSACK <= '0';
-                     if(BCLK_d = '1' and BCLK_m = '0') then
-                        DMA_state<=DMA_TERM_WITH_DSACK;
-                     end if;
-                  end if;
-               when DMA_TERM_DELAY2 =>
-                  LEBUS_DMA_int <= '1';
-                  nDMA_STERM <= '0';
-                  if(BCLK_d = '0' and BCLK_m = '1') then
-                     DMA_state<=DMA_IDLE;
-                  end if;
-               when DMA_TERM_WITH_DSACK =>
-                  LEBUS_DMA_int <= '1';
-                  nDMA_DSACK <= '0';
-                  if(BCLK_d = '1' and BCLK_m = '0') then
-                     DMA_state<=DMA_TERM_WITH_DSACK2;
-                  end if;
-               when DMA_TERM_WITH_DSACK2 =>
-                  LEBUS_DMA_int <= '1';
-                  nDMA_DSACK <= '0';
-                  if(nAS040/='0') then
---                     DMA_state<=DMA_IDLE;
-                     DMA_state<=DMA_TERM_DELAY;
-                  end if;
-               when DMA_TERM_DELAY =>
-                  LEBUS_DMA_int <= '1';
-                  nDMA_DSACK <= '0';
-                  if(BCLK_d = '1' and BCLK_m = '0') then
-                     DMA_state<=DMA_IDLE;
                   end if;
                when others =>
                   DMA_state<=DMA_IDLE;
@@ -565,7 +670,74 @@ begin
          end if;
       end if;
    end process;
--- end DMA
+--end DMA
+
+-- This works with DMA scsi read ok, write errors) with 060 at PCLK=50 MHz (BCLK=25 MHz). It doesn't work at 100MHz
+-- but it doesn't work with A4091 at 50 MHz or 100 MHz
+--   process(BCLK_int)
+--   begin
+--      if(BCLK_int'event and BCLK_int='1') then
+--      -- DMA state machine
+--         if(n040RSTI_int='0') then
+--            DMA_state<=DMA_IDLE;
+--            nTS_int <= '1';
+--            LEBUS_DMA_int <= '0';
+--            nDMA_STERM <= '1';
+--            nDMA_DSACK <= '1';
+--         else
+--            nTS_int <= '1';
+--            LEBUS_DMA_int <= '0';
+--            nDMA_STERM <= '1';
+--            nDMA_DSACK <= '1';
+--            case (DMA_state) is
+--               when DMA_IDLE =>
+--                     if (DMA_select='1' and nAS040='0') then
+--                        DMA_state<=DMA_START_TS1;
+--                  end if;
+--               when DMA_START_TS1 =>
+--                  nTS_int <= '0';
+--                  DMA_state<=DMA_WAIT_TA;
+--                  if(nTA='0') then
+--                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
+--							LEBUS_DMA_int <= '1';
+--                  end if;
+--               when DMA_WAIT_TA =>
+--                  if(nTA='0') then
+--                     DMA_state<=DMA_LATCH_BUS_AND_TERM;
+--							LEBUS_DMA_int <= '1';
+--                  end if;
+--               when DMA_LATCH_BUS_AND_TERM =>
+--                  LEBUS_DMA_int <= '1';
+--                  if finish_with_STERM='1' then
+---- STERM
+--                     nDMA_STERM <= '0';
+--                     if(nAS040/='0') then
+--                        DMA_state<=DMA_IDLE;
+--                     end if;
+--                  else
+---- DSACK
+--                     nDMA_DSACK <= '0';
+--                     DMA_state<=DMA_TERM_WITH_DSACK;
+--                  end if;
+--               when DMA_TERM_WITH_DSACK =>
+--                  LEBUS_DMA_int <= '1';
+--                  nDMA_DSACK <= '0';
+--                  DMA_state<=DMA_TERM_WITH_DSACK2;
+--               when DMA_TERM_WITH_DSACK2 =>
+--                  LEBUS_DMA_int <= '1';
+--                  nDMA_DSACK <= '0';
+--                  if(nAS040/='0') then
+--                     DMA_state<=DMA_IDLE;
+--                  end if;
+--               when others =>
+--                  DMA_state<=DMA_IDLE;
+--            end case;
+--         end if;
+--      end if;
+--   end process;
+---- end DMA
+
+
 
    nBGACK040  <= '0' when NBG_ARM='1' else nBGACK040_int and nBG_int; -- this signal is 244's buffer trisate
 
@@ -659,36 +831,36 @@ nTS_030 <= --nTS_FPGA and
    BCLK_int<=BCLK;
    
    RESET_OUT <= RESET_CPLD; -- reset from FPGA side
-   process(BCLK_int)
-   begin
-      if(BCLK_int'event and BCLK_int='1') then
-         if (n040RSTO='0' or reset_counter/="00000") then
-            if (reset_counter="11110") then
-               reset_extended <= '1';
-               reset_counter <= "00000";
-            else
-               reset_counter <= reset_counter + 1;
-               reset_extended <= '0';
-            end if;
-         else
-            reset_counter <= "00000";
-         end if;
-      end if;
-   end process;
+--   process(BCLK_int)
+--   begin
+--      if(BCLK_int'event and BCLK_int='1') then
+--         if (n040RSTO='0' or reset_counter/="00000") then
+--            if (reset_counter="11111") then
+--               reset_extended <= '1';
+--               reset_counter <= "00000";
+--            else
+--               reset_counter <= reset_counter + 1;
+--               reset_extended <= '0';
+--            end if;
+--         else
+--            reset_counter <= "00000";
+--         end if;
+--      end if;
+--   end process;
    process(BCLK_int)
    begin
       if(BCLK_int'event and BCLK_int='1') then
          nRBERR <= nBERR;
          nRHALT <= nHLT;
-         if(nCPURST='0' or RESET_CPLD='0'
---         or n040RSTO='0'
-         or reset_extended='0'
---         or nPWRST='0' -- it needs Voltage detector to be soldered...
-         ) then
-            n040RSTI_int<='0';
-         else
-            n040RSTI_int<='1';
-         end if;
+			if nCPURST='0'
+			or nPWRST='0'
+			or n040RSTO='0'
+--			or reset_extended = '1'
+			or RESET_CPLD='0' then
+				n040RSTI_int<='0';
+			else
+				n040RSTI_int<='1';
+			end if;
 --         n040RSTI_int <= nCPURST; -- reset output <= reset input
          nBR_D <= nBR;
          nBGACK_D <= nBGACK;
@@ -718,7 +890,6 @@ nTS_030 <= --nTS_FPGA and
 --OEBUS
    oebus_unit: OEBUS_component PORT MAP (
          BCLK => BCLK_int,
---         nBGACK040 => nBGACK040_int,
          MAS0 => MAS0,
          MAS1 => MAS1,
          MAS2 => MAS2,
@@ -854,18 +1025,12 @@ nTS_030 <= --nTS_FPGA and
 --LEBUS
    lebus_unit: LEBUS_component PORT MAP (
          BCLK => BCLK_int,
---         nBGACK040 => nBGACK040_int,
          MAS0 => MAS0,
          MAS1 => MAS1,
          MAS2 => MAS2,
          MAS3 => MAS3,
-         SLV0 => SLV0,
-         SLV1 => SLV1,
-         SLV2 => SLV2,
-         SLV3 => SLV3,
          nRTERM => nRTERM,
          nLSTERM => nLSTERM,
-         R_W040 => R_W040,
          LEBUS => LEBUS_int
          );
 --END LEBUS

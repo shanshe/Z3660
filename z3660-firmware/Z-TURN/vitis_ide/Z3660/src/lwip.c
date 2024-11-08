@@ -6,7 +6,6 @@
 #include "lwip/init.h"
 #include "lwip/tcp.h"
 #include "lwip/dhcp.h"
-#include "lwip/init.h"
 #include "lwip/inet.h"
 #include "sleep.h"
 #include "lwip/priv/tcp_priv.h"
@@ -37,7 +36,9 @@ void HttpClientResultCallback (void *arg, httpc_result_t httpc_result, u32_t rx_
 err_t RecvBOOTbinCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 err_t RecvVersionCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 err_t RecvVersionScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
+err_t RecvVersionJedCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 err_t RecvScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
+err_t RecvJedCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 
 ip_addr_t google_dnsserver;
 
@@ -45,6 +46,7 @@ ip_addr_t google_dnsserver;
 char version_string[5000];
 char version_string_export[50];
 char version_scsirom_string_export[50];
+char version_jed_string_export[50];
 volatile int received=0;
 struct netif *netif;
 volatile int TcpFastTmrFlag = 0;
@@ -61,7 +63,12 @@ void dhcp_coarse_tmr();
 
 #define RESET_RX_CNTR_LIMIT	400
 struct netif server_netif;
-
+uint32_t miliseconds=0;
+u32_t sys_now(void)
+{
+	return(miliseconds);
+}
+void sys_check_timeouts(void);
 void txrx_loop(void)
 {
 	if (TcpFastTmrFlag) {
@@ -73,6 +80,7 @@ void txrx_loop(void)
 		TcpSlowTmrFlag = 0;
 	}
 	xemacif_input(netif);
+	sys_check_timeouts();
 }
 static int ResetRxCntr = 0;
 
@@ -81,6 +89,7 @@ void timer_callback(XScuTimer * TimerInstance)
 	/* we need to call tcp_fasttmr & tcp_slowtmr at intervals specified
 	 * by lwIP. It is not important that the timing is absoluetly accurate.
 	 */
+	miliseconds+=250;
 	static int odd = 1;
 #if LWIP_DHCP==1
     static int dhcp_timer = 0;
@@ -120,7 +129,7 @@ void timer_callback(XScuTimer * TimerInstance)
 #endif
 	XScuTimer_ClearInterruptStatus(TimerInstance);
 }
-static XScuTimer TimerInstance;
+static XScuTimer TimerInstance={.IsReady=-1};
 
 void platform_setup_timer(void)
 {
@@ -128,31 +137,34 @@ void platform_setup_timer(void)
 	XScuTimer_Config *ConfigPtr;
 	int TimerLoadValue = 0;
 
-	ConfigPtr = XScuTimer_LookupConfig(TIMER_DEVICE_ID);
-	Status = XScuTimer_CfgInitialize(&TimerInstance, ConfigPtr,
-			ConfigPtr->BaseAddr);
-	if (Status != XST_SUCCESS) {
+	if(TimerInstance.IsReady==-1)
+	{
+		ConfigPtr = XScuTimer_LookupConfig(TIMER_DEVICE_ID);
+		Status = XScuTimer_CfgInitialize(&TimerInstance, ConfigPtr,
+				ConfigPtr->BaseAddr);
+		if (Status != XST_SUCCESS) {
 
-		printf("In %s: Scutimer Cfg initialization failed...\n",
-		__func__);
-		return;
+			printf("In %s: Scutimer Cfg initialization failed...\n",
+			__func__);
+			return;
+		}
+
+		Status = XScuTimer_SelfTest(&TimerInstance);
+		if (Status != XST_SUCCESS) {
+			printf("In %s: Scutimer Self test failed...\n",
+			__func__);
+			return;
+
+		}
+
+		XScuTimer_EnableAutoReload(&TimerInstance);
+		/*
+		 * Set for 250 milli seconds timeout.
+		 */
+		TimerLoadValue = XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ / 8;
+
+		XScuTimer_LoadTimer(&TimerInstance, TimerLoadValue);
 	}
-
-	Status = XScuTimer_SelfTest(&TimerInstance);
-	if (Status != XST_SUCCESS) {
-		printf("In %s: Scutimer Self test failed...\n",
-		__func__);
-		return;
-
-	}
-
-	XScuTimer_EnableAutoReload(&TimerInstance);
-	/*
-	 * Set for 250 milli seconds timeout.
-	 */
-	TimerLoadValue = XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ / 8;
-
-	XScuTimer_LoadTimer(&TimerInstance, TimerLoadValue);
 	return;
 }
 
@@ -216,23 +228,27 @@ static void assign_default_ip(ip_addr_t *ip, ip_addr_t *mask, ip_addr_t *gw)
 	if (!err)
 		printf("Invalid default gateway address: %d\n", err);
 }
+extern uint8_t EmacPsMAC[6];
 
 int lwip_connect(void)
 {
-	unsigned char mac_ethernet_address[] = {
-		0x00, 0x0a, 0x35, 0x00, 0x01, 0x02 };
+//	unsigned char EmacPsMAC[] = {
+//		0x00, 0x0a, 0x35, 0x00, 0x01, 0x02 };
 
 	netif = &server_netif;
 
 	platform_setup_timer();
 	platform_setup_interrupts();
-
+	usleep(1000000);
 	lwip_init();
-	if (!xemac_add(netif, NULL, NULL, NULL, mac_ethernet_address,
+	if (!xemac_add(netif, NULL, NULL, NULL, EmacPsMAC,
 				PLATFORM_EMAC_BASEADDR)) {
 		printf("Error adding N/W interface\n");
 		return 0;
 	}
+	printf("Mac address: %02X:%02X:%02X:%02X:%02X:%02X\n",EmacPsMAC[0],
+			EmacPsMAC[1],EmacPsMAC[2],
+			EmacPsMAC[3],EmacPsMAC[4],EmacPsMAC[5]);
 
 	netif_set_default(netif);
 	platform_enable_interrupts();
@@ -254,6 +270,10 @@ int lwip_connect(void)
 	return(1);
 }
 void hdmi_tick(int clean);
+#define TIMEOUTS 5   // 5 seconds
+#define TIMEOUTS_USTEPS 100 // 100 us steps
+#define TIMEOUTS_TOTAL_US ((TIMEOUTS*1000000L)/TIMEOUTS_USTEPS)
+#define TIMEOUTS_1S_US ((1*1000000L)/TIMEOUTS_USTEPS)
 int lwip_get_update_version(char* file_version_loc,int alfa)
 {
 	conn_settings.use_proxy = 0;
@@ -274,17 +294,17 @@ int lwip_get_update_version(char* file_version_loc,int alfa)
 			RecvVersionCallback, NULL, &connection);
 	if(error==0)
 	{
-		int timeout=5000000; // 5 seconds of timeout
+		long int timeout=TIMEOUTS_TOTAL_US; // 5 seconds of timeout
 		while(received==0 && timeout>0)
 		{
 			timeout--;
 			txrx_loop(); // it executes at a rate of 250 and 500 ms
-			if((timeout%1000000)==0)
+			if((timeout%TIMEOUTS_1S_US)==0)
 				hdmi_tick(0); // 0 = roll the bar
 			else
-				usleep(1);
+				usleep(TIMEOUTS_USTEPS);
 		}
-		if(timeout==0)
+		if(received==0 && timeout==0)
 		{
 			printf("\nTimeout\n");
 			hdmi_tick(2); // 2 = timeout
@@ -318,17 +338,17 @@ int lwip_get_update_version_scsirom(char* file_version_loc,int alfa)
 			RecvVersionScsiRomCallback, NULL, &connection);
 	if(error==0)
 	{
-		int timeout=5000000; // 5 seconds of timeout
+		long int timeout=TIMEOUTS_TOTAL_US; // 5 seconds of timeout
 		while(received==0 && timeout>0)
 		{
 			timeout--;
 			txrx_loop(); // it executes at a rate of 250 and 500 ms
-			if((timeout%1000000)==0)
+			if((timeout%TIMEOUTS_1S_US)==0)
 				hdmi_tick(0); // 0 = roll the bar
 			else
-				usleep(1);
+				usleep(TIMEOUTS_USTEPS);
 		}
-		if(timeout==0)
+		if(received==0 && timeout==0)
 		{
 			printf("\nTimeout\n");
 			hdmi_tick(2); // 2 = timeout
@@ -342,6 +362,51 @@ int lwip_get_update_version_scsirom(char* file_version_loc,int alfa)
 	}
 
 	return(0);
+}
+int lwip_get_update_version_jed(char* file_version_loc,int alfa)
+{
+   conn_settings.use_proxy = 0;
+   conn_settings.headers_done_fn = RecvHttpHeaderCallback;
+   conn_settings.result_fn = HttpClientResultCallback;
+
+   strcpy(domain_name, "shanshe.mooo.com");
+   err_t error;
+
+   received=0;
+   sprintf(url,"/z3660/%s%s",alfa?"alfa/":"",file_version_loc);
+
+   google_dnsserver.addr=0x08080808;
+
+   dns_setserver(0, &google_dnsserver);
+
+   error = httpc_get_file_dns(domain_name, 80, url, &conn_settings,
+         RecvVersionJedCallback, NULL, &connection);
+   if(error==0)
+   {
+      long int timeout=TIMEOUTS_TOTAL_US; // 5 seconds of timeout
+      while(received==0 && timeout>0)
+      {
+         timeout--;
+         txrx_loop(); // it executes at a rate of 250 and 500 ms
+         if((timeout%TIMEOUTS_1S_US)==0)
+            hdmi_tick(0); // 0 = roll the bar
+         else
+            usleep(TIMEOUTS_USTEPS);
+      }
+      if(received==0 && timeout==0)
+      {
+         printf("\nTimeout\n");
+         hdmi_tick(2); // 2 = timeout
+         return(0);
+      }
+      else
+      {
+         hdmi_tick(1); // 1 = clean
+         return(1);
+      }
+   }
+
+   return(0);
 }
 int lwip_get_update(char *filename_loc,int alfa)
 {
@@ -367,17 +432,17 @@ int lwip_get_update(char *filename_loc,int alfa)
 
 	if(error==0)
 	{
-		long int timeout=10000000; // 10 seconds of timeout
+		long int timeout=TIMEOUTS_TOTAL_US*10; // 50 seconds of timeout
 		while(received==0 && timeout>0)
 		{
 			timeout--;
 			txrx_loop(); // it executes at a rate of 250 and 500 ms
-			if((timeout%1000000)==0)
+			if((timeout%TIMEOUTS_1S_US)==0)
 				hdmi_tick(0); // 0 = roll the bar
 			else
-				usleep(1);
+				usleep(TIMEOUTS_USTEPS);
 		}
-		if(timeout==0)
+		if(received==0 && timeout==0)
 		{
 			printf("\nTimeout\n");
 			hdmi_tick(2); // 2 = timeout
@@ -416,17 +481,17 @@ int lwip_get_update_scsirom(char *filename_loc,int alfa)
 
 	if(error==0)
 	{
-		long int timeout=10000000; // 10 seconds of timeout
+		long int timeout=TIMEOUTS_TOTAL_US; // 5 seconds of timeout
 		while(received==0 && timeout>0)
 		{
 			timeout--;
 			txrx_loop(); // it executes at a rate of 250 and 500 ms
-			if((timeout%1000000)==0)
+			if((timeout%TIMEOUTS_1S_US)==0)
 				hdmi_tick(0); // 0 = roll the bar
 			else
-				usleep(1);
+				usleep(TIMEOUTS_USTEPS);
 		}
-		if(timeout==0)
+		if(received==0 && timeout==0)
 		{
 			printf("\nTimeout\n");
 			hdmi_tick(2); // 2 = timeout
@@ -440,6 +505,55 @@ int lwip_get_update_scsirom(char *filename_loc,int alfa)
 		}
 	}
 	return(0);
+}
+int lwip_get_update_jed(char *filename_loc,int alfa)
+{
+   conn_settings.use_proxy = 0;
+   conn_settings.headers_done_fn = RecvHttpHeaderCallback;
+   conn_settings.result_fn = HttpClientResultCallback;
+
+   strcpy(domain_name, "shanshe.mooo.com");
+   err_t error;
+
+   received=0;
+   sprintf(url,"/z3660/%s%s",alfa?"alfa/":"",filename_loc);
+   printf("url:\n%s\n", url);
+
+   google_dnsserver.addr=0x08080808;
+
+   dns_setserver(0, &google_dnsserver);
+
+   error = httpc_get_file_dns(domain_name, 80, url, &conn_settings,
+         RecvJedCallback, NULL, &connection);
+   download_data.IncomingBytes = 0;
+   download_data.PacketCnt = 0;
+
+   if(error==0)
+   {
+      long int timeout=TIMEOUTS_TOTAL_US; // 5 seconds of timeout
+      while(received==0 && timeout>0)
+      {
+         timeout--;
+         txrx_loop(); // it executes at a rate of 250 and 500 ms
+         if((timeout%TIMEOUTS_1S_US)==0)
+            hdmi_tick(0); // 0 = roll the bar
+         else
+            usleep(TIMEOUTS_USTEPS);
+      }
+      if(received==0 && timeout==0)
+      {
+         printf("\nTimeout\n");
+         hdmi_tick(2); // 2 = timeout
+         return(0);
+      }
+      else
+      {
+         printf("Done...\n");
+         hdmi_tick(1); // 1 = clean
+         return(1);
+      }
+   }
+   return(0);
 }
 
 
@@ -455,9 +569,48 @@ void HttpClientResultCallback (void *arg, httpc_result_t httpc_result, u32_t rx_
 //   printf("received number of bytes: %u\n", rx_content_len);
 }
 
+void print_error(err_t err)
+{
+	switch(err)
+	{
+	case ERR_MEM:
+		printf("Out of memory error\n");
+	case ERR_BUF:
+		printf("Buffer error\n");
+	case ERR_TIMEOUT:
+		printf("Timeout\n");
+	case ERR_RTE:
+		printf("Routing problem\n");
+	case ERR_INPROGRESS:
+		printf("Operation in progress\n");
+	case ERR_VAL:
+		printf("Illegal value\n");
+	case ERR_WOULDBLOCK:
+		printf("Operation would block\n");
+	case ERR_USE:
+		printf("Address in use\n");
+	case ERR_ALREADY:
+		printf("Already connecting\n");
+	case ERR_ISCONN:
+		printf("Conn already established\n");
+	case ERR_CONN:
+		printf("Not connected\n");
+	case ERR_IF:
+		printf("Low-level netif error\n");
+	case ERR_ABRT:
+		printf("Connection aborted\n");
+	case ERR_RST:
+		printf("Connection reset\n");
+	case ERR_CLSD:
+		printf("Connection closed\n");
+	case ERR_ARG:
+		printf("Illegal argument\n");
+	}
+}
 
 uint8_t *DATA;
 err_t RecvBOOTbinCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if(err!=ERR_OK) print_error(err);
 	if (p == NULL) {
 		printf("pbuf==NULL TCP packet has arrived\n");
 	} else {
@@ -482,6 +635,7 @@ err_t RecvBOOTbinCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t
 	return ERR_OK;
 }
 err_t RecvScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if(err!=ERR_OK) print_error(err);
 	if (p == NULL) {
 		printf("pbuf==NULL TCP packet has arrived\n");
 	} else {
@@ -505,8 +659,34 @@ err_t RecvScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t
 	}
 	return ERR_OK;
 }
+err_t RecvJedCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+   if(err!=ERR_OK) print_error(err);
+   if (p == NULL) {
+      printf("pbuf==NULL TCP packet has arrived\n");
+   } else {
+      memcpy(&DATA[download_data.IncomingBytes], p->payload, p->len);
+      download_data.IncomingBytes = download_data.IncomingBytes + p->len;
+      download_data.PacketCnt++;
+      if(download_data.PacketCnt%100==0 || download_data.IncomingBytes>download_data.filesize_jed-5000)
+         printf("Total length %ld bytes     \r", download_data.IncomingBytes);
+
+      tcp_recved(tpcb, p->tot_len);
+      pbuf_free(p);
+
+      if (download_data.IncomingBytes >= download_data.filesize_jed) {
+         printf("\nincoming bytes (%ld) >= filesize (%ld)\n", download_data.IncomingBytes, download_data.filesize_jed);
+         printf("Last packed recieved -> closing the tcp connection...\n");
+         download_data.IncomingBytes = 0;
+         download_data.PacketCnt = 0;
+         received=1;
+         return tcp_close(tpcb);
+      }
+   }
+   return ERR_OK;
+}
 uint32_t hextoi(char *str);
 err_t RecvVersionCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if(err!=ERR_OK) print_error(err);
 	if (p == NULL) {
 		printf("pbuf==NULL TCP packet has arrived\n");
 	} else {
@@ -546,6 +726,7 @@ err_t RecvVersionCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t
     return ERR_OK;
 }
 err_t RecvVersionScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if(err!=ERR_OK) print_error(err);
 	if (p == NULL) {
 		printf("pbuf==NULL TCP packet has arrived\n");
 	} else {
@@ -584,8 +765,49 @@ err_t RecvVersionScsiRomCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p
     }
     return ERR_OK;
 }
+err_t RecvVersionJedCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+   if(err!=ERR_OK) print_error(err);
+   if (p == NULL) {
+      printf("pbuf==NULL TCP packet has arrived\n");
+   } else {
+      printf("Packet received\n");
+
+      memcpy(&version_string, p->payload, p->len);
+      char *version=strstr(version_string,"version=");
+      if(version!=NULL && version==version_string) // version is in the downloaded text, and also is the first work
+      {
+         version=version_string+8;
+         char *plen=strchr(version_string,'\r');
+         *plen=0;
+         printf("Version: %s\n", version);
+         strcpy(version_jed_string_export,version);
+         *plen='\r';
+         plen=strstr(version_string,"length=");
+         char *pcheck=strchr(plen,'\r');
+         *pcheck=0;
+         download_data.filesize_jed=atoi(plen+7);
+         printf("File size: %ld\n",download_data.filesize_jed);
+         *pcheck='\r';
+         pcheck=strstr(version_string,"checksum32=");
+         char *last=strchr(pcheck,'\r');
+         *last=0;
+         download_data.checksum32_jed=hextoi(pcheck+11);
+
+         tcp_recved(tpcb, p->tot_len);
+         pbuf_free(p);
+         received=1;
+      }
+      else
+      {
+         printf("The update server is down.\nPlease let us know about this on the z3660 discord channel.\n");
+      }
+        return tcp_close(tpcb);
+    }
+    return ERR_OK;
+}
 /*
 err_t RecvVersionScsiRomVersionCallback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+	if(err!=ERR_OK) print_error(err);
 	if (p == NULL) {
 		printf("pbuf==NULL TCP packet has arrived\n");
 	} else {

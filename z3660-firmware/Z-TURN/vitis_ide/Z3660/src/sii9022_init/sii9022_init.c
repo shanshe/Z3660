@@ -27,27 +27,28 @@ struct sensor_register {
 
 struct sensor_register sii9022_init_regs[] = {
 
-	{0x1e, 0x00},
-	{0x08, 0x70},
+	{SII9022_POWER_STATE_CTRL_REG, 0x00},
+	{SII9022_PIXEL_REPETITION_REG, 0x70},
 
-	{0x09, 0x00},
-	{0x0a, 0x00},
+	{SII9022_AVI_IN_FORMAT_REG,    0x00},
+	{SII9022_AVI_OUT_FORMAT_REG,   0x00},
 
 	{0x60, 0x04},
-	{0x3c, 0x01},
+	{SII9022_IRQ_ENABLE_REG,       0x01},
 
-	{0x1a, 0x11},
+	{SII9022_SYS_CTRL_DATA_REG,    0x11},
 
-	{0x00, 0x02},
-	{0x01, 0x3a},
-	{0x02, 0x70},
-	{0x03, 0x17},
-	{0x04, 0x98},
-	{0x05, 0x08},
-	{0x06, 0x65},
-	{0x07, 0x04},
-	{0x08, 0x70},
-	{0x1a, 0x01},
+	{SII9022_PIXEL_CLK_LSB_REG,    0x02},
+	{SII9022_PIXEL_CLK_MSB_REG,    0x3a},
+	{SII9022_VFREQ_LSB_REG,        0x70},
+	{SII9022_VFREQ_MSB_REG,        0x17},
+	{SII9022_PIXELS_LSB_REG,       0x98},
+	{SII9022_PIXELS_MSB_REG,       0x08},
+	{SII9022_LINES_LSB_REG,        0x65},
+	{SII9022_LINES_MSB_REG,        0x04},
+	{SII9022_PIXEL_REPETITION_REG, 0x70},
+
+	{SII9022_SYS_CTRL_DATA_REG,    0x01},
 //I2S config
 
 	//0x26
@@ -61,16 +62,12 @@ struct sensor_register sii9022_init_regs[] = {
 									   |SII902X_TPI_I2S_WS_POLARITY_LOW
 			                           |SII902X_TPI_I2S_MCLK_MULTIPLIER_384
 	                                   |SII902X_TPI_I2S_SCK_EDGE_RISING},
-	//0x21
-	{0x21,0x00},
-	//0x22
-	{0x22,0x00},
-	//0x23
-	{0x23,0x20},
-	//0x24
-	{0x24,0x02},
-	//0x25
-	{0x25,0x02},
+
+	{SII902X_TPI_I2S_STRM_HDR_0_REG, 0x04},
+	{SII902X_TPI_I2S_STRM_HDR_1_REG, 0x00},
+	{SII902X_TPI_I2S_STRM_HDR_2_REG, 0x20},
+	{SII902X_TPI_I2S_STRM_HDR_3_REG, 0x22},
+	{SII902X_TPI_I2S_STRM_HDR_4_REG, 0x02},
 
 	{SII902X_TPI_AUDIO_CONFIG_BYTE2_REG,SII902X_TPI_AUDIO_MUTE_DISABLE
 			                           |SII902X_TPI_AUDIO_CODING_PCM
@@ -175,7 +172,7 @@ int sii9022_init(zz_video_mode *vmode)
 	/*					sii9022 hardware reset   					*/
 	/* ------------------------------------------------------------ */
 
-	set_hdmi_video_mode(vmode->hres,vmode->vres,vmode->phz, 60, 1);
+	set_hdmi_video_mode(vmode->hres,vmode->vres,vmode->phz, vmode->vhz, vmode->hdmi);
 
 	iic_master_init();
 	iic_write_8(0xc7,0x00);//software reset

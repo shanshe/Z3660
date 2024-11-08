@@ -1754,6 +1754,7 @@ void readbyte(int address, int dest)
 
 void readword(int address, int dest)
 {
+// There is something wrong with direct read word (jnf_MEM_READ_OFF_w)
     if (special_mem & S_READ)
         readmem_special(address, dest, SIZEOF_VOID_P * 1);
     else
@@ -1776,9 +1777,9 @@ STATIC_INLINE void get_n_addr_old(int address, int dest)
 
 STATIC_INLINE void get_n_addr_real(int address, int dest)
 {
-    if (currprefs.address_space_24)
-        jnf_MEM_GETADR24_OFF(dest, address);
-    else
+//    if (currprefs.address_space_24)
+//        jnf_MEM_GETADR24_OFF(dest, address);
+//    else
         jnf_MEM_GETADR_OFF(dest, address);
 }
 

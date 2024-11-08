@@ -32,6 +32,7 @@
 #include <exec/tasks.h>
 #include <hardware/intbits.h>
 #include <string.h>
+#include <exec/execbase.h>
 
 #ifdef HAVE_VERSION_H
 #include "version.h"
@@ -44,7 +45,6 @@
 #include "newstyle.h"
 #endif				/* NEWSTYLE */
 #ifdef DEVICES_NEWSTYLE_H
-
 const UWORD dev_supportedcmds[] = {
 	NSCMD_DEVICEQUERY,
 	CMD_READ,
@@ -55,18 +55,18 @@ const UWORD dev_supportedcmds[] = {
 
 const struct NSDeviceQueryResult NSDQueryAnswer = {
 	0,
-	16,			/* up to SupportedCommands (inclusive) TODO: correct number */
-	NSDEVTYPE_SANA2,	/* TODO: proper device type */
-	0,			/* subtype */
-	(UWORD *) dev_supportedcmds
+	16,              /* up to SupportedCommands (inclusive) TODO: correct number */
+	NSDEVTYPE_SANA2, /* TODO: proper device type */
+	0,               /* subtype */
+	(UWORD*)dev_supportedcmds
 };
-#endif				/* DEVICES_NEWSTYLE_H */
+#endif /* DEVICES_NEWSTYLE_H */
 
 #include "device.h"
 #include "macros.h"
 
 // FIXME get rid of global var!
-static ULONG ZZ9K_REGS = 0;
+static ULONG ZZ3660_REGS = 0;
 
 struct Sana2DeviceStats global_stats;
 BOOL is_online;
@@ -75,21 +75,20 @@ SAVEDS void frame_proc();
 char *frame_proc_name = "Z3660NetFramer";
 
 // Z3660 Interrupt Handler (INT6)
-SAVEDS void dev_isr(ASMR(a1)
-		      struct devbase *db ASMREG(a1))
+SAVEDS void dev_isr(ASMR(a1) struct devbase *db ASMREG(a1))
 {
-	ULONG status = *(volatile ULONG *)(ZZ9K_REGS + REG_ZZ_INT_STATUS);
+  ULONG status = *(volatile ULONG *)(ZZ3660_REGS + REG_ZZ_INT_STATUS);
 
-	// ethernet interrupt signal set?
-	if (status & 1) {
-		// ack/clear ethernet interrupt
-		*(volatile ULONG *)(ZZ9K_REGS + REG_ZZ_CONFIG) = 8 | 16;
+  // ethernet interrupt signal set?
+  if (status & 1) {
+    // ack/clear ethernet interrupt
+    *(volatile ULONG *)(ZZ3660_REGS + REG_ZZ_CONFIG) = 8 | 16;
 
-		// signal main process that a packet is available
-		if (db->db_Proc) {
-			Signal((struct Task *)db->db_Proc, SIGBREAKF_CTRL_F);
-		}
-	}
+    // signal main process that a packet is available
+    if (db->db_Proc) {
+      Signal((struct Task *)db->db_Proc, SIGBREAKF_CTRL_F);
+    }
+  }
 }
 
 static UBYTE HW_MAC[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -163,11 +162,9 @@ SAVEDS struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
 				     (struct ConfigDev *)FindConfigDev(cd,
 								       0x144B,
 								       0x1))) {
-					BPTR fh;
-
 					D(("Z3660Net: Z3660 found.\n"));
-					ZZ9K_REGS = (ULONG) cd->cd_BoardAddr;
-
+					ZZ3660_REGS = (ULONG) cd->cd_BoardAddr;
+/* Configuracion of MAC address is now part of ARM side
 					// Thanks to https://grandcentrix.team
 					// 68:82:F2
 					// Commodore International
@@ -179,6 +176,7 @@ SAVEDS struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
 					HW_MAC[4] = 0x01;
 					HW_MAC[5] = 0x00;
 
+					BPTR fh;
 					if ((fh =
 					     Open("ENV:Z3660_MAC",
 						  MODE_OLDFILE))) {
@@ -196,10 +194,21 @@ SAVEDS struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
 					}
 
 					// FIXME
-					*(ULONG *)(ZZ9K_REGS + REG_ZZ_ETH_MAC_HI) = (HW_MAC[0] << 8) | HW_MAC[1];
-					*(ULONG *)(ZZ9K_REGS + REG_ZZ_ETH_MAC_LO) = (HW_MAC[2] << 24) | (HW_MAC[3] << 16) |
+					*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_HI) = (HW_MAC[0] << 8) | HW_MAC[1];
+					*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_LO) = (HW_MAC[2] << 24) | (HW_MAC[3] << 16) |
 					    					    (HW_MAC[4] << 8) | HW_MAC[5];
+*/
+					// Read the Mac Address and send it again to force update the MAC address
+					HW_MAC[0]=((*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_HI))>>8 )&0xFF;
+					HW_MAC[1]=((*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_HI))    )&0xFF;
+					HW_MAC[2]=((*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_LO))>>24)&0xFF;
+					HW_MAC[3]=((*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_LO))>>16)&0xFF;
+					HW_MAC[4]=((*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_LO))>>8 )&0xFF;
+					HW_MAC[5]=((*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_LO))    )&0xFF;
 
+					*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_HI) = (HW_MAC[0] << 8) | HW_MAC[1];
+					*(ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_MAC_LO) = (HW_MAC[2] << 24) | (HW_MAC[3] << 16) |
+					    					    (HW_MAC[4] << 8) | HW_MAC[5];
 					ok = 1;
 
 				} else {
@@ -235,11 +244,11 @@ SAVEDS struct Device *DevInit(ASMR(d0) DEVBASEP ASMREG(d0),
 	return (ok > 0) ? (struct Device *)db : (0);
 }
 
-SAVEDS LONG DevOpen(ASMR(a1)
-		      struct IOSana2Req *ioreq ASMREG(a1),
-		      ASMR(d0) ULONG unit ASMREG(d0),
-		      ASMR(d1) ULONG flags ASMREG(d1),
-		      ASMR(a6) DEVBASEP ASMREG(a6))
+SAVEDS LONG DevOpen(
+	ASMR(a1) struct IOSana2Req *ioreq ASMREG(a1),
+	ASMR(d0) ULONG unit ASMREG(d0),
+	ASMR(d1) ULONG flags ASMREG(d1),
+	ASMR(a6) DEVBASEP ASMREG(a6))
 {
 	LONG ok = 0, ret = IOERR_OPENFAIL;
 	struct BufferManagement *bm;
@@ -271,7 +280,7 @@ SAVEDS LONG DevOpen(ASMR(a1)
 			if ((port = CreateMsgPort())) {
 				D(("Z3660Net: Starting Process\n"));
 				if ((db->db_Proc =
-				     CreateNewProcTags(NP_Entry, (intptr_t)frame_proc, NP_Name, (intptr_t)frame_proc_name, NP_Priority, 0, TAG_DONE))) {
+				    CreateNewProcTags(NP_Entry, (intptr_t)frame_proc, NP_Name, (intptr_t)frame_proc_name, NP_Priority, 0, TAG_DONE))) {
 					InitSemaphore(&db->db_ProcExitSem);
 
 					init.error = 1;
@@ -305,9 +314,9 @@ SAVEDS LONG DevOpen(ASMR(a1)
 							ok = 1;
 
 							// enable HW interrupt
-							//ULONG hw_config = *(volatile ULONG*)(ZZ9K_REGS+REG_ZZ_INT_STATUS);
+							//ULONG hw_config = *(volatile ULONG*)(ZZ3660_REGS+REG_ZZ_INT_STATUS);
 							//hw_config |= 1;
-							*(volatile ULONG *)(ZZ9K_REGS + REG_ZZ_CONFIG) = 1;
+							*(volatile ULONG *)(ZZ3660_REGS + REG_ZZ_CONFIG) = 1;
 
 							D(("Z3660Net: ZZ interrupt enabled\n"));
 						} else {
@@ -372,9 +381,9 @@ SAVEDS BPTR DevClose(ASMR(a1)
 
 	if (db->db_Lib.lib_OpenCnt == 0) {
 		// disable HW interrupt
-		//ULONG hw_config = *(ULONG*)(ZZ9K_REGS+REG_ZZ_INT_STATUS);
+		//ULONG hw_config = *(ULONG*)(ZZ3660_REGS+REG_ZZ_INT_STATUS);
 		//hw_config &= 0xfffffffe;
-		*(volatile ULONG *)(ZZ9K_REGS + REG_ZZ_CONFIG) = 0;
+		*(volatile ULONG *)(ZZ3660_REGS + REG_ZZ_CONFIG) = 0;
 
 		D(("Z3660Net: ZZ interrupt disabled\n"));
 
@@ -484,10 +493,10 @@ SAVEDS VOID DevBeginIO(ASMR(a1)
 		}
 		/* fall through */
 	case CMD_WRITE:{
-//    ULONG res = write_frame(ioreq, (UBYTE*)(ZZ9K_REGS+REG_ZZ_TX_BUFF));
-			D(("write_frame: ZZ9K_REGS+TX_FRAME_ADDRESS = 0x%lx\n",
-			   ZZ9K_REGS + TX_FRAME_ADDRESS));
-			ULONG res = write_frame(ioreq, (UBYTE *) (ZZ9K_REGS + TX_FRAME_ADDRESS));
+//    ULONG res = write_frame(ioreq, (UBYTE*)(ZZ3660_REGS+REG_ZZ_TX_BUFF));
+			D(("write_frame: ZZ3660_REGS+TX_FRAME_ADDRESS = 0x%lx\n",
+			   ZZ3660_REGS + TX_FRAME_ADDRESS));
+			ULONG res = write_frame(ioreq, (UBYTE *) (ZZ3660_REGS + TX_FRAME_ADDRESS));
 			if (res != 0) {
 				ioreq->ios2_Req.io_Error = S2ERR_NO_RESOURCES;
 				ioreq->ios2_WireError = S2WERR_GENERIC_ERROR;
@@ -723,7 +732,7 @@ ULONG write_frame(struct IOSana2Req *req, UBYTE *frame)
 		} else {
 			// buffer was copied to Z3660, send it
 			volatile ULONG *reg =
-			    (volatile ULONG *)(ZZ9K_REGS + REG_ZZ_ETH_TX);
+			    (volatile ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_TX);
 			*reg = (ULONG) sz;
 
 			// get feedback
@@ -786,17 +795,16 @@ SAVEDS void frame_proc()
 		}
 		// read first the address of frame_received_from_backlog
 		uint32_t address_of_rx_buff =
-		    *((volatile ULONG *)(ZZ9K_REGS + REG_ZZ_ETH_RX_ADDRESS));
+		    *((volatile ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_RX_ADDRESS));
 
-		D(("address_of_rx_buff: 0x%lx\n",
-		   ZZ9K_REGS + address_of_rx_buff));
+		D(("address_of_rx_buff: 0x%lx\n", ZZ3660_REGS + address_of_rx_buff));
 
-		volatile UBYTE *frm =
-		    (volatile UBYTE *)(ZZ9K_REGS + address_of_rx_buff);
+		volatile UBYTE *frm =(volatile UBYTE *)(ZZ3660_REGS + address_of_rx_buff);
 		ULONG serial = get_frame_serial(frm);
 
 		//D(("FTI %ld\n", serial));
-		if (serial != old_serial) {
+		if (serial != old_serial)
+		{
 			int processed = 0;
 			USHORT packet_type = ((USHORT) frm[16] << 8) | ((USHORT) frm[17]);
 			old_serial = serial;
@@ -806,6 +814,7 @@ SAVEDS void frame_proc()
 			     ior->ios2_Req.io_Message.mn_Node.ln_Succ;
 			     ior = (struct IOSana2Req *)ior->ios2_Req.io_Message.mn_Node.ln_Succ) {
 				if (ior->ios2_PacketType == packet_type) {
+//					CacheClearE(frm, HW_ETH_HDR_SIZE,CACRF_ClearD);
 					ULONG res = read_frame(ior, frm);
 					if (res == 0) {
 						Remove((struct Node *)ior);
@@ -826,10 +835,11 @@ SAVEDS void frame_proc()
 			}
 
 			// mark this frame as accepted
-			volatile ULONG *reg =
-			    (volatile ULONG *)(ZZ9K_REGS + REG_ZZ_ETH_RX);
+			volatile ULONG *reg = (volatile ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_RX);
 			*reg = 1L;
-		} else {
+		}
+//		else
+		{
 			// if there are no more new packets, idle until the next interrupt
 			recv = Wait(wmask);
 		}

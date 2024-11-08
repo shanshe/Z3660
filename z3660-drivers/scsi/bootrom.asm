@@ -132,7 +132,7 @@ rt_Init:    dc.l     Init-RomStart      ; APTR  RT_INIT
             dc.b     '$VER '
 ******* Strings referenced in Diag Copy area  ************************
 DevName:    dc.b     'z3660_scsi.device',0                      ; Name string
-IdString    dc.b     'Z3660 SCSI v0.8',0   ; Id string
+IdString    dc.b     'Z3660 SCSI v1.01',0   ; Id string
 
 DosName:        dc.b     'dos.library',0                ; DOS library name
 ExpansionName:  dc.b     'expansion.library',0
@@ -317,7 +317,7 @@ get_boardbase:
             move.l  d0,-(a7)
             lea     get_boardbase-RomStart(pc),a5
             move.l  a5,d0
-            and.l   #$FFF00000,d0
+            and.l   #$FFFF0000,d0
             add.l   #PiSCSI_OFFSET,d0
             move.l  d0,a5
             move.l  (a7)+,d0

@@ -265,7 +265,16 @@ MIDFUNC(3,lea_l_brr,(W4 d, RR4 s, IM32 offset))
     LOAD_U32(REG_WORK1, offset);
   	ADD_rrr(d, s, REG_WORK1);
   }
-
+/*
+  if(offset>=0 && offset<=0xfff) {
+    ADD_rri(d, s, offset);
+  }else if(offset>=-0xfff && offset<0) {
+    SUB_rri(d, s, -offset);
+  } else {
+    LOAD_U32(REG_WORK1, offset);
+   ADD_rrr(d, s, REG_WORK1);
+  }
+*/
 	EXIT_REGS(d,s);
 }
 MENDFUNC(3,lea_l_brr,(W4 d, RR4 s, IM32 offset))
@@ -513,11 +522,22 @@ MIDFUNC(2,arm_ADD_l_ri,(RW4 d, IM32 i))
 
 	if(CHECK32(i)) {
 		ADD_rri(d, d, i);
-	} else {
-    LOAD_U32(REG_WORK1, i);
-		ADD_rrr(d, d, REG_WORK1);
+	   } else {
+	      LOAD_U32(REG_WORK1, i);
+	   ADD_rrr(d, d, REG_WORK1);
   }
-	
+/*   if(i>=0 && i<0xfff) {
+      ADD_rri(d, d, i);
+   } else {
+      if(i>-0x7fff && i<0x7fff) {
+        SIGNED16_IMM_2_REG(REG_WORK1, i);
+      } else {
+         LOAD_U32(REG_WORK1, i);
+         SXTH_rr(REG_WORK1,REG_WORK1);
+      }
+      ADD_rrr(d, d, REG_WORK1);
+  }
+	*/
 	unlock2(d);
 }
 MENDFUNC(2,arm_ADD_l_ri,(RW4 d, IM32 i))

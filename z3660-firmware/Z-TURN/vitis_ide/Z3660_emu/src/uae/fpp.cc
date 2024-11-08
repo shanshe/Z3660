@@ -2086,15 +2086,15 @@ static uaecptr fmovem2fpp (uaecptr ad, uae_u32 list, int incr, int regdir)
 	}
 	return ad;
 }
-
+int histograma[128]={0};
 static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 {
 	uae_u64 q = 0;
 	uae_u8 s = 0;
-
+	histograma[extra&0x7F]++;
 	switch (extra & 0x7f)
 	{
-		case 0x00: /* FMOVE */
+		case 0x00: /* FMOVE */ //2060
 			fpp_move(dst, src, PREC_NORMAL);
 			break;
 		case 0x40: /* FSMOVE */
@@ -2109,10 +2109,10 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 		case 0x02: /* FSINH */
 			fpp_sinh(dst, src);
 			break;
-		case 0x03: /* FINTRZ */
+		case 0x03: /* FINTRZ */ // 34
 			fpp_intrz(dst, src);
 			break;
-		case 0x04: /* FSQRT */
+		case 0x04: /* FSQRT */  // 5
 		case 0x05:
 			fpp_sqrt(dst, src, PREC_NORMAL);
 			break;
@@ -2142,7 +2142,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 		case 0x0d: /* FATANH */
 			fpp_atanh(dst, src);
 			break;
-		case 0x0e: /* FSIN */
+		case 0x0e: /* FSIN */ //5
 			fpp_sin(dst, src);
 			break;
 		case 0x0f: /* FTAN */
@@ -2168,7 +2168,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 		case 0x17:
 			fpp_log2(dst, src);
 			break;
-		case 0x18: /* FABS */
+		case 0x18: /* FABS */ // 5
 			fpp_abs(dst, src, PREC_NORMAL);
 			break;
 		case 0x58: /* FSABS */
@@ -2180,7 +2180,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 		case 0x19: /* FCOSH */
 			fpp_cosh(dst, src);
 			break;
-		case 0x1a: /* FNEG */
+		case 0x1a: /* FNEG */ //28
 		case 0x1b:
 			fpp_neg(dst, src, PREC_NORMAL);
 			break;
@@ -2202,7 +2202,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 		case 0x1f: /* FGETMAN */
 			fpp_getman(dst, src);
 			break;
-		case 0x20: /* FDIV */
+		case 0x20: /* FDIV */ //30
 			fpp_div(dst, src, PREC_NORMAL);
 			break;
 		case 0x60: /* FSDIV */
@@ -2216,7 +2216,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 			fpp_mod(dst, src, &q, &s);
 			fpsr_set_quotient(q, s);
 			break;
-		case 0x22: /* FADD */
+		case 0x22: /* FADD */ //814
 			fpp_add(dst, src, PREC_NORMAL);
 			break;
 		case 0x62: /* FSADD */
@@ -2225,7 +2225,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 		case 0x66: /* FDADD */
 			fpp_add(dst, src, PREC_DOUBLE);
 			break;
-		case 0x23: /* FMUL */
+		case 0x23: /* FMUL */ //1214
 			fpp_mul(dst, src, PREC_NORMAL);
 			break;
 		case 0x63: /* FSMUL */
@@ -2248,7 +2248,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 		case 0x27: /* FSGLMUL */
 			fpp_sglmul(dst, src);
 			break;
-		case 0x28: /* FSUB */
+		case 0x28: /* FSUB */ //143
 		case 0x29:
 		case 0x2a:
 		case 0x2b:
@@ -2276,7 +2276,7 @@ static bool fp_arithmetic(fpdata *src, fpdata *dst, int extra)
 			regs.fp[extra & 7] = *dst;
 			fpp_sin(dst, src);
 			break;
-		case 0x38: /* FCMP */
+		case 0x38: /* FCMP */ //435
 		case 0x39:
 		case 0x3c:
 		case 0x3d:
@@ -2629,7 +2629,7 @@ static void fpuop_arithmetic2 (uae_u32 opcode, uae_u16 extra)
 
 		case 0:
 		case 2: /* Extremely common */
-
+			regs.fpiar = pc;
 			reg = (extra >> 7) & 7;
 			if ((extra & 0xfc00) == 0x5c00) {
 				// FMOVECR

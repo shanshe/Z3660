@@ -1269,7 +1269,7 @@
  * LWIP_TCP_SACK_OUT==1: TCP will support sending selective acknowledgements (SACKs).
  */
 #if !defined LWIP_TCP_SACK_OUT || defined __DOXYGEN__
-#define LWIP_TCP_SACK_OUT               0
+#define LWIP_TCP_SACK_OUT               1
 #endif
 
 /**

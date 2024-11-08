@@ -20,7 +20,7 @@ void amiga_interrupt_set(uint32_t bit) {
 	uint32_t old_amiga_interrupts=amiga_interrupts;
 	amiga_interrupts |= bit;
 
-	if (amiga_interrupts != 0 && old_amiga_interrupts == 0) {
+	if (amiga_interrupts != 0 && old_amiga_interrupts != amiga_interrupts) {
 		DiscreteSet(REG0,FPGA_INT6); // set int6 to 1 (active high)
 	}
 }
