@@ -1,6 +1,7 @@
 # Z3660 drivers
 
-To build all these drivers, you will need vbcc and m68k-amigaos-gcc compilers. Also you will need a NDK (I'm using NDK from OS3.9)
+To build all these drivers, you will need vbcc and m68k-amigaos-gcc compilers. Also you will need a NDK (I'm using NDK from OS3.9).
+<br>To build ZTop app you will need SASC under vamos emulation.
 <br>See Makefile in order to adjust your paths.
 <br>With the command line:
 <br>`make all`

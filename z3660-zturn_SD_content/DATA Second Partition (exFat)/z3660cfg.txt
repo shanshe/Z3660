@@ -23,9 +23,10 @@ kickstart 5
 
 # Declare up to 9 extended kickstarts files. (1-9)
 ext_kickstart1 kicks/kick060.rom
+ext_kickstart2 kicks/kick060_scsi.rom
 # Select the number (1-9) to map one of the above extended kickstarts on ARM's internal RAM, or 0 to use the installed extended kickstart on your Amiga (if any)
 # This selection can be overriden by env/ext_kickstart file on SD root
-ext_kickstart 1
+ext_kickstart 2
 
 # Load scsi ROM on boot (boot from SCSI hdf files on SD)
 # (YES or NO, in capitals)
@@ -35,10 +36,11 @@ scsiboot YES
 
 # Select your hdf files (from hdf0 to hdf19)
 hdf0 hdf/a4000.hdf
-hdf1 hdf/Daten5.hdf
+hdf1 hdf/Daten5_PFS3.hdf
 hdf2 hdf/Work.hdf
 hdf3 hdf/temp_1G_PFS3.hdf
 hdf4 hdf/hd0.hda
+hdf5 hdf/Programs.hdf
 # Select the scsi number (scsi0 to scsi6) to assign one of the above hdf files
 scsi0 0
 scsi1 1
@@ -53,6 +55,14 @@ scsi3 3
 # This selection can be overriden by env/autoconfig_ram file on SD root
 #autoconfig_ram NO
 autoconfig_ram YES
+
+# Autoconfig RTG Enable
+# When disabled, the RTG will not be part of the Autoconfig chain, but it will appear at $1000_0000
+# You will need the kick060_scsi.rom to make the Z3660 SCSI bootable (adds a new Zorro II "virtual" board)
+# (YES or NO, in capitals)
+# This selection can be overriden by env/autoconfig_rtg file on SD root
+autoconfig_rtg NO
+#autoconfig_rtg YES
 
 # CPU RAM Enable (128 MB CPU RAM)
 # IMPORTANT NOTE: disabling CPU RAM, will also disable SCSIBOOT
@@ -73,4 +83,9 @@ enable_test YES
 #enable_test NO
 
 # Select a boot screen resolution (1920x1080, 1280x720 or 800x600)
+bootscreen_resolution 1920x1080
 #bootscreen_resolution 1280x720
+#bootscreen_resolution 800x600
+
+# Select a mac address for Ethernet
+mac_address 00:80:10:00:01:00

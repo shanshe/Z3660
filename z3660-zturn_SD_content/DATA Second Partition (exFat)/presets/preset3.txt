@@ -1,0 +1,31 @@
+#preset_name "A4000 UAEJIT 90 MHz"
+#############
+#BOOT options
+#############
+bootmode UAEJIT
+scsiboot YES
+autoconfig_ram YES
+autoconfig_rtg NO
+cpu_ram YES
+cpufreq 90
+kickstart 1
+ext_kickstart 2
+enable_test NO
+bootscreen_resolution 1280x720
+#############
+#SCSI options
+#############
+scsi0 0
+scsi1 5
+scsi2 1
+scsi3 -1
+scsi4 -1
+scsi5 -1
+scsi6 -1
+#############
+#MISC options
+#############
+mac_address 00:08:01:02:03:06
+bp_ton 0.000500
+bp_toff 0.010000
+

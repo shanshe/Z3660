@@ -10,6 +10,8 @@ In this directory you can find the content of the two partitions. In the first p
 
    <b>z3660_scsi.rom</b> contains the bootrom of SD SCSI emulation, so you need it only if you are going to boot from hdf files.
 
+   <b>z3660.jed</b> is the CPLD firmware that can be flashed with the CPLD programmer.
+
    <b>z3660cfg.txt</b> contains some configuration of the Z3660. It should be very self explanatory.
 In z3660cfg.txt, you can comment out a line with a `#` on the first character of a line. If you use multiple lines with the same configuration, the last one config is what will be finally selected.
 
