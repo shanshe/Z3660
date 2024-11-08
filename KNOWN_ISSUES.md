@@ -6,8 +6,8 @@ The frequency of 060 is limited to 50 and 100 MHz.
 <br>When using EMU (MUSASHI, UAE or UAEJIT) then the 060 frequency affects to the emulation chip speed access. So the maximum chip speed is reached when clocking the system at 100 MHz (060 receives the same clock).
 <br>
 
-* v1.03 beta 4 FPGA/ARM versions<br>
-The frequency of the 060 can be selected between 50 and 100 MHz, in 5 Mhz steps. 90 MHz and 95 MHz are a bit unstable in my systems (A4000 and AA3000). All other frequencies seems to work fine (again, in my systems).
+* v1.03 beta 4 and later FPGA/ARM versions<br>
+The frequency of the 060 can be selected between 50 and 100 MHz, in 5 Mhz steps. 90 MHz and 95 MHz are a bit unstable on my systems (A4000 and AA3000). All other frequencies seems to work fine (again, on my systems).
 
 ##SCSI SD emulation
  * v1.01 CPLD and FPGA/ARM versions<br>
@@ -21,10 +21,10 @@ There is a bug in hunk relocation code that makes that one hdf grows upto fill t
 <br><br>
  * v1.03 beta 4 FPGA/ARM versions<br>
  The issues in v1.02 has been fixed. You can copy between partitions and use any filesystems.
- But still please use with caution, make always a backup of your files... WIP...
+ But still please use with caution, make always a backup of your files...
 <br><br>
  * v1.03 beta 14 FPGA/ARM versions<br>
- After beta 12, you can make a third partition in the SD with type 0x76 (like you do with pistorm/emu68). It will be automounted by the SCSI SD emulation.
+ After beta 14, you can make a third partition in the SD with type 0x76 (like you do with pistorm/emu68). It will be automounted by the SCSI SD emulation. (beta 12 and beta 13 had a bug that made some hdfs to grow up, and it was fixed in beta 14).
  
 ##DMA and Zorro III bus bastmer
  * v1.02 CPLD and FPGA/ARM versions<br>
