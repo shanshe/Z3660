@@ -18,4 +18,4 @@ In z3660cfg.txt, you can comment out a line with a `#` on the first character of
    <b>Folders</b>: each folder has a readme...
 
 # A note on the type of microSD card to use in the Z-Turn
-I have received a microSD with every Z-turn I have bought, but they are HC type... they are really slow!!! Please use XC type microSDs.
+I have received a microSD with every Z-turn I have bought, but they are U1 or less speed class... they are really slow!!! Please use U3 or higher speed class microSDs.
