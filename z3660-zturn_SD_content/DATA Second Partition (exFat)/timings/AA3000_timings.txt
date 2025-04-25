@@ -1,0 +1,93 @@
+# AA3000 timings
+# Released for version 1.03 BETA 18
+index 0
+# 50 MHz
+    pclk.phase   = -20
+    clken.phase  =  40
+    bclk.phase   = -20
+    cpuclk.phase = 240
+    clk90.phase  = 330
+index 1
+# 55 MHz
+    pclk.phase   = -30
+    clken.phase  =  50
+    bclk.phase   = -20
+    cpuclk.phase = 240
+    clk90.phase  = 330
+index 2
+# 60 MHz
+    pclk.phase   = -20
+    clken.phase  =  60
+    bclk.phase   = -20
+    cpuclk.phase = 240
+    clk90.phase  = 330
+index 3
+# 65 MHz
+    pclk.phase   = -20
+    clken.phase  =  60
+    bclk.phase   = -20
+    cpuclk.phase = 240
+    clk90.phase  = 330
+index 4
+# 70 MHz
+    pclk.phase   = -20
+    clken.phase  =  40
+    bclk.phase   = -20
+    cpuclk.phase = 260
+    clk90.phase  = 340
+index 5
+# 75 MHz
+    pclk.phase   = -20
+    clken.phase  =  40
+    bclk.phase   = -20
+    cpuclk.phase = 260
+    clk90.phase  = 350
+index 6
+# 80 MHz
+    pclk.phase   = -20
+    clken.phase  =  60
+    bclk.phase   = -20
+    cpuclk.phase = 240
+    clk90.phase  = 330
+index 7
+# 85 MHz
+    pclk.phase   = -20
+    clken.phase  =  60
+    bclk.phase   = -20
+    cpuclk.phase = 240
+    clk90.phase  = 330
+index 8
+# 90 MHz
+    pclk.phase   = -20
+    clken.phase  =  60
+    bclk.phase   = -20
+    cpuclk.phase = 220
+    clk90.phase  = 310
+index 9
+# 95 MHz
+    pclk.phase   = -20
+    clken.phase  =  40
+    bclk.phase   = -20
+    cpuclk.phase = 220
+    clk90.phase  = 310
+index 10
+# 100 MHz
+    pclk.phase   = -20
+    clken.phase  =  40
+    bclk.phase   = -20
+    cpuclk.phase = 220
+    clk90.phase  = 310
+index 11
+# 105 MHz
+    pclk.phase   = -20
+    clken.phase  =  60
+    bclk.phase   = -20
+    cpuclk.phase = 220
+    clk90.phase  = 310
+index 12
+# 110 MHz
+    pclk.phase   = -15
+    clken.phase  =  30
+    bclk.phase   = -15
+    cpuclk.phase = 220
+    clk90.phase  = 310

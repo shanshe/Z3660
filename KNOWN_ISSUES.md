@@ -9,6 +9,9 @@ The frequency of 060 is limited to 50 and 100 MHz.
 * v1.03 beta 4 and later FPGA/ARM versions<br>
 The frequency of the 060 can be selected between 50 and 100 MHz, in 5 Mhz steps. 90 MHz and 95 MHz are a bit unstable on my systems (A4000 and AA3000). All other frequencies seems to work fine (again, on my systems).
 
+* v1.03 beta 18 and later FPGA/ARM versions
+The 060 frequency and the CPLD frequency are noe decoupled, so when using an EMU, the 060 will get 50 MHz or less.
+
 ##SCSI SD emulation
  * v1.01 CPLD and FPGA/ARM versions<br>
 There is a bug in hunk relocation code that makes that one hdf grows upto fill the SD. Please don't use this version of firmware with SCSI SD emulation.
