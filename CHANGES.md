@@ -104,4 +104,50 @@ WARNING: make backup of your SDs, I have seen that the bug that makes hdfs to gr
  * Added to ZTop for Amiga the tabs MISC and PRESET. (The mac address still CAN'T be modified, it will in a new version).
  * Added to ZTop (both ARM and Amiga) a button to delete the selected preset (it will delete the current selected preset, reboot the machine and select the default preset).
  * Temporarily fixed a bug in the EMU write words, that make CLUT video modes (8 bit, 256 colors) to not see some icons (for example in WBDOCK2). It is not fixed really, what I do is not use UAE direct access from JIT for writing words (16 bit). It makes this accesses slower. This will be in this way until I discover a JIT compiler solution for this... 
- 
+
+##v1.03 beta 15
+ * Fix in xcs3prog (cpld programmer): more time to have more compatibility with different Amiga models. Better CPLD version identification.
+ * New: Scsi emulation now can read hybrid MBR+RDB SDs (you now can use the same SD with z3660, with emu68 and winUAE)
+ @Crumb instructions:<br>
+ "I have installed emu68 on a hybrid MBR+RDB SDHC card and it works nicely. The steps were:<br>
+-create 3 MBR partitions: first partition space will be used for native amiga rdb partitions space so make It big. second one must be fat32 and small (e.g. 200MB), It will store z3660 boot.bin (and emu68k files). The third one will keep z3660 data partition (config, hardfiles...)<br>
+-delete de first one (It Will be the space used by our amiga partitions)<br>
+-download from aminet hdinsttools<br>
+On Amiga side:<br>
+-set RDBLOW=2 in hdinsttools tooltypes<br>
+-create a bootable WB partition at the beginning (I would create a second one with lower priority as a system backup, work partitions...).<br>
+-create a work partition or the ones you want but remember to avoid reaching the point where the mbr partitions begin, so leave space at the end (the fat32 size + data partition size and some megabytes as safety net) for example 250MB.<br>
+-remember that hdinsttools adds some zeros at the end of maxtransfer so remember to change maxtransfer with hdtoolbox if you plan to share the sdcard with other amigas.<br>
+-format the WB partition and install your favourite OS<br>
+-Add sd.unit0=rw to emu68 as parameter to be able to write<br>
+-Enjoy :-)"<br>
+ * ZTop update (both Amiga and ARM): now you can choose to mount ROOT of the SD (MBR+RDB partition) and/or 0x76 partitions. <br>
+
+##v1.03 beta 16
+ * SD configurable frequency. AFAIK the Xilinx driver only uses two main frequencies: 25 and 50 MHz. This is configurable only from z3660cfg.txt and has only two options: you have to write a new line with "sd_clock 50" or "sd_clock 25" without quotes. Obviouosly, at 25 MHz the SD access will be slower, but maybe it will work with longer extension wires...
+ * SD direct driver (for 0x76 or root partitions) had a maximum limit of data written at once that made read errors. It could be bypassed by setting a lower value in maxtransfer (as the typical value 0x1fe00). Now is fixed a the long writes are made in shorter writes as needed.
+ * Doubled sprite cursor or high res cursor, was not totally managed by the hw_srpite function (from ZZ9000) and now the amiga monitor driver and RTG support double and hi res cursors.
+ * Monitor switch partially implemented (as you will need the SwitchControl utility in your startup-sequence). In Ztop (only ARM for now) you can select to manage CTS and/or SEL signals, in order to make visible the RTG at boot time. One of these signals can be used with Ratte monitor switch, or one of those cheap HDMI switches modified to accept CTS or SEL signals. Also you can configure the active level of these signals (so virtually you can use any switcher).
+ * UAE JIT. While trying to get Amiberry 7 CPU emulation, I have seen that some JIT instructions are not completely emulated. Mainly they are MUL and DIV instructions. I have deactivated them and demos like StateOfTheArt polygons are correct. Also this affected to Shapeshifter text backgrounds (yeah... why is macos using MUL and DIV for the text background???). Also the "jumping" cursor was because ADDX and SUBX instructions are also wrong... The bad thing is that emulation is a bit slower, but more compatible. Also, there was a fix in Amiberry regarding to some FPU operations to unaligned acesses that are fixed. Please report experiencies with JIT emulator. 
+	
+##v1.03 beta 17
+ * A new way to program the CPLD by pressing SW1 on the Zturn board: press the button marked as "USR" after boot, or within the two seconds that boot screen is showed over the HDMI output).
+ * Enabled all partitions to Amiga side (now you can mount the first FAT partition. These partitions will start on scsi unit 11. Exfat can't be mounted as we don't have any driver for it (WIP) :) )
+ * Monitor switch fully implemented (SwitchControl is not necessary). Please take note that when updating the CPLD the Amiga is reseted and then, the monitor switch will not switch correctly. Wait 5 minutes and then power cycle your Amiga.
+ * RTG: some gfx miniterms fixed.
+ * Updated miniaudio to version v0.11.22 (AHI/MHI mp3, ogg, flac player)
+ * Test Amiga regions on ARM boot. You can select different test zones in the z3660cfg.txt file:<br><br>
+ # Select Test Amiga ranges (test_range0 to test_range7)<br>
+ # First number is the start in hexadecimal format<br>
+ # Second number is the length finished with KB or MB (without space, minium unit 1KB)<br>
+ # Third string is an optional name<br>
+test_range0 0x0 2048KB "Chip RAM"<br>
+test_range1 0x07800000 8MB "Mother Board RAM"<br>
+test_range2 0x08000000 128MB "Cpu Board RAM"<br>
+<br>
+ * Fixed some EMU opcodes: MOVES and MVMLE. I'm using cputest from WINUAE. The emulation will be slower than before as I disabled some "suspicious" opcodes.
+
+##v1.03 beta 18
+ * Timings are all redone. 060 and CPLD clocks are now decoupled, so when you run an EMU at 100MHz, the 060 is clocked at 50 MHz (or less). For this, I have used some other pins for the clocks, so the previous timing is not valid anymore.<br>
+You will need a new CPLD firmware (1.03 BETA 18). And also you will need a new folder in your SD, that contains all the timings. What I have seen is that the timing is system dependent so I have included two files, one for each machine I have.
+ * The update system have been updated and now accepts https connections, so after this version you will update from GitHub instead of my NAS server. For emergencies, you can still update from my NAS, changing the server with 'S' in the update console.
