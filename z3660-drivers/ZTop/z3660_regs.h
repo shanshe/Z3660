@@ -169,8 +169,12 @@ enum zz_reg_offsets {
    REG_ZZ_OP             = 0x304,
    REG_ZZ_OP_NOP         = 0x308,
    REG_ZZ_OP_CAPTUREMODE = 0x30C,
-    
-   //NOT USED 0x310 - 0x4FC
+
+   REG_ZZ_MOUNT_SD_0x76  = 0x310,
+   REG_ZZ_MOUNT_SD_ROOT  = 0x314,
+   REG_ZZ_MONITOR_SWITCH = 0x318,
+
+   //NOT USED 0x31C - 0x4FC
 
    REG_ZZ_SEL_KS_TXT     = 0x500,
    REG_ZZ_SEL_SCSI_TXT   = 0x600,
@@ -291,4 +295,19 @@ struct GFXData {
     volatile uint32_t offset[2];
     volatile uint32_t rgb[2];
     volatile uint16_t x[4], y[4];
+    volatile uint16_t user[4];
+    volatile uint16_t pitch[4];
+    volatile uint8_t u8_user[8];
+    volatile uint8_t op, mask, minterm, u8offset;
+    volatile uint32_t u32_user[8];
+    volatile uint8_t clut1[768];
+    volatile uint8_t clut2[768];
+    volatile uint8_t clut3[768];
+    volatile uint8_t clut4[768];
+};
+#pragma pack(4)
+struct Soft3dData {
+    uint32_t offset[3];
+    uint32_t format[2];
+    uint16_t x[4], y[4];
 };

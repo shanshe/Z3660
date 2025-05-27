@@ -1,0 +1,70 @@
+#------------------------------------------------------------------------------
+
+CC			= gcc
+STRIP		= strip
+CHMOD		= chmod
+CP			= cp
+RM			= rm
+CFLAGS	= -O2 -Wall -ffast-math -fomit-frame-pointer -fno-builtin -noixemul
+LFLAGS	= -noixemul -nostartfiles -ldebug
+CDEFS		= \
+	-D__AMIGADATE__=\"$(shell date "+%d.%m.%y")\" \
+	-D__YEAR__=\"$(shell date "+%Y")\" \
+	-D__READ_ONLY__
+
+#------------------------------------------------------------------------------
+
+NAME = exFATFileSystem
+
+OFILES = \
+	fs_startup.o \
+	fs_disk.o \
+	fs_lock.o \
+	fs_main.o \
+	fs_notify.o \
+	fs_ops.o \
+	fs_packet.o \
+	fs_scsi.o \
+	fs_string.o \
+	fs_support.o \
+	fs_timer.o \
+	ef_cluster.o \
+	ef_format.o \
+	ef_io.o \
+	ef_log.o \
+	ef_lookup.o \
+	ef_mount.o \
+	ef_node.o \
+	ef_time.o \
+	ef_utf.o \
+	ef_utils.o
+
+#------------------------------------------------------------------------------
+
+all: $(NAME)
+
+$(NAME): $(OFILES)
+	$(CC) $(OFILES) -o $@.debug $(LFLAGS)
+	$(STRIP) --strip-all --strip-unneeded --remove-section .comment $@.debug -o $@
+	$(CHMOD) +x $(NAME)
+	$(CP) -f $(NAME) L:
+
+.c.o:
+	$(CC) $(CDEFS) $(CFLAGS) -c $< -o $@
+
+test: test.o
+	$(CC) test.o -o $@ -ldebug -noixemul
+
+#------------------------------------------------------------------------------
+
+clean:
+	$(RM) -f $(NAME) *.o *.debug
+
+install:
+	$(CP) -f $(NAME) L:
+
+uninstall:
+	$(RM) -f L:$(NAME)
+
+#------------------------------------------------------------------------------
+

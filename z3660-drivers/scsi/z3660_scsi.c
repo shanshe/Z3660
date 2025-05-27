@@ -124,8 +124,8 @@ static struct Library __attribute__((used)) *init_device(uint8_t *seg_list asm("
             Z3660_REGS = (ULONG)cd->cd_BoardAddr;
             struct BootNode *bn = (struct BootNode*)((struct ExpansionBase*)ExpansionBase)->MountList.lh_Head;
             while (bn->bn_Node.ln_Succ) {
-		        struct DeviceNode *dn = bn->bn_DeviceNode;
-		        const UBYTE *bname2 = BADDR(dn->dn_Name);
+                struct DeviceNode *dn = bn->bn_DeviceNode;
+                const UBYTE *bname2 = BADDR(dn->dn_Name);
                 WRITELONG(PISCSI_CMD_EXPBASE,(uint32_t)(bname2));
                 bn = (struct BootNode*)bn->bn_Node.ln_Succ;
             }
@@ -744,31 +744,31 @@ scsireadwrite:;
 
 uint16_t ns_support[] = {
     NSCMD_DEVICEQUERY,
-  	CMD_RESET,
-	CMD_READ,
-	CMD_WRITE,
-	CMD_UPDATE,
-	CMD_CLEAR,
-	CMD_START,
-	CMD_STOP,
-	CMD_FLUSH,
-	TD_MOTOR,
-	TD_SEEK,
-	TD_FORMAT,
-	TD_REMOVE,
-	TD_CHANGENUM,
-	TD_CHANGESTATE,
-	TD_PROTSTATUS,
-	TD_GETDRIVETYPE,
-	TD_GETGEOMETRY,
-	TD_ADDCHANGEINT,
-	TD_REMCHANGEINT,
-	HD_SCSICMD,
-	NSCMD_TD_READ64,
-	NSCMD_TD_WRITE64,
-	NSCMD_TD_SEEK64,
-	NSCMD_TD_FORMAT64,
-	0,
+    CMD_RESET,
+    CMD_READ,
+    CMD_WRITE,
+    CMD_UPDATE,
+    CMD_CLEAR,
+    CMD_START,
+    CMD_STOP,
+    CMD_FLUSH,
+    TD_MOTOR,
+    TD_SEEK,
+    TD_FORMAT,
+    TD_REMOVE,
+    TD_CHANGENUM,
+    TD_CHANGESTATE,
+    TD_PROTSTATUS,
+    TD_GETDRIVETYPE,
+    TD_GETGEOMETRY,
+    TD_ADDCHANGEINT,
+    TD_REMCHANGEINT,
+    HD_SCSICMD,
+    NSCMD_TD_READ64,
+    NSCMD_TD_WRITE64,
+    NSCMD_TD_SEEK64,
+    NSCMD_TD_FORMAT64,
+    0,
 };
 
 #define DUMMYCMD iostd->io_Actual = 0; break;

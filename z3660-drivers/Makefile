@@ -49,11 +49,6 @@ LINKLIBS+= -lamiga
 
 RTG_CFLAGS = -v -k -c99 -O2 -cpu=$(CPU) -fpu=$(FPU)
 
-all: clean $(SRC_RTG)/Z3660.card $(SRC_ETH)/Z3660Net.device $(SRC_ZTP)/ZTop $(SRC_W3D)/Wazp3D.library $(SRC_AHI)/z3660ax.audio $(SRC_MHI)/mhiz3660.library $(SRC_SCSI)/z3660_scsi.device $(SRC_KICK31_060)/kick060.rom
-#$(SRC_USB)/z3660_usb.device
-
-kickrom: clean_kickrom $(SRC_KICK31_060)/kick060.rom
-
 $(SRC_RTG)/Z3660.card: $(SRC_RTG)/gfx.c $(SRC_RTG)/gfx.h $(SRC_RTG)/rtg.h $(SRC_RTG)/z3660_regs.h
 	$(GCC) $(SRC_RTG)/gfx.c -m68020 -mtune=68020-60 -O2 -o $(SRC_RTG)/Z3660.card -noixemul -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -nostartfiles -lamiga -DDMARTG -ldebug
 	$(RM) $(SRC_RTG)/gfx.asm
@@ -107,7 +102,9 @@ $(SRC_SCSI)/z3660_scsi.device: $(SRC_SCSI)/z3660_scsi.c $(SRC_SCSI)/z3660_scsi_e
 
 $(SRC_KICK31_060)/kick060.rom: $(SRC_KICK31_060)/kick31_060.asm
 	/opt/amiga/bin/vasmm68k_mot -m68060 -Fbin $(SYSINC_I) $(SRC_KICK31_060)/kick31_060.asm -o $(SRC_KICK31_060)/kick060.rom
-	/opt/amiga/bin/vasmm68k_mot -m68060 -Fbin $(SYSINC_I) $(SRC_KICK31_060)/kick31_060.asm -o $(SRC_KICK31_060)/kick060_scsi.rom -DEXP_MODULE_ENABLED=1
+	/opt/amiga/bin/vasmm68k_mot -m68060 -Fbin $(SYSINC_I) $(SRC_KICK31_060)/kick31_060.asm -o $(SRC_KICK31_060)/kick060_z3660scsi.rom -DEXP_MODULE_ENABLED=1
+	/opt/amiga/bin/vasmm68k_mot -m68060 -Fbin $(SYSINC_I) $(SRC_KICK31_060)/kick31_060.asm -o $(SRC_KICK31_060)/kick060_noscsi.rom -DNOSCSI_MODULE_ENABLED=1
+	/opt/amiga/bin/vasmm68k_mot -m68060 -Fbin $(SYSINC_I) $(SRC_KICK31_060)/kick31_060.asm -o $(SRC_KICK31_060)/kick060_z3660scsi_noscsi.rom -DEXP_MODULE_ENABLED=1 -DNOSCSI_MODULE_ENABLED=1
 
 $(SRC_ETH)/Z3660Net.device: $(SRC_ETH)/deviceheader.c $(SRC_ETH)/deviceinit.c $(SRC_ETH)/device.c $(SRC_ETH)/device.h $(SRC_ETH)/compiler.h $(SRC_ETH)/macros.h $(SRC_ETH)/sana2.h $(SRC_ETH)/version.h
 	$(GCC) -c $(ETH_COPTS) -o $(SRC_ETH)/deviceheader.o $(SRC_ETH)/deviceheader.c
@@ -142,9 +139,8 @@ $(SRC_W3D)/Wazp3D.library: $(SRC_W3D)/Wazp3D_lib.o $(SRC_W3D)/Wazp3D56.o $(SRC_W
 	$(GCC) $(SRC_W3D)/Wazp3D56.o $(SRC_W3D)/Wazp3D_lib.o $(SRC_W3D)/soft3d/soft3D56.o -o $(SRC_W3D)/Wazp3D.library -nostartfiles -lm
 	$(CP) $(SRC_W3D)/Wazp3D.library $(UAEPATH)
 
-clean: clean_scsi clean_kickrom clean_eth clean_ztop
+clean: clean_scsi clean_kickrom clean_eth clean_ztop clean_rtg
 	@echo cleaning...
-	$(RM) $(SRC_RTG)/Z3660.card
 	$(RM) $(SRC_AHI)/z3660ax.audio
 	$(RM) $(SRC_AHI)/Z3660AX
 	$(RM) $(SRC_MHI)/mhiz3660.library
@@ -155,6 +151,9 @@ clean: clean_scsi clean_kickrom clean_eth clean_ztop
 #	$(RM) $(SRC_USB)/z3660_usb.device
 #	$(RM) $(SRC_SCSI)/z3660_usb.rom
 #	$(RM) $(SRC_USB)/*.o
+
+clean_rtg:
+	$(RM) $(SRC_RTG)/Z3660.card
 
 clean_scsi:
 	$(RM) $(SRC_SCSI)/z3660_scsi.device
@@ -170,6 +169,8 @@ clean_ztop:
 clean_kickrom:
 	$(RM) $(SRC_KICK31_060)/kick060.rom
 	$(RM) $(SRC_KICK31_060)/kick060_scsi.rom
+	$(RM) $(SRC_KICK31_060)/kick060_z3660scsi.rom
+	$(RM) $(SRC_KICK31_060)/kick060_z3660scsi_noscsi.rom
 
 adf: all
 	@echo creating adf...
@@ -198,8 +199,15 @@ A4000: adf
 	diskutil eject /Volumes/A4000
 	@echo "Ejected"
 
+rtg: clean_rtg $(SRC_RTG)/Z3660.card
+
 scsi: clean_scsi $(SRC_SCSI)/z3660_scsi.device
 
 eth: clean_eth $(SRC_ETH)/Z3660Net.device
 
 ZTop: clean_ztop $(SRC_ZTP)/ZTop
+
+kickrom: clean_kickrom $(SRC_KICK31_060)/kick060.rom
+
+all: clean $(SRC_RTG)/Z3660.card $(SRC_ETH)/Z3660Net.device $(SRC_ZTP)/ZTop $(SRC_W3D)/Wazp3D.library $(SRC_AHI)/z3660ax.audio $(SRC_MHI)/mhiz3660.library $(SRC_SCSI)/z3660_scsi.device $(SRC_KICK31_060)/kick060.rom
+#$(SRC_USB)/z3660_usb.device

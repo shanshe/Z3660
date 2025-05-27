@@ -126,6 +126,28 @@ crashvector:
 
     jmp       (A5)            ; return to Kickstart
 
+    cnop      0,4
+
+    ifd NOSCSI_MODULE_ENABLED
+;---- NO scsi.device
+NOSCSI_start:
+    dc.w    RTC_MATCHWORD
+    dc.l         NOSCSI_start
+    dc.l         NOSCSI_end
+    dc.b         0
+    dc.b         51    ;Version
+    dc.b         0     ;Type
+    dc.b         10    ;Priority
+    dc.l         scsiname                           ; "scsi.device"
+    dc.l         modulename                         ; "NoIDE by Chris Hodges"
+    dc.l         0     ; No init function
+scsiname:
+    dc.b         "scsi.device", 0
+modulename:
+    dc.b         "NoIDE by Chris Hodges", 0   
+NOSCSI_end:
+    endc    ;NOSCSI_MODULE_ENABLED
+;----
 
 ;--------------------- Expansion ID module -------------------------
     ifd EXP_MODULE_ENABLED

@@ -382,7 +382,7 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 #ifdef DMARTG
 		fwrev = registers[REG_ZZ_FW_VERSION>>2];
 #else
-		fwrev = ((uint16_t*)b->RegisterBase)[0xC0/2];
+		fwrev = ((uint16_t*)b->RegisterBase)[REG_ZZ_FW_VERSION/2];
 #endif
 		fwrev_major = fwrev >> 8;
 		fwrev_minor = fwrev & 0xff;
@@ -399,8 +399,14 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 			alert[7]='0'+(fwrev_minor/10);
 			alert[8]='0'+(fwrev_minor%10);
 			DisplayAlert(RECOVERY_ALERT, (unsigned char*)alert, 52);
-			return 0;
+			return 1;
 		}
+/*
+		if (fwrev_major <= 1 && fwrev_minor < 3) {
+			KPrintF((CONST_STRPTR)"Z3660 FW v%c.%c%c. Z3660.card v1.03 needs at least firmware (BOOT.bin) v1.03.\n",'0'+fwrev_major,'0'+(fwrev_minor/10),'0'+(fwrev_minor%10));
+			return 1;
+		}
+*/
 /* Z3660 -> no scandoubler :(
 		MNTZZ9KRegs* registers = (MNTZZ9KRegs *)b->RegisterBase;
 */		BPTR f;
@@ -429,11 +435,11 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 			ZZ_REGS_WRITE(REG_ZZ_SET_FEATURE, 0);
 		}
 
-		return 1;
 	} else {
 		KPrintF((CONST_STRPTR)"Z3660.card: Z3660 not found!\n");
-		return 0;
+//		DisplayAlert(RECOVERY_ALERT, (unsigned char*)"\x01\x04\x10Z3660 not found\x00\x00", 30);
 	}
+	return(1);
 }
 
 int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
@@ -480,10 +486,7 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
 
 	//b->AllocCardMem = (void *)NULL;
 	//b->FreeCardMem = (void *)NULL;
-#ifdef COMPILE_FOR_FSUAE
-	// FSUAE Z3660 emulation needs the switch
 	b->SetSwitch = (void *)SetSwitch;
-#endif
 	b->SetColorArray = (void *)SetColorArray;
 	b->SetDAC = (void *)SetDAC;
 	b->SetGC = (void *)SetGC;
@@ -664,18 +667,75 @@ void SetGC(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __
 	init_modeline(registers, w, h, colormode, scale, mode_info);
 }
 
-//z3660 -> no scandoubler :(
 #ifdef COMPILE_FOR_FSUAE
 #warning ---------------------------
 #warning ---------------------------
 #warning -- Compiled for UAE !!!! --
 #warning ---------------------------
 #warning ---------------------------
+#endif
+//z3660 -> no scandoubler :(
+
 UWORD SetSwitch(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
     uint32_t* registers = (uint32_t*)b->RegisterBase;
+	// Read the monitor switch config selected
+	uint32_t monswitch=ZZ_REGS_READ(REG_ZZ_MONITOR_SWITCH);
+#define CIAB_PRA  0xBFD000
+#define CIAB_DDRA 0xBFD200
+	// Read the DDRA CIAB register
+	uint8_t ciab_ddra=*(uint8_t *)CIAB_DDRA;
+	if(monswitch&1)
+		ciab_ddra|=0x10; // CTS
+	if(monswitch&2)
+		ciab_ddra|=0x04; // SEL
+	if(monswitch&3) // if we have to change CTS and/or SEL
+	{
+		// Write the DDRA CIAB register
+		*(uint8_t *)CIAB_DDRA=ciab_ddra;
+		// Read the PRA CIAB register
+		uint8_t ciab_pra=*(uint8_t *)CIAB_PRA;
+		if (enabled != 0) // RTG
+		{
+			if(monswitch&1)
+			{
+				if(monswitch&0x10)
+					ciab_pra&=~0x10;// CTS high level
+				else
+					ciab_pra|=0x10;
+			}
+			if(monswitch&2)
+			{
+				if(monswitch&0x20)
+					ciab_pra&=~0x04;// SEL high level
+				else
+					ciab_pra|=0x04;
+			}
+		}
+		else
+		{
+			if(monswitch&1)
+			{
+				if(monswitch&0x10)
+					ciab_pra|=0x10;
+				else
+					ciab_pra&=~0x10;// CTS high level
+			}
+			if(monswitch&2)
+			{
+				if(monswitch&0x20)
+					ciab_pra|=0x04;
+				else
+					ciab_pra&=~0x04;// SEL high level
+			}
+		}
+		// Write the PRA CIAB register
+		*(uint8_t *)CIAB_PRA=ciab_pra;
+	}
 
-	if (enabled == 0) {
-		// capture 24 bit amiga video to 0xe00000
+	if (enabled == 0) // native video
+	{
+
+	// capture 24 bit amiga video to 0xe00000
 /*
 		if (scandoubler_800x600) {
 			// slightly adjusted centering
@@ -688,7 +748,7 @@ UWORD SetSwitch(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
 		// firmware will detect that we are capturing and viewing the capture area
 		// and switch to the appropriate video mode (VCAP_MODE)
 		ZZ_REGS_WRITE(REG_ZZ_OP_CAPTUREMODE, 1); // capture mode
-	} else {
+	} else { // RTG
 		// rtg mode
 		ZZ_REGS_WRITE(REG_ZZ_OP_CAPTUREMODE, 0); // capture mode
 
@@ -697,7 +757,6 @@ UWORD SetSwitch(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
 
 	return 1 - enabled;
 }
-#endif
 
 void SetPanning(__REGA0(struct BoardInfo *b), __REGA1(UBYTE *addr), __REGD0(UWORD width), __REGD1(WORD x_offset), __REGD2(WORD y_offset), __REGD7(RGBFTYPE format)) {
 	b->XOffset = x_offset;
@@ -1419,6 +1478,7 @@ void SetSpriteImage(__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format)) {
 		dmy_cache
 		gfxdata->offset[1] = zz_template_addr;
 		gfxdata->x[2] = doubledsprite;
+		gfxdata->y[2] = hiressprite-1;
 		gfxdata->x[0] = b->XOffset;
 		gfxdata->x[1] = b->MouseWidth;
 		gfxdata->y[0] = b->YOffset;
@@ -1429,6 +1489,7 @@ void SetSpriteImage(__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format)) {
 		ZZ_REGS_WRITE(REG_ZZ_BLIT_SRC, zz_template_addr);
 
 		ZZ_REGS_WRITE(REG_ZZ_X3, doubledsprite);
+		ZZ_REGS_WRITE(REG_ZZ_Y3, hiressprite-1);
 		ZZ_REGS_WRITE(REG_ZZ_X1, b->XOffset);
 		ZZ_REGS_WRITE(REG_ZZ_X2, b->MouseWidth);
 		ZZ_REGS_WRITE(REG_ZZ_Y1, b->YOffset);
