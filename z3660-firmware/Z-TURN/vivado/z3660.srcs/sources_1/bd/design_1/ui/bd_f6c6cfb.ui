@@ -1,0 +1,52 @@
+{
+   "ActiveEmotionalView":"Default View",
+   "Default View_ScaleFactor":"0.980545",
+   "Default View_TopLeft":"-316,3",
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
+#  -string -flagsOSRD
+preplace port s_axi_lite -pg 1 -lvl 0 -x 0 -y 300 -defaultsOSRD
+preplace port s_axi_lite1 -pg 1 -lvl 0 -x 0 -y 90 -defaultsOSRD
+preplace port port-id_clk_in1 -pg 1 -lvl 0 -x 0 -y 150 -defaultsOSRD
+preplace port port-id_s_axi_aclk -pg 1 -lvl 0 -x 0 -y 110 -defaultsOSRD
+preplace port port-id_s_axi_aresetn -pg 1 -lvl 0 -x 0 -y 130 -defaultsOSRD
+preplace port port-id_clk_out1 -pg 1 -lvl 3 -x 630 -y 320 -defaultsOSRD
+preplace port port-id_AXI_clk -pg 1 -lvl 3 -x 630 -y 60 -defaultsOSRD
+preplace port port-id_nCLKEN_clk -pg 1 -lvl 3 -x 630 -y 100 -defaultsOSRD
+preplace port port-id_PCLK_clk -pg 1 -lvl 3 -x 630 -y 80 -defaultsOSRD
+preplace port port-id_BCLK_clk -pg 1 -lvl 3 -x 630 -y 120 -defaultsOSRD
+preplace port port-id_clk_out2 -pg 1 -lvl 3 -x 630 -y 460 -defaultsOSRD
+preplace port port-id_PCLK_reg -pg 1 -lvl 3 -x 630 -y 160 -defaultsOSRD
+preplace port port-id_nCLKEN_reg -pg 1 -lvl 3 -x 630 -y 140 -defaultsOSRD
+preplace port port-id_CPUCLK_clk -pg 1 -lvl 3 -x 630 -y 180 -defaultsOSRD
+preplace port port-id_enable_clk_output -pg 1 -lvl 0 -x 0 -y 240 -defaultsOSRD
+preplace port port-id_CLK90_pin -pg 1 -lvl 3 -x 630 -y 200 -defaultsOSRD
+preplace port port-id_cpuclk_detected -pg 1 -lvl 3 -x 630 -y 220 -defaultsOSRD
+preplace port port-id_clk90_detected -pg 1 -lvl 3 -x 630 -y 240 -defaultsOSRD
+preplace inst clk_wiz_0 -pg 1 -lvl 1 -x 160 -y 120 -defaultsOSRD
+preplace inst clk_wiz_2 -pg 1 -lvl 1 -x 160 -y 330 -defaultsOSRD
+preplace inst clk_wiz_3 -pg 1 -lvl 1 -x 160 -y 460 -defaultsOSRD
+preplace inst cpuclk_iob_0 -pg 1 -lvl 2 -x 450 -y 210 -defaultsOSRD
+preplace netloc Net 1 2 1 N 180
+preplace netloc Net1 1 2 1 N 200
+preplace netloc clk_in1_1 1 0 1 20 150n
+preplace netloc clk_wiz_0_AXI_clk 1 1 2 300 60 N
+preplace netloc clk_wiz_0_BCLK_clk 1 1 2 NJ 120 N
+preplace netloc clk_wiz_0_CLK90_clk 1 1 1 290 140n
+preplace netloc clk_wiz_0_CPUCLK_clk 1 1 1 280 160n
+preplace netloc clk_wiz_0_PCLK_clk 1 1 2 N 80 610
+preplace netloc clk_wiz_0_nCLKEN_clk 1 1 2 N 100 600
+preplace netloc clk_wiz_2_clk_out1 1 1 2 N 320 N
+preplace netloc clk_wiz_3_clk_out1 1 1 2 N 460 N
+preplace netloc cpuclk_iob_0_clk90_detected 1 2 1 N 240
+preplace netloc cpuclk_iob_0_cpuclk_detected 1 2 1 N 220
+preplace netloc enable_clk_output_1 1 0 2 N 240 N
+preplace netloc s_axi_aclk_1 1 0 1 40 110n
+preplace netloc s_axi_aresetn_1 1 0 1 30 130n
+preplace netloc Conn1 1 0 1 NJ 300
+preplace netloc Conn2 1 0 1 NJ 90
+levelinfo -pg 1 0 160 450 630
+pagesize -pg 1 -db -bbox -sgen -180 0 790 520
+"
+}
+0

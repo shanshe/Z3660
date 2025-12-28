@@ -1,0 +1,187 @@
+{
+   "ActiveEmotionalView":"No Loops",
+   "Addressing View_Layers":"/processing_av_system/audio_video_engine/audio_irq_1:false|/z3660_0_interrupt:false|/processing_av_system/processing_system7_0_FCLK_CLK1:false|/processing_av_system/processing_system7_0_FCLK_CLK2:false|/processing_av_system/clock_generation/clk_wiz_0_AXI_clk:false|/processing_av_system/proc_sys_reset_0_peripheral_reset:false|/processing_av_system/clock_generation/clk_wiz_0_PCLK_clk:false|/processing_av_system/interconnect_matrix/ARESETN_1:false|/processing_av_system/interconnect_matrix/rst_ps7_0_200M_peripheral_aresetn:false|/processing_av_system/audio_video_engine/M00_ARESETN_1:false|/processing_av_system/audio_video_engine/aud_mrst_1:false|/processing_av_system/processing_system7_0_FCLK_CLK0:false|/processing_av_system/clock_generation/clk_wiz_1_BCLK_clk:false|/processing_av_system/clock_generation/clk_wiz_0_nCLKEN_clk:false|/processing_av_system/clock_generation/clk_wiz_1_CPUCLK_clk:false|/Net2:false|/processing_av_system/clock_generation/clk_wiz_3_clk_out1:false|/processing_av_system/proc_sys_reset_0_peripheral_aresetn:false|/processing_av_system/clock_generation/clk_wiz_2_clk_out1:false|/processing_av_system/processing_system7_0_FCLK_RESET0_N:false|/processing_av_system/audio_video_engine/video/rst_ps7_0_200M_1_peripheral_aresetn:false|/processing_av_system/audio_video_engine/video/s_axis_aresetn_1:false|/processing_av_system/audio_video_engine/video/axi_vdma_0_mm2s_introut:false|/processing_av_system/clock_generation/clk_wiz_1_CLK90_clk:false|/Net1:false|",
+   "Addressing View_ScaleFactor":"1.0",
+   "Addressing View_TopLeft":"-271,-83",
+   "Color Coded_ScaleFactor":"0.495783",
+   "Color Coded_TopLeft":"-593,2",
+   "Default View_ScaleFactor":"0.867213",
+   "Default View_TopLeft":"-164,492",
+   "Display-PortTypeClock":"true",
+   "Display-PortTypeData":"true",
+   "Display-PortTypeInterrupt":"true",
+   "Display-PortTypeOthers":"true",
+   "Display-PortTypeReset":"true",
+   "ExpandedHierarchyInLayout":"",
+   "Grouping and No Loops_ScaleFactor":"1.0",
+   "Grouping and No Loops_TopLeft":"-258,-9",
+   "Interfaces View_Layers":"/processing_av_system/audio_video_engine/audio_irq_1:false|/z3660_0_interrupt:false|/processing_av_system/processing_system7_0_FCLK_CLK1:false|/processing_av_system/processing_system7_0_FCLK_CLK2:false|/processing_av_system/clock_generation/clk_wiz_0_AXI_clk:false|/processing_av_system/proc_sys_reset_0_peripheral_reset:false|/processing_av_system/clock_generation/clk_wiz_0_PCLK_clk:false|/processing_av_system/interconnect_matrix/ARESETN_1:false|/processing_av_system/interconnect_matrix/rst_ps7_0_200M_peripheral_aresetn:false|/processing_av_system/audio_video_engine/M00_ARESETN_1:false|/processing_av_system/audio_video_engine/aud_mrst_1:false|/processing_av_system/processing_system7_0_FCLK_CLK0:false|/processing_av_system/clock_generation/clk_wiz_1_BCLK_clk:false|/processing_av_system/clock_generation/clk_wiz_0_nCLKEN_clk:false|/processing_av_system/clock_generation/clk_wiz_1_CPUCLK_clk:false|/Net2:false|/processing_av_system/clock_generation/clk_wiz_3_clk_out1:false|/processing_av_system/proc_sys_reset_0_peripheral_aresetn:false|/processing_av_system/clock_generation/clk_wiz_2_clk_out1:false|/processing_av_system/processing_system7_0_FCLK_RESET0_N:false|/processing_av_system/audio_video_engine/video/rst_ps7_0_200M_1_peripheral_aresetn:false|/processing_av_system/audio_video_engine/video/s_axis_aresetn_1:false|/processing_av_system/audio_video_engine/video/axi_vdma_0_mm2s_introut:false|/processing_av_system/clock_generation/clk_wiz_1_CLK90_clk:false|/Net1:false|",
+   "Interfaces View_ScaleFactor":"1.0",
+   "Interfaces View_TopLeft":"-269,-79",
+   "No Loops_ExpandedHierarchyInLayout":"",
+   "No Loops_Layout":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
+#  -string -flagsOSRD
+preplace port DDR -pg 1 -lvl 4 -x 740 -y 100 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -lvl 4 -x 740 -y 60 -defaultsOSRD
+preplace port IIC_0 -pg 1 -lvl 4 -x 740 -y 80 -defaultsOSRD
+preplace port port-id_nTEA -pg 1 -lvl 0 -x 0 -y 770 -defaultsOSRD
+preplace port port-id_nTCI -pg 1 -lvl 0 -x 0 -y 750 -defaultsOSRD
+preplace port port-id_BP -pg 1 -lvl 4 -x 740 -y 1170 -defaultsOSRD
+preplace port port-id_PCLK_clk -pg 1 -lvl 4 -x 740 -y 320 -defaultsOSRD
+preplace port port-id_BCLK_clk -pg 1 -lvl 4 -x 740 -y 400 -defaultsOSRD
+preplace port port-id_nTBI -pg 1 -lvl 4 -x 740 -y 1150 -defaultsOSRD
+preplace port port-id_nCLKEN_clk -pg 1 -lvl 4 -x 740 -y 380 -defaultsOSRD
+preplace port port-id_nTS_FPGA -pg 1 -lvl 4 -x 740 -y 1130 -defaultsOSRD
+preplace port port-id_hdmi_de -pg 1 -lvl 4 -x 740 -y 240 -defaultsOSRD
+preplace port port-id_hdmi_hs -pg 1 -lvl 4 -x 740 -y 260 -defaultsOSRD
+preplace port port-id_hdmi_vs -pg 1 -lvl 4 -x 740 -y 280 -defaultsOSRD
+preplace port port-id_hdmi_clk -pg 1 -lvl 4 -x 740 -y 300 -defaultsOSRD
+preplace port port-id_I2SO_D0 -pg 1 -lvl 4 -x 740 -y 200 -defaultsOSRD
+preplace port port-id_I2S_FSYNC_OUT -pg 1 -lvl 4 -x 740 -y 180 -defaultsOSRD
+preplace port port-id_I2S_SCLK -pg 1 -lvl 4 -x 740 -y 220 -defaultsOSRD
+preplace port port-id_R_W040 -pg 1 -lvl 4 -x 740 -y 1030 -defaultsOSRD
+preplace port port-id_nTA -pg 1 -lvl 4 -x 740 -y 1070 -defaultsOSRD
+preplace port port-id_INT6_ARM -pg 1 -lvl 4 -x 740 -y 1050 -defaultsOSRD
+preplace port port-id_nTS -pg 1 -lvl 0 -x 0 -y 790 -defaultsOSRD
+preplace port port-id_CPUCLK_clk -pg 1 -lvl 4 -x 740 -y 340 -defaultsOSRD
+preplace port port-id_CLK90_clk -pg 1 -lvl 4 -x 740 -y 360 -defaultsOSRD
+preplace portBus D040 -pg 1 -lvl 4 -x 740 -y 1090 -defaultsOSRD
+preplace portBus hdmi_data -pg 1 -lvl 4 -x 740 -y 160 -defaultsOSRD
+preplace portBus hdmi_intn -pg 1 -lvl 0 -x 0 -y 600 -defaultsOSRD
+preplace portBus A060 -pg 1 -lvl 4 -x 740 -y 1110 -defaultsOSRD
+preplace portBus SIZ40 -pg 1 -lvl 4 -x 740 -y 1010 -defaultsOSRD
+preplace inst processing_av_system -pg 1 -lvl 2 -x 260 -y 40 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 118 110 109 111 112 105 106 107 108 122 116 113 117 127 124 121 129 125 123 128 114 126 115 119 120} -defaultsOSRD -pinDir FIXED_IO right -pinY FIXED_IO 20R -pinDir IIC_0 right -pinY IIC_0 40R -pinDir DDR right -pinY DDR 60R -pinDir S_AXI left -pinY S_AXI 540L -pinDir M_AXI right -pinY M_AXI 80R -pinDir M_AXI1 right -pinY M_AXI1 100R -pinBusDir hdmi_intn left -pinBusY hdmi_intn 560L -pinBusDir control_vblank right -pinBusY control_vblank 380R -pinDir hdmi_hs right -pinY hdmi_hs 220R -pinDir hdmi_de right -pinY hdmi_de 200R -pinDir hdmi_vs right -pinY hdmi_vs 240R -pinDir hdmi_clk right -pinY hdmi_clk 260R -pinBusDir hdmi_data right -pinBusY hdmi_data 120R -pinDir I2S_FSYNC_OUT right -pinY I2S_FSYNC_OUT 140R -pinDir I2SO_D0 right -pinY I2SO_D0 160R -pinDir I2S_SCLK right -pinY I2S_SCLK 180R -pinDir AXI_clk right -pinY AXI_clk 460R -pinDir nCLKEN_clk right -pinY nCLKEN_clk 340R -pinDir PCLK_clk right -pinY PCLK_clk 280R -pinDir BCLK_clk right -pinY BCLK_clk 360R -pinBusDir peripheral_reset right -pinBusY peripheral_reset 540R -pinBusDir aresetn right -pinBusY aresetn 500R -pinDir AXI1_clk right -pinY AXI1_clk 440R -pinBusDir aresetn1 right -pinBusY aresetn1 580R -pinDir PCLK_reg right -pinY PCLK_reg 520R -pinDir nCLKEN_reg right -pinY nCLKEN_reg 480R -pinDir CLK18M_clk right -pinY CLK18M_clk 560R -pinDir CPUCLK_clk right -pinY CPUCLK_clk 300R -pinDir enable_clk_output left -pinY enable_clk_output 580L -pinDir CLK90_clk right -pinY CLK90_clk 320R -pinDir cpuclk_detected right -pinY cpuclk_detected 400R -pinDir clk90_detected right -pinY clk90_detected 420R
+preplace inst z3660_0 -pg 1 -lvl 2 -x 260 -y 690 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 93 95 96 92 94 82 80 78 88 91 97 83 89 87 79 98 99 85 74 77 90 86 75 84 81 76} -defaultsOSRD -pinDir S00_AXI right -pinY S00_AXI 20R -pinDir S01_AXI right -pinY S01_AXI 40R -pinDir m00_axi left -pinY m00_axi 20L -pinDir interrupt right -pinY interrupt 360R -pinBusDir D040 right -pinBusY D040 400R -pinBusDir A060 right -pinBusY A060 420R -pinDir R_W040 right -pinY R_W040 340R -pinDir nTA right -pinY nTA 380R -pinDir nTEA left -pinY nTEA 80L -pinDir nTCI left -pinY nTCI 60L -pinDir PCLK_clk right -pinY PCLK_clk 140R -pinDir nTS left -pinY nTS 100L -pinBusDir SIZ40 right -pinBusY SIZ40 320R -pinDir nTS_FPGA_out right -pinY nTS_FPGA_out 440R -pinDir nCLKEN_clk right -pinY nCLKEN_clk 180R -pinDir cpuclk_detected right -pinY cpuclk_detected 280R -pinDir clk90_detected right -pinY clk90_detected 260R -pinDir enable_clk_output left -pinY enable_clk_output 40L -pinDir nTBI right -pinY nTBI 460R -pinDir BP right -pinY BP 480R -pinDir m00_axi_aclk right -pinY m00_axi_aclk 220R -pinDir m00_axi_aresetn right -pinY m00_axi_aresetn 60R -pinDir RESET_IN right -pinY RESET_IN 120R -pinBusDir control_vblank right -pinBusY control_vblank 300R -pinDir S00_AXI_ACLK right -pinY S00_AXI_ACLK 240R -pinDir S00_AXI_ARESETN right -pinY S00_AXI_ARESETN 80R -pinDir S01_AXI_ACLK right -pinY S01_AXI_ACLK 200R -pinDir S01_AXI_ARESETN right -pinY S01_AXI_ARESETN 160R -pinDir CLK18M_clk right -pinY CLK18M_clk 100R
+preplace netloc Net 1 2 2 N 340 NJ
+preplace netloc Net1 1 2 2 NJ 1090 NJ
+preplace netloc Net2 1 2 2 NJ 1110 NJ
+preplace netloc Net3 1 2 2 N 1030 NJ
+preplace netloc Net4 1 2 2 N 360 NJ
+preplace netloc Net5 1 2 2 N 1010 NJ
+preplace netloc Net6 1 2 2 N 1070 NJ
+preplace netloc clk_wiz_0_PCLK_clk 1 2 2 N 320 NJ
+preplace netloc clk_wiz_0_nCLKEN_clk 1 2 2 N 380 NJ
+preplace netloc clk_wiz_1_BCLK_clk 1 2 2 NJ 400 NJ
+preplace netloc hdmi_intn_1 1 0 2 NJ 600 N
+preplace netloc nTCI_1 1 0 2 NJ 750 N
+preplace netloc nTEA_1 1 0 2 NJ 770 N
+preplace netloc nTS_1 1 0 2 NJ 790 N
+preplace netloc processing_av_system_AXI1_clk 1 2 1 610 480n
+preplace netloc processing_av_system_AXI_clk 1 2 1 590 500n
+preplace netloc processing_av_system_CLK18M_clk 1 2 1 470 600n
+preplace netloc processing_av_system_I2SO_D0 1 2 2 N 200 NJ
+preplace netloc processing_av_system_I2S_FSYNC_OUT 1 2 2 N 180 NJ
+preplace netloc processing_av_system_I2S_SCLK 1 2 2 N 220 NJ
+preplace netloc processing_av_system_PCLK_reg 1 2 1 530 560n
+preplace netloc processing_av_system_aresetn 1 2 1 550 540n
+preplace netloc processing_av_system_aresetn1 1 2 1 430 620n
+preplace netloc processing_av_system_clk90_detected 1 2 1 630 460n
+preplace netloc processing_av_system_control_vblank 1 2 1 670 420n
+preplace netloc processing_av_system_cpuclk_detected 1 2 1 650 440n
+preplace netloc processing_av_system_hdmi_clk 1 2 2 NJ 300 NJ
+preplace netloc processing_av_system_hdmi_data 1 2 2 N 160 NJ
+preplace netloc processing_av_system_hdmi_de 1 2 2 N 240 NJ
+preplace netloc processing_av_system_hdmi_hs 1 2 2 N 260 NJ
+preplace netloc processing_av_system_hdmi_vs 1 2 2 N 280 NJ
+preplace netloc processing_av_system_nCLKEN_reg 1 2 1 570 520n
+preplace netloc processing_av_system_peripheral_reset 1 2 1 510J 580n
+preplace netloc z3660_0_BP 1 2 2 N 1170 NJ
+preplace netloc z3660_0_NU_1 1 2 2 N 1130 NJ
+preplace netloc z3660_0_enable_clk_output 1 1 1 70 620n
+preplace netloc z3660_0_interrupt 1 2 2 NJ 1050 NJ
+preplace netloc z3660_0_nTBI 1 2 2 N 1150 NJ
+preplace netloc processing_av_system_DDR 1 2 2 NJ 100 NJ
+preplace netloc processing_av_system_FIXED_IO 1 2 2 NJ 60 NJ
+preplace netloc processing_av_system_IIC_0 1 2 2 NJ 80 NJ
+preplace netloc processing_av_system_M_AXI 1 2 1 490 120n
+preplace netloc processing_av_system_M_AXI1 1 2 1 450 140n
+preplace netloc z3660_0_m00_axi 1 1 1 90 580n
+levelinfo -pg 1 0 40 260 700 740
+pagesize -pg 1 -db -bbox -sgen -150 0 910 1230
+",
+   "No Loops_ScaleFactor":"0.411765",
+   "No Loops_TopLeft":"-1115,2",
+   "Reduced Jogs_Layers":"/processing_av_system/audio_video_engine/audio_irq_1:true|/z3660_0_interrupt:true|/processing_av_system/processing_system7_0_FCLK_CLK1:true|/processing_av_system/processing_system7_0_FCLK_CLK2:true|/processing_av_system/clock_generation/clk_wiz_0_AXI_clk:true|/processing_av_system/proc_sys_reset_0_peripheral_reset:true|/processing_av_system/clock_generation/clk_wiz_0_PCLK_clk:true|/processing_av_system/interconnect_matrix/ARESETN_1:true|/processing_av_system/interconnect_matrix/rst_ps7_0_200M_peripheral_aresetn:true|/processing_av_system/audio_video_engine/M00_ARESETN_1:true|/processing_av_system/audio_video_engine/aud_mrst_1:true|/processing_av_system/processing_system7_0_FCLK_CLK0:true|/processing_av_system/clock_generation/clk_wiz_1_BCLK_clk:true|/processing_av_system/clock_generation/clk_wiz_0_nCLKEN_clk:true|/processing_av_system/clock_generation/clk_wiz_1_CPUCLK_clk:true|/Net2:true|/processing_av_system/clock_generation/clk_wiz_3_clk_out1:true|/processing_av_system/proc_sys_reset_0_peripheral_aresetn:true|/processing_av_system/clock_generation/clk_wiz_2_clk_out1:true|/processing_av_system/processing_system7_0_FCLK_RESET0_N:true|/processing_av_system/audio_video_engine/video/rst_ps7_0_200M_1_peripheral_aresetn:true|/processing_av_system/audio_video_engine/video/s_axis_aresetn_1:true|/processing_av_system/audio_video_engine/video/axi_vdma_0_mm2s_introut:true|/processing_av_system/clock_generation/clk_wiz_1_CLK90_clk:true|/Net1:true|",
+   "Reduced Jogs_ScaleFactor":"0.452137",
+   "Reduced Jogs_TopLeft":"-599,0",
+   "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
+#  -string -flagsOSRD
+preplace port DDR -pg 1 -lvl 2 -x 560 -y 190 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -lvl 2 -x 560 -y 150 -defaultsOSRD
+preplace port IIC_0 -pg 1 -lvl 2 -x 560 -y 170 -defaultsOSRD
+preplace port port-id_nTEA -pg 1 -lvl 0 -x 0 -y 740 -defaultsOSRD
+preplace port port-id_nTCI -pg 1 -lvl 0 -x 0 -y 760 -defaultsOSRD
+preplace port port-id_BP -pg 1 -lvl 2 -x 560 -y 940 -defaultsOSRD
+preplace port port-id_PCLK_clk -pg 1 -lvl 2 -x 560 -y 20 -defaultsOSRD
+preplace port port-id_BCLK_clk -pg 1 -lvl 2 -x 560 -y 40 -defaultsOSRD
+preplace port port-id_CLK90_clk -pg 1 -lvl 2 -x 560 -y 490 -defaultsOSRD
+preplace port port-id_nTBI -pg 1 -lvl 2 -x 560 -y 920 -defaultsOSRD
+preplace port port-id_CPUCLK_clk -pg 1 -lvl 2 -x 560 -y 470 -defaultsOSRD
+preplace port port-id_nCLKEN_clk -pg 1 -lvl 2 -x 560 -y 430 -defaultsOSRD
+preplace port port-id_nTS_FPGA -pg 1 -lvl 2 -x 560 -y 900 -defaultsOSRD
+preplace port port-id_hdmi_de -pg 1 -lvl 2 -x 560 -y 290 -defaultsOSRD
+preplace port port-id_hdmi_hs -pg 1 -lvl 2 -x 560 -y 270 -defaultsOSRD
+preplace port port-id_hdmi_vs -pg 1 -lvl 2 -x 560 -y 310 -defaultsOSRD
+preplace port port-id_hdmi_clk -pg 1 -lvl 2 -x 560 -y 330 -defaultsOSRD
+preplace port port-id_I2SO_D0 -pg 1 -lvl 2 -x 560 -y 390 -defaultsOSRD
+preplace port port-id_I2S_FSYNC_OUT -pg 1 -lvl 2 -x 560 -y 370 -defaultsOSRD
+preplace port port-id_I2S_SCLK -pg 1 -lvl 2 -x 560 -y 410 -defaultsOSRD
+preplace port port-id_R_W040 -pg 1 -lvl 2 -x 560 -y 840 -defaultsOSRD
+preplace port port-id_nTS -pg 1 -lvl 2 -x 560 -y 1060 -defaultsOSRD
+preplace port port-id_nTA -pg 1 -lvl 2 -x 560 -y 860 -defaultsOSRD
+preplace port port-id_INT6_ARM -pg 1 -lvl 2 -x 560 -y 780 -defaultsOSRD
+preplace portBus D040 -pg 1 -lvl 2 -x 560 -y 800 -defaultsOSRD
+preplace portBus hdmi_data -pg 1 -lvl 2 -x 560 -y 350 -defaultsOSRD
+preplace portBus hdmi_intn -pg 1 -lvl 0 -x 0 -y 390 -defaultsOSRD
+preplace portBus A060 -pg 1 -lvl 2 -x 560 -y 820 -defaultsOSRD
+preplace portBus SIZ40 -pg 1 -lvl 2 -x 560 -y 880 -defaultsOSRD
+preplace inst processing_av_system -pg 1 -lvl 1 -x 270 -y 380 -defaultsOSRD
+preplace inst z3660_0 -pg 1 -lvl 1 -x 270 -y 850 -defaultsOSRD
+preplace netloc Net1 1 1 1 N 800
+preplace netloc Net2 1 1 1 N 820
+preplace netloc Net3 1 1 1 N 840
+preplace netloc Net4 1 0 2 90 1060 N
+preplace netloc Net5 1 1 1 N 880
+preplace netloc Net6 1 1 1 N 860
+preplace netloc clk_wiz_0_PCLK_clk 1 0 2 30 30 510
+preplace netloc clk_wiz_0_nCLKEN_clk 1 0 2 50 50 500
+preplace netloc clk_wiz_1_BCLK_clk 1 1 1 520 40n
+preplace netloc hdmi_intn_1 1 0 1 NJ 390
+preplace netloc nTCI_1 1 0 1 20J 760n
+preplace netloc nTEA_1 1 0 1 20J 740n
+preplace netloc processing_av_system_AXI1_clk 1 0 2 80 1070 470
+preplace netloc processing_av_system_AXI_clk 1 0 2 40 40 490
+preplace netloc processing_av_system_CLK90_clk 1 1 1 N 490
+preplace netloc processing_av_system_CPUCLK_clk 1 1 1 N 470
+preplace netloc processing_av_system_I2SO_D0 1 1 1 N 390
+preplace netloc processing_av_system_I2S_FSYNC_OUT 1 1 1 N 370
+preplace netloc processing_av_system_I2S_SCLK 1 1 1 N 410
+preplace netloc processing_av_system_aresetn 1 0 2 100 1050 450
+preplace netloc processing_av_system_aresetn1 1 0 2 70 1080 440
+preplace netloc processing_av_system_control_vblank 1 0 2 60 60 480
+preplace netloc processing_av_system_hdmi_clk 1 1 1 N 330
+preplace netloc processing_av_system_hdmi_data 1 1 1 N 350
+preplace netloc processing_av_system_hdmi_de 1 1 1 N 290
+preplace netloc processing_av_system_hdmi_hs 1 1 1 N 270
+preplace netloc processing_av_system_hdmi_vs 1 1 1 N 310
+preplace netloc processing_av_system_peripheral_reset 1 0 2 50J 1090 480J
+preplace netloc z3660_0_BP 1 1 1 N 940
+preplace netloc z3660_0_NU_1 1 1 1 N 900
+preplace netloc z3660_0_interrupt 1 1 1 N 780
+preplace netloc z3660_0_nTBI 1 1 1 N 920
+preplace netloc processing_av_system_DDR 1 1 1 N 190
+preplace netloc processing_av_system_FIXED_IO 1 1 1 N 150
+preplace netloc processing_av_system_IIC_0 1 1 1 N 170
+preplace netloc processing_av_system_M_AXI 1 0 2 80 70 440
+preplace netloc processing_av_system_M_AXI1 1 0 2 90 80 470
+preplace netloc z3660_0_m00_axi 1 0 2 100 90 460
+levelinfo -pg 1 0 270 560
+pagesize -pg 1 -db -bbox -sgen -150 0 730 1100
+"
+}
+{
+   "da_axi4_cnt":"10",
+   "da_board_cnt":"13",
+   "da_clkrst_cnt":"57",
+   "da_ps7_cnt":"1"
+}

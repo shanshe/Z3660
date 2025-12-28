@@ -1,0 +1,40 @@
+{
+   "ActiveEmotionalView":"Default View",
+   "Default View_ScaleFactor":"0.717775",
+   "Default View_TopLeft":"-244,0",
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
+#  -string -flagsOSRD
+preplace port M06_AXI -pg 1 -lvl 3 -x 700 -y 510 -defaultsOSRD
+preplace port S00_AXI -pg 1 -lvl 0 -x 0 -y 280 -defaultsOSRD
+preplace port M01_AXI -pg 1 -lvl 3 -x 700 -y 430 -defaultsOSRD
+preplace port M04_AXI -pg 1 -lvl 3 -x 700 -y 470 -defaultsOSRD
+preplace port M03_AXI -pg 1 -lvl 3 -x 700 -y 450 -defaultsOSRD
+preplace port M07_AXI -pg 1 -lvl 3 -x 700 -y 530 -defaultsOSRD
+preplace port M05_AXI -pg 1 -lvl 3 -x 700 -y 490 -defaultsOSRD
+preplace port M00_AXI -pg 1 -lvl 3 -x 700 -y 410 -defaultsOSRD
+preplace port port-id_S00_ACLK -pg 1 -lvl 0 -x 0 -y 70 -defaultsOSRD
+preplace port port-id_ext_reset_in -pg 1 -lvl 0 -x 0 -y 90 -defaultsOSRD
+preplace portBus peripheral_aresetn -pg 1 -lvl 3 -x 700 -y 80 -defaultsOSRD
+preplace portBus interconnect_aresetn -pg 1 -lvl 3 -x 700 -y 20 -defaultsOSRD
+preplace inst rst_ps7_0_200M -pg 1 -lvl 1 -x 210 -y 110 -defaultsOSRD
+preplace inst axi_interconnect_0 -pg 1 -lvl 1 -x 210 -y 480 -defaultsOSRD
+preplace inst xadc_wiz_0 -pg 1 -lvl 2 -x 540 -y 200 -defaultsOSRD
+preplace netloc ARESETN_1 1 0 3 40 10 380 20 N
+preplace netloc S00_ACLK_1 1 0 2 20 210 NJ
+preplace netloc ext_reset_in_1 1 0 1 NJ 90
+preplace netloc rst_ps7_0_200M_peripheral_aresetn 1 0 3 30 220 390 80 NJ
+preplace netloc Conn3 1 0 1 NJ 280
+preplace netloc Conn4 1 1 2 NJ 430 NJ
+preplace netloc Conn10 1 1 2 NJ 410 NJ
+preplace netloc axi_interconnect_0_M02_AXI 1 1 2 N 450 NJ
+preplace netloc axi_interconnect_0_M03_AXI 1 1 2 N 470 NJ
+preplace netloc axi_interconnect_0_M04_AXI 1 1 2 N 490 NJ
+preplace netloc axi_interconnect_0_M05_AXI 1 1 2 N 510 NJ
+preplace netloc axi_interconnect_0_M06_AXI 1 1 2 N 530 NJ
+preplace netloc axi_interconnect_0_M07_AXI 1 1 1 400 170n
+levelinfo -pg 1 0 210 540 700
+pagesize -pg 1 -db -bbox -sgen -140 0 930 740
+"
+}
+0

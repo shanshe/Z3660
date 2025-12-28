@@ -1,0 +1,59 @@
+{
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 6.8.11  2018-08-07 bk=1.4403 VDI=40 GEI=35 GUI=JA:9.0 non-TLS-threadsafe
+#  -string -flagsOSRD
+preplace port s_axi_aclk -pg 1 -y 70 -defaultsOSRD
+preplace port hdmi_de -pg 1 -y 650 -defaultsOSRD
+preplace port S_AXI_LITE -pg 1 -y 320 -defaultsOSRD
+preplace port s_axis_aclk -pg 1 -y 340 -defaultsOSRD
+preplace port S_AXI -pg 1 -y 610 -defaultsOSRD
+preplace port hdmi_clk -pg 1 -y 530 -defaultsOSRD
+preplace port s_axi_aresetn -pg 1 -y 90 -defaultsOSRD
+preplace port hdmi_hs -pg 1 -y 610 -defaultsOSRD
+preplace port vid_clk -pg 1 -y 590 -defaultsOSRD
+preplace port ext_reset_in -pg 1 -y 50 -defaultsOSRD
+preplace port hdmi_vs -pg 1 -y 630 -defaultsOSRD
+preplace port M00_AXI -pg 1 -y 390 -defaultsOSRD
+preplace portBus audio_irq -pg 1 -y 30 -defaultsOSRD
+preplace portBus peripheral_aresetn -pg 1 -y 510 -defaultsOSRD
+preplace portBus hdmi_data -pg 1 -y 670 -defaultsOSRD
+preplace portBus dout -pg 1 -y 110 -defaultsOSRD
+preplace portBus control_vblank -pg 1 -y 690 -defaultsOSRD
+preplace portBus hdmi_intn -pg 1 -y 680 -defaultsOSRD
+preplace portBus aresetn -pg 1 -y 20 -defaultsOSRD
+preplace inst xlslice_0 -pg 1 -lvl 2 -y 240 -defaultsOSRD
+preplace inst axi_vdma_0 -pg 1 -lvl 1 -y 360 -defaultsOSRD
+preplace inst util_vector_logic_0 -pg 1 -lvl 1 -y 680 -defaultsOSRD
+preplace inst xlconcat_0 -pg 1 -lvl 2 -y 110 -defaultsOSRD
+preplace inst rst_ps7_0_200M_1 -pg 1 -lvl 1 -y 160 -defaultsOSRD
+preplace inst video_formatter_0 -pg 1 -lvl 2 -y 650 -defaultsOSRD
+preplace inst axi_interconnect_1 -pg 1 -lvl 2 -y 400 -defaultsOSRD
+preplace inst axis_data_fifo_0 -pg 1 -lvl 1 -y 520 -defaultsOSRD
+preplace netloc ctrl_1 1 0 2 NJ 610 NJ
+preplace netloc vid_clk_1 1 0 3 10J 620 490J 530 N
+preplace netloc Conn2 1 0 1 N
+preplace netloc video_formatter_0_hdmi_data 1 2 1 N
+preplace netloc Conn3 1 2 1 880
+preplace netloc video_formatter_0_dvi_active_video 1 2 1 N
+preplace netloc s_axi_aclk_0_1 1 0 2 50 60 420
+preplace netloc axi_vdma_0_M_AXIS_MM2S 1 0 2 60 260 400
+preplace netloc util_vector_logic_0_Res 1 1 1 440
+preplace netloc hdmi_intn_1 1 0 1 N
+preplace netloc s_axis_aclk_1 1 0 2 30 750 470
+preplace netloc rst_ps7_0_200M_1_peripheral_aresetn 1 0 3 60 600 410J 520 870
+preplace netloc ext_reset_in_0_1 1 0 2 40 50 460
+preplace netloc In3_1 1 0 2 NJ 30 490J
+preplace netloc video_formatter_0_dvi_vsync 1 2 1 N
+preplace netloc xlconcat_0_dout 1 2 1 N
+preplace netloc S00_AXI_1 1 1 1 450
+preplace netloc axi_vdma_0_mm2s_introut 1 1 1 430
+preplace netloc s_axi_aresetn_0_1 1 0 2 20 740 490
+preplace netloc video_formatter_0_dvi_hsync 1 2 1 N
+preplace netloc axis_data_fifo_0_M_AXIS 1 1 1 400
+preplace netloc xlslice_0_Dout 1 1 2 500 20 870
+preplace netloc video_formatter_0_control_vblank 1 1 2 500 770 880
+preplace netloc s_axis_aresetn_1 1 1 2 480 10 880
+levelinfo -pg 1 -10 230 690 910 -top 0 -bot 790
+"
+}
+0
