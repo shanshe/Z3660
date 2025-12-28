@@ -1,4 +1,4 @@
 #define REVISION_MAJOR 1
 #define REVISION_MINOR 3 // 03
 //#define REVISION_BETA 0
-#define REVISION_BETA 14
+#define REVISION_BETA 19

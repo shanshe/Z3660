@@ -213,6 +213,8 @@ void Codec37Decoder_MakeTable(int idx, int pitch, int index)
 
 void Codec37Decoder_proc1(int idx, byte *dst, const byte *src, int32 next_offs, int bw, int bh, int pitch, int16 *offset_table)
 {
+	(void)offset_table;
+	(void)idx;
 	//struct Codec37Decoder *dc = &c37_decoders[idx];
 	uint8_t code;
 	uint8_t filling, skipCode;
@@ -280,6 +282,7 @@ void Codec37Decoder_proc1(int idx, byte *dst, const byte *src, int32 next_offs, 
 
 void Codec37Decoder_proc3WithFDFE(int idx, byte *dst, const byte *src, int32 next_offs, int bw, int bh, int pitch, int16 *offset_table)
 {
+	(void)offset_table;
 	struct Codec37Decoder *dc = &c37_decoders[idx];
 	do {
 		int32 i = bw;
@@ -302,6 +305,7 @@ void Codec37Decoder_proc3WithFDFE(int idx, byte *dst, const byte *src, int32 nex
 
 void Codec37Decoder_proc3WithoutFDFE(int idx, byte *dst, const byte *src, int32 next_offs, int bw, int bh, int pitch, int16 *offset_table)
 {
+	(void)offset_table;
 	struct Codec37Decoder *dc = &c37_decoders[idx];
 	do {
 		int32 i = bw;
@@ -320,6 +324,7 @@ void Codec37Decoder_proc3WithoutFDFE(int idx, byte *dst, const byte *src, int32 
 
 void Codec37Decoder_proc4WithFDFE(int idx, byte *dst, const byte *src, int32 next_offs, int bw, int bh, int pitch, int16 *offset_table)
 {
+	(void)offset_table;
 	struct Codec37Decoder *dc = &c37_decoders[idx];
 	do {
 		int32 i = bw;
@@ -358,6 +363,7 @@ void Codec37Decoder_proc4WithFDFE(int idx, byte *dst, const byte *src, int32 nex
 
 void Codec37Decoder_proc4WithoutFDFE(int idx, byte *dst, const byte *src, int32 next_offs, int bw, int bh, int pitch, int16 *offset_table)
 {
+	(void)offset_table;
 	struct Codec37Decoder *dc = &c37_decoders[idx];
 	do {
 		int32 i = bw;

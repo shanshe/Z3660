@@ -39,15 +39,21 @@
 #include "debug_console.h"
 extern DEBUG_CONSOLE debug_console;
 
+void SetUpSLCRDivisors_z3660(UINTPTR mac_baseaddr, int32_t speed);
+
 static XEmacPs EmacPsInstance;
+volatile int semaphore=0;
 void DEBUG_ETHERNET(const char *format, ...)
 {
    if(debug_console.debug_ethernet==0)
       return;
+   while(semaphore==1);
+   semaphore=1;
    va_list args;
    va_start(args, format);
    vprintf(format,args);
    va_end(args);
+   semaphore=0;
 }
 
 #define FRAME_MAX_BACKLOG 64
@@ -57,19 +63,19 @@ void DEBUG_ETHERNET(const char *format, ...)
 
 // could also be 55, 77 (eth1), see interrupts.pdf last page
 // XPS_GEM0_INT_ID == 54
-#define EMACPS_IRPT_INTR	XPS_GEM0_INT_ID
+#define EMACPS_IRPT_INTR         XPS_GEM0_INT_ID
 
-#define SLCR_LOCK_ADDR			(XPS_SYS_CTRL_BASEADDR + 0x4)
-#define SLCR_UNLOCK_ADDR		(XPS_SYS_CTRL_BASEADDR + 0x8)
-#define SLCR_GEM0_CLK_CTRL_ADDR		(XPS_SYS_CTRL_BASEADDR + 0x140)
-#define SLCR_GEM1_CLK_CTRL_ADDR		(XPS_SYS_CTRL_BASEADDR + 0x144)
+#define SLCR_LOCK_ADDR           (XPS_SYS_CTRL_BASEADDR + 0x4)
+#define SLCR_UNLOCK_ADDR         (XPS_SYS_CTRL_BASEADDR + 0x8)
+#define SLCR_GEM0_CLK_CTRL_ADDR  (XPS_SYS_CTRL_BASEADDR + 0x140)
+#define SLCR_GEM1_CLK_CTRL_ADDR  (XPS_SYS_CTRL_BASEADDR + 0x144)
 
-#define SLCR_LOCK_KEY_VALUE		0x767B
-#define SLCR_UNLOCK_KEY_VALUE		0xDF0D
-#define SLCR_ADDR_GEM_RST_CTRL		(XPS_SYS_CTRL_BASEADDR + 0x214)
+#define SLCR_LOCK_KEY_VALUE      0x767B
+#define SLCR_UNLOCK_KEY_VALUE    0xDF0D
+#define SLCR_ADDR_GEM_RST_CTRL   (XPS_SYS_CTRL_BASEADDR + 0x214)
 
-#define EMACPS_PHY_DELAY_SEC     4	//Amount of time to delay waiting on PHY to reset
-#define EMACPS_SLCR_DIV_MASK	0xFC0FC0FF
+#define EMACPS_PHY_DELAY_SEC     4 //Amount of time to delay waiting on PHY to reset
+#define EMACPS_SLCR_DIV_MASK     0xFC0FC0FF
 
 static int32_t GemVersion;
 uint8_t EmacPsMAC[6] = {0x00,0x80,0x10,0x00,0x01,0x00};
@@ -86,12 +92,12 @@ int frames_received_from_backlog = 0;
 #define ETH_PHY_TYPE_MOTORCOMM 1
 static int eth_phy_type_ = ETH_PHY_TYPE_MICREL;
 
-uint32_t PhyAddr;
+uint32_t PhyAddr=0;
 
 typedef char EthernetFrame[XEMACPS_MAX_VLAN_FRAME_SIZE_JUMBO] __attribute__ ((aligned(64)));
 
-volatile char* TxFrame = (char*)(RTG_BASE+TX_FRAME_ADDRESS);		/* Transmit buffer */
-volatile char* RxFrame = (char*)(RTG_BASE+RX_FRAME_ADDRESS);		/* Receive buffer */
+volatile char* TxFrame = (char*)(RTG_BASE+TX_FRAME_ADDRESS);      /* Transmit buffer */
+volatile char* RxFrame = (char*)(RTG_BASE+RX_FRAME_ADDRESS);      /* Receive buffer */
 
 /*
  * Buffer descriptors are allocated in uncached memory. The memory is made
@@ -102,7 +108,7 @@ volatile char* RxFrame = (char*)(RTG_BASE+RX_FRAME_ADDRESS);		/* Receive buffer 
 
 #define PHY_DETECT_REG1 2
 #define PHY_DETECT_REG2 3
-#define PHY_ID_MARVELL	0x141
+#define PHY_ID_MARVELL        0x141
 #define PHY_ID_MICREL_KSZ9031 0x22
 
 static void xEmacPsSendHandler(void *Callback);
@@ -125,8 +131,12 @@ int ethernet_task_state = ETH_TASK_SETUP;
 
 void xEmacPsClkSetup(XEmacPs *EmacPsInstancePtr, uint16_t EmacPsIntrId, int link_speed)
 {
+   (void)EmacPsInstancePtr;
    uint32_t SlcrTxClkCntrl;
    //uint32_t CrlApbClkCntrl;
+
+   // Check and correct divisors before configuring them
+   FixEthernetPLLDivisors_z3660();
 
    if (GemVersion == 2)
    {
@@ -137,16 +147,24 @@ void xEmacPsClkSetup(XEmacPs *EmacPsInstancePtr, uint16_t EmacPsIntrId, int link
          SlcrTxClkCntrl = *(volatile unsigned int *)(SLCR_GEM0_CLK_CTRL_ADDR);
 
          SlcrTxClkCntrl &= EMACPS_SLCR_DIV_MASK;
-
          if (link_speed == 100) {
-            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV1 << 20);
-            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV0 << 8);
+//            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV1 << 20);
+//            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV0 << 8);
+            SetUpSLCRDivisors_z3660(EmacPsInstancePtr->Config.BaseAddress,100);
+//            SlcrTxClkCntrl |= (10 << 20);
+//            SlcrTxClkCntrl |= (10 << 8);
          } else if (link_speed == 1000) {
-            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV1 << 20);
-            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV0 << 8);
+//            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV1 << 20);
+//            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV0 << 8);
+            SetUpSLCRDivisors_z3660(EmacPsInstancePtr->Config.BaseAddress,1000);
+//            SlcrTxClkCntrl |= (1 << 20);
+//            SlcrTxClkCntrl |= (10 << 8);
          } else if (link_speed == 10) {
-            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV1 << 20);
-            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV0 << 8);
+//            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV1 << 20);
+//            SlcrTxClkCntrl |= (XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV0 << 8);
+            SetUpSLCRDivisors_z3660(EmacPsInstancePtr->Config.BaseAddress,100);
+//            SlcrTxClkCntrl |= (50 << 20);
+//            SlcrTxClkCntrl |= (20 << 8);
          } else {
             printf("XEmacPsClkSetup: invalid link speed %d\n", link_speed);
          }
@@ -284,9 +302,9 @@ int ethernet_init() {
     * address range that starts at address 0x0FF00000 is made uncached.
     */
 
-   //	Xil_SetTlbAttributes(RTG_BASE+TX_BD_LIST_START_ADDRESS, STRONG_ORDERED);
-   //	Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, STRONG_ORDERED);
-   //	Xil_SetTlbAttributes(RTG_BASE+RX_BACKLOG_ADDRESS, STRONG_ORDERED);
+   //Xil_SetTlbAttributes(RTG_BASE+TX_BD_LIST_START_ADDRESS, STRONG_ORDERED);
+   //Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, STRONG_ORDERED);
+   //Xil_SetTlbAttributes(RTG_BASE+RX_BACKLOG_ADDRESS, STRONG_ORDERED);
    //Xil_SetTlbAttributes(RTG_BASE+RX_FRAME_ADDRESS, 0xc02);
    //Xil_SetTlbAttributes(RTG_BASE+TX_FRAME_ADDRESS, 0xc02);
 
@@ -294,9 +312,78 @@ int ethernet_init() {
 
    setup_phy(EmacPsInstancePtr);
 
+
    ethernet_update_mac_address();
 
    return(XST_SUCCESS);
+}
+
+void SetUpSLCRDivisors_z3660(UINTPTR mac_baseaddr, int32_t speed)
+{
+	volatile UINTPTR slcrBaseAddress;
+	uint32_t SlcrDiv0 = 0;
+	uint32_t SlcrDiv1 = 0;
+	uint32_t SlcrTxClkCntrl;
+	uint32_t gigeversion;
+
+	gigeversion = ((Xil_In32(mac_baseaddr + 0xFC)) >> 16) & 0xFFF;
+	if (gigeversion == 2) {
+
+		Xil_Out32(SLCR_UNLOCK_ADDR, SLCR_UNLOCK_KEY_VALUE);
+
+		if (mac_baseaddr == XPAR_XEMACPS_0_BASEADDR) {
+			slcrBaseAddress = SLCR_GEM0_CLK_CTRL_ADDR;
+		} else {
+			slcrBaseAddress = SLCR_GEM1_CLK_CTRL_ADDR;
+		}
+#define SLCR_GEM_SRCSEL_EMIO 0x40
+
+		if(Xil_In32(slcrBaseAddress) &
+			SLCR_GEM_SRCSEL_EMIO) {
+				return;
+		}
+
+		if (speed == 1000) {
+			if (mac_baseaddr == XPAR_XEMACPS_0_BASEADDR) {
+				// Use corrected values to generate 125 MHz
+				// Originally: DIV0=16, DIV1=1 -> 62.5 MHz (incorrect)
+				// Corrected: DIV0=8, DIV1=1 -> 125 MHz (correct)
+				SlcrDiv0 = 8;  // Corrected value
+				SlcrDiv1 = 1;  // Corrected value
+				printf("Setting corrected divisors for 1000 Mbps: DIV0=8, DIV1=1\n");
+			}
+		} else if (speed == 100) {
+			if (mac_baseaddr == XPAR_XEMACPS_0_BASEADDR) {
+				// Use corrected values to generate 25 MHz
+				SlcrDiv0 = 8;  // Corrected value
+				SlcrDiv1 = 5;  // Corrected value
+				printf("Setting corrected divisors for 100 Mbps: DIV0=8, DIV1=5\n");
+			}
+		} else {
+			if (mac_baseaddr == XPAR_XEMACPS_0_BASEADDR) {
+				// Use corrected values to generate 2.5 MHz
+				SlcrDiv0 = 8;   // Corrected value
+				SlcrDiv1 = 50;  // Corrected value
+				printf("Setting corrected divisors for 10 Mbps: DIV0=8, DIV1=50\n");
+			}
+		}
+
+		if (SlcrDiv0 != 0 && SlcrDiv1 != 0) {
+			SlcrTxClkCntrl = Xil_In32(slcrBaseAddress);
+			SlcrTxClkCntrl &= EMACPS_SLCR_DIV_MASK;
+			SlcrTxClkCntrl |= (SlcrDiv1 << 20);
+			SlcrTxClkCntrl |= (SlcrDiv0 << 8);
+			Xil_Out32(slcrBaseAddress, SlcrTxClkCntrl);
+			Xil_Out32(SLCR_LOCK_ADDR, SLCR_LOCK_KEY_VALUE);
+		} else {
+			printf("Clock Divisors incorrect - Please check\n");
+		}
+	}
+	else
+   {
+      printf("Unsupported GEM version %ld for SLCR clock setup\n", gigeversion);
+   }
+	return;
 }
 
 void ethernet_task() {
@@ -342,6 +429,7 @@ void ethernet_task() {
 
 static void xEmacPsSendHandler(void *Callback)
 {
+   (void)Callback;
    XEmacPs_Bd *BdTxPtr;
    //XEmacPs *EmacPsInstancePtr = (XEmacPs *) Callback;
    XEmacPs* EmacPsInstancePtr = &EmacPsInstance;
@@ -402,7 +490,7 @@ void ethernet_alloc_rx_frames() {
 
          int bd_index=XEMACPS_BD_TO_INDEX(rxring, rxbd);
          XEmacPs_BdClearRxNew(rxbd);
-			XEmacPs_BdSetAddressRx(rxbd, RxFrame+bd_index*FRAME_SIZE); // FIXME redundant?
+         XEmacPs_BdSetAddressRx(rxbd, RxFrame+bd_index*FRAME_SIZE); // FIXME redundant?
 
          Status = XEmacPs_BdRingToHw(rxring, 1, rxbd);
          if (Status != XST_SUCCESS) {
@@ -421,6 +509,7 @@ int num_rx_bufs=0;
 extern int interrupt_enabled_ethernet;
 static void xEmacPsRecvHandler(void *Callback)
 {
+   (void)Callback;
    uint32_t status;
 //   XEmacPs* EmacPsInstancePtr = (XEmacPs *) Callback;
    XEmacPs* EmacPsInstancePtr = &EmacPsInstance;
@@ -450,7 +539,7 @@ static void xEmacPsRecvHandler(void *Callback)
          uint32_t bd_idx = XEMACPS_BD_TO_INDEX(rxring, cur_bd_ptr);
          int rx_bytes = XEmacPs_BdGetLength(cur_bd_ptr);
 
-			uint8_t* frame_ptr = (uint8_t*)(RxFrame + bd_idx*FRAME_SIZE);
+         uint8_t* frame_ptr = (uint8_t*)(RxFrame + bd_idx*FRAME_SIZE);
 
          DEBUG_ETHERNET("EMAC: RX: %d [%d] bd_idx: %d\n", frame_serial, rx_bytes, bd_idx);
 
@@ -514,16 +603,16 @@ int ethernet_get_backlog() {
 
 int ethernet_receive_frame() {
    volatile uint8_t* frm = ethernet_current_receive_ptr()+RTG_BASE;
-   //	printf("ethernet_receive_frame: %d bytes: %d serial: %d frames_backlog %d\n", frames_received_from_backlog, frm[0]<<8|frm[1], frm[2]<<8|frm[3],frames_backlog);
+   //   printf("ethernet_receive_frame: %d bytes: %d serial: %d frames_backlog %d\n", frames_received_from_backlog, frm[0]<<8|frm[1], frm[2]<<8|frm[3],frames_backlog);
    /*
-	int frame_size=frm[0]<<8|frm[1];
-	volatile uint8_t* frm2=frm+4;
-	for (int y=0; y<frame_size; y++) {
-		printf("%02x",frm2[y]);
-		if (y%4==3) printf(" ");
-		if (y%32==31) printf("\n");
-	}
-	printf("\n==========================================\n");
+   int frame_size=frm[0]<<8|frm[1];
+   volatile uint8_t* frm2=frm+4;
+   for (int y=0; y<frame_size; y++) {
+      printf("%02x",frm2[y]);
+      if (y%4==3) printf(" ");
+      if (y%32==31) printf("\n");
+   }
+   printf("\n==========================================\n");
     */
    if (frames_backlog>0) {
       frames_received_from_backlog++;
@@ -581,6 +670,7 @@ void ethernet_update_mac_address() {
 
 static void xEmacPsErrorHandler(void *Callback, uint8_t Direction, uint32_t ErrorWord)
 {
+   (void)Callback;
    //XEmacPs *EmacPsInstancePtr = (XEmacPs *) Callback;
 
    DeviceErrors++;
@@ -657,7 +747,7 @@ uint32_t xEmacPsDetectPHY(XEmacPs * EmacPsInstancePtr)
       }
    }
 
-   return(PhyAddr);		/* default to 32(max of iteration) */
+   return(PhyAddr);      /* default to 32(max of iteration) */
 }
 
 LONG setup_phy(XEmacPs * EmacPsInstancePtr)
@@ -692,56 +782,56 @@ LONG setup_phy(XEmacPs * EmacPsInstancePtr)
    return(XST_FAILURE);
 }
 
-#define ADVERTISE_10HALF	0x0020  /* Try for 10mbps half-duplex  */
-#define ADVERTISE_1000XFULL	0x0020  /* Try for 1000BASE-X full-duplex */
-#define ADVERTISE_10FULL	0x0040  /* Try for 10mbps full-duplex  */
-#define ADVERTISE_1000XHALF	0x0040  /* Try for 1000BASE-X half-duplex */
-#define ADVERTISE_100HALF	0x0080  /* Try for 100mbps half-duplex */
-#define ADVERTISE_1000XPAUSE	0x0080  /* Try for 1000BASE-X pause    */
-#define ADVERTISE_100FULL	0x0100  /* Try for 100mbps full-duplex */
-#define ADVERTISE_1000XPSE_ASYM	0x0100  /* Try for 1000BASE-X asym pause */
-#define ADVERTISE_100BASE4	0x0200  /* Try for 100mbps 4k packets  */
+#define ADVERTISE_10HALF        0x0020  /* Try for 10mbps half-duplex  */
+#define ADVERTISE_1000XFULL     0x0020  /* Try for 1000BASE-X full-duplex */
+#define ADVERTISE_10FULL        0x0040  /* Try for 10mbps full-duplex  */
+#define ADVERTISE_1000XHALF     0x0040  /* Try for 1000BASE-X half-duplex */
+#define ADVERTISE_100HALF       0x0080  /* Try for 100mbps half-duplex */
+#define ADVERTISE_1000XPAUSE    0x0080  /* Try for 1000BASE-X pause    */
+#define ADVERTISE_100FULL       0x0100  /* Try for 100mbps full-duplex */
+#define ADVERTISE_1000XPSE_ASYM 0x0100  /* Try for 1000BASE-X asym pause */
+#define ADVERTISE_100BASE4      0x0200  /* Try for 100mbps 4k packets  */
 
-#define ADVERTISE_100_AND_10	(ADVERTISE_10FULL | ADVERTISE_100FULL | ADVERTISE_10HALF | ADVERTISE_100HALF)
-#define ADVERTISE_100		(ADVERTISE_100FULL | ADVERTISE_100HALF)
-#define ADVERTISE_10		(ADVERTISE_10FULL | ADVERTISE_10HALF)
+#define ADVERTISE_100_AND_10   (ADVERTISE_10FULL  | ADVERTISE_100FULL | ADVERTISE_10HALF | ADVERTISE_100HALF)
+#define ADVERTISE_100          (ADVERTISE_100FULL | ADVERTISE_100HALF )
+#define ADVERTISE_10           (ADVERTISE_10FULL  | ADVERTISE_10HALF  )
 
-#define ADVERTISE_1000		0x0300
+#define ADVERTISE_1000      0x0300
 
-#define IEEE_ASYMMETRIC_PAUSE_MASK				0x0800
-#define IEEE_PAUSE_MASK							0x0400
-#define IEEE_AUTONEG_ERROR_MASK					0x8000
+#define IEEE_ASYMMETRIC_PAUSE_MASK            0x0800
+#define IEEE_PAUSE_MASK                       0x0400
+#define IEEE_AUTONEG_ERROR_MASK               0x8000
 
-#define IEEE_CONTROL_REG_OFFSET					0
-#define IEEE_STATUS_REG_OFFSET					1
-#define IEEE_AUTONEGO_ADVERTISE_REG				4
-#define IEEE_PARTNER_ABILITIES_1_REG_OFFSET		5
-#define IEEE_PARTNER_ABILITIES_2_REG_OFFSET		8
+#define IEEE_CONTROL_REG_OFFSET              0
+#define IEEE_STATUS_REG_OFFSET               1
+#define IEEE_AUTONEGO_ADVERTISE_REG          4
+#define IEEE_PARTNER_ABILITIES_1_REG_OFFSET  5
+#define IEEE_PARTNER_ABILITIES_2_REG_OFFSET  8
 #define IEEE_1000BASET_CONTROL_REG  9
-#define IEEE_1000BASET_STATUS_REG	10
-#define IEEE_COPPER_SPECIFIC_CONTROL_REG		16
-#define IEEE_SPECIFIC_STATUS_REG				17
-#define IEEE_COPPER_SPECIFIC_STATUS_REG_2		19
-#define IEEE_EXT_PHY_SPECIFIC_CONTROL_REG   	20
-#define IEEE_CONTROL_REG_MAC					21
-#define IEEE_PAGE_ADDRESS_REGISTER				22
+#define IEEE_1000BASET_STATUS_REG   10
+#define IEEE_COPPER_SPECIFIC_CONTROL_REG     16
+#define IEEE_SPECIFIC_STATUS_REG             17
+#define IEEE_COPPER_SPECIFIC_STATUS_REG_2    19
+#define IEEE_EXT_PHY_SPECIFIC_CONTROL_REG    20
+#define IEEE_CONTROL_REG_MAC                 21
+#define IEEE_PAGE_ADDRESS_REGISTER           22
 
-#define IEEE_CTRL_1GBPS_LINKSPEED_MASK			0x2040
-#define IEEE_CTRL_LINKSPEED_MASK				0x0040
-#define IEEE_CTRL_LINKSPEED_1000M				0x0040
-#define IEEE_CTRL_LINKSPEED_100M				0x2000
-#define IEEE_CTRL_LINKSPEED_10M					0x0000
-#define IEEE_CTRL_RESET_MASK					0x8000
-#define IEEE_CTRL_AUTONEGOTIATE_ENABLE			0x1000
-#define IEEE_STAT_AUTONEGOTIATE_CAPABLE			0x0008
-#define IEEE_STAT_AUTONEGOTIATE_COMPLETE		0x0020
-#define IEEE_STAT_AUTONEGOTIATE_RESTART			0x0200
-#define IEEE_STAT_1GBPS_EXTENSIONS				0x0100
-#define IEEE_AN1_ABILITY_MASK					0x1FE0
-#define IEEE_AN3_ABILITY_MASK_1GBPS				0x0C00
-#define IEEE_AN1_ABILITY_MASK_100MBPS			0x0380
-#define IEEE_AN1_ABILITY_MASK_10MBPS			0x0060
-#define IEEE_RGMII_TXRX_CLOCK_DELAYED_MASK		0x0030
+#define IEEE_CTRL_1GBPS_LINKSPEED_MASK       0x2040
+#define IEEE_CTRL_LINKSPEED_MASK             0x0040
+#define IEEE_CTRL_LINKSPEED_1000M            0x0040
+#define IEEE_CTRL_LINKSPEED_100M             0x2000
+#define IEEE_CTRL_LINKSPEED_10M              0x0000
+#define IEEE_CTRL_RESET_MASK                 0x8000
+#define IEEE_CTRL_AUTONEGOTIATE_ENABLE       0x1000
+#define IEEE_STAT_AUTONEGOTIATE_CAPABLE      0x0008
+#define IEEE_STAT_AUTONEGOTIATE_COMPLETE     0x0020
+#define IEEE_STAT_AUTONEGOTIATE_RESTART      0x0200
+#define IEEE_STAT_1GBPS_EXTENSIONS           0x0100
+#define IEEE_AN1_ABILITY_MASK                0x1FE0
+#define IEEE_AN3_ABILITY_MASK_1GBPS          0x0C00
+#define IEEE_AN1_ABILITY_MASK_100MBPS        0x0380
+#define IEEE_AN1_ABILITY_MASK_10MBPS         0x0060
+#define IEEE_RGMII_TXRX_CLOCK_DELAYED_MASK   0x0030
 
 #define IEEE_1000BASE_STATUS_REG 0x0a
 
@@ -754,7 +844,7 @@ void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_typ
    if(eth_phy_type == ETH_PHY_TYPE_MOTORCOMM) {
       printf("PHY: Start Ethernet PHY auto negotiation (MotorCom YT8531S)\n"); //MotorComm
       // access IEEE MII regs
-      //		XEmacPs_PhyWrite(xemacpsp, phy_addr, 0x100, 0x6);
+      //      XEmacPs_PhyWrite(xemacpsp, phy_addr, 0x100, 0x6);
    } else {
       printf("PHY: Start Ethernet PHY auto negotiation (Microchip KSZ9031)\n"); //Micrel
    }
@@ -787,9 +877,9 @@ void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_typ
    } else if (link_speed == 1000) {
       // register 0: 1000 mbit
       /*XEmacPs_PhyRead(xemacpsp, phy_addr, IEEE_CONTROL_REG_OFFSET, &control);
-		control |= (1<<6);
-		control &= ~(1<<13);
-		XEmacPs_PhyWrite(xemacpsp, phy_addr, IEEE_CONTROL_REG_OFFSET, control);*/
+      control |= (1<<6);
+      control &= ~(1<<13);
+      XEmacPs_PhyWrite(xemacpsp, phy_addr, IEEE_CONTROL_REG_OFFSET, control);*/
 
       // register 9
       XEmacPs_PhyRead(xemacpsp, phy_addr, IEEE_1000BASET_CONTROL_REG, &control);
@@ -836,7 +926,7 @@ uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr, int e
 
    XEmacPs_PhyRead(xemacpsp, phy_addr, IEEE_STATUS_REG_OFFSET, &status);
 
-   //	printf("PHY status: %x\n", status);
+   //   printf("PHY status: %x\n", status);
 
    if (status & IEEE_STAT_AUTONEGOTIATE_COMPLETE) {
       if(eth_phy_type == ETH_PHY_TYPE_MOTORCOMM) {
@@ -879,8 +969,8 @@ uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr, int e
       //timeout_counter++;
 
       //if (timeout_counter > 2) {
-      //	printf("PHY: Auto negotiation timeout\n");
-      //	break;
+      //   printf("PHY: Auto negotiation timeout\n");
+      //   break;
       //}
 
       return(XST_FAILURE);
@@ -892,14 +982,14 @@ uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr, int e
  *
  * This function setups the interrupt system so interrupts can occur for the
  * EMACPS.
- * @param	EmacPsInstancePtr is a pointer to the instance of the EmacPs
- *		driver.
- * @param	EmacPsIntrId is the Interrupt ID and is typically
- *		XPAR_<EMACPS_instance>_INTR value from xparameters.h.
+ * @param   EmacPsInstancePtr is a pointer to the instance of the EmacPs
+ *      driver.
+ * @param   EmacPsIntrId is the Interrupt ID and is typically
+ *      XPAR_<EMACPS_instance>_INTR value from xparameters.h.
  *
- * @return	XST_SUCCESS if successful, otherwise XST_FAILURE.
+ * @return   XST_SUCCESS if successful, otherwise XST_FAILURE.
  *
- * @note		None.
+ * @note      None.
  *
  *****************************************************************************/
 static LONG emacPsSetupIntrSystem(XEmacPs *EmacPsInstancePtr, uint16_t EmacPsIntrId)
@@ -929,7 +1019,7 @@ static LONG emacPsSetupIntrSystem(XEmacPs *EmacPsInstancePtr, uint16_t EmacPsInt
    /*
     * Enable interrupts in the processor
     */
-   //	Xil_ExceptionEnable();
+   //   Xil_ExceptionEnable();
 
    printf("GIC: Interrupts enabled\n");
    return(XST_SUCCESS);
@@ -946,17 +1036,17 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
    uint32_t old_frames_tx = FramesTx;
 
 //   Xil_DCacheInvalidateRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
-	Xil_L1DCacheFlushRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
-	Xil_L2CacheFlushRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
+   Xil_L1DCacheFlushRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
+   Xil_L2CacheFlushRange((UINTPTR)TxFrame, sizeof(EthernetFrame));
 
-   //	printf("ethernet_send_frame: %lu %d\n",old_frames_tx,frame_size);
+   //   printf("ethernet_send_frame: %lu %d\n",old_frames_tx,frame_size);
    /*
-	for (int y=0; y<frame_size; y++) {
-		printf("%02x",TxFrame[y]);
-		if (y%4==3) printf(" ");
-		if (y%32==31) printf("\n");
-	}
-	printf("\n==========================================\n");
+   for (int y=0; y<frame_size; y++) {
+      printf("%02x",TxFrame[y]);
+      if (y%4==3) printf(" ");
+      if (y%32==31) printf("\n");
+   }
+   printf("\n==========================================\n");
     */
    LONG Status = XEmacPs_BdRingAlloc(&(XEmacPs_GetTxRing(EmacPsInstancePtr)), 1, &BdTxPtr);
 
@@ -980,8 +1070,8 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
       return(3);
    }
 
-   //	Xil_L1DCacheFlushRange((UINTPTR)BdTxPtr, 128);
-   //	Xil_L2CacheFlushRange((UINTPTR)BdTxPtr, 128);
+   //   Xil_L1DCacheFlushRange((UINTPTR)BdTxPtr, 128);
+   //   Xil_L2CacheFlushRange((UINTPTR)BdTxPtr, 128);
 
    XEmacPs_Transmit(EmacPsInstancePtr);
 
@@ -1002,6 +1092,123 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
 
    // all good
    return(0);
+}
+
+void PrintEthernetPLLFrequencies_z3660()
+{
+//   printf("=== Ethernet PLL Frequencies ===\n");
+   
+   // Base frequency of the IO PLL is typically 1000 MHz for Zynq
+   // According to Xilinx documentation, the base frequency is 1000 MHz
+   const uint32_t IO_PLL_FREQ_HZ = 1000000000; // 1000 MHz
+   
+//   printf("IO PLL base frequency: %lu MHz\n", IO_PLL_FREQ_HZ / 1000000);
+   
+   // Calculate frequency for 1000 Mbps
+   uint32_t div0_1000 = XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV0;
+   uint32_t div1_1000 = XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV1;
+   uint32_t freq_1000 = IO_PLL_FREQ_HZ / (div0_1000 * div1_1000);
+   
+//   printf("1000 Mbps - Divisors: DIV0=%lu, DIV1=%lu\n", div0_1000, div1_1000);
+//   printf("Resulting frequency: %lu MHz (expected: 125 MHz)\n", freq_1000 / 1000000);
+//   printf("Difference: %d %%\n", (int)(((float)freq_1000 / 125000000.0 - 1.0) * 100.0));
+   
+   // Calculate frequency for 100 Mbps
+//   uint32_t div0_100 = XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV0;
+//   uint32_t div1_100 = XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV1;
+//   uint32_t freq_100 = IO_PLL_FREQ_HZ / (div0_100 * div1_100);
+   
+//   printf("100 Mbps - Divisors: DIV0=%lu, DIV1=%lu\n", div0_100, div1_100);
+//   printf("Resulting frequency: %lu MHz (expected: 25 MHz)\n", freq_100 / 1000000);
+//   printf("Difference: %d %%\n", (int)(((float)freq_100 / 25000000.0 - 1.0) * 100.0));
+   
+   // Calculate frequency for 10 Mbps
+//   uint32_t div0_10 = XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV0;
+//   uint32_t div1_10 = XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV1;
+//   uint32_t freq_10 = IO_PLL_FREQ_HZ / (div0_10 * div1_10);
+   
+//   printf("10 Mbps - Divisors: DIV0=%lu, DIV1=%lu\n", div0_10, div1_10);
+//   printf("Resulting frequency: %lu MHz (expected: 2.5 MHz)\n", freq_10 / 1000000);
+//   printf("Difference: %d %%\n", (int)(((float)freq_10 / 2500000.0 - 1.0) * 100.0));
+   
+//   printf("====================================\n");
+   
+   // Verify if the values match those defined in xparameters.h
+   uint32_t expected_freq = XPAR_PS7_ETHERNET_0_ENET_CLK_FREQ_HZ;
+//   printf("Expected frequency defined in xparameters.h: %lu MHz\n", expected_freq / 1000000);
+   
+   if (freq_1000 == expected_freq) {
+//      printf("✓ Divisors for 1000 Mbps generate the expected frequency (125 MHz)\n");
+   } else {
+      printf("✗ ERROR: Divisors for 1000 Mbps do NOT generate the expected frequency\n");
+      printf("  Calculated: %lu Hz, Expected: %lu Hz\n", freq_1000, expected_freq);
+   }
+}
+
+void FixEthernetPLLDivisors_z3660()
+{
+//   printf("=== Automatic Ethernet PLL Divisors Correction ===\n");
+   
+   // Check current divisors
+   uint32_t div0_1000 = XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV0;
+   uint32_t div1_1000 = XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV1;
+   uint32_t div0_100 = XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV0;
+   uint32_t div1_100 = XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV1;
+   uint32_t div0_10 = XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV0;
+   uint32_t div1_10 = XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV1;
+   
+//   printf("Current divisors:\n");
+//   printf("  1000 Mbps: DIV0=%lu, DIV1=%lu\n", div0_1000, div1_1000);
+//   printf("  100 Mbps:  DIV0=%lu, DIV1=%lu\n", div0_100, div1_100);
+//   printf("  10 Mbps:   DIV0=%lu, DIV1=%lu\n", div0_10, div1_10);
+   
+   // Correct values to generate 125 MHz: DIV0=8, DIV1=1
+   const uint32_t CORRECT_DIV0_1000 = 8;
+   const uint32_t CORRECT_DIV1_1000 = 1;
+   const uint32_t CORRECT_DIV0_100 = 8;
+   const uint32_t CORRECT_DIV1_100 = 5;
+   const uint32_t CORRECT_DIV0_10 = 8;
+   const uint32_t CORRECT_DIV1_10 = 50;
+   
+   // Redefine the correct values if they are wrong
+   if (div0_1000 != CORRECT_DIV0_1000 || div1_1000 != CORRECT_DIV1_1000) {
+      printf("✓ Correcting divisors for 1000 Mbps: DIV0=8, DIV1=1\n");
+      
+      // In embedded systems we cannot redefine macros, so we'll use direct values
+      // in the SetUpSLCRDivisors_z3660 function when called
+      // For calculation purposes, we'll update our temporary variables
+      div0_1000 = CORRECT_DIV0_1000;
+      div1_1000 = CORRECT_DIV1_1000;
+   }
+   
+   if (div0_100 != CORRECT_DIV0_100 || div1_100 != CORRECT_DIV1_100) {
+      printf("✓ Correcting divisors for 100 Mbps: DIV0=8, DIV1=5\n");
+      div0_100 = CORRECT_DIV0_100;
+      div1_100 = CORRECT_DIV1_100;
+   }
+   
+   if (div0_10 != CORRECT_DIV0_10 || div1_10 != CORRECT_DIV1_10) {
+      printf("✓ Correcting divisors for 10 Mbps: DIV0=8, DIV1=50\n");
+      div0_10 = CORRECT_DIV0_10;
+      div1_10 = CORRECT_DIV1_10;
+   }
+   
+//   printf("Corrected divisors:\n");
+//   printf("  1000 Mbps: DIV0=%lu, DIV1=%lu\n", div0_1000, div1_1000);
+//   printf("  100 Mbps:  DIV0=%lu, DIV1=%lu\n", div0_100, div1_100);
+//   printf("  10 Mbps:   DIV0=%lu, DIV1=%lu\n", div0_10, div1_10);
+   
+   // Verify the resulting frequency
+   const uint32_t IO_PLL_FREQ_HZ = 1000000000;
+   uint32_t freq_1000 = IO_PLL_FREQ_HZ / (div0_1000 * div1_1000);
+   
+   if (freq_1000 == XPAR_PS7_ETHERNET_0_ENET_CLK_FREQ_HZ) {
+//      printf("✓ Corrected divisors generate 125 MHz correctly\n");
+   } else {
+      printf("✗ ERROR: Corrected divisors do NOT generate 125 MHz\n");
+   }
+   
+//   printf("=== End of correction ===\n");
 }
 
 

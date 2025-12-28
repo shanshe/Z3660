@@ -2,7 +2,6 @@
 #define _HUNK_RELOC_H_
 
 #include <ff.h>
-#include "scsi.h"
 /*
 typedef struct hunk_reloc_ {
     uint32_t src_hunk;

@@ -25,9 +25,11 @@
 #include "xil_cache.h"
 #include "xil_cache_l.h"
 #include "xil_exception.h"
-#define sleep sleep_seconds
+//#define sleep sleep_seconds
+//#define usleep sleep_microseconds
 #include "xclk_wiz.h"
-#undef sleep
+//#undef sleep
+//#undef usleep
 #include "xadcps.h"
 #include "xuartps.h"
 
@@ -44,6 +46,7 @@
 #include "interrupt.h"
 #include "adc.h"
 #include "ax.h"
+#include "usb.h"
 #include "xpseudo_asm.h"
 #include <xparameters.h>
 
@@ -69,43 +72,45 @@
 #define PS_MIO_51    51 // MIO 51
 
 typedef struct {
-	volatile uint32_t shared_data;         // 0xFFFF0000
-	volatile uint32_t write_rtg;           // 0xFFFF0004
-	volatile uint32_t write_rtg_addr;      // 0xFFFF0008
-	volatile uint32_t write_rtg_data;      // 0xFFFF000C
-	volatile uint32_t core0_hold;          // 0xFFFF0010
-	volatile uint32_t core0_hold_ack;      // 0xFFFF0014
-	volatile uint32_t irq;                 // 0xFFFF0018
-	volatile uint32_t uart_semaphore;      // 0xFFFF001C
-	volatile uint32_t jit_enabled;         // 0xFFFF0020
-	volatile uint32_t reset_emulator;      // 0xFFFF0024
-	volatile uint32_t load_rom_emu;        // 0xFFFF0028
-	volatile uint32_t load_rom_addr;       // 0xFFFF002C
-	volatile uint32_t int_available;       // 0xFFFF0030
-	volatile uint32_t cfg_emu;             // 0xFFFF0034
-	volatile uint32_t write_scsi;          // 0xFFFF0038
-	volatile uint32_t write_scsi_addr;     // 0xFFFF003C
-	volatile uint32_t write_scsi_data;     // 0xFFFF0040
-	volatile uint32_t write_scsi_type;     // 0xFFFF0044
-	volatile uint32_t read_scsi;           // 0xFFFF0048
-	volatile uint32_t read_scsi_addr;      // 0xFFFF004C
-	volatile uint32_t read_scsi_data;      // 0xFFFF0050
-	volatile uint32_t read_scsi_type;      // 0xFFFF0054
-	volatile uint32_t scsiboot_rom_loaded; // 0xFFFF0058
-	volatile uint32_t write_scsi_in_progress; // 0xFFFF005C
-	volatile uint32_t read_rtg;            // 0xFFFF0060
-	volatile uint32_t read_rtg_addr;       // 0xFFFF0064
-	volatile uint32_t read_rtg_data;       // 0xFFFF0068
-	volatile uint32_t mmu_core1_add;       // 0xFFFF006C
-	volatile uint32_t z3_enabled;          // 0xFFFF0070
-	volatile uint32_t load_ext_rom_addr;   // 0xFFFF0074
-	volatile uint32_t load_romext_emu;     // 0xFFFF0078
-	volatile uint32_t nops_write;          // 0xFFFF007C
-	volatile uint32_t nops_read;           // 0xFFFF0080
-	volatile uint32_t disassemble;         // 0xFFFF0088
-	volatile uint32_t musashi_step;        // 0xFFFF008C
-	volatile uint32_t reset_emulator_dis;  // 0xFFFF0090
-	volatile uint32_t z2_enabled;          // 0xFFFF0094
+   volatile uint32_t shared_data;         // 0xFFFF0000
+   volatile uint32_t write_rtg;           // 0xFFFF0004
+   volatile uint32_t write_rtg_addr;      // 0xFFFF0008
+   volatile uint32_t write_rtg_data;      // 0xFFFF000C
+   volatile uint32_t core0_hold;          // 0xFFFF0010
+   volatile uint32_t core0_hold_ack;      // 0xFFFF0014
+   volatile uint32_t irq;                 // 0xFFFF0018
+   volatile uint32_t uart_semaphore;      // 0xFFFF001C
+   volatile uint32_t jit_enabled;         // 0xFFFF0020
+   volatile uint32_t reset_emulator;      // 0xFFFF0024
+   volatile uint32_t load_rom_emu;        // 0xFFFF0028
+   volatile uint32_t load_rom_addr;       // 0xFFFF002C
+   volatile uint32_t int_available;       // 0xFFFF0030
+   volatile uint32_t cfg_emu;             // 0xFFFF0034
+   volatile uint32_t write_scsi;          // 0xFFFF0038
+   volatile uint32_t write_scsi_addr;     // 0xFFFF003C
+   volatile uint32_t write_scsi_data;     // 0xFFFF0040
+   volatile uint32_t write_scsi_type;     // 0xFFFF0044
+   volatile uint32_t read_scsi;           // 0xFFFF0048
+   volatile uint32_t read_scsi_addr;      // 0xFFFF004C
+   volatile uint32_t read_scsi_data;      // 0xFFFF0050
+   volatile uint32_t read_scsi_type;      // 0xFFFF0054
+   volatile uint32_t scsiboot_rom_loaded; // 0xFFFF0058
+   volatile uint32_t write_scsi_in_progress; // 0xFFFF005C
+   volatile uint32_t read_rtg;            // 0xFFFF0060
+   volatile uint32_t read_rtg_addr;       // 0xFFFF0064
+   volatile uint32_t read_rtg_data;       // 0xFFFF0068
+   volatile uint32_t mmu_core1_add;       // 0xFFFF006C
+   volatile uint32_t z3_enabled;          // 0xFFFF0070
+   volatile uint32_t load_ext_rom_addr;   // 0xFFFF0074
+   volatile uint32_t load_romext_emu;     // 0xFFFF0078
+   volatile uint32_t nops_write;          // 0xFFFF007C
+   volatile uint32_t nops_read;           // 0xFFFF0080
+   volatile uint32_t disassemble;         // 0xFFFF0084
+   volatile uint32_t musashi_step;        // 0xFFFF0088
+   volatile uint32_t reset_emulator_dis;  // 0xFFFF008C
+   volatile uint32_t z2_enabled;          // 0xFFFF0090
+   volatile uint32_t printhist_dataabort; // 0xFFFF0094
+   volatile uint32_t arm_freq_code;       // 0xFFFF0098
 } SHARED;
 extern SHARED *shared;
 #define REG_BASE_ADDRESS XPAR_Z3660_0_BASEADDR
@@ -138,8 +143,11 @@ unsigned int READ_NBG_ARM(void);
 #define REG1 0x04
 #define REG2 0x08
 #define REG3 0x0C
-//#define REG4 0x10
+#define REG4 0x10
 #define REG5 0x14
+#define REG6 0x18
+#define REG7 0x1C
+#define REG8 0x20
 
 #define FPGA_RAM_EN                   (1L<< 0)  // SAXI REG0  0
 #define FPGA_RAM_BURST_READ_EN        (1L<< 1)  // SAXI REG0  1
@@ -156,24 +164,30 @@ unsigned int READ_NBG_ARM(void);
 #define FPGA_ENCONDITION_PCLK1_CLKEN0 (1L<< 8)  // SAXI REG0  9..8
 #define FPGA_ENCONDITION_PCLK0        (2L<< 8)  // SAXI REG0  9..8
 #define FPGA_ENCONDITION_PCLK1        (3L<< 8)  // SAXI REG0  9..8
+#define FPGA_ADVANCED_BURST           (3L<<10)  // SAXI REG0  10
+#define FPGA_PREFETCH_ENABLE          (3L<<11)  // SAXI REG0  11
 #define FPGA_256MB_AUTOCONFIG_EN      (1L<<12)  // SAXI REG0 12
 #define FPGA_RTG_AUTOCONFIG_EN        (1L<<13)  // SAXI REG0 13
 #define FPGA_SCSI_AUTOCONFIG_EN       (1L<<14)  // SAXI REG0 14
+#define FPGA_ENABLE_CPUCLK_OUTPUT     (1L<<16)  // SAXI REG0 16
 #define FPGA_AUTOCONFIG_BOOT_EN       (1L<<27)  // SAXI REG0 27
 #define FPGA_BP                       (1L<<28)  // SAXI REG0 28
 #define FPGA_INT6                     (1L<<29)  // SAXI REG0 29
 #define READ_WRITE_ACK                (1L<<30)  // SAXI REG0 30
 #define FPGA_RESET                    (1L<<31)  // SAXI REG0 31
 
+#define FPGA_CPUCLK_DETECTED          (1L<< 0)  // SAXI REG6 0
+#define FPGA_CLK90_DETECTED           (1L<< 1)  // SAXI REG6 0
+
 #define ENABLE_BURST_READ_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_READ_EN);\
-                  }while(0)
+      }while(0)
 #define DISABLE_BURST_READ_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_READ_EN);\
-                  }while(0)
+      }while(0)
 
 #define ENABLE_BURST_WRITE_FPGA do{DiscreteSet(REG0, FPGA_RAM_BURST_WRITE_EN);\
-                  }while(0)
+      }while(0)
 #define DISABLE_BURST_WRITE_FPGA do{DiscreteClear(REG0, FPGA_RAM_BURST_WRITE_EN);\
-                  }while(0)
+      }while(0)
 
 #ifdef XPARAMETERS_H // FIXME: this is not needed, but eclipse complaints if not defined here
 //#define XPAR_Z3660_0_BASEADDR 0x83C00000
@@ -185,7 +199,7 @@ unsigned int READ_NBG_ARM(void);
 #endif
 
 #define REG_BASE_ADDRESS_S01 0x7FC70000
-#define REG_BASE_ADDRESS_S00 0x80000000
+#define REG_BASE_ADDRESS_S00 XPAR_Z3660_0_BASEADDR
 
 #define read_reg_s01(Offset) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S01+(Offset)))
 #define write_reg_s01(Offset,Data) (*(volatile uint32_t *)(REG_BASE_ADDRESS_S01+(Offset)))=(Data)
@@ -231,9 +245,13 @@ void arm_write_nowait(uint32_t address, uint32_t data);
 //#define ACTIVITY_LED_OFF do{XGpioPs_WritePin(&GpioPs, LED1, 1);}while(0)
 //#define ACTIVITY_LED_ON do{XGpioPs_WritePin(&GpioPs, LED1, 0);}while(0)
 #define ACTIVITY_LED_OFF do{*(uint32_t *)0xE000A000=0xF7FF0800;\
-   }while(0)
+      }while(0)
 #define ACTIVITY_LED_ON do{*(uint32_t *)0xE000A000=0xF7FF0000;\
-   DiscreteSet(REG0,FPGA_BP);\
-   DiscreteClear(REG0,FPGA_BP);\
-   }while(0)
+      DiscreteSet(REG0,FPGA_BP);\
+      DiscreteClear(REG0,FPGA_BP);\
+}while(0)
+
+FRESULT f_clk_mount (FATFS* fs, const TCHAR* path, BYTE opt);
+FRESULT f_umount(const TCHAR* path);
+
 #endif /* SRC_MAIN_H_ */

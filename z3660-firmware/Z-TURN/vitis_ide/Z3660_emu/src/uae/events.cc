@@ -15,9 +15,13 @@
 #include "events.h"
 #include "memory.h"
 #include "newcpu.h"
-//#include "uae/ppc.h"
+#ifdef WITH_PPC
+#include "uae/ppc.h"
+#endif
 //#include "xwin.h"
-//#include "x86.h"
+#ifdef WITH_X86
+#include "x86.h"
+#endif
 //#include "audio.h"
 //#include "cia.h"
 
@@ -25,6 +29,7 @@ static const int pissoff_nojit_value = 256 * CYCLE_UNIT;
 
 evt_t event_cycles, nextevent, currcycle;
 int is_syncline;
+//static int syncline_cnt;
 //frame_time_t is_syncline_end;
 int cycles_to_next_event;
 int max_cycles_to_next_event;
@@ -259,7 +264,6 @@ static bool event_check_vsync(void)
 #endif
 void do_cycles_cpu_fastest(int cycles_to_add)
 {
-#if 0
 #ifdef WITH_X86
 #if 0
 	if (x86_turbo_on) {
@@ -269,60 +273,20 @@ void do_cycles_cpu_fastest(int cycles_to_add)
 #endif
 
 	if (!currprefs.cpu_thread) {
-		if ((pissoff -= cycles_to_add) >= 0)
+		if ((regs.pissoff -= cycles_to_add) >= 0)
 			return;
 
-		cycles_to_add = -pissoff;
-		pissoff = 0;
+		cycles_to_add = -regs.pissoff;
+		regs.pissoff = 0;
 	} else {
-		pissoff = 0x40000000;
+	   regs.pissoff = 0x40000000;
 	}
 
-	while ((nextevent - currcycle) <= cycles_to_add) {
-
-		if (is_syncline) {
-			if (event_check_vsync())
-				return;
-		}
-
-		cycles_to_add -= (int)(nextevent - currcycle);
-		currcycle = nextevent;
-
-		for (int i = 0; i < ev_max; i++) {
-			if (eventtab[i].active && eventtab[i].evtime == currcycle) {
-				if (eventtab[i].handler == NULL) {
-					gui_message(_T("eventtab[%d].handler is null!\n"), i);
-					eventtab[i].active = 0;
-				} else {
-					(*eventtab[i].handler)();
-				}
-			}
-		}
-		events_schedule ();
-	}
 	currcycle += cycles_to_add;
-#endif
 }
 
 void do_cycles_cpu_norm(int cycles_to_add)
 {
-/*
-	while ((nextevent - currcycle) <= cycles_to_add)
-	{
-		cycles_to_add -= (nextevent - currcycle);
-		currcycle = nextevent;
-
-		for (auto& i : eventtab)
-		{
-			if (i.active && i.evtime == currcycle)
-			{
-				(*i.handler)();
-			}
-		}
-		events_schedule();
-
-	}
-*/
 	currcycle += cycles_to_add;
 }
 
@@ -385,6 +349,15 @@ void MISC_handler(void)
 		events_schedule();
 	}
 	recursive--;
+}
+
+void event2_newevent_xx_ce(evt_t t, uae_u32 data, evfunc2 func)
+{
+	if (!currprefs.cpu_memory_cycle_exact) {
+		func(data);
+		return;
+	}
+	event2_newevent_xx(-1, t, data, func);
 }
 
 void event2_newevent_xx (int no, evt_t t, uae_u32 data, evfunc2 func)

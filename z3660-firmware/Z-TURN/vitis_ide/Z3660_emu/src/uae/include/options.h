@@ -29,7 +29,7 @@ extern long int version;
 
 struct multipath
 {
-	TCHAR path[MAX_PATHS][MAX_DPATH];
+   TCHAR path[MAX_PATHS][MAX_DPATH];
 };
 
 #define PATH_NONE -1
@@ -46,9 +46,9 @@ struct multipath
 
 struct strlist
 {
-	struct strlist* next;
-	TCHAR* option, * value;
-	int unknown;
+   struct strlist* next;
+   TCHAR* option, * value;
+   int unknown;
 };
 
 #define MAX_TOTAL_SCSI_DEVICES 8
@@ -70,24 +70,24 @@ struct strlist
 #if 0
 struct uae_input_device_event
 {
-	uae_s16 eventid[MAX_INPUT_SUB_EVENT_ALL];
-	TCHAR* custom[MAX_INPUT_SUB_EVENT_ALL];
-	uae_u64 flags[MAX_INPUT_SUB_EVENT_ALL];
-	uae_u8 port[MAX_INPUT_SUB_EVENT_ALL];
-	uae_s16 extra;
+   uae_s16 eventid[MAX_INPUT_SUB_EVENT_ALL];
+   TCHAR* custom[MAX_INPUT_SUB_EVENT_ALL];
+   uae_u64 flags[MAX_INPUT_SUB_EVENT_ALL];
+   uae_u8 port[MAX_INPUT_SUB_EVENT_ALL];
+   uae_s16 extra;
 };
 
 
 struct uae_input_device
 {
-	TCHAR* name;
-	TCHAR* configname;
-	uae_s16 eventid[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
-	TCHAR* custom[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
-	uae_u64 flags[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
-	uae_s8 port[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
-	uae_s16 extra[MAX_INPUT_DEVICE_EVENTS];
-	uae_s8 enabled;
+   TCHAR* name;
+   TCHAR* configname;
+   uae_s16 eventid[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
+   TCHAR* custom[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
+   uae_u64 flags[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
+   uae_s8 port[MAX_INPUT_DEVICE_EVENTS][MAX_INPUT_SUB_EVENT_ALL];
+   uae_s16 extra[MAX_INPUT_DEVICE_EVENTS];
+   uae_s8 enabled;
 };
 
 #define MAX_JPORTS_CUSTOM 6
@@ -98,31 +98,31 @@ struct uae_input_device
 
 struct jport_custom
 {
-	TCHAR custom[MAX_DPATH];
+   TCHAR custom[MAX_DPATH];
 };
 
 struct inputdevconfig
 {
-	TCHAR name[MAX_JPORT_NAME];
-	TCHAR configname[MAX_JPORT_CONFIG];
-	TCHAR shortid[16];
+   TCHAR name[MAX_JPORT_NAME];
+   TCHAR configname[MAX_JPORT_CONFIG];
+   TCHAR shortid[16];
 };
 
 struct jport
 {
-	int id{};
-	int mode{}; // 0=default,1=wheel mouse,2=mouse,3=joystick,4=gamepad,5=analog joystick,6=cdtv,7=cd32
-	int submode;
-	int autofire{};
-	struct inputdevconfig idc {};
-	bool nokeyboardoverride{};
-	bool changed{};
+   int id{};
+   int mode{}; // 0=default,1=wheel mouse,2=mouse,3=joystick,4=gamepad,5=analog joystick,6=cdtv,7=cd32
+   int submode;
+   int autofire{};
+   struct inputdevconfig idc {};
+   bool nokeyboardoverride{};
+   bool changed{};
 #ifdef AMIBERRY
-	int mousemap{};
-	std::array<int, SDL_CONTROLLER_BUTTON_MAX> amiberry_custom_none;
-	std::array<int, SDL_CONTROLLER_BUTTON_MAX> amiberry_custom_hotkey;
-	std::array<int, SDL_CONTROLLER_AXIS_MAX> amiberry_custom_axis_none;
-	std::array<int, SDL_CONTROLLER_AXIS_MAX> amiberry_custom_axis_hotkey;
+   int mousemap{};
+   std::array<int, SDL_CONTROLLER_BUTTON_MAX> amiberry_custom_none;
+   std::array<int, SDL_CONTROLLER_BUTTON_MAX> amiberry_custom_hotkey;
+   std::array<int, SDL_CONTROLLER_AXIS_MAX> amiberry_custom_axis_none;
+   std::array<int, SDL_CONTROLLER_AXIS_MAX> amiberry_custom_axis_hotkey;
 #endif
 };
 
@@ -161,32 +161,32 @@ struct jport
 #define MAX_SLIRP_REDIRS 32
 struct slirp_redir
 {
-	int proto;
-	int srcport;
-	int dstport;
-	unsigned long addr;
+   int proto;
+   int srcport;
+   int dstport;
+   unsigned long addr;
 };
 #endif
 
 struct cdslot
 {
-	TCHAR name[MAX_DPATH];
-	bool inuse;
-	bool delayed;
-	bool temporary;
-	int type;
+   TCHAR name[MAX_DPATH];
+   bool inuse;
+   bool delayed;
+   bool temporary;
+   int type;
 };
 
 struct floppyslot
 {
-	TCHAR df[MAX_DPATH];
-	int dfxtype;
-	int dfxsubtype;
-	TCHAR dfxsubtypeid[32];
-	int dfxclick;
-	TCHAR dfxclickexternal[256];
-	bool forcedwriteprotect;
-	TCHAR config[256];
+   TCHAR df[MAX_DPATH];
+   int dfxtype;
+   int dfxsubtype;
+   TCHAR dfxsubtypeid[32];
+   int dfxclick;
+   TCHAR dfxclickexternal[256];
+   bool forcedwriteprotect;
+   TCHAR config[256];
 };
 
 #define ASPECTMULT 1024
@@ -194,9 +194,9 @@ struct floppyslot
 
 struct wh
 {
-	int x, y;
-	int width, height;
-	int special;
+   int x, y;
+   int width, height;
+   int special;
 };
 
 #define MOUNT_CONFIG_SIZE 30
@@ -223,84 +223,84 @@ struct wh
 
 struct uaedev_badblock
 {
-	uae_u32 first;
-	uae_u32 last;
+   uae_u32 first;
+   uae_u32 last;
 };
 
 struct uaedev_config_info
 {
-	int type;
-	TCHAR devname[MAX_DPATH];
-	TCHAR volname[MAX_DPATH];
-	TCHAR rootdir[MAX_DPATH];
-	bool readonly;
-	bool lock;
-	bool loadidentity;
-	int bootpri;
-	TCHAR filesys[MAX_DPATH];
-	TCHAR geometry[MAX_DPATH];
-	int lowcyl;
-	int highcyl; // zero if detected from size
-	int cyls; // calculated/corrected highcyl
-	int surfaces;
-	int sectors;
-	int reserved;
-	int blocksize;
-	bool chs;
-	uae_u64 max_lba;
-	int controller_type;
-	int controller_type_unit;
-	int controller_unit;
-	int controller_media_type; // 1 = CF IDE, 0 = normal
-	int unit_feature_level;
-	int unit_special_flags;
-	bool physical_geometry; // if false: use defaults
-	int pcyls, pheads, psecs;
-	int flags;
-	int buffers;
-	int bufmemtype;
-	int stacksize;
-	int priority;
-	uae_u32 mask;
-	int maxtransfer;
-	uae_u32 dostype;
-	int unit;
-	int interleave;
-	int sectorsperblock;
-	int forceload;
-	int device_emu_unit;
-	bool inject_icons;
-	int badblock_num;
-	struct uaedev_badblock badblocks[MAX_UAEDEV_BADBLOCKS];
-	int uae_unitnum; // mountunit nr
+   int type;
+   TCHAR devname[MAX_DPATH];
+   TCHAR volname[MAX_DPATH];
+   TCHAR rootdir[MAX_DPATH];
+   bool readonly;
+   bool lock;
+   bool loadidentity;
+   int bootpri;
+   TCHAR filesys[MAX_DPATH];
+   TCHAR geometry[MAX_DPATH];
+   int lowcyl;
+   int highcyl; // zero if detected from size
+   int cyls; // calculated/corrected highcyl
+   int surfaces;
+   int sectors;
+   int reserved;
+   int blocksize;
+   bool chs;
+   uae_u64 max_lba;
+   int controller_type;
+   int controller_type_unit;
+   int controller_unit;
+   int controller_media_type; // 1 = CF IDE, 0 = normal
+   int unit_feature_level;
+   int unit_special_flags;
+   bool physical_geometry; // if false: use defaults
+   int pcyls, pheads, psecs;
+   int flags;
+   int buffers;
+   int bufmemtype;
+   int stacksize;
+   int priority;
+   uae_u32 mask;
+   int maxtransfer;
+   uae_u32 dostype;
+   int unit;
+   int interleave;
+   int sectorsperblock;
+   int forceload;
+   int device_emu_unit;
+   bool inject_icons;
+   int badblock_num;
+   struct uaedev_badblock badblocks[MAX_UAEDEV_BADBLOCKS];
+   int uae_unitnum; // mountunit nr
 };
 
 struct uaedev_config_data
 {
-	struct uaedev_config_info ci;
-	int configoffset; // HD config entry index
-	int unitnum; // scsi unit number (if tape currently)
+   struct uaedev_config_info ci;
+   int configoffset; // HD config entry index
+   int unitnum; // scsi unit number (if tape currently)
 };
 
 enum
 {
-	CP_GENERIC = 1,
-	CP_CDTV,
-	CP_CDTVCR,
-	CP_CD32,
-	CP_A500,
-	CP_A500P,
-	CP_A600,
-	CP_A1000,
-	CP_A1200,
-	CP_A2000,
-	CP_A3000,
-	CP_A3000T,
-	CP_A4000,
-	CP_A4000T,
-	CP_VELVET,
-	CP_CASABLANCA,
-	CP_DRACO
+   CP_GENERIC = 1,
+   CP_CDTV,
+   CP_CDTVCR,
+   CP_CD32,
+   CP_A500,
+   CP_A500P,
+   CP_A600,
+   CP_A1000,
+   CP_A1200,
+   CP_A2000,
+   CP_A3000,
+   CP_A3000T,
+   CP_A4000,
+   CP_A4000T,
+   CP_VELVET,
+   CP_CASABLANCA,
+   CP_DRACO
 };
 
 #define IDE_A600A1200 1
@@ -370,24 +370,24 @@ enum
 #define CHIPSET_REFRESH_NTSC (MAX_CHIPSET_REFRESH + 1)
 struct chipset_refresh
 {
-	bool inuse;
-	int index;
-	bool locked;
-	bool rtg;
-	bool exit;
-	bool defaultdata;
-	int horiz;
-	int vert;
-	int lace;
-	int resolution;
-	int resolution_pct;
-	int ntsc;
-	int vsync;
-	int framelength;
-	float rate;
-	TCHAR label[16];
-	TCHAR commands[256];
-	TCHAR filterprofile[64];
+   bool inuse;
+   int index;
+   bool locked;
+   bool rtg;
+   bool exit;
+   bool defaultdata;
+   int horiz;
+   int vert;
+   int lace;
+   int resolution;
+   int resolution_pct;
+   int ntsc;
+   int vsync;
+   int framelength;
+   float rate;
+   TCHAR label[16];
+   TCHAR commands[256];
+   TCHAR filterprofile[64];
 };
 
 #define APMODE_NATIVE 0
@@ -395,19 +395,19 @@ struct chipset_refresh
 
 struct apmode
 {
-	int gfx_fullscreen;
-	int gfx_display;
-	int gfx_vsync;
-	// 0 = immediate flip
-	// -1 = wait for flip, before frame ends
-	// 1 = wait for flip, after new frame has started
-	int gfx_vflip;
-	// doubleframemode strobo
-	bool gfx_strobo;
-	int gfx_vsyncmode;
-	int gfx_backbuffers;
-	bool gfx_interlaced;
-	int gfx_refreshrate;
+   int gfx_fullscreen;
+   int gfx_display;
+   int gfx_vsync;
+   // 0 = immediate flip
+   // -1 = wait for flip, before frame ends
+   // 1 = wait for flip, after new frame has started
+   int gfx_vflip;
+   // doubleframemode strobo
+   bool gfx_strobo;
+   int gfx_vsyncmode;
+   int gfx_backbuffers;
+   bool gfx_interlaced;
+   int gfx_refreshrate;
 };
 
 #define MAX_LUA_STATES 16
@@ -419,32 +419,32 @@ struct apmode
 #define GF_INTERLACE 2
 struct gfx_filterdata
 {
-	int enable;
-	int gfx_filter;
-	TCHAR gfx_filtershader[2 * MAX_FILTERSHADERS + 1][MAX_DPATH];
-	TCHAR gfx_filtermask[2 * MAX_FILTERSHADERS + 1][MAX_DPATH];
-	TCHAR gfx_filteroverlay[MAX_DPATH];
-	struct wh gfx_filteroverlay_pos;
-	int gfx_filteroverlay_overscan;
-	int gfx_filter_scanlines;
-	int gfx_filter_scanlineratio;
-	int gfx_filter_scanlinelevel;
-	int gfx_filter_scanlineoffset;
-	float gfx_filter_horiz_zoom, gfx_filter_vert_zoom;
-	float gfx_filter_horiz_zoom_mult, gfx_filter_vert_zoom_mult;
-	float gfx_filter_horiz_offset, gfx_filter_vert_offset;
-	int gfx_filter_left_border, gfx_filter_right_border;
-	int gfx_filter_top_border, gfx_filter_bottom_border;
-	int gfx_filter_filtermodeh, gfx_filter_filtermodev;
-	int gfx_filter_bilinear;
-	int gfx_filter_noise, gfx_filter_blur;
-	int gfx_filter_saturation, gfx_filter_luminance, gfx_filter_contrast;
-	int gfx_filter_gamma, gfx_filter_gamma_ch[3];
-	int gfx_filter_keep_aspect, gfx_filter_aspect;
-	int gfx_filter_autoscale;
-	int gfx_filter_integerscalelimit;
-	int gfx_filter_keep_autoscale_aspect;
-	bool changed;
+   int enable;
+   int gfx_filter;
+   TCHAR gfx_filtershader[2 * MAX_FILTERSHADERS + 1][MAX_DPATH];
+   TCHAR gfx_filtermask[2 * MAX_FILTERSHADERS + 1][MAX_DPATH];
+   TCHAR gfx_filteroverlay[MAX_DPATH];
+   struct wh gfx_filteroverlay_pos;
+   int gfx_filteroverlay_overscan;
+   int gfx_filter_scanlines;
+   int gfx_filter_scanlineratio;
+   int gfx_filter_scanlinelevel;
+   int gfx_filter_scanlineoffset;
+   float gfx_filter_horiz_zoom, gfx_filter_vert_zoom;
+   float gfx_filter_horiz_zoom_mult, gfx_filter_vert_zoom_mult;
+   float gfx_filter_horiz_offset, gfx_filter_vert_offset;
+   int gfx_filter_left_border, gfx_filter_right_border;
+   int gfx_filter_top_border, gfx_filter_bottom_border;
+   int gfx_filter_filtermodeh, gfx_filter_filtermodev;
+   int gfx_filter_bilinear;
+   int gfx_filter_noise, gfx_filter_blur;
+   int gfx_filter_saturation, gfx_filter_luminance, gfx_filter_contrast;
+   int gfx_filter_gamma, gfx_filter_gamma_ch[3];
+   int gfx_filter_keep_aspect, gfx_filter_aspect;
+   int gfx_filter_autoscale;
+   int gfx_filter_integerscalelimit;
+   int gfx_filter_keep_autoscale_aspect;
+   bool changed;
 };
 
 #define MAX_DUPLICATE_EXPANSION_BOARDS 5
@@ -454,76 +454,76 @@ struct gfx_filterdata
 struct boardromconfig;
 struct romconfig
 {
-	TCHAR romfile[MAX_DPATH];
-	TCHAR romident[256];
-	uae_u32 board_ram_size;
-	bool autoboot_disabled;
-	bool inserted;
-	bool dma24bit;
-	int device_id;
-	int device_settings;
-	int subtype;
-	void* unitdata;
-	TCHAR configtext[ROMCONFIG_CONFIGTEXT_LEN];
-	uae_u16 manufacturer;
-	uae_u8 product;
-	uae_u8 autoconfig[16];
-	struct boardromconfig* back;
+   TCHAR romfile[MAX_DPATH];
+   TCHAR romident[256];
+   uae_u32 board_ram_size;
+   bool autoboot_disabled;
+   bool inserted;
+   bool dma24bit;
+   int device_id;
+   int device_settings;
+   int subtype;
+   void* unitdata;
+   TCHAR configtext[ROMCONFIG_CONFIGTEXT_LEN];
+   uae_u16 manufacturer;
+   uae_u8 product;
+   uae_u8 autoconfig[16];
+   struct boardromconfig* back;
 };
 #define MAX_BOARD_ROMS 2
 struct boardromconfig
 {
-	int device_type;
-	int device_num;
-	int device_order;
-	struct romconfig roms[MAX_BOARD_ROMS];
+   int device_type;
+   int device_num;
+   int device_order;
+   struct romconfig roms[MAX_BOARD_ROMS];
 };
 #define MAX_RTG_BOARDS 1
 struct rtgboardconfig
 {
-	int rtg_index;
-	int rtgmem_type;
-	uae_u32 rtgmem_size;
-	int device_order;
-	int monitor_id;
+   int rtg_index;
+   int rtgmem_type;
+   uae_u32 rtgmem_size;
+   int device_order;
+   int monitor_id;
 };
 struct boardloadfile
 {
-	uae_u32 loadoffset;
-	uae_u32 fileoffset, filesize;
-	TCHAR loadfile[MAX_DPATH];
+   uae_u32 loadoffset;
+   uae_u32 fileoffset, filesize;
+   TCHAR loadfile[MAX_DPATH];
 };
 #define MAX_ROM_BOARDS 4
 struct romboard
 {
-	uae_u32 size;
-	uae_u32 start_address;
-	uae_u32 end_address;
-	struct boardloadfile lf;
+   uae_u32 size;
+   uae_u32 start_address;
+   uae_u32 end_address;
+   struct boardloadfile lf;
 };
 #define MAX_RAM_BOARDS 4
 struct ramboard
 {
-	uae_u32 size;
-	uae_u16 manufacturer;
-	uae_u8 product;
-	uae_u8 autoconfig[16];
-	bool autoconfig_inuse;
-	bool manual_config;
-	bool no_reset_unmap;
-	int device_order;
-	uae_u32 start_address;
-	uae_u32 end_address;
-	uae_u32 write_address;
-	bool readonly;
-	bool nodma;
-	bool force16bit;
-	bool chipramtiming;
-	struct boardloadfile lf;
+   uae_u32 size;
+   uae_u16 manufacturer;
+   uae_u8 product;
+   uae_u8 autoconfig[16];
+   bool autoconfig_inuse;
+   bool manual_config;
+   bool no_reset_unmap;
+   int device_order;
+   uae_u32 start_address;
+   uae_u32 end_address;
+   uae_u32 write_address;
+   bool readonly;
+   bool nodma;
+   bool force16bit;
+   bool chipramtiming;
+   struct boardloadfile lf;
 };
 struct expansion_params
 {
-	int device_order;
+   int device_order;
 };
 
 #define Z3MAPPING_AUTO 0
@@ -533,515 +533,515 @@ struct expansion_params
 #define GFX_SIZE_EXTRA_NUM 6
 struct monconfig
 {
-	struct wh gfx_size_win;
-	struct wh gfx_size_fs;
-	struct wh gfx_size;
-	struct wh gfx_size_win_xtra[GFX_SIZE_EXTRA_NUM];
-	struct wh gfx_size_fs_xtra[GFX_SIZE_EXTRA_NUM];
+   struct wh gfx_size_win;
+   struct wh gfx_size_fs;
+   struct wh gfx_size;
+   struct wh gfx_size_win_xtra[GFX_SIZE_EXTRA_NUM];
+   struct wh gfx_size_fs_xtra[GFX_SIZE_EXTRA_NUM];
 };
 
 #ifdef AMIBERRY
 struct whdbooter
 {
-	int custom1 = 0;
-	int custom2 = 0;
-	int custom3 = 0;
-	int custom4 = 0;
-	int custom5 = 0;
-	TCHAR custom[256]{};
-	bool buttonwait{};
-	TCHAR slave[4096]{};
-	bool showsplash{};
-	int configdelay = 0;
-	bool writecache{};
-	bool quit_on_exit{};
+   int custom1 = 0;
+   int custom2 = 0;
+   int custom3 = 0;
+   int custom4 = 0;
+   int custom5 = 0;
+   TCHAR custom[256]{};
+   bool buttonwait{};
+   TCHAR slave[4096]{};
+   bool showsplash{};
+   int configdelay = 0;
+   bool writecache{};
+   bool quit_on_exit{};
 };
 #endif
 #endif
 
 struct uae_prefs
 {
-	int cachesize;
-	bool compfpu;
-	bool fpu_strict;
-	bool address_space_24;
-	int cpu_model;
-	int m68k_speed;
-	int fpu_model;
-	bool fpu_no_unimplemented;
-	int comptrustbyte;
-	bool cpu_compatible;
-	int mmu_model;
-	bool cpu_cycle_exact;
-	bool cpu_memory_cycle_exact;
-	bool int_no_unimplemented;
-	int cpu_clock_multiplier;    // not used
-	int cpu_frequency;           // not used
-	bool cpu_data_cache;         // not used
-	bool mmu_ec;                 // not used
-	float m68k_speed_throttle;   // not used
-	bool reset_delay;
-	int cpu_idle;                // not used
-	int fpu_mode;
-	bool cpu_thread;
-	bool crash_auto_reset;
+   int cachesize;
+   bool compfpu;
+   bool fpu_strict;
+   bool address_space_24;
+   int cpu_model;
+   int m68k_speed;
+   int fpu_model;
+   bool fpu_no_unimplemented;
+   int comptrustbyte;
+   bool cpu_compatible;
+   int mmu_model;
+   bool cpu_cycle_exact;
+   bool cpu_memory_cycle_exact;
+   bool int_no_unimplemented;
+   int cpu_clock_multiplier;    // not used
+   int cpu_frequency;           // not used
+   bool cpu_data_cache;         // not used
+   bool mmu_ec;                 // not used
+   float m68k_speed_throttle;   // not used
+   bool reset_delay;
+   int cpu_idle;                // not used
+   int fpu_mode;
+   bool cpu_thread;
+   bool crash_auto_reset;
 #if 0
-	struct strlist* all_lines;
+   struct strlist* all_lines;
 
-	TCHAR description[256];
-	TCHAR category[256];
-	TCHAR tags[256];
-	TCHAR info[256];
-	int config_version;
-	TCHAR config_hardware_path[MAX_DPATH];
-	TCHAR config_host_path[MAX_DPATH];
-	TCHAR config_all_path[MAX_DPATH];
-	TCHAR config_path[MAX_DPATH];
-	TCHAR config_window_title[256];
+   TCHAR description[256];
+   TCHAR category[256];
+   TCHAR tags[256];
+   TCHAR info[256];
+   int config_version;
+   TCHAR config_hardware_path[MAX_DPATH];
+   TCHAR config_host_path[MAX_DPATH];
+   TCHAR config_all_path[MAX_DPATH];
+   TCHAR config_path[MAX_DPATH];
+   TCHAR config_window_title[256];
 
-	bool illegal_mem;
-	bool debug_mem;
-	bool use_serial;
-	bool serial_demand;
-	bool serial_hwctsrts;
-	bool serial_direct;
-	int serial_stopbits;
-	int serial_crlf;
-	bool parallel_demand;
-	int parallel_matrix_emulation;
-	bool parallel_postscript_emulation;
-	bool parallel_postscript_detection;
-	int parallel_autoflush_time;
-	TCHAR ghostscript_parameters[256];
-	bool use_gfxlib;
-	bool socket_emu;
+   bool illegal_mem;
+   bool debug_mem;
+   bool use_serial;
+   bool serial_demand;
+   bool serial_hwctsrts;
+   bool serial_direct;
+   int serial_stopbits;
+   int serial_crlf;
+   bool parallel_demand;
+   int parallel_matrix_emulation;
+   bool parallel_postscript_emulation;
+   bool parallel_postscript_detection;
+   int parallel_autoflush_time;
+   TCHAR ghostscript_parameters[256];
+   bool use_gfxlib;
+   bool socket_emu;
 
-	bool start_debugger;
-	int debugging_features;
-	TCHAR debugging_options[MAX_DPATH];
-	bool start_gui;
+   bool start_debugger;
+   int debugging_features;
+   TCHAR debugging_options[MAX_DPATH];
+   bool start_gui;
 
-	KbdLang keyboard_lang;
+   KbdLang keyboard_lang;
 
-	int produce_sound;
-	int sound_stereo;
-	int sound_stereo_separation;
-	int sound_mixed_stereo_delay;
-	int sound_freq;
-	int sound_maxbsiz;
-	int sound_interpol;
-	int sound_filter;
-	int sound_filter_type;
-	int sound_volume_master;
-	int sound_volume_paula;
-	int sound_volume_cd;
-	int sound_volume_board;
-	int sound_volume_midi;
-	int sound_volume_genlock;
-	bool sound_stereo_swap_paula;
-	bool sound_stereo_swap_ahi;
-	bool sound_auto;
-	bool sound_volcnt;
+   int produce_sound;
+   int sound_stereo;
+   int sound_stereo_separation;
+   int sound_mixed_stereo_delay;
+   int sound_freq;
+   int sound_maxbsiz;
+   int sound_interpol;
+   int sound_filter;
+   int sound_filter_type;
+   int sound_volume_master;
+   int sound_volume_paula;
+   int sound_volume_cd;
+   int sound_volume_board;
+   int sound_volume_midi;
+   int sound_volume_genlock;
+   bool sound_stereo_swap_paula;
+   bool sound_stereo_swap_ahi;
+   bool sound_auto;
+   bool sound_volcnt;
 
-	int sampler_freq;
-	int sampler_buffer;
-	bool sampler_stereo;
+   int sampler_freq;
+   int sampler_buffer;
+   bool sampler_stereo;
 
-	int comptrustbyte;
-	int comptrustword;
-	int comptrustlong;
-	int comptrustnaddr;
-	bool compnf;
-	bool compfpu;
-	bool comp_hardflush;
-	bool comp_constjump;
-	bool comp_catchfault;
-	int cachesize;
-	TCHAR jitblacklist[MAX_DPATH];
-	bool fpu_strict;
-	int fpu_mode;
+   int comptrustbyte;
+   int comptrustword;
+   int comptrustlong;
+   int comptrustnaddr;
+   bool compnf;
+   bool compfpu;
+   bool comp_hardflush;
+   bool comp_constjump;
+   bool comp_catchfault;
+   int cachesize;
+   TCHAR jitblacklist[MAX_DPATH];
+   bool fpu_strict;
+   int fpu_mode;
 
-	struct monconfig gfx_monitor[MAX_AMIGADISPLAYS];
-	int gfx_framerate, gfx_autoframerate;
-	bool gfx_autoresolution_vga;
-	int gfx_autoresolution;
-	int gfx_autoresolution_delay;
-	int gfx_autoresolution_minv, gfx_autoresolution_minh;
-	bool gfx_scandoubler;
-	struct apmode gfx_apmode[2];
-	int gfx_resolution;
-	int gfx_vresolution;
-	int gfx_lores_mode;
-	int gfx_pscanlines, gfx_iscanlines;
-	int gfx_xcenter, gfx_ycenter;
-	int gfx_xcenter_pos, gfx_ycenter_pos;
-	int gfx_xcenter_size, gfx_ycenter_size;
-	int gfx_max_horizontal, gfx_max_vertical;
-	int gfx_saturation, gfx_luminance, gfx_contrast, gfx_gamma, gfx_gamma_ch[3];
-	bool gfx_blackerthanblack;
-	int gfx_threebitcolors;
-	int gfx_api;
-	int gfx_api_options;
-	int color_mode;
-	int gfx_extrawidth;
-	int gfx_extraheight;
-	bool lightboost_strobo;
-	int lightboost_strobo_ratio;
-	bool gfx_grayscale;
-	bool lightpen_crosshair;
-	int lightpen_offset[2];
-	int gfx_display_sections;
-	int gfx_variable_sync;
-	bool gfx_windowed_resize;
-	int gfx_overscanmode;
-	int gfx_monitorblankdelay;
-	int gfx_rotation;
+   struct monconfig gfx_monitor[MAX_AMIGADISPLAYS];
+   int gfx_framerate, gfx_autoframerate;
+   bool gfx_autoresolution_vga;
+   int gfx_autoresolution;
+   int gfx_autoresolution_delay;
+   int gfx_autoresolution_minv, gfx_autoresolution_minh;
+   bool gfx_scandoubler;
+   struct apmode gfx_apmode[2];
+   int gfx_resolution;
+   int gfx_vresolution;
+   int gfx_lores_mode;
+   int gfx_pscanlines, gfx_iscanlines;
+   int gfx_xcenter, gfx_ycenter;
+   int gfx_xcenter_pos, gfx_ycenter_pos;
+   int gfx_xcenter_size, gfx_ycenter_size;
+   int gfx_max_horizontal, gfx_max_vertical;
+   int gfx_saturation, gfx_luminance, gfx_contrast, gfx_gamma, gfx_gamma_ch[3];
+   bool gfx_blackerthanblack;
+   int gfx_threebitcolors;
+   int gfx_api;
+   int gfx_api_options;
+   int color_mode;
+   int gfx_extrawidth;
+   int gfx_extraheight;
+   bool lightboost_strobo;
+   int lightboost_strobo_ratio;
+   bool gfx_grayscale;
+   bool lightpen_crosshair;
+   int lightpen_offset[2];
+   int gfx_display_sections;
+   int gfx_variable_sync;
+   bool gfx_windowed_resize;
+   int gfx_overscanmode;
+   int gfx_monitorblankdelay;
+   int gfx_rotation;
 
-	struct gfx_filterdata gf[3];
+   struct gfx_filterdata gf[3];
 
-	float rtg_horiz_zoom_mult;
-	float rtg_vert_zoom_mult;
+   float rtg_horiz_zoom_mult;
+   float rtg_vert_zoom_mult;
 
-	bool immediate_blits;
-	int waiting_blits;
-	float blitter_speed_throttle;
-	unsigned int chipset_mask;
-	bool chipset_hr;
-	bool keyboard_connected;
-	bool ntscmode;
-	bool genlock;
-	int genlock_image;
-	int genlock_mix;
-	int genlock_scale;
-	int genlock_aspect;
-	int genlock_effects;
-	uae_u64 ecs_genlock_features_colorkey_mask[4];
-	uae_u8 ecs_genlock_features_plane_mask;
-	bool genlock_alpha;
-	TCHAR genlock_image_file[MAX_DPATH];
-	TCHAR genlock_video_file[MAX_DPATH];
-	int monitoremu;
-	int monitoremu_mon;
-	float chipset_refreshrate;
-	struct chipset_refresh cr[MAX_CHIPSET_REFRESH + 2];
-	int cr_selected;
-	int collision_level;
-	int leds_on_screen;
+   bool immediate_blits;
+   int waiting_blits;
+   float blitter_speed_throttle;
+   unsigned int chipset_mask;
+   bool chipset_hr;
+   bool keyboard_connected;
+   bool ntscmode;
+   bool genlock;
+   int genlock_image;
+   int genlock_mix;
+   int genlock_scale;
+   int genlock_aspect;
+   int genlock_effects;
+   uae_u64 ecs_genlock_features_colorkey_mask[4];
+   uae_u8 ecs_genlock_features_plane_mask;
+   bool genlock_alpha;
+   TCHAR genlock_image_file[MAX_DPATH];
+   TCHAR genlock_video_file[MAX_DPATH];
+   int monitoremu;
+   int monitoremu_mon;
+   float chipset_refreshrate;
+   struct chipset_refresh cr[MAX_CHIPSET_REFRESH + 2];
+   int cr_selected;
+   int collision_level;
+   int leds_on_screen;
 #ifdef AMIBERRY
-	int fast_copper;
-	int multithreaded_drawing;
+   int fast_copper;
+   int multithreaded_drawing;
 #endif
-	int leds_on_screen_mask[2];
-	int leds_on_screen_multiplier[2];
-	int power_led_dim;
-	struct wh osd_pos;
-	int keyboard_leds[3];
-	bool keyboard_leds_in_use;
-	int scsi;
-	bool sana2;
-	bool uaeserial;
-	int catweasel;
-	int cpu_idle;
-	int ppc_cpu_idle;
-	bool cpu_cycle_exact;
-	int cpu_clock_multiplier;
-	int cpu_frequency;
-	bool blitter_cycle_exact;
-	bool cpu_memory_cycle_exact;
-	int floppy_speed;
-	int floppy_write_length;
-	int floppy_random_bits_min;
-	int floppy_random_bits_max;
-	int floppy_auto_ext2;
-	int cd_speed;
-	bool tod_hack;
-	uae_u32 maprom;
-	int boot_rom;
-	bool rom_readwrite;
-	int turbo_emulation;
-	int turbo_emulation_limit;
-	bool turbo_boot;
-	int turbo_boot_delay;
-	bool headless;
-	int filesys_limit;
-	int filesys_max_name;
-	int filesys_max_file_size;
-	bool filesys_inject_icons;
-	TCHAR filesys_inject_icons_tool[MAX_DPATH];
-	TCHAR filesys_inject_icons_project[MAX_DPATH];
-	TCHAR filesys_inject_icons_drawer[MAX_DPATH];
-	int uaescsidevmode;
-	bool reset_delay;
-	bool crash_auto_reset;
+   int leds_on_screen_mask[2];
+   int leds_on_screen_multiplier[2];
+   int power_led_dim;
+   struct wh osd_pos;
+   int keyboard_leds[3];
+   bool keyboard_leds_in_use;
+   int scsi;
+   bool sana2;
+   bool uaeserial;
+   int catweasel;
+   int cpu_idle;
+   int ppc_cpu_idle;
+   bool cpu_cycle_exact;
+   int cpu_clock_multiplier;
+   int cpu_frequency;
+   bool blitter_cycle_exact;
+   bool cpu_memory_cycle_exact;
+   int floppy_speed;
+   int floppy_write_length;
+   int floppy_random_bits_min;
+   int floppy_random_bits_max;
+   int floppy_auto_ext2;
+   int cd_speed;
+   bool tod_hack;
+   uae_u32 maprom;
+   int boot_rom;
+   bool rom_readwrite;
+   int turbo_emulation;
+   int turbo_emulation_limit;
+   bool turbo_boot;
+   int turbo_boot_delay;
+   bool headless;
+   int filesys_limit;
+   int filesys_max_name;
+   int filesys_max_file_size;
+   bool filesys_inject_icons;
+   TCHAR filesys_inject_icons_tool[MAX_DPATH];
+   TCHAR filesys_inject_icons_project[MAX_DPATH];
+   TCHAR filesys_inject_icons_drawer[MAX_DPATH];
+   int uaescsidevmode;
+   bool reset_delay;
+   bool crash_auto_reset;
 
-	int cs_compatible;
-	int cs_ciaatod;
-	int cs_rtc;
-	int cs_rtc_adjust;
-	int cs_rtc_adjust_mode;
-	bool cs_ksmirror_e0;
-	bool cs_ksmirror_a8;
-	bool cs_ciaoverlay;
-	bool cs_cd32cd;
-	bool cs_cd32c2p;
-	bool cs_cd32nvram;
-	bool cs_cd32fmv;
-	int cs_cd32nvram_size;
-	bool cs_cdtvcd;
-	bool cs_cdtvram;
-	int cs_ide;
-	bool cs_pcmcia;
-	bool cs_a1000ram;
-	int cs_fatgaryrev;
-	int cs_ramseyrev;
-	int cs_agnusrev;
-	int cs_deniserev;
-	int cs_mbdmac;
-	bool cs_cdtvcr;
-	bool cs_df0idhw;
-	bool cs_resetwarning;
-	bool cs_denisenoehb;
-	bool cs_dipagnus;
-	bool cs_agnusbltbusybug;
-	bool cs_ciatodbug;
-	bool cs_z3autoconfig;
-	bool cs_1mchipjumper;
-	bool cs_cia6526;
-	bool cs_bytecustomwritebug;
-	bool cs_color_burst;
-	bool cs_romisslow;
-	bool cs_toshibagary;
-	bool cs_bkpthang;
-	int cs_unmapped_space;
-	int cs_hacks;
-	int cs_ciatype[2];
-	int cs_kbhandshake;
-	int cs_hvcsync;
-	int cs_eclockphase;
-	int cs_eclocksync;
-	bool cs_memorypatternfill;
+   int cs_compatible;
+   int cs_ciaatod;
+   int cs_rtc;
+   int cs_rtc_adjust;
+   int cs_rtc_adjust_mode;
+   bool cs_ksmirror_e0;
+   bool cs_ksmirror_a8;
+   bool cs_ciaoverlay;
+   bool cs_cd32cd;
+   bool cs_cd32c2p;
+   bool cs_cd32nvram;
+   bool cs_cd32fmv;
+   int cs_cd32nvram_size;
+   bool cs_cdtvcd;
+   bool cs_cdtvram;
+   int cs_ide;
+   bool cs_pcmcia;
+   bool cs_a1000ram;
+   int cs_fatgaryrev;
+   int cs_ramseyrev;
+   int cs_agnusrev;
+   int cs_deniserev;
+   int cs_mbdmac;
+   bool cs_cdtvcr;
+   bool cs_df0idhw;
+   bool cs_resetwarning;
+   bool cs_denisenoehb;
+   bool cs_dipagnus;
+   bool cs_agnusbltbusybug;
+   bool cs_ciatodbug;
+   bool cs_z3autoconfig;
+   bool cs_1mchipjumper;
+   bool cs_cia6526;
+   bool cs_bytecustomwritebug;
+   bool cs_color_burst;
+   bool cs_romisslow;
+   bool cs_toshibagary;
+   bool cs_bkpthang;
+   int cs_unmapped_space;
+   int cs_hacks;
+   int cs_ciatype[2];
+   int cs_kbhandshake;
+   int cs_hvcsync;
+   int cs_eclockphase;
+   int cs_eclocksync;
+   bool cs_memorypatternfill;
 
-	struct boardromconfig expansionboard[MAX_EXPANSION_BOARDS];
+   struct boardromconfig expansionboard[MAX_EXPANSION_BOARDS];
 
-	TCHAR romfile[MAX_DPATH];
-	TCHAR romident[256];
-	TCHAR romextfile[MAX_DPATH];
-	uae_u32 romextfile2addr;
-	TCHAR romextfile2[MAX_DPATH];
-	TCHAR romextident[256];
-	TCHAR flashfile[MAX_DPATH];
-	TCHAR rtcfile[MAX_DPATH];
-	TCHAR cartfile[MAX_DPATH];
-	TCHAR cartident[256];
-	int cart_internal;
-	TCHAR pci_devices[256];
-	TCHAR prtname[256];
-	TCHAR sername[256];
-	TCHAR a2065name[MAX_DPATH];
-	TCHAR ne2000pciname[MAX_DPATH];
-	TCHAR ne2000pcmcianame[MAX_DPATH];
-	TCHAR picassoivromfile[MAX_DPATH];
-	struct cdslot cdslots[MAX_TOTAL_SCSI_DEVICES];
-	TCHAR quitstatefile[MAX_DPATH];
-	TCHAR statefile[MAX_DPATH];
-	TCHAR inprecfile[MAX_DPATH];
-	TCHAR trainerfile[MAX_DPATH];
-	bool inprec_autoplay;
-	bool refresh_indicator;
+   TCHAR romfile[MAX_DPATH];
+   TCHAR romident[256];
+   TCHAR romextfile[MAX_DPATH];
+   uae_u32 romextfile2addr;
+   TCHAR romextfile2[MAX_DPATH];
+   TCHAR romextident[256];
+   TCHAR flashfile[MAX_DPATH];
+   TCHAR rtcfile[MAX_DPATH];
+   TCHAR cartfile[MAX_DPATH];
+   TCHAR cartident[256];
+   int cart_internal;
+   TCHAR pci_devices[256];
+   TCHAR prtname[256];
+   TCHAR sername[256];
+   TCHAR a2065name[MAX_DPATH];
+   TCHAR ne2000pciname[MAX_DPATH];
+   TCHAR ne2000pcmcianame[MAX_DPATH];
+   TCHAR picassoivromfile[MAX_DPATH];
+   struct cdslot cdslots[MAX_TOTAL_SCSI_DEVICES];
+   TCHAR quitstatefile[MAX_DPATH];
+   TCHAR statefile[MAX_DPATH];
+   TCHAR inprecfile[MAX_DPATH];
+   TCHAR trainerfile[MAX_DPATH];
+   bool inprec_autoplay;
+   bool refresh_indicator;
 
-	struct multipath path_floppy;
-	struct multipath path_hardfile;
-	struct multipath path_rom;
-	struct multipath path_cd;
+   struct multipath path_floppy;
+   struct multipath path_hardfile;
+   struct multipath path_rom;
+   struct multipath path_cd;
 
-	int m68k_speed;
-	float m68k_speed_throttle;
-	float x86_speed_throttle;
-	int cpu_model;
-	int mmu_model;
-	bool mmu_ec;
-	int cpu060_revision;
-	int fpu_model;
-	int fpu_revision;
-	int ppc_mode;
-	TCHAR ppc_model[32];
-	bool cpu_compatible;
-	bool cpu_thread;
-	bool int_no_unimplemented;
-	bool fpu_no_unimplemented;
-	bool address_space_24;
-	bool cpu_data_cache;
-	bool picasso96_nocustom;
-	int picasso96_modeflags;
-	int cpu_model_fallback;
+   int m68k_speed;
+   float m68k_speed_throttle;
+   float x86_speed_throttle;
+   int cpu_model;
+   int mmu_model;
+   bool mmu_ec;
+   int cpu060_revision;
+   int fpu_model;
+   int fpu_revision;
+   int ppc_mode;
+   TCHAR ppc_model[32];
+   bool cpu_compatible;
+   bool cpu_thread;
+   bool int_no_unimplemented;
+   bool fpu_no_unimplemented;
+   bool address_space_24;
+   bool cpu_data_cache;
+   bool picasso96_nocustom;
+   int picasso96_modeflags;
+   int cpu_model_fallback;
 
-	uae_u32 z3autoconfig_start;
-	struct ramboard z3fastmem[MAX_RAM_BOARDS];
-	struct ramboard fastmem[MAX_RAM_BOARDS];
-	struct romboard romboards[MAX_ROM_BOARDS];
-	struct ramboard z3chipmem;
-	struct ramboard chipmem;
-	struct ramboard bogomem;
-	struct ramboard mbresmem_low;
-	struct ramboard mbresmem_high;
-	struct ramboard mem25bit;
-	uae_u32 debugmem_start;
-	uae_u32 debugmem_size;
-	int cpuboard_type;
-	int cpuboard_subtype;
-	int cpuboard_settings;
-	struct ramboard cpuboardmem1;
-	struct ramboard cpuboardmem2;
-	int ppc_implementation;
-	bool rtg_hardwareinterrupt;
-	bool rtg_hardwaresprite;
-	bool rtg_more_compatible;
-	bool rtg_multithread;
-	bool rtg_overlay;
-	bool rtg_vgascreensplit;
-	bool rtg_paletteswitch;
-	bool rtg_dacswitch;
-	struct rtgboardconfig rtgboards[MAX_RTG_BOARDS];
-	uae_u32 custom_memory_addrs[MAX_CUSTOM_MEMORY_ADDRS];
-	uae_u32 custom_memory_sizes[MAX_CUSTOM_MEMORY_ADDRS];
-	uae_u32 custom_memory_mask[MAX_CUSTOM_MEMORY_ADDRS];
-	int uaeboard;
-	bool uaeboard_nodiag;
-	int uaeboard_order;
+   uae_u32 z3autoconfig_start;
+   struct ramboard z3fastmem[MAX_RAM_BOARDS];
+   struct ramboard fastmem[MAX_RAM_BOARDS];
+   struct romboard romboards[MAX_ROM_BOARDS];
+   struct ramboard z3chipmem;
+   struct ramboard chipmem;
+   struct ramboard bogomem;
+   struct ramboard mbresmem_low;
+   struct ramboard mbresmem_high;
+   struct ramboard mem25bit;
+   uae_u32 debugmem_start;
+   uae_u32 debugmem_size;
+   int cpuboard_type;
+   int cpuboard_subtype;
+   int cpuboard_settings;
+   struct ramboard cpuboardmem1;
+   struct ramboard cpuboardmem2;
+   int ppc_implementation;
+   bool rtg_hardwareinterrupt;
+   bool rtg_hardwaresprite;
+   bool rtg_more_compatible;
+   bool rtg_multithread;
+   bool rtg_overlay;
+   bool rtg_vgascreensplit;
+   bool rtg_paletteswitch;
+   bool rtg_dacswitch;
+   struct rtgboardconfig rtgboards[MAX_RTG_BOARDS];
+   uae_u32 custom_memory_addrs[MAX_CUSTOM_MEMORY_ADDRS];
+   uae_u32 custom_memory_sizes[MAX_CUSTOM_MEMORY_ADDRS];
+   uae_u32 custom_memory_mask[MAX_CUSTOM_MEMORY_ADDRS];
+   int uaeboard;
+   bool uaeboard_nodiag;
+   int uaeboard_order;
 
-	bool kickshifter;
-	bool scsidevicedisable;
-	bool filesys_no_uaefsdb;
-	bool filesys_custom_uaefsdb;
-	bool mmkeyboard;
-	int uae_hide;
-	bool clipboard_sharing;
-	bool native_code;
-	bool uae_hide_autoconfig;
-	int z3_mapping_mode;
-	bool autoconfig_custom_sort;
-	bool obs_sound_toccata;
-	bool obs_sound_toccata_mixer;
-	bool obs_sound_es1370;
-	bool obs_sound_fm801;
-	bool cputester;
+   bool kickshifter;
+   bool scsidevicedisable;
+   bool filesys_no_uaefsdb;
+   bool filesys_custom_uaefsdb;
+   bool mmkeyboard;
+   int uae_hide;
+   bool clipboard_sharing;
+   bool native_code;
+   bool uae_hide_autoconfig;
+   int z3_mapping_mode;
+   bool autoconfig_custom_sort;
+   bool obs_sound_toccata;
+   bool obs_sound_toccata_mixer;
+   bool obs_sound_es1370;
+   bool obs_sound_fm801;
+   bool cputester;
 
-	int mountitems;
-	struct uaedev_config_data mountconfig[MOUNT_CONFIG_SIZE];
+   int mountitems;
+   struct uaedev_config_data mountconfig[MOUNT_CONFIG_SIZE];
 
-	int nr_floppies;
-	struct floppyslot floppyslots[4];
-	bool floppy_read_only;
-	bool harddrive_read_only;
-	TCHAR dfxlist[MAX_SPARE_DRIVES][MAX_DPATH];
-	int dfxclickvolume_disk[4];
-	int dfxclickvolume_empty[4];
-	int dfxclickchannelmask;
+   int nr_floppies;
+   struct floppyslot floppyslots[4];
+   bool floppy_read_only;
+   bool harddrive_read_only;
+   TCHAR dfxlist[MAX_SPARE_DRIVES][MAX_DPATH];
+   int dfxclickvolume_disk[4];
+   int dfxclickvolume_empty[4];
+   int dfxclickchannelmask;
 
-	TCHAR luafiles[MAX_LUA_STATES][MAX_DPATH];
+   TCHAR luafiles[MAX_LUA_STATES][MAX_DPATH];
 
-	/* Target specific options */
+   /* Target specific options */
 
-	int kbd_led_num;
-	int kbd_led_scr;
-	int kbd_led_cap;
+   int kbd_led_num;
+   int kbd_led_scr;
+   int kbd_led_cap;
 
-	bool gfx_auto_crop;
-	int gfx_horizontal_offset;
-	int gfx_vertical_offset;
-	int gfx_correct_aspect;
-	int scaling_method;
+   bool gfx_auto_crop;
+   int gfx_horizontal_offset;
+   int gfx_vertical_offset;
+   int gfx_correct_aspect;
+   int scaling_method;
 
-	bool gui_alwaysontop;
-	bool main_alwaysontop;
-	bool minimize_inactive;
-	bool capture_always;
-	bool start_minimized;
-	bool start_uncaptured;
+   bool gui_alwaysontop;
+   bool main_alwaysontop;
+   bool minimize_inactive;
+   bool capture_always;
+   bool start_minimized;
+   bool start_uncaptured;
 
-	int active_capture_priority;
-	bool active_nocapture_pause;
-	bool active_nocapture_nosound;
-	int inactive_priority;
-	bool inactive_pause;
-	bool inactive_nosound;
-	int inactive_input;
-	int minimized_priority;
-	bool minimized_pause;
-	bool minimized_nosound;
-	int minimized_input;
+   int active_capture_priority;
+   bool active_nocapture_pause;
+   bool active_nocapture_nosound;
+   int inactive_priority;
+   bool inactive_pause;
+   bool inactive_nosound;
+   int inactive_input;
+   int minimized_priority;
+   bool minimized_pause;
+   bool minimized_nosound;
+   int minimized_input;
 
-	bool rtgmatchdepth;
-	bool rtgallowscaling;
-	int rtgscaleaspectratio;
-	int rtgvblankrate;
-	bool borderless;
-	bool automount_removable;
-	bool automount_cddrives;
-	int uaescsimode;
-	int soundcard;
-	int samplersoundcard;
-	bool blankmonitors;
-	bool right_control_is_right_win_key;
+   bool rtgmatchdepth;
+   bool rtgallowscaling;
+   int rtgscaleaspectratio;
+   int rtgvblankrate;
+   bool borderless;
+   bool automount_removable;
+   bool automount_cddrives;
+   int uaescsimode;
+   int soundcard;
+   int samplersoundcard;
+   bool blankmonitors;
+   bool right_control_is_right_win_key;
 
-	int statecapturerate, statecapturebuffersize;
+   int statecapturerate, statecapturebuffersize;
 
-	TCHAR open_gui[256];
-	TCHAR quit_amiberry[256];
-	TCHAR action_replay[256];
-	TCHAR fullscreen_toggle[256];
-	TCHAR minimize[256];
+   TCHAR open_gui[256];
+   TCHAR quit_amiberry[256];
+   TCHAR action_replay[256];
+   TCHAR fullscreen_toggle[256];
+   TCHAR minimize[256];
 
-	/* input */
+   /* input */
 
-	struct jport jports[MAX_JPORTS];
-	struct jport_custom jports_custom[MAX_JPORTS_CUSTOM];
-	int input_selected_setting;
-	int input_joymouse_multiplier;
-	int input_joymouse_deadzone;
-	int input_joystick_deadzone;
-	int input_joymouse_speed;
-	int input_analog_joystick_mult;
-	int input_analog_joystick_offset;
-	int input_autofire_linecnt;
-	int input_mouse_speed;
-	int input_tablet;
-	bool tablet_library;
-	int input_mouse_untrap;
-	int input_magic_mouse_cursor;
-	int input_keyboard_type;
-	int input_autoswitch;
-	struct uae_input_device joystick_settings[MAX_INPUT_SETTINGS][MAX_INPUT_DEVICES];
-	struct uae_input_device mouse_settings[MAX_INPUT_SETTINGS][MAX_INPUT_DEVICES];
-	struct uae_input_device keyboard_settings[MAX_INPUT_SETTINGS][MAX_INPUT_DEVICES];
-	struct uae_input_device internalevent_settings[MAX_INPUT_SETTINGS][INTERNALEVENT_COUNT];
-	TCHAR input_config_name[GAMEPORT_INPUT_SETTINGS][256];
-	int dongle;
-	int input_contact_bounce;
-	int input_device_match_mask;
+   struct jport jports[MAX_JPORTS];
+   struct jport_custom jports_custom[MAX_JPORTS_CUSTOM];
+   int input_selected_setting;
+   int input_joymouse_multiplier;
+   int input_joymouse_deadzone;
+   int input_joystick_deadzone;
+   int input_joymouse_speed;
+   int input_analog_joystick_mult;
+   int input_analog_joystick_offset;
+   int input_autofire_linecnt;
+   int input_mouse_speed;
+   int input_tablet;
+   bool tablet_library;
+   int input_mouse_untrap;
+   int input_magic_mouse_cursor;
+   int input_keyboard_type;
+   int input_autoswitch;
+   struct uae_input_device joystick_settings[MAX_INPUT_SETTINGS][MAX_INPUT_DEVICES];
+   struct uae_input_device mouse_settings[MAX_INPUT_SETTINGS][MAX_INPUT_DEVICES];
+   struct uae_input_device keyboard_settings[MAX_INPUT_SETTINGS][MAX_INPUT_DEVICES];
+   struct uae_input_device internalevent_settings[MAX_INPUT_SETTINGS][INTERNALEVENT_COUNT];
+   TCHAR input_config_name[GAMEPORT_INPUT_SETTINGS][256];
+   int dongle;
+   int input_contact_bounce;
+   int input_device_match_mask;
 
 #ifdef AMIBERRY
-	bool vkbd_enabled;
-	bool vkbd_hires;
-	bool vkbd_exit;
-	char vkbd_language[128];
-	char vkbd_style[128];
-	int vkbd_transparency;
-	char vkbd_toggle[128];
-	
-	int drawbridge_driver;
-	bool drawbridge_connected_drive_b;
-	bool drawbridge_smartspeed;
-	bool drawbridge_autocache;
-	bool alt_tab_release;
-	int sound_pullmode;
-	bool use_retroarch_quit;
-	bool use_retroarch_menu;
-	bool use_retroarch_reset;
-	bool use_retroarch_statebuttons;
-	bool use_retroarch_vkbd;
+   bool vkbd_enabled;
+   bool vkbd_hires;
+   bool vkbd_exit;
+   char vkbd_language[128];
+   char vkbd_style[128];
+   int vkbd_transparency;
+   char vkbd_toggle[128];
+   
+   int drawbridge_driver;
+   bool drawbridge_connected_drive_b;
+   bool drawbridge_smartspeed;
+   bool drawbridge_autocache;
+   bool alt_tab_release;
+   int sound_pullmode;
+   bool use_retroarch_quit;
+   bool use_retroarch_menu;
+   bool use_retroarch_reset;
+   bool use_retroarch_statebuttons;
+   bool use_retroarch_vkbd;
 
-	struct whdbooter whdbootprefs;
+   struct whdbooter whdbootprefs;
 
 #endif
 #endif
@@ -1170,18 +1170,18 @@ extern void machdep_free(void);
 
 struct fsvdlg_vals
 {
-	struct uaedev_config_info ci;
-	int rdb;
+   struct uaedev_config_info ci;
+   int rdb;
 };
 
 struct hfdlg_vals
 {
-	struct uaedev_config_info ci;
-	bool original;
-	uae_u64 size;
-	uae_u32 dostype;
-	int forcedcylinders;
-	bool rdb;
+   struct uaedev_config_info ci;
+   bool original;
+   uae_u64 size;
+   uae_u32 dostype;
+   int forcedcylinders;
+   bool rdb;
 };
 extern struct fsvdlg_vals current_fsvdlg;
 extern struct hfdlg_vals current_hfdlg;
@@ -1194,90 +1194,90 @@ extern void updatehdfinfo(bool force, bool defaults);
 #ifdef AMIBERRY
 struct amiberry_customised_layout
 {
-	// create structures for each 'function' button
-	std::array<int, 15> none;
-	std::array<int, 15> select;
+   // create structures for each 'function' button
+   std::array<int, 15> none;
+   std::array<int, 15> select;
 };
 
 struct hotkey_modifiers
 {
-	bool lctrl;
-	bool rctrl;
-	bool lalt;
-	bool ralt;
-	bool lshift;
-	bool rshift;
-	bool lgui;
-	bool rgui;
+   bool lctrl;
+   bool rctrl;
+   bool lalt;
+   bool ralt;
+   bool lshift;
+   bool rshift;
+   bool lgui;
+   bool rgui;
 };
 struct amiberry_hotkey
 {
-	int scancode;
-	Uint8 button;
-	std::string key_name;
-	std::string modifiers_string;
-	hotkey_modifiers modifiers;
+   int scancode;
+   Uint8 button;
+   std::string key_name;
+   std::string modifiers_string;
+   hotkey_modifiers modifiers;
 };
 
 struct amiberry_options
 {
-	bool quickstart_start = true;
-	bool read_config_descriptions = true;
-	bool write_logfile = false;
-	bool rctrl_as_ramiga = false;
-	bool gui_joystick_control = true;
+   bool quickstart_start = true;
+   bool read_config_descriptions = true;
+   bool write_logfile = false;
+   bool rctrl_as_ramiga = false;
+   bool gui_joystick_control = true;
 #ifdef USE_RENDER_THREAD
-	bool use_sdl2_render_thread = true;
+   bool use_sdl2_render_thread = true;
 #else
-	bool use_sdl2_render_thread = false;
+   bool use_sdl2_render_thread = false;
 #endif
-	bool default_multithreaded_drawing = true;
-	int default_line_mode = 0;
-	int input_default_mouse_speed = 100;
-	bool input_keyboard_as_joystick_stop_keypresses = false;
-	char default_open_gui_key[128] = "F12";
-	char default_quit_key[128]{};
-	char default_ar_key[128] = "Pause";
-	char default_fullscreen_toggle_key[128]{};
-	int rotation_angle = 0;
-	bool default_horizontal_centering = false;
-	bool default_vertical_centering = false;
-	int default_scaling_method = -1;
-	bool default_frameskip = false;
-	bool default_correct_aspect_ratio = true;
-	bool default_auto_crop = false;
-	int default_width = 720;
-	int default_height = 568;
-	int default_fullscreen_mode = false;
-	int default_stereo_separation = 7;
-	int default_sound_buffer = 8192;
-	bool default_sound_pull = true;
-	int default_joystick_deadzone = 33;
-	bool default_retroarch_quit = true;
-	bool default_retroarch_menu = true;
-	bool default_retroarch_reset = false;
-	bool default_retroarch_vkbd = false;
-	char default_controller1[128] = "joy1";
-	char default_controller2[128] = "joy2";
-	char default_controller3[128]{};
-	char default_controller4[128]{};
-	char default_mouse1[128] = "mouse";
-	char default_mouse2[128] = "joy0";
-	bool default_whd_buttonwait = false;
-	bool default_whd_showsplash = true;
-	int default_whd_configdelay = 0;
-	bool default_whd_writecache = false;
-	bool default_whd_quit_on_exit = false;
-	bool disable_shutdown_button = false;
-	bool allow_display_settings_from_xml = true;
-	int default_soundcard = 0;
-	bool default_vkbd_enabled;
-	bool default_vkbd_hires;
-	bool default_vkbd_exit;
-	char default_vkbd_language[128] = "US";
-	char default_vkbd_style[128] = "Original";
-	int default_vkbd_transparency;
-	char default_vkbd_toggle[128] = "guide";
+   bool default_multithreaded_drawing = true;
+   int default_line_mode = 0;
+   int input_default_mouse_speed = 100;
+   bool input_keyboard_as_joystick_stop_keypresses = false;
+   char default_open_gui_key[128] = "F12";
+   char default_quit_key[128]{};
+   char default_ar_key[128] = "Pause";
+   char default_fullscreen_toggle_key[128]{};
+   int rotation_angle = 0;
+   bool default_horizontal_centering = false;
+   bool default_vertical_centering = false;
+   int default_scaling_method = -1;
+   bool default_frameskip = false;
+   bool default_correct_aspect_ratio = true;
+   bool default_auto_crop = false;
+   int default_width = 720;
+   int default_height = 568;
+   int default_fullscreen_mode = false;
+   int default_stereo_separation = 7;
+   int default_sound_buffer = 8192;
+   bool default_sound_pull = true;
+   int default_joystick_deadzone = 33;
+   bool default_retroarch_quit = true;
+   bool default_retroarch_menu = true;
+   bool default_retroarch_reset = false;
+   bool default_retroarch_vkbd = false;
+   char default_controller1[128] = "joy1";
+   char default_controller2[128] = "joy2";
+   char default_controller3[128]{};
+   char default_controller4[128]{};
+   char default_mouse1[128] = "mouse";
+   char default_mouse2[128] = "joy0";
+   bool default_whd_buttonwait = false;
+   bool default_whd_showsplash = true;
+   int default_whd_configdelay = 0;
+   bool default_whd_writecache = false;
+   bool default_whd_quit_on_exit = false;
+   bool disable_shutdown_button = false;
+   bool allow_display_settings_from_xml = true;
+   int default_soundcard = 0;
+   bool default_vkbd_enabled;
+   bool default_vkbd_hires;
+   bool default_vkbd_exit;
+   char default_vkbd_language[128] = "US";
+   char default_vkbd_style[128] = "Original";
+   int default_vkbd_transparency;
+   char default_vkbd_toggle[128] = "guide";
 };
 
 extern struct amiberry_options amiberry_options;

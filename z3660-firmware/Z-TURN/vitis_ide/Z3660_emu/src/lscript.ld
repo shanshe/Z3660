@@ -4,7 +4,7 @@
 /*                                                                 */
 /* Version: 2018.3                                                 */
 /*                                                                 */
-/* Copyright (c) 2010-2016 Xilinx, Inc.  All rights reserved.      */
+/* Copyright (c) 2010-2019 Xilinx, Inc.  All rights reserved.      */
 /*                                                                 */
 /* Description : Cortex-A9 Linker Script                           */
 /*                                                                 */
@@ -37,6 +37,7 @@ ENTRY(_vector_table)
 SECTIONS
 {
 .text : {
+   . = ALIGN(2048);
    KEEP (*(.vectors))
    *(.boot)
    *(.text)
@@ -51,9 +52,6 @@ SECTIONS
    *(.ARM.extab)
    *(.gnu.linkonce.armextab.*)
 } > ps7_ddr_0
-.ocm : {
-   *(.ocm)
-} > ps7_ram_1
 
 .init : {
    KEEP (*(.init))
@@ -114,6 +112,10 @@ SECTIONS
 
 .got : {
    *(.got)
+} > ps7_ddr_0
+
+.note.gnu.build-id : {
+   KEEP (*(.note.gnu.build-id))
 } > ps7_ddr_0
 
 .ctors : {
@@ -238,6 +240,10 @@ SECTIONS
    *(COMMON)
    __bss_end = .;
 } > ps7_ddr_0
+
+/* Provide aliases expected by some CRT objects */
+PROVIDE(__bss_start__ = __bss_start);
+PROVIDE(__bss_end__ = __bss_end);
 
 _SDA_BASE_ = __sdata_start + ((__sbss_end - __sdata_start) / 2 );
 

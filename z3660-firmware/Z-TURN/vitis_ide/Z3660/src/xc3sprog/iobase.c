@@ -38,7 +38,7 @@ Dmitry Teytelman [dimtey@gmail.com] 14 Jun 2006 [applied 13 Aug 2006]:
 #define false 0
 #define true 1
 void setVerbose_io(IOBase *io,bool v) { io->verbose = v; }
-void settype(int subtype) {}
+void settype(int subtype) { (void)subtype;}
 IOBase iobase;
 void IOBase_init(IOBase *io)
 {

@@ -47,7 +47,7 @@
  * mbedtls include directory must be reachable via include search path
  */
 #ifndef LWIP_ALTCP_TLS_MBEDTLS
-#define LWIP_ALTCP_TLS_MBEDTLS                        0
+#define LWIP_ALTCP_TLS_MBEDTLS                        1
 #endif
 
 /** Configure debug level of this file */

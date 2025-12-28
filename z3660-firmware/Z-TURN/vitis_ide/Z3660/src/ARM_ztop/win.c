@@ -21,38 +21,64 @@ extern char message[300];
 extern ZZ_VIDEO_STATE vs;
 extern CONFIG config;
 extern ENV_FILE_VARS env_file_vars_temp[9]; // really size 8
+extern int timing_selected;
+
 void load_config_from_ztop(void)
 {
-   env_file_vars_temp[preset_selected].boot_mode=b_list->selected_item;
+   env_file_vars_temp[preset_selected].boot_mode=b_list_emu->selected_item;
    env_file_vars_temp[preset_selected].scsiboot=cb_scsi_boot->checked;
    env_file_vars_temp[preset_selected].autoconfig_ram=cb_autoc_ram->checked;
    env_file_vars_temp[preset_selected].autoconfig_rtg=cb_autoc_rtg->checked;
    env_file_vars_temp[preset_selected].enable_test=cb_test->checked;
    env_file_vars_temp[preset_selected].cpu_ram=cb_cpuram->checked;
+   env_file_vars_temp[preset_selected].mount_sd_0x76=cb_mount_sd_0x76->checked;
+   env_file_vars_temp[preset_selected].mount_sd_root=cb_mount_sd_root->checked;
    env_file_vars_temp[preset_selected].cpufreq=slider_cpufreq->pos;
    env_file_vars_temp[preset_selected].kickstart=ls_kickstart->selected_item;
    env_file_vars_temp[preset_selected].ext_kickstart=ls_kickstart_ext->selected_item;
    env_file_vars_temp[preset_selected].bootscreen_resolution=ls_screen_res->selected_item;
+   env_file_vars_temp[preset_selected].doubled_cursor=cb_doubled_cursor->checked;
+
    for(int i=0;i<7;i++)
       env_file_vars_temp[preset_selected].scsi_num[i]=ls_scsi[i]->selected_item-1;
    for(int i=0;i<6;i++)
       env_file_vars_temp[preset_selected].mac_address[i]=mac_textedit->mac_address[i];
    env_file_vars_temp[preset_selected].bp_ton=((slider_bpton->pos+0.5e-6)*TON_MAX)/slider_bpton->max;
    env_file_vars_temp[preset_selected].bp_toff=((slider_bptoff->pos+0.5e-3)*TOFF_MAX)/slider_bptoff->max;
+   env_file_vars_temp[preset_selected].doubled_cursor=cb_doubled_cursor->checked;
+   int monswitch=0;
+   if(cb_monitor_switch_CTS->checked)
+      monswitch|=1;
+   if(cb_monitor_switch_SEL->checked)
+      monswitch|=2;
+   if(cb_monitor_switch_CTS_level->checked)
+      monswitch|=0x10;
+   if(cb_monitor_switch_SEL_level->checked)
+      monswitch|=0x20;
+   env_file_vars_temp[preset_selected].monitor_switch=monswitch;
+
+   env_file_vars_temp[preset_selected].arm_frequency=ls_arm_frequency->selected_item;
 
 }
 void load_config_to_ztop(void)
 {
-   b_list->selected_item=config.boot_mode=env_file_vars_temp[preset_selected].boot_mode;
+   b_list_emu->selected_item=config.boot_mode=env_file_vars_temp[preset_selected].boot_mode;
    cb_scsi_boot->checked=config.scsiboot=env_file_vars_temp[preset_selected].scsiboot;
    cb_autoc_ram->checked=config.autoconfig_ram=env_file_vars_temp[preset_selected].autoconfig_ram;
    cb_autoc_rtg->checked=config.autoconfig_rtg=env_file_vars_temp[preset_selected].autoconfig_rtg;
    cb_test->checked=config.enable_test=env_file_vars_temp[preset_selected].enable_test;
    cb_cpuram->checked=config.cpu_ram=env_file_vars_temp[preset_selected].cpu_ram;
+   cb_mount_sd_0x76->checked=config.mount_sd_0x76=env_file_vars_temp[preset_selected].mount_sd_0x76;
+   cb_mount_sd_root->checked=config.mount_sd_root=env_file_vars_temp[preset_selected].mount_sd_root;
    slider_cpufreq->pos=config.cpufreq=env_file_vars_temp[preset_selected].cpufreq;
    ls_kickstart->selected_item=config.kickstart=env_file_vars_temp[preset_selected].kickstart;
    ls_kickstart_ext->selected_item=config.ext_kickstart=env_file_vars_temp[preset_selected].ext_kickstart;
    ls_screen_res->selected_item=config.bootscreen_resolution=env_file_vars_temp[preset_selected].bootscreen_resolution;
+   ls_arm_frequency->selected_item=config.arm_frequency=env_file_vars_temp[preset_selected].arm_frequency;
+
+   ls_timings->selected_item=timing_selected;
+
+   cb_doubled_cursor->checked=config.doubled_cursor=env_file_vars_temp[preset_selected].doubled_cursor;
    for(int i=0;i<7;i++)
    {
       ls_scsi[i]->selected_item=env_file_vars_temp[preset_selected].scsi_num[i]+1;
@@ -67,7 +93,11 @@ void load_config_to_ztop(void)
    slider_bpton->pos=(config.bp_ton+0.5e-6)*slider_bpton->max/TON_MAX;
    config.bp_toff=env_file_vars_temp[preset_selected].bp_toff;
    slider_bptoff->pos=(config.bp_toff+0.5e-3)*slider_bptoff->max/TOFF_MAX;
-
+   int monswitch=config.monitor_switch=env_file_vars_temp[preset_selected].monitor_switch;
+   cb_monitor_switch_CTS->checked=monswitch&1?1:0;
+   cb_monitor_switch_SEL->checked=monswitch&2?1:0;
+   cb_monitor_switch_CTS_level->checked=monswitch&0x10?1:0;
+   cb_monitor_switch_SEL_level->checked=monswitch&0x20?1:0;
 }
 
 void recalculate_coords(void)
@@ -127,10 +157,10 @@ void show_ztop(void)
    Font->TextColor=0x00000000;
    displayStringAt(Font,win.x+16+8,win.y+2,(uint8_t*)message,LEFT_MODE);
 
-   FILLRECT(      win.x+6, win.y+win.t+tab_h+2, win.w-12,                   1, 0x00FFFFFF); // frame top edge
-   FILLRECT(      win.x+6, win.y+win.t+tab_h+2,        2, win.h-win.t-tab_h-9, 0x00FFFFFF); // frame left edge
-   FILLRECT(      win.x+7,       win.y+win.h-6, win.w-13,                   1, 0x00000000); // frame bottom edge
-   FILLRECT(win.x+win.w-8, win.y+win.t+tab_h+3,        2, win.h-win.t-tab_h-8, 0x00000000); // frame right edge
+   FILLRECT(      win.x+6, win.y+win.t+TAB_HEIGHT+2, win.w-12,                        1, 0x00FFFFFF); // frame top edge
+   FILLRECT(      win.x+6, win.y+win.t+TAB_HEIGHT+2,        2, win.h-win.t-TAB_HEIGHT-9, 0x00FFFFFF); // frame left edge
+   FILLRECT(      win.x+7,       win.y+win.h-6, win.w-13,                             1, 0x00000000); // frame bottom edge
+   FILLRECT(win.x+win.w-8, win.y+win.t+TAB_HEIGHT+3,        2, win.h-win.t-TAB_HEIGHT-8, 0x00000000); // frame right edge
 
    init_tabs();
 
@@ -162,7 +192,7 @@ void clear_screen(void)
 void init_win(void)
 {
    win.w=426;
-   win.h=200+8+16;
+   win.h=200+8+16+16;
    win.x=(vs.vmode_hsize-win.w)/2;
    win.y=(vs.vmode_vsize-win.h)/2;
    win.t=14; // window title height
@@ -175,8 +205,8 @@ void calculate_drag(int delta_x,int delta_y)
    int temp_y=delta_y+drag_win_y;
    if(temp_x<0) temp_x=0;
    if(temp_y<0) temp_y=0;
-   if(temp_x>vs.vmode_hsize-win.w) temp_x=vs.vmode_hsize-win.w;
-   if(temp_y>vs.vmode_vsize-win.h) temp_y=vs.vmode_vsize-win.h;
+   if(temp_x>(int)vs.vmode_hsize-win.w) temp_x=vs.vmode_hsize-win.w;
+   if(temp_y>(int)vs.vmode_vsize-win.h) temp_y=vs.vmode_vsize-win.h;
    if(win.x!=temp_x || win.y!=temp_y)
    {
       copy_rect_nomask( temp_x, temp_y, win.w, win.h,

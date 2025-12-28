@@ -3,9 +3,9 @@
 DRIVER_LIB_VERSION = 1.0
 PROCESSOR = ps7_cortexa9_0
 LIBRARIES = ${PROCESSOR}/lib/libxil.a
-BSP_MAKEFILES := $(wildcard $(PROCESSOR)/libsrc/*/src/Makefile)
+BSP_MAKEFILES := $(filter-out $(PROCESSOR)/libsrc/xilrsa_v1_7/src/Makefile,$(wildcard $(PROCESSOR)/libsrc/*/src/Makefile))
 SUBDIRS := $(patsubst %/Makefile, %, $(BSP_MAKEFILES))
-BSP_SEQUENTIAL_MAKEFILES := ps7_cortexa9_0/libsrc/xilrsa_v1_7/src/Makefile
+BSP_SEQUENTIAL_MAKEFILES :=
 BSP_PARALLEL_MAKEFILES := $(filter-out $(BSP_SEQUENTIAL_MAKEFILES),$(BSP_MAKEFILES))
 SEQ_SUBDIRS := $(patsubst %/Makefile, %, $(BSP_SEQUENTIAL_MAKEFILES))
 PAR_SUBDIRS := $(patsubst %/Makefile, %, $(BSP_PARALLEL_MAKEFILES))
@@ -15,9 +15,10 @@ ifneq (,$(findstring win,$(RDI_PLATFORM)))
 endif
 
 all: 
-	$(MAKE) --no-print-directory seq_libs
-	$(MAKE) -j 2 --no-print-directory par_libs
-	$(MAKE) --no-print-directory archive
+	@echo Making seq_libs archive par_libs
+	@$(MAKE) --no-print-directory seq_libs
+	@$(MAKE) --no-print-directory archive
+	@$(MAKE) --no-print-directory par_libs
 	@echo 'Finished building libraries'
 
 include: $(addsuffix /make.include,$(SUBDIRS))
@@ -29,7 +30,8 @@ par_libs: $(addsuffix /make.libs,$(PAR_SUBDIRS))
 	@echo 'Finished building libraries parallelly.'
 
 archive:
-	arm-none-eabi-ar -r  $(LIBRARIES) $(sort $(wildcard $(PROCESSOR)/lib/*.o))
+	@echo Archiving libraries
+	@arm-none-eabi-ar -r  $(LIBRARIES) $(sort $(wildcard $(PROCESSOR)/lib/*.o))
 
 clean: $(addsuffix /make.clean,$(SUBDIRS))
 	rm -f ${PROCESSOR}/lib/libxil.a
@@ -39,11 +41,11 @@ $(PROCESSOR)/lib/libxil.a: $(PROCESSOR)/lib/libxil_init.a
 
 %/make.include: $(if $(wildcard $(PROCESSOR)/lib/libxil_init.a),$(PROCESSOR)/lib/libxil.a,)
 	@echo "Running Make include in $(subst /make.include,,$@)"
-	$(MAKE) -C $(subst /make.include,,$@) -s include  "SHELL=$(SHELL)" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
+	@$(MAKE) -C $(subst /make.include,,$@) -s include  "SHELL=$(SHELL)" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 
 %/make.libs: include
 	@echo "Running Make libs in $(subst /make.libs,,$@)"
-	$(MAKE) -C $(subst /make.libs,,$@) -s libs  "SHELL=$(SHELL)" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
+	@$(MAKE) -C $(subst /make.libs,,$@) -s libs  "SHELL=$(SHELL)" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 
 %/make.clean: 
 	$(MAKE) -C $(subst /make.clean,,$@) -s clean 

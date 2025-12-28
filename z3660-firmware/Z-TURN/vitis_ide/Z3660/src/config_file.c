@@ -54,6 +54,8 @@ const char *config_item_names[CONFITEM_NUM] = {
       "autoconfig_ram",
       "autoconfig_rtg",
       "cpu_ram",
+      "mount_sd_0x76",
+      "mount_sd_root",
       "resistor",
       "temperature",
       "cpufreq",
@@ -77,17 +79,33 @@ const char *config_item_names[CONFITEM_NUM] = {
       "ext_kickstart7",
       "ext_kickstart8",
       "ext_kickstart9",
+      "sound_language",
       "enable_test",
       "bootscreen_resolution",
+      "doubled_cursor",
       "mac_address",
       "bp_ton",
       "bp_toff",
+      "boot_delay",
+      "sd_clock",
+      "monitor_switch",
+      "test_range0",
+      "test_range1",
+      "test_range2",
+      "test_range3",
+      "test_range4",
+      "test_range5",
+      "test_range6",
+      "test_range7",
+      "arm_frequency",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
       "CPU",
       "MUSASHI",
-      "UAE",
-      "UAEJIT",
+      "UAE_030",
+      "UAEJIT_030",
+      "UAE_040",
+      "UAEJIT_040",
 };
 const char *yesno_names[YESNO_NUM] = {
       "NO",
@@ -103,6 +121,24 @@ const char *resolution_names[RES_NUM] = {
       "1280x720",
       "1920x1080",
 };
+const char *arm_frequency_names[FREQ_NUM] = {
+      "667",
+      "767",
+      "867",
+      "900",
+      "933",
+      "967",
+      "1000",
+      "1033",
+      "1067",
+      "1100",
+      "1133",
+      "1167",
+      "1200",
+      "1233",
+      "1267",
+      "1300",
+};
 void print_line(FIL *fil, char* line_in, ...)
 {
    va_list args;
@@ -114,7 +150,7 @@ void print_line(FIL *fil, char* line_in, ...)
 }
 void load_default_config(void)
 {
-   config.boot_mode=UAEJIT;
+   config.boot_mode=UAEJIT_040;
    for(int i=0;i<20;i++)
       config.hdf[i][0]=0;
    for(int i=0;i<7;i++)
@@ -123,6 +159,8 @@ void load_default_config(void)
    config.autoconfig_ram=0;
    config.autoconfig_rtg=0;
    config.cpu_ram=1;
+   config.mount_sd_0x76=0;
+   config.mount_sd_root=0;
    config.resistor=800.0;
    config.temperature=27.0;
    config.cpufreq=CPUFREQ_MIN;
@@ -148,13 +186,19 @@ void load_default_config(void)
    config.ext_kickstart7[0]=0;
    config.ext_kickstart8[0]=0;
    config.ext_kickstart9[0]=0;
+   strcpy(config.sound_language,"eng");
    config.enable_test=0;
    config.bootscreen_resolution=RES_800x600;
+   config.doubled_cursor=0;
    for(int i=0;i<6;i++)
       config.mac_address[i]=EmacPsMAC[i];
    config.bp_ton=0;
    config.bp_toff=0;
+   config.boot_delay=2;
+   config.sd_clock=50;
    memcpy(&default_config,&config,sizeof(CONFIG));
+   config.monitor_switch=0;
+   config.arm_frequency=FREQ_667;
 }
 void write_config_file(char *filename)
 {
@@ -219,6 +263,16 @@ void write_config_file(char *filename)
    print_line(&fil,"#cpu_ram NO\n");
    print_line(&fil,"cpu_ram YES\n");
    print_line(&fil,"\n");
+   print_line(&fil,"# MOUNT SD 0x76 partition\n");
+   print_line(&fil,"# (YES or NO, in capitals)\n");
+   print_line(&fil,"#mount_sd_0x76 YES\n");
+   print_line(&fil,"mount_sd_0x76 NO\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# MOUNT SD ROOT partition\n");
+   print_line(&fil,"# (YES or NO, in capitals)\n");
+   print_line(&fil,"#mount_sd_root YES\n");
+   print_line(&fil,"mount_sd_root NO\n");
+   print_line(&fil,"\n");
    print_line(&fil,"# Temperature sensor calibration (THERM)\n");
    print_line(&fil,"# Theoretical value 780 Ohms @ 25 Celsius, but every 060 has a random offset.\n");
    print_line(&fil,"# Resistor R30 (measured from R30 right pad to ground, with 060 cooled to room temperature) in Ohms\n");
@@ -234,12 +288,31 @@ void write_config_file(char *filename)
    print_line(&fil,"# Select a boot screen resolution (1920x1080, 1280x720 or 800x600)\n");
    print_line(&fil,"bootscreen_resolution 1920x1080\n");
    print_line(&fil,"\n");
+   print_line(&fil,"# Select if you want a doubled cursor size or not (YES or NO)\n");
+   print_line(&fil,"doubled_cursor YES\n");
+   print_line(&fil,"\n");
    print_line(&fil,"# Select a mac address for Ethernet\n");
    print_line(&fil,"mac_address 00:80:10:00:01:00\n");
    print_line(&fil,"\n");
    print_line(&fil,"# Set the BEEPER time on/off to simulate SCSI activity noise\n");
    print_line(&fil,"bp_ton 0.001\n");
    print_line(&fil,"bp_toff 0.010\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Set the reset sound language directory name (exFAT:/sound/XXX)\n");
+   print_line(&fil,"sound_language eng\n");
+   print_line(&fil,"#sound_language spa\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Set the selected boot delay (in seconds)\n");
+   print_line(&fil,"boot_delay 2\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Set the selected sd clock (25 or 50 (MHz))\n");
+   print_line(&fil,"sd_clock 50\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Set the selected monitor switch config (as a sum of values): 1 CTS, 2 SEL, 16 CTS level, 32 SEL level\n");
+   print_line(&fil,"monitor_switch 17\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Select a frequency in MHz for the ARM system (667, 767, 867, 900, 933, 967, 1000, 1033, 1067, 1100, 1133, 1167, 1200, 1233, 1267, 1300)\n");
+   print_line(&fil,"arm_frequency 667\n");
    print_line(&fil,"\n");
    f_close(&fil);
 
@@ -310,7 +383,11 @@ int get_bootmode_type(char *cmd) {
          return i;
       }
    }
-   return UAEJIT;
+   if (strcmp(cmd, "UAE") == 0)
+      return(UAE_040);
+   if (strcmp(cmd, "UAEJIT") == 0)
+      return(UAEJIT_040);
+   return UAEJIT_040;
 }
 int get_yesno_type(char *cmd) {
    for (int i = 0; i < YESNO_NUM; i++) {
@@ -318,6 +395,7 @@ int get_yesno_type(char *cmd) {
          return i;
       }
    }
+   printf("\e[31m\e[103mERROR YES/NO expected, but got \"%s\"\e[0m\n",cmd);
    return NO;
 }
 int get_yesnomin_type(char *cmd) {
@@ -335,6 +413,14 @@ int get_resolution_type(char *cmd) {
       }
    }
    return RES_800x600;
+}
+int get_arm_frequency_type(char *cmd) {
+   for (int i = 0; i < FREQ_NUM; i++) {
+      if (strcmp(cmd, arm_frequency_names[i]) == 0) {
+         return i;
+      }
+   }
+   return FREQ_667;
 }
 int get_mac_address_type(char *cmd) {
    if(cmd[2]!=':')
@@ -363,11 +449,42 @@ int get_mac_address_type(char *cmd) {
 float get_float_type(char *cmd) {
    return atof(cmd);
 }
+uint32_t hextoi(char *str);
+uint32_t get_hex_type(char *cmd) {
+   return hextoi(cmd);
+}
 int get_int_type(char *cmd) {
    return atoi(cmd);
 }
+uint32_t get_intbytes_type(char *cmd) {
+   uint32_t div=1;
+   unsigned int i;
+   char div_str[3]="", cmd2[30];
+//   printf("get_intbytes()\n");
+   div_str[0]=cmd[strlen(cmd)-2];
+   div_str[1]=cmd[strlen(cmd)-1];
+   div_str[2]=0;
+//   printf("div_str %s\n",div_str);
+   for(i=0;i<strlen(cmd)-2;i++)
+      cmd2[i]=cmd[i];
+   cmd2[i]=0;
+//   printf("cmd2 %s\n",cmd2);
+   if(strcmp(div_str,"KB")==0)
+   {
+      div=1024;
+   }
+   else if(strcmp(div_str,"MB")==0)
+   {
+      div=1024*1024;
+   }
+   else // bytes?
+   {
+      return atoi(cmd);
+   }
+   return atoi(cmd2)*div;
+}
 
-void read_config_file(void)
+void read_config_file(int verbose)
 {
    char Filename[]=DEFAULT_ROOT "z3660cfg.txt";
    static FIL fil;      /* File object */
@@ -379,32 +496,32 @@ void read_config_file(void)
 
    int ret;
 retry:
-   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   ret=f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
    if(ret!=0)
    {
-      printf("Error opening SD media\nRetry in 5 seconds\n");
+      if(verbose) printf("Error opening SD media\nRetry in 5 seconds\n");
       sleep(5);
       goto retry;
    }
    ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
    if(ret!=0)
    {
-//      printf("Error opening file \"%s\"\nCreating default file...\n",Filename);
+//      if(verbose) printf("Error opening file \"%s\"\nCreating default file...\n",Filename);
 //      write_config_file(Filename);
 //      ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
 //      if(ret!=0)
       {
-         printf("Error opening config file %s\nHALT!!!\n",Filename);
+         if(verbose) printf("Error opening config file %s\nHALT!!!\n",Filename);
          while(1);
       }
    }
-   printf("Reading %s file \n",Filename);
+   if(verbose) printf("Reading %s file \n",Filename);
    int cur_line = 1;
    char parse_line[512];
    char cur_cmd[128];
    memset(&config, 0x00, sizeof(CONFIG));
 //   sprintf(config.kickstart,""); // this produces a warning O_O
-   config.boot_mode=UAEJIT;
+   config.boot_mode=UAEJIT_040;
    config.kickstart0[0]=0;
    config.kickstart1[0]=0;
    config.kickstart2[0]=0;
@@ -425,11 +542,13 @@ retry:
    config.ext_kickstart7[0]=0;
    config.ext_kickstart8[0]=0;
    config.ext_kickstart9[0]=0;
+   strcpy(config.sound_language,"eng");
    for(int i=0;i<20;i++)
       config.hdf[i][0]=0;
    for(int i=0;i<7;i++)
       config.scsi_num[i]=-1;
    config.bootscreen_resolution=RES_800x600;
+   config.doubled_cursor=0;
    for(int i=0;i<6;i++)
       config.mac_address[i]=EmacPsMAC[i];
 
@@ -440,6 +559,8 @@ retry:
    config.autoconfig_ram=0;
    config.autoconfig_rtg=0;
    config.cpu_ram=1;
+   config.mount_sd_0x76=0;
+   config.mount_sd_root=0;
    config.resistor=800.0;
    config.temperature=27.0;
    config.cpufreq=CPUFREQ_MIN;
@@ -448,6 +569,10 @@ retry:
    config.enable_test=0;
    config.bp_ton=0;
    config.bp_toff=0;
+   config.boot_delay=2;
+   config.sd_clock=50;
+   config.monitor_switch=0;
+   config.arm_frequency=FREQ_667;
 
    while (!f_eof(&fil))
    {
@@ -466,39 +591,47 @@ retry:
       case CONFITEM_BOOTMODE:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.boot_mode=get_bootmode_type(cur_cmd);
-         printf("[CFG] Boot mode %s.\n", bootmode_names[config.boot_mode]);
+         if(verbose) printf("[CFG] Boot mode %s.\n", bootmode_names[config.boot_mode]);
          shared->cfg_emu=config.boot_mode;
-         shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
+         shared->jit_enabled=config.boot_mode==UAEJIT_030 || config.boot_mode==UAEJIT_040?1:0;
          break;
 
       case CONFITEM_KICKSTART:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.kickstart=get_int_type(cur_cmd);
          if(config.kickstart==0)
-            printf("[CFG] Kickstart file selected: mobo kickstart.\n");
+         {
+            if(verbose) printf("[CFG] Kickstart file selected: mobo kickstart.\n");
+         }
          else
-            printf("[CFG] Kickstart file selected: number %d.\n", config.kickstart);
+         {
+            if(verbose) printf("[CFG] Kickstart file selected: number %d.\n", config.kickstart);
+         }
          break;
 
       case CONFITEM_EXT_KICKSTART:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.ext_kickstart=get_int_type(cur_cmd);
          if(config.ext_kickstart==0)
-            printf("[CFG] Extended Kickstart file selected: mobo extended kickstart (if any).\n");
+         {
+            if(verbose) printf("[CFG] Extended Kickstart file selected: mobo extended kickstart (if any).\n");
+         }
          else
-            printf("[CFG] Extended Kickstart file selected: number %d.\n", config.ext_kickstart);
+         {
+            if(verbose) printf("[CFG] Extended Kickstart file selected: number %d.\n", config.ext_kickstart);
+         }
          break;
 
       case CONFITEM_SCSI_BOOT_ENABLE:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.scsiboot=get_yesno_type(cur_cmd);
-         printf("[CFG] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
+         if(verbose) printf("[CFG] SCSI Boot %s.\n", yesno_names[config.scsiboot]);
          break;
 
       case CONFITEM_ENABLE_TEST:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.enable_test=get_yesnomin_type(cur_cmd);
-         printf("[CFG] Enable Test %s.\n", yesnomin_names[config.enable_test]);
+         if(verbose) printf("[CFG] Enable Test %s.\n", yesnomin_names[config.enable_test]);
          break;
 
       case CONFITEM_SCSI0:
@@ -512,7 +645,7 @@ retry:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.scsi_num[index]=get_int_type(cur_cmd);
          if(config.scsi_num[index]>=0)
-            printf("[CFG] SCSI%d assigned to %s\n",index,config.hdf[config.scsi_num[index]]);
+            if(verbose) printf("[CFG] SCSI%d assigned to %s\n",index,config.hdf[config.scsi_num[index]]);
          break;
       }
       case CONFITEM_HDF0:
@@ -538,55 +671,67 @@ retry:
          int index=item-CONFITEM_HDF0;
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          sprintf(config.hdf[index],"%s%s", DEFAULT_ROOT, cur_cmd);
-         printf("[CFG] hdf%d file %s\n", index, config.hdf[index]);
+         if(verbose) printf("[CFG] hdf%d file %s\n", index, config.hdf[index]);
          break;
       }
 
       case CONFITEM_AUTOCONFIG_RAM_ENABLE:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.autoconfig_ram=get_yesno_type(cur_cmd);
-         printf("[CFG] AutoConfig RAM %s.\n", yesno_names[config.autoconfig_ram]);
+         if(verbose) printf("[CFG] AutoConfig RAM %s.\n", yesno_names[config.autoconfig_ram]);
          break;
 
       case CONFITEM_AUTOCONFIG_RTG_ENABLE:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.autoconfig_rtg=get_yesno_type(cur_cmd);
-         printf("[CFG] AutoConfig RTG %s.\n", yesno_names[config.autoconfig_rtg]);
+         if(verbose) printf("[CFG] AutoConfig RTG %s.\n", yesno_names[config.autoconfig_rtg]);
          break;
 
       case CONFITEM_CPU_RAM_ENABLE:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.cpu_ram=get_yesno_type(cur_cmd);
-         printf("[CFG] CPU RAM %s.\n", yesno_names[config.cpu_ram]);
+         if(verbose) printf("[CFG] CPU RAM %s.\n", yesno_names[config.cpu_ram]);
+         break;
+
+      case CONFITEM_MOUNT_SD_0x76:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.mount_sd_0x76=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] MOUNT SD 0x76 %s.\n", yesno_names[config.mount_sd_0x76]);
+         break;
+
+      case CONFITEM_MOUNT_SD_ROOT:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.mount_sd_root=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] MOUNT SD ROOT %s.\n", yesno_names[config.mount_sd_root]);
          break;
 
       case CONFITEM_RESISTOR:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.resistor=get_float_type(cur_cmd);
-         printf("[CFG] Calibrated Resistor %.1f.\n", config.resistor);
+         if(verbose) printf("[CFG] Calibrated Resistor %.1f.\n", config.resistor);
          break;
 
       case CONFITEM_TEMPERATURE:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.temperature=get_float_type(cur_cmd);
-         printf("[CFG] Calibrated Temperature %.1f.\n", config.temperature);
+         if(verbose) printf("[CFG] Calibrated Temperature %.1f.\n", config.temperature);
          break;
 
       case CONFITEM_CPUFREQ:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.cpufreq=(get_int_type(cur_cmd)/5)*5; // 5 MHz steps
-         printf("[CFG] 060 CPU Frequency %d MHz\n", config.cpufreq);
+         if(verbose) printf("[CFG] 060 CPU Frequency %d MHz\n", config.cpufreq);
          break;
 
       case CONFITEM_KICKSTART0:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-         printf("[CFG] WARNING!!! Kickstart file 0 is reserved to internal kickstart!!!.\n");
+         if(verbose) printf("[CFG] WARNING!!! Kickstart file 0 is reserved to internal kickstart!!!.\n");
          break;
 
 #define CASE_CONFITEM_KICKSTART(x)  case CONFITEM_KICKSTART ## x:\
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');\
          sprintf(config.kickstart ## x,"%s%s", DEFAULT_ROOT, cur_cmd);\
-         printf("[CFG] kickstart%d file %s\n", x, config.kickstart ## x);\
+         if(verbose) printf("[CFG] kickstart%d file %s\n", x, config.kickstart ## x);\
          break;
       CASE_CONFITEM_KICKSTART(1)
       CASE_CONFITEM_KICKSTART(2)
@@ -600,13 +745,13 @@ retry:
 
       case CONFITEM_EXT_KICKSTART0:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-         printf("[CFG] WARNING!!! Extended Kickstart file 0 is reserved to internal extended kickstart!!!.\n");
+         if(verbose) printf("[CFG] WARNING!!! Extended Kickstart file 0 is reserved to internal extended kickstart!!!.\n");
          break;
 
 #define CASE_CONFITEM_EXT_KICKSTART(x)  case CONFITEM_EXT_KICKSTART ## x:\
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');\
          sprintf(config.ext_kickstart ## x,"%s%s", DEFAULT_ROOT, cur_cmd);\
-         printf("[CFG] Extended kickstart%d file %s\n", x, config.ext_kickstart ## x);\
+         if(verbose) printf("[CFG] Extended kickstart%d file %s\n", x, config.ext_kickstart ## x);\
          break;
       CASE_CONFITEM_EXT_KICKSTART(1)
       CASE_CONFITEM_EXT_KICKSTART(2)
@@ -618,38 +763,116 @@ retry:
       CASE_CONFITEM_EXT_KICKSTART(8)
       CASE_CONFITEM_EXT_KICKSTART(9)
 
+      case CONFITEM_SOUND_LANGUAGE:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         sprintf(config.sound_language,"%s", cur_cmd);
+         if(verbose) printf("[CFG] Sound Language: %s\n",config.sound_language);
+         break;
+
       case CONFITEM_BOOTSCREEN_RESOLUTION:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.bootscreen_resolution=get_resolution_type(cur_cmd);
-         printf("[CFG] Boot Screen Resolution %s\n", resolution_names[config.bootscreen_resolution]);
+         if(verbose) printf("[CFG] Boot Screen Resolution %s\n", resolution_names[config.bootscreen_resolution]);
+         break;
+
+      case CONFITEM_DOUBLED_CURSOR:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.doubled_cursor=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] Doubled cursor %s\n", yesno_names[config.doubled_cursor]);
          break;
 
       case CONFITEM_MAC_ADDRESS:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          if(get_mac_address_type(cur_cmd)) {
-            printf("[CFG] Mac Address %02X:%02X:%02X:%02X:%02X:%02X\n", config.mac_address[0],
+            if(verbose) printf("[CFG] Mac Address %02X:%02X:%02X:%02X:%02X:%02X\n", config.mac_address[0],
                   config.mac_address[1],config.mac_address[2],
                   config.mac_address[3],config.mac_address[4],config.mac_address[5]);
             for(int i=0;i<6;i++)
                EmacPsMAC[i]=config.mac_address[i];
          }
          else
-            printf("[CFG] BAD Mac Address %s\n",cur_cmd);
+            if(verbose) printf("[CFG] BAD Mac Address %s\n",cur_cmd);
          break;
       case CONFITEM_BP_TON:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.bp_ton=get_float_type(cur_cmd);
-         printf("[CFG] Beeper Ton %f\n", config.bp_ton);
+         if(verbose) printf("[CFG] Beeper Ton %f\n", config.bp_ton);
          break;
       case CONFITEM_BP_TOFF:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.bp_toff=get_float_type(cur_cmd);
-         printf("[CFG] Beeper Toff %f\n", config.bp_toff);
+         if(verbose) printf("[CFG] Beeper Toff %f\n", config.bp_toff);
+         break;
+      case CONFITEM_BOOT_DELAY:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.boot_delay=get_int_type(cur_cmd);
+         if(config.boot_delay<2) config.boot_delay=2;
+         if(verbose) printf("[CFG] Boot Delay %d seconds\n", config.boot_delay);
+         break;
+
+      case CONFITEM_SD_CLOCK:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.sd_clock=get_int_type(cur_cmd);
+         if(config.sd_clock<50)
+            config.sd_clock=25;
+         else
+            config.sd_clock=50;
+         if(verbose) printf("[CFG] SD Clock %d MHz\n", config.sd_clock);
+         break;
+
+      case CONFITEM_MONITOR_SWITCH:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.monitor_switch=get_int_type(cur_cmd);
+         if(verbose) printf("[CFG] Monitor Switch 0x%02X\n", config.monitor_switch);
+         break;
+
+      case CONFITEM_TEST_RANGE0:
+      case CONFITEM_TEST_RANGE1:
+      case CONFITEM_TEST_RANGE2:
+      case CONFITEM_TEST_RANGE3:
+      case CONFITEM_TEST_RANGE4:
+      case CONFITEM_TEST_RANGE5:
+      case CONFITEM_TEST_RANGE6:
+      case CONFITEM_TEST_RANGE7: {
+         int index=item-CONFITEM_TEST_RANGE0;
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.test_range[index].start=get_hex_type(cur_cmd);
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.test_range[index].length=get_intbytes_type(cur_cmd);
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         strcpy(config.test_range[index].name,cur_cmd);
+         // minimum unit 1 KB
+         if(config.test_range[index].length<1024)
+            config.test_range[index].length=1024;
+//         if(config.test_range[index].length>=0) // always true
+         {
+            // Round to KB
+            config.test_range[index].length&=~1023L;
+            char div_str[3]="KB";
+            int div=1024;
+            if( config.test_range[index].length>1024*1024 &&   // if > 1MB
+               (config.test_range[index].length&(1024*1024L-1))==0) // and has not remaining KBs
+            {
+               strcpy(div_str,"MB");
+               div=1024*1024;
+            }
+            if(verbose) printf("[CFG] Test Range %d: start 0x%08lX, length %ld %s (\"%s\")\n",index,
+                  config.test_range[index].start,
+                  config.test_range[index].length/div,div_str,
+                  config.test_range[index].name);
+         }
+         break;
+      }
+
+      case CONFITEM_ARM_FREQUENCY:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.arm_frequency=get_arm_frequency_type(cur_cmd);
+         if(verbose) printf("[CFG] ARM Frequency %s Mhz\n", arm_frequency_names[config.arm_frequency]);
          break;
 
       case CONFITEM_NONE:
       default:
-         printf("[CFG] Unknown config item %s on line %d.\n", cur_cmd, cur_line);
+         if(verbose) printf("[CFG] Unknown config item %s on line %d.\n", cur_cmd, cur_line);
          break;
       }
 
@@ -659,14 +882,14 @@ retry:
    goto load_successful;
 // this will never be executed
 //load_failed:;
-   printf("Error loading config file %s\n",Filename);
-   printf("Loading default config\n");
+   if(verbose) printf("Error loading config file %s\n",Filename);
+   if(verbose) printf("Loading default config\n");
    load_default_config();
 load_successful:;
 
    f_close(&fil);
-   f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
-   printf("Config file read OK\n");
+   f_umount(Path);
+   if(verbose) printf("Config file read OK\n");
 
    memcpy(&default_config,&config,sizeof(CONFIG));
    memcpy(&temp_config,&config,sizeof(CONFIG));
@@ -679,6 +902,8 @@ load_successful:;
       COPY_DEFAULT(autoconfig_ram);
       COPY_DEFAULT(autoconfig_rtg);
       COPY_DEFAULT(cpu_ram);
+      COPY_DEFAULT(mount_sd_0x76);
+      COPY_DEFAULT(mount_sd_root);
       COPY_DEFAULT(kickstart);
       COPY_DEFAULT(ext_kickstart);
       COPY_DEFAULT(enable_test);
@@ -690,11 +915,13 @@ load_successful:;
       COPY_DEFAULT(bp_ton);
       COPY_DEFAULT(bp_toff);
       env_file_vars_temp[i].preset_name[0]=0;
+      COPY_DEFAULT(monitor_switch);
+      COPY_DEFAULT(arm_frequency);
    }
 
    Xil_ExceptionEnable();
 }
-void read_env_files(void)
+void read_env_files(int verbose)
 {
    static FIL fil;      /* File object */
    static FATFS fatfs;
@@ -705,10 +932,10 @@ void read_env_files(void)
 
    int ret;
 retry:
-   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   ret=f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
    if(ret!=0)
    {
-      printf("Error opening SD media\nRetry in 5 seconds\n");
+      if(verbose) printf("Error opening SD media\nRetry in 5 seconds\n");
       sleep(5);
       goto retry;
    }
@@ -736,11 +963,13 @@ retry:
             get_next_string(parse_line, cur_cmd, &str_pos, ' ');
             preset_selected=get_int_type(cur_cmd);
             if(preset_selected>=0 && preset_selected<PRESET_CB_MAX-1)
-               printf("[ENV] Preset %d selected\n",preset_selected);
+            {
+               if(verbose) printf("[ENV] Preset %d selected\n",preset_selected);
+            }
             else
             {
                preset_selected=PRESET_CB_MAX-1;
-               printf("[ENV] Default preset selected (z3660cfg.txt file)\n");
+               if(verbose) printf("[ENV] Default preset selected (z3660cfg.txt file)\n");
             }
             break;
          }
@@ -749,7 +978,7 @@ retry:
          if(preset_selected==-1)
          {
             preset_selected=PRESET_CB_MAX-1;
-            printf("[ENV] WARNING!!! preset NOT selected/loaded\n");
+            if(verbose) printf("[ENV] WARNING!!! preset NOT selected/loaded\n");
             f_close(&fil);
             return;
          }
@@ -757,7 +986,7 @@ retry:
    }
    else
    {
-      printf("[ENV] Warning!!! Can't open presets/preset.txt file\n");
+      if(verbose) printf("[ENV] Warning!!! Can't open presets/preset.txt file\n");
        return;
    }
    char text[50];
@@ -808,7 +1037,7 @@ retry:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].boot_mode=get_bootmode_type(cur_cmd);
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] Boot mode %s.\e[0m\n", bootmode_names[env_file_vars_temp[preset].boot_mode]);
+                     if(verbose) printf("\e[30m\e[103m[ENV] Boot mode %s.\e[0m\n", bootmode_names[env_file_vars_temp[preset].boot_mode]);
                   break;
                case CONFITEM_KICKSTART:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
@@ -816,9 +1045,13 @@ retry:
                   if(preset==preset_selected)
                   {
                      if(env_file_vars_temp[preset].kickstart==0)
-                        printf("\e[30m\e[103m[ENV] Kickstart file selected: mobo kickstart.\e[0m\n");
+                     {
+                        if(verbose) printf("\e[30m\e[103m[ENV] Kickstart file selected: mobo kickstart.\e[0m\n");
+                     }
                      else
-                        printf("\e[30m\e[103m[ENV] kickstart selected: number %d\e[0m\n", env_file_vars_temp[preset].kickstart);
+                     {
+                        if(verbose) printf("\e[30m\e[103m[ENV] kickstart selected: number %d\e[0m\n", env_file_vars_temp[preset].kickstart);
+                     }
                   }
                   break;
                case CONFITEM_EXT_KICKSTART:
@@ -827,22 +1060,26 @@ retry:
                   if(preset==preset_selected)
                   {
                      if(env_file_vars_temp[preset].ext_kickstart==0)
-                        printf("\e[30m\e[103m[ENV] Extended kickstart selected: mobo extended kickstart (if any).\e[0m\n");
+                     {
+                        if(verbose) printf("\e[30m\e[103m[ENV] Extended kickstart selected: mobo extended kickstart (if any).\e[0m\n");
+                     }
                      else
-                        printf("\e[30m\e[103m[ENV] Extended kickstart selected: number %d\e[0m\n", env_file_vars_temp[preset].ext_kickstart);
+                     {
+                        if(verbose) printf("\e[30m\e[103m[ENV] Extended kickstart selected: number %d\e[0m\n", env_file_vars_temp[preset].ext_kickstart);
+                     }
                   }
                   break;
                case CONFITEM_SCSI_BOOT_ENABLE:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].scsiboot=get_yesno_type(cur_cmd);
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] SCSI Boot %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].scsiboot]);
+                     if(verbose) printf("\e[30m\e[103m[ENV] SCSI Boot %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].scsiboot]);
                   break;
                case CONFITEM_ENABLE_TEST:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].enable_test=get_yesnomin_type(cur_cmd);
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] Enable Test %s.\e[0m\n", yesnomin_names[env_file_vars_temp[preset].enable_test]);
+                     if(verbose) printf("\e[30m\e[103m[ENV] Enable Test %s.\e[0m\n", yesnomin_names[env_file_vars_temp[preset].enable_test]);
                   break;
                case CONFITEM_SCSI0:
                case CONFITEM_SCSI1:
@@ -853,11 +1090,15 @@ retry:
                case CONFITEM_SCSI6: {
                   int index=item-CONFITEM_SCSI0;
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
-                  env_file_vars_temp[preset].scsi_num[index]=get_int_type(cur_cmd);
+                  int num=get_int_type(cur_cmd);
+                  if(num>=-1 && num<=19)
+                     env_file_vars_temp[preset].scsi_num[index]=num;
+                  else
+                     if(verbose) printf("\e[31m\e[103mERROR SCSI%d assigned to %d\e[0m\n", index,num);
                   if(preset==preset_selected)
                   {
-                     if(env_file_vars_temp[preset].scsi_num[index]>=0)
-                        printf("\e[30m\e[103m[ENV] SCSI%d assigned to %s.\e[0m\n", index,config.hdf[env_file_vars_temp[preset].scsi_num[index]]);
+                     if(num>=0 && num<=19)
+                        if(verbose) printf("\e[30m\e[103m[ENV] SCSI%d assigned to %s.\e[0m\n", index,config.hdf[env_file_vars_temp[preset].scsi_num[index]]);
                   }
                   break;
                }
@@ -866,7 +1107,7 @@ retry:
                   env_file_vars_temp[preset].autoconfig_ram=get_yesno_type(cur_cmd);
                   if(preset==preset_selected)
                   {
-                     printf("\e[30m\e[103m[ENV] AutoConfig Ram %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].autoconfig_ram]);
+                     if(verbose) printf("\e[30m\e[103m[ENV] AutoConfig Ram %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].autoconfig_ram]);
                   }
                   break;
                case CONFITEM_AUTOCONFIG_RTG_ENABLE:
@@ -874,26 +1115,44 @@ retry:
                   env_file_vars_temp[preset].autoconfig_rtg=get_yesno_type(cur_cmd);
                   if(preset==preset_selected)
                   {
-                     printf("\e[30m\e[103m[ENV] AutoConfig RTG %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].autoconfig_rtg]);
+                     if(verbose) printf("\e[30m\e[103m[ENV] AutoConfig RTG %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].autoconfig_rtg]);
                   }
                   break;
                case CONFITEM_CPU_RAM_ENABLE:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].cpu_ram=get_yesno_type(cur_cmd);
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] CPU Ram %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].cpu_ram]);
+                     if(verbose) printf("\e[30m\e[103m[ENV] CPU Ram %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].cpu_ram]);
+                  break;
+               case CONFITEM_MOUNT_SD_0x76:
+                  get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+                  env_file_vars_temp[preset].mount_sd_0x76=get_yesno_type(cur_cmd);
+                  if(preset==preset_selected)
+                     if(verbose) printf("\e[30m\e[103m[ENV] MOUNT SD 0x76 %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].mount_sd_0x76]);
+                  break;
+               case CONFITEM_MOUNT_SD_ROOT:
+                  get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+                  env_file_vars_temp[preset].mount_sd_root=get_yesno_type(cur_cmd);
+                  if(preset==preset_selected)
+                     if(verbose) printf("\e[30m\e[103m[ENV] MOUNT SD ROOT %s.\e[0m\n", yesno_names[env_file_vars_temp[preset].mount_sd_root]);
                   break;
                case CONFITEM_CPUFREQ:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].cpufreq=(get_int_type(cur_cmd)/5)*5; // 5 MHz steps
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] 060 CPU Frequency %d MHz\e[0m\n", env_file_vars_temp[preset].cpufreq);
+                     if(verbose) printf("\e[30m\e[103m[ENV] 060 CPU Frequency %d MHz\e[0m\n", env_file_vars_temp[preset].cpufreq);
                   break;
                case CONFITEM_BOOTSCREEN_RESOLUTION:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].bootscreen_resolution=get_resolution_type(cur_cmd);
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] Boot Screen Resolution %s\e[0m\n", resolution_names[env_file_vars_temp[preset].bootscreen_resolution]);
+                     if(verbose) printf("\e[30m\e[103m[ENV] Boot Screen Resolution %s\e[0m\n", resolution_names[env_file_vars_temp[preset].bootscreen_resolution]);
+                  break;
+               case CONFITEM_DOUBLED_CURSOR:
+                  get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+                  env_file_vars_temp[preset].doubled_cursor=get_yesno_type(cur_cmd);
+                  if(preset==preset_selected)
+                     if(verbose) printf("\e[30m\e[103m[ENV] Doubled Cursor %s\e[0m\n", yesno_names[env_file_vars_temp[preset].doubled_cursor]);
                   break;
                case CONFITEM_MAC_ADDRESS:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
@@ -901,31 +1160,43 @@ retry:
                      for(int i=0;i<6;i++)
                         EmacPsMAC[i]=env_file_vars_temp[preset].mac_address[i]=config.mac_address[i];
                      if(preset==preset_selected)
-                        printf("\e[30m\e[103m[ENV] Mac Address %02X:%02X:%02X:%02X:%02X:%02X\e[0m\n", config.mac_address[0],
+                        if(verbose) printf("\e[30m\e[103m[ENV] Mac Address %02X:%02X:%02X:%02X:%02X:%02X\e[0m\n", config.mac_address[0],
                         config.mac_address[1],config.mac_address[2],
                         config.mac_address[3],config.mac_address[4],config.mac_address[5]);
                   }
                   else
                   {
                      if(preset==preset_selected)
-                        printf("\e[30m\e[103m[ENV] BAD Mac Address %s\e[0m\n",cur_cmd);
+                        if(verbose) printf("\e[30m\e[103m[ENV] BAD Mac Address %s\e[0m\n",cur_cmd);
                   }
                   break;
                case CONFITEM_BP_TON:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].bp_ton=get_float_type(cur_cmd);
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] Beeper Ton %f\e[0m\n", env_file_vars_temp[preset].bp_ton);
+                     if(verbose) printf("\e[30m\e[103m[ENV] Beeper Ton %f\e[0m\n", env_file_vars_temp[preset].bp_ton);
                   break;
                case CONFITEM_BP_TOFF:
                   get_next_string(parse_line, cur_cmd, &str_pos, ' ');
                   env_file_vars_temp[preset].bp_toff=get_float_type(cur_cmd);
                   if(preset==preset_selected)
-                     printf("\e[30m\e[103m[ENV] Beeper Toff %f\e[0m\n", env_file_vars_temp[preset].bp_toff);
+                     if(verbose) printf("\e[30m\e[103m[ENV] Beeper Toff %f\e[0m\n", env_file_vars_temp[preset].bp_toff);
+                  break;
+               case CONFITEM_MONITOR_SWITCH:
+                  get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+                  env_file_vars_temp[preset].monitor_switch=get_int_type(cur_cmd);
+                  if(preset==preset_selected)
+                     if(verbose) printf("\e[30m\e[103m[ENV] Monitor Switch 0x%02X\e[0m\n", env_file_vars_temp[preset].monitor_switch);
+                  break;
+               case CONFITEM_ARM_FREQUENCY:
+                  get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+                  env_file_vars_temp[preset].arm_frequency=get_arm_frequency_type(cur_cmd);
+                  if(preset==preset_selected)
+                     if(verbose) printf("\e[30m\e[103m[ENV] ARM Frequency %s MHz\e[0m\n", arm_frequency_names[env_file_vars_temp[preset].arm_frequency]);
                   break;
                case CONFITEM_NONE:
                default:
-                  printf("\e[30m\e[103m[ENV] Unknown config item %s on line %d. (file %s)\e[0m\n", cur_cmd, cur_line,text);
+                  if(verbose) printf("\e[30m\e[103m[ENV] Unknown config item %s on line %d. (file %s)\e[0m\n", cur_cmd, cur_line,text);
                   break;
             }
 
@@ -940,7 +1211,7 @@ retry:
    {
       config.boot_mode=env_file_vars_temp[preset_selected].boot_mode;
       shared->cfg_emu=config.boot_mode;
-      shared->jit_enabled=config.boot_mode==UAEJIT?1:0;
+      shared->jit_enabled=config.boot_mode==UAEJIT_030 || config.boot_mode==UAEJIT_040?1:0;
       config.kickstart=env_file_vars_temp[preset_selected].kickstart;
       config.ext_kickstart=env_file_vars_temp[preset_selected].ext_kickstart;
       config.scsiboot=env_file_vars_temp[preset_selected].scsiboot;
@@ -950,16 +1221,21 @@ retry:
       config.autoconfig_ram=env_file_vars_temp[preset_selected].autoconfig_ram;
       config.autoconfig_rtg=env_file_vars_temp[preset_selected].autoconfig_rtg;
       config.cpu_ram=env_file_vars_temp[preset_selected].cpu_ram;
+      config.mount_sd_0x76=env_file_vars_temp[preset_selected].mount_sd_0x76;
+      config.mount_sd_root=env_file_vars_temp[preset_selected].mount_sd_root;
       config.cpufreq=env_file_vars_temp[preset_selected].cpufreq;
       config.bootscreen_resolution=env_file_vars_temp[preset_selected].bootscreen_resolution;
+      config.doubled_cursor=env_file_vars_temp[preset_selected].doubled_cursor;
       for(int i=0;i<6;i++)
          EmacPsMAC[i]=config.mac_address[i]=env_file_vars_temp[preset_selected].mac_address[i];
       config.bp_ton=env_file_vars_temp[preset_selected].bp_ton;
       config.bp_toff=env_file_vars_temp[preset_selected].bp_toff;
+      config.monitor_switch=env_file_vars_temp[preset_selected].monitor_switch;
+      config.arm_frequency=env_file_vars_temp[preset_selected].arm_frequency;
       memcpy(&temp_config,&config,sizeof(CONFIG));
    }
 
-   f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+   f_umount(Path);
    Xil_ExceptionEnable();
 }
 int write_env_files(ENV_FILE_VARS *env_file)
@@ -973,7 +1249,7 @@ int write_env_files(ENV_FILE_VARS *env_file)
 
    int ret;
 retry:
-   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   ret=f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
    if(ret!=0)
    {
       printf("Error opening SD media\nRetry in 5 seconds\n");
@@ -1024,6 +1300,8 @@ retry:
          f_printf(&fil,"autoconfig_ram %s\n",yesno_names[env_file->autoconfig_ram]);
          f_printf(&fil,"autoconfig_rtg %s\n",yesno_names[env_file->autoconfig_rtg]);
          f_printf(&fil,"cpu_ram %s\n",yesno_names[env_file->cpu_ram]);
+         f_printf(&fil,"mount_sd_0x76 %s\n",yesno_names[env_file->mount_sd_0x76]);
+         f_printf(&fil,"mount_sd_root %s\n",yesno_names[env_file->mount_sd_root]);
          f_printf(&fil,"cpufreq %d\n",env_file->cpufreq);
          f_printf(&fil,"kickstart %d\n",env_file->kickstart);
          f_printf(&fil,"ext_kickstart %d\n",env_file->ext_kickstart);
@@ -1044,6 +1322,9 @@ retry:
                env_file->mac_address[3],env_file->mac_address[4],env_file->mac_address[5]);
          f_printf(&fil,"bp_ton %f\n",env_file->bp_ton);
          f_printf(&fil,"bp_toff %f\n",env_file->bp_toff);
+         f_printf(&fil,"doubled_cursor %s\n",yesno_names[env_file->doubled_cursor]);
+         f_printf(&fil,"monitor_switch %d\n",env_file->monitor_switch);
+         f_printf(&fil,"arm_frequency %s\n",arm_frequency_names[env_file->arm_frequency]);
 
          f_printf(&fil,"\n"); // we really need this at the end of file...
          f_close(&fil);
@@ -1056,7 +1337,7 @@ retry:
       }
    }
    usleep(10000);
-   f_mount(NULL, Path, 1); // NULL unmount, 1 immediately
+   f_umount(Path);
    Xil_ExceptionEnable();
    usleep(10000);
    return(1);
@@ -1068,18 +1349,23 @@ int write_env_files_boot(ENV_FILE_VARS *env_file)
 //   env_file->scsiboot=config.scsiboot;
 //   env_file->autoconfig_ram=config.autoconfig_ram;
 //   env_file->autoconfig_rtg=config.autoconfig_rtg;
-   //   env_file->enable_test=config.enable_test;
+//   env_file->enable_test=config.enable_test;
 //   env_file->cpu_ram=config.cpu_ram;
+//   env_file->mount_sd_0x76=config.mount_sd_0x76;
+//   env_file->mount_sd_root=config.mount_sd_root;
 //   env_file->cpufreq=config.cpufreq;
 //   env_file->kickstart=config.kickstart;
 //   env_file->ext_kickstart=config.ext_kickstart;
    env_file->bootscreen_resolution=config.bootscreen_resolution;
+   env_file->doubled_cursor=config.doubled_cursor;
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
    for(int i=0;i<6;i++)
       env_file->mac_address[i]=config.mac_address[i];
    env_file->bp_ton=config.bp_ton;
    env_file->bp_toff=config.bp_toff;
+   env_file->monitor_switch=config.monitor_switch;
+   env_file->arm_frequency=config.arm_frequency;
 
    return(write_env_files(env_file));
 }
@@ -1092,16 +1378,21 @@ int write_env_files_scsi(ENV_FILE_VARS *env_file)
    env_file->autoconfig_rtg=config.autoconfig_rtg;
    env_file->enable_test=config.enable_test;
    env_file->cpu_ram=config.cpu_ram;
+   env_file->mount_sd_0x76=config.mount_sd_0x76;
+   env_file->mount_sd_root=config.mount_sd_root;
    env_file->cpufreq=config.cpufreq;
    env_file->kickstart=config.kickstart;
    env_file->ext_kickstart=config.ext_kickstart;
    env_file->bootscreen_resolution=config.bootscreen_resolution;
+   env_file->doubled_cursor=config.doubled_cursor;
 //   for(int i=0;i<7;i++)
 //      env_file->scsi_num[i]=config.scsi_num[i];
    for(int i=0;i<6;i++)
       env_file->mac_address[i]=config.mac_address[i];
    env_file->bp_ton=config.bp_ton;
    env_file->bp_toff=config.bp_toff;
+   env_file->monitor_switch=config.monitor_switch;
+   env_file->arm_frequency=config.arm_frequency;
 
    return(write_env_files(env_file));
 }
@@ -1114,10 +1405,16 @@ int write_env_files_bootscres(ENV_FILE_VARS *env_file)
    env_file->autoconfig_rtg=config.autoconfig_rtg;
    env_file->enable_test=config.enable_test;
    env_file->cpu_ram=config.cpu_ram;
+   env_file->mount_sd_0x76=config.mount_sd_0x76;
+   env_file->mount_sd_root=config.mount_sd_root;
    env_file->cpufreq=config.cpufreq;
    env_file->kickstart=config.kickstart;
    env_file->ext_kickstart=config.ext_kickstart;
 //   env_file->bootscreen_resolution=config.bootscreen_resolution;
+//   env_file->doubled_cursor=config.doubled_cursor;
+//   env_file->monitor_switch=config.monitor_switch;
+//   env_file->arm_frequency=config.arm_frequency;
+
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
    for(int i=0;i<6;i++)
@@ -1136,10 +1433,15 @@ int write_env_files_misc(ENV_FILE_VARS *env_file)
    env_file->autoconfig_rtg=config.autoconfig_rtg;
    env_file->enable_test=config.enable_test;
    env_file->cpu_ram=config.cpu_ram;
+   env_file->mount_sd_0x76=config.mount_sd_0x76;
+   env_file->mount_sd_root=config.mount_sd_root;
    env_file->cpufreq=config.cpufreq;
    env_file->kickstart=config.kickstart;
    env_file->ext_kickstart=config.ext_kickstart;
    env_file->bootscreen_resolution=config.bootscreen_resolution;
+   env_file->doubled_cursor=config.doubled_cursor;
+   env_file->monitor_switch=config.monitor_switch;
+   env_file->arm_frequency=config.arm_frequency;
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
 //   for(int i=0;i<6;i++)
@@ -1158,20 +1460,32 @@ int write_env_files_preset(ENV_FILE_VARS *env_file)
    env_file->autoconfig_rtg=config.autoconfig_rtg;
    env_file->enable_test=config.enable_test;
    env_file->cpu_ram=config.cpu_ram;
+   env_file->mount_sd_0x76=config.mount_sd_0x76;
+   env_file->mount_sd_root=config.mount_sd_root;
    env_file->cpufreq=config.cpufreq;
    env_file->kickstart=config.kickstart;
    env_file->ext_kickstart=config.ext_kickstart;
    env_file->bootscreen_resolution=config.bootscreen_resolution;
+   env_file->doubled_cursor=config.doubled_cursor;
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
    for(int i=0;i<6;i++)
       env_file->mac_address[i]=config.mac_address[i];
    env_file->bp_ton=config.bp_ton;
    env_file->bp_toff=config.bp_toff;
+   env_file->monitor_switch=config.monitor_switch;
+   env_file->arm_frequency=config.arm_frequency;
 
    return(write_env_files(env_file));
 }
-
+int remove_preset_file(void)
+{
+   static FIL fil;
+   f_unlink(DEFAULT_ROOT "presets/preset.txt");
+   f_open(&fil,DEFAULT_ROOT "presets/preset.txt", FA_CREATE_ALWAYS | FA_WRITE);
+   f_close(&fil);
+   return(0);
+}
 int delete_env_files(void)
 {
    static FIL fil;      /* File object */
@@ -1183,7 +1497,7 @@ int delete_env_files(void)
 
    int ret;
 retry:
-   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   ret=f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
    if(ret!=0)
    {
       printf("Error opening SD media\nRetry in 5 seconds\n");
@@ -1216,7 +1530,7 @@ retry:
    DELETE_FILE("env/macaddress");
 
    usleep(10000);
-   f_mount(NULL, Path, 1); // NULL unmount, 1 immediately
+   f_umount(Path);
    Xil_ExceptionEnable();
    usleep(10000);
    return(1);
@@ -1232,7 +1546,7 @@ int delete_selected_preset(void)
 
    int ret;
 retry:
-   ret=f_mount(&fatfs, Path, 1); // 1 mount immediately
+   ret=f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
    if(ret!=0)
    {
       printf("Error opening SD media\nRetry in 5 seconds\n");
@@ -1255,7 +1569,7 @@ retry:
       return(0);
    }
    usleep(10000);
-   f_mount(NULL, Path, 1); // NULL unmount, 1 immediately
+   f_umount(Path);
    Xil_ExceptionEnable();
    usleep(10000);
    return(1);

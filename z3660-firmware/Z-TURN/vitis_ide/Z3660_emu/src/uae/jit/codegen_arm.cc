@@ -35,6 +35,7 @@
 #include "sysdeps.h"
 #include "compemu.h"
 #include "codegen_arm.h"
+#include "memory.h"
 
 // Declare the built-in __clear_cache function.
 extern void __clear_cache (char*, char*);
@@ -71,8 +72,6 @@ extern void __clear_cache (char*, char*);
 #define REG_PAR1 R0_INDEX
 #define REG_PAR2 R1_INDEX
 
-/* REG_WORK1 needs to be even register number and REG_WORK2 must be the following register number!
-   We use LDRD with them.*/
 #define REG_WORK1 R2_INDEX
 #define REG_WORK2 R3_INDEX
 #define REG_WORK3 R12_INDEX
@@ -81,11 +80,11 @@ extern void __clear_cache (char*, char*);
 
 #define REG_PC_TMP R1_INDEX /* Another register that is not the above */
 
-#define R_MEMSTART R11_INDEX
-#define R_REGSTRUCT RLR_INDEX
-uae_s8 always_used[]={REG_WORK1,REG_WORK2,R_MEMSTART,REG_WORK3,R_REGSTRUCT,-1}; // r2, r3 and r12 are work register in emitted code
+#define R_MEMSTART 10
+#define R_REGSTRUCT 11
+uae_s8 always_used[]={2,3,R_MEMSTART,R_REGSTRUCT,12,-1}; // r2, r3 and r12 are work register in emitted code
 
-uae_u8 call_saved[]={0,0,0,0, 1,1,1,1, 1,1,1,1, 0,1,0,1};
+uae_u8 call_saved[]={0,0,0,0, 1,1,1,1, 1,1,1,1, 0,1,1,1};
 
 /* This *should* be the same as call_saved. But:
    - We might not really know which registers are saved, and which aren't,
@@ -98,7 +97,7 @@ uae_u8 call_saved[]={0,0,0,0, 1,1,1,1, 1,1,1,1, 0,1,0,1};
    Don't understand why. */
 static const uae_u8 need_to_preserve[]={0,0,0,0, 1,1,1,1, 1,1,1,1, 1,0,0,0};
 static const uae_u32 PRESERVE_MASK = ((1<<R4_INDEX)|(1<<R5_INDEX)|(1<<R6_INDEX)|(1<<R7_INDEX)|(1<<R8_INDEX)|(1<<R9_INDEX)
-		|(1<<R10_INDEX)|(1<<R11_INDEX)|(1<<R12_INDEX)|(1<<RLR_INDEX));
+		|(1<<R10_INDEX)|(1<<R11_INDEX)|(1<<R12_INDEX));
 
 #include "codegen_arm.h"
 
@@ -241,18 +240,18 @@ LENDFUNC(WRITE,READ,1,compemu_raw_cmp_pc,(IMPTR s))
 
 LOWFUNC(NONE,WRITE,1,compemu_raw_set_pc_i,(IMPTR s))
 {
-  LOAD_U32(REG_WORK2, s);
+  LOAD_U32(REG_WORK1, s);
   uintptr idx = (uintptr) &(regs.pc_p) - (uintptr) &regs;
-  STR_rRI(REG_WORK2, R_REGSTRUCT, idx);
+  STR_rRI(REG_WORK1, R_REGSTRUCT, idx);
 }
 LENDFUNC(NONE,WRITE,1,compemu_raw_set_pc_i,(IMPTR s))
 
 LOWFUNC(NONE,WRITE,2,compemu_raw_mov_l_mi,(MEMW d, IM32 s))
 {
   /* d points always to memory in regs struct */
-  LOAD_U32(REG_WORK2, s);
+  LOAD_U32(REG_WORK1, s);
   uintptr idx = d - (uintptr) &regs;
-  STR_rRI(REG_WORK2, R_REGSTRUCT, idx);
+  STR_rRI(REG_WORK1, R_REGSTRUCT, idx);
 }
 LENDFUNC(NONE,WRITE,2,compemu_raw_mov_l_mi,(MEMW d, IM32 s))
 
@@ -292,10 +291,6 @@ LOWFUNC(WRITE,RMW,1,compemu_raw_dec_m,(MEMRW d))
 {
   clobber_flags();
 
-/*  LOAD_U32(REG_WORK1, d);
-  LDR_rR(REG_WORK2, REG_WORK1);
-  SUBS_rri(REG_WORK2, REG_WORK2, 1);
-  STR_rR(REG_WORK2, REG_WORK1);*/
   LOAD_U32(REG_WORK2, d);
   LDR_rR(REG_WORK1, REG_WORK2);
   SUBS_rri(REG_WORK1, REG_WORK1, 1);
@@ -628,7 +623,16 @@ LOWFUNC(NONE,WRITE,2,compemu_raw_fmov_mr_drop,(MEMW mem, FR s))
 	  VSTR64_dRi(s, REG_WORK3, 0);
 	else {
 	  VMOV64_rrd(REG_WORK1, REG_WORK2, s);
+#ifdef ALLOW_UNALIGNED_LDRD
 	  STRD_rRI(REG_WORK1, REG_WORK3, 0);
+#else
+     STR_rRI(REG_WORK1, REG_WORK3, 0);
+//     STR_rRI(REG_WORK2, REG_WORK3, 4);
+     PUSH(REG_WORK1);
+     MOV_rr(REG_WORK1,REG_WORK2);
+     STR_rRI(REG_WORK1, REG_WORK3, 4);
+     POP(REG_WORK1);
+#endif
 	}
   }
 }
@@ -643,7 +647,16 @@ LOWFUNC(NONE,READ,2,compemu_raw_fmov_rm,(FW d, MEMR mem))
 	if((mem & 0x3) == 0)
 	  VLDR64_dRi(d, REG_WORK3, 0);
 	else {
+#ifdef ALLOW_UNALIGNED_LDRD
 		LDRD_rRI(REG_WORK1, REG_WORK3, 0);
+#else
+      LDR_rRI(REG_WORK1, REG_WORK3, 0);
+//		LDR_rRI(REG_WORK2, REG_WORK3, 4);
+		PUSH(REG_WORK1);
+		LDR_rRI(REG_WORK1, REG_WORK3, 4);
+		MOV_rr(REG_WORK2,REG_WORK1);
+		POP(REG_WORK1);
+#endif
 		VMOV64_drr(d, REG_WORK1, REG_WORK2);
 	}
   }
@@ -763,7 +776,16 @@ LOWFUNC(NONE,READ,2,raw_fmov_d_rm,(FW r, MEMR m))
   if((m & 0x3) == 0)
 	VLDR64_dRi(r, REG_WORK3, 0);
   else {
+#ifdef ALLOW_UNALIGNED_LDRD
 	LDRD_rRI(REG_WORK1, REG_WORK3, 0);
+#else
+      LDR_rRI(REG_WORK1, REG_WORK3, 0);
+//      LDR_rRI(REG_WORK2, REG_WORK3, 4);
+      PUSH(REG_WORK1);
+      LDR_rRI(REG_WORK1, REG_WORK3, 4);
+      MOV_rr(REG_WORK2,REG_WORK1);
+      POP(REG_WORK1);
+#endif
 	VMOV64_drr(r, REG_WORK1, REG_WORK2);
   }
 }
@@ -965,11 +987,15 @@ LOWFUNC(NONE,WRITE,2,raw_fp_from_exten_mr,(RR4 adr, FR s))
   VREV64_8_dd(SCRATCH_F64_1, SCRATCH_F64_1);
   VMOV64_rrd(REG_WORK1, REG_WORK2, SCRATCH_F64_1);
   ORR_rri(REG_WORK1, REG_WORK1, 0x80);  			// insert explicit 1
-#ifdef ARMV6T2
+#ifdef ALLOW_UNALIGNED_LDRD
   STRD_rRI(REG_WORK1, REG_WORK3, 4);
 #else
   STR_rRI(REG_WORK1, REG_WORK3, 4);
-  STR_rRI(REG_WORK2, REG_WORK3, 8);
+//  STR_rRI(REG_WORK2, REG_WORK3, 8);
+  PUSH(REG_WORK1);
+  MOV_rr(REG_WORK1,REG_WORK2);
+  STR_rRI(REG_WORK1, REG_WORK3, 8);
+  POP(REG_WORK1);
 #endif
   uae_u32* branchadd_end = (uae_u32*)get_target();
   B_i(0);            // end_of_op
@@ -988,13 +1014,21 @@ LOWFUNC(NONE,WRITE,2,raw_fp_from_exten_mr,(RR4 adr, FR s))
 	ADD_rrr(REG_WORK3, adr, R_MEMSTART);
 
   REV_rr(REG_WORK1, REG_WORK1);
-#ifdef ARMV6T2
+#ifdef ALLOW_UNALIGNED_LDRD
   STRD_rR(REG_WORK1, REG_WORK3);
 #else
   STR_rR(REG_WORK1, REG_WORK3);
-  STR_rRI(REG_WORK2, REG_WORK3, 4);
+//  STR_rRI(REG_WORK2, REG_WORK3, 4);
+  PUSH(REG_WORK1);
+  MOV_rr(REG_WORK1,REG_WORK2);
+  STR_rRI(REG_WORK1, REG_WORK3, 4);
+  POP(REG_WORK1);
 #endif
-  STR_rRI(REG_WORK2, REG_WORK3, 8);
+//  STR_rRI(REG_WORK2, REG_WORK3, 8);
+  PUSH(REG_WORK1);
+  MOV_rr(REG_WORK1,REG_WORK2);
+  STR_rRI(REG_WORK1, REG_WORK3, 8);
+  POP(REG_WORK1);
 
 // end_of_op
   write_jmp_target(branchadd_end, (uintptr)get_target());
@@ -1004,19 +1038,18 @@ LENDFUNC(NONE,WRITE,2,raw_fp_from_exten_mr,(RR4 adr, FR s))
 LOWFUNC(NONE,READ,2,raw_fp_to_exten_rm,(FW d, RR4 adr))
 {
 	ADD_rrr(REG_WORK3, adr, R_MEMSTART);
-/*
-#ifdef ARMV6T2
+
+#ifdef ALLOW_UNALIGNED_LDRD
 	LDRD_rRI(REG_WORK1, REG_WORK3, 4);
 #else
-	LDR_rRI(REG_WORK1, REG_WORK3, 4);
-	LDR_rRI(REG_WORK2, REG_WORK3, 8);
+   LDR_rRI(REG_WORK1, REG_WORK3, 4);
+//   LDR_rRI(REG_WORK2, REG_WORK3, 8);
+   PUSH(REG_WORK1);
+   LDR_rRI(REG_WORK1, REG_WORK3, 8);
+   MOV_rr(REG_WORK2,REG_WORK1);
+   POP(REG_WORK1);
 #endif
-*/
-	LDR_rRI(REG_WORK1, REG_WORK3, 4);
-	PUSH(REG_WORK1);
-	LDR_rRI(REG_WORK1, REG_WORK3, 8);
-	MOV_rr(REG_WORK2,REG_WORK1);
-	POP(REG_WORK1);
+
 
 	BIC_rri(REG_WORK1, REG_WORK1, 0x80); 	// clear explicit 1
 	VMOV64_drr(d, REG_WORK1, REG_WORK2);
@@ -1068,21 +1101,33 @@ LOWFUNC(NONE,WRITE,2,raw_fp_from_double_mr,(RR4 adr, FR s))
 	ADD_rrr(REG_WORK3, adr, R_MEMSTART);
 	VREV64_8_dd(SCRATCH_F64_1, s);
   VMOV64_rrd(REG_WORK1, REG_WORK2, SCRATCH_F64_1);
+#ifdef ALLOW_UNALIGNED_LDRD
   STRD_rRI(REG_WORK1, REG_WORK3, 0);
+#else
+  STR_rRI(REG_WORK1, REG_WORK3, 0);
+//  STR_rRI(REG_WORK2, REG_WORK3, 4);
+  PUSH(REG_WORK1);
+  MOV_rr(REG_WORK1,REG_WORK2);
+  STR_rRI(REG_WORK1, REG_WORK3, 4);
+  POP(REG_WORK1);
+#endif
 }
 LENDFUNC(NONE,WRITE,2,raw_fp_from_double_mr,(RR4 adr, FR s))
 
 LOWFUNC(NONE,READ,2,raw_fp_to_double_rm,(FW d, RR4 adr))
 {
 	ADD_rrr(REG_WORK3, adr, R_MEMSTART);
-/*
+#ifdef ALLOW_UNALIGNED_LDRD
 	LDRD_rRI(REG_WORK1, REG_WORK3, 0);
-*/
-	LDR_rR(REG_WORK1, REG_WORK3);
-	PUSH(REG_WORK1);
-	LDR_rRI(REG_WORK1, REG_WORK3, 4);
-	MOV_rr(REG_WORK2,REG_WORK1);
-	POP(REG_WORK1);
+#else
+  LDR_rRI(REG_WORK1, REG_WORK3, 0);
+//  LDR_rRI(REG_WORK2, REG_WORK3, 4);
+  PUSH(REG_WORK1);
+  LDR_rRI(REG_WORK1, REG_WORK3, 4);
+  MOV_rr(REG_WORK2,REG_WORK1);
+  POP(REG_WORK1);
+#endif
+
 
 	VMOV64_drr(d, REG_WORK1, REG_WORK2);
   VREV64_8_dd(d, d);

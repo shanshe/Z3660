@@ -32,7 +32,7 @@ extern "C" void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type);
 extern "C" uint32_t read_scsi_register(uint16_t zaddr,int type);
 extern "C" uint32_t read_rtg_register(uint16_t zaddr);
 extern SHARED *shared;
-
+/*
 void put_long_ce000 (uaecptr addr, uae_u32 v)
 {
    m68k_write_memory_32((unsigned int)addr,(unsigned int)v);
@@ -45,6 +45,7 @@ void put_byte_ce000 (uaecptr addr, uae_u32 v)
 {
    m68k_write_memory_8(addr,v);
 }
+*/
 uae_u32 do_get_mem_long(uae_u32* a)
 {
 //    uint8_t* b = (uint8_t*)a;
@@ -117,25 +118,10 @@ bool is_cycle_ce(uaecptr address)
 }
 unsigned int direct_read_32(uaecptr add)
 {
-   if(add&3)
-   {
-//      printf("r32 unaligned\n");
-      return(
-            ((*(uint8_t *)(add  ))<<24)|
-            ((*(uint8_t *)(add+1))<<16)|
-            ((*(uint8_t *)(add+2))<<8)|
-            ((*(uint8_t *)(add+3)))
-            );
-   }
    return(swap32(*(uint32_t *)add));
 }
 unsigned int direct_read_16(uaecptr add)
 {
-   if(add&1)
-   {
-//      printf("r16 unaligned\n");
-   return((*(uint8_t *)(add+1))|((*(uint8_t *)(add))<<8));
-   }
    return(swap16(*(uint16_t *)add));
 }
 unsigned int direct_read_8(uaecptr add)
@@ -144,31 +130,15 @@ unsigned int direct_read_8(uaecptr add)
 }
 void direct_write_32(uaecptr add, unsigned int data)
 {
-   if(add&3)
-   {
-//      printf("w32 unaligned\n");
-      *(uint8_t *)(add  )=(uint8_t)(data>>24);
-      *(uint8_t *)(add+1)=(uint8_t)(data>>16);
-      *(uint8_t *)(add+2)=(uint8_t)(data>>8 );
-      *(uint8_t *)(add+3)=(uint8_t)(data    );
-      return;
-   }
    *(uint32_t *)add=swap32(data);
 }
 void direct_write_16(uaecptr add, unsigned int data)
 {
-   if(add&1)
-   {
-//      printf("w16 unaligned\n");
-      *(uint8_t *)(add  )=(uint8_t)(data>>8);
-      *(uint8_t *)(add+1)=(uint8_t)(data   );
-      return;
-   }
    *(uint16_t *)add=swap16(data);
 }
 void direct_write_8(uaecptr add, unsigned int data)
 {
-   *(uint8_t *)add=data&0xFF;
+   *(uint8_t *)add=data;
 }
 extern uint32_t autoConfigBaseFastRam;
 extern uint32_t autoConfigBaseRTG;
@@ -435,7 +405,7 @@ void auto_write_8_z2(uaecptr address, unsigned int data)
 }
 void auto_write_32_z3(uaecptr address, unsigned int data)
 {
-   z3660_printf("[Core1] Autoconfig Z3 BANK: Writ32e 0x%08X 0x%08X\n",address,data);
+   z3660_printf("[Core1] Autoconfig Z3 BANK: Write32 0x%08X 0x%08X\n",address,data);
 #ifdef AUTOCONFIG_ENABLED
    if(((configured_z3|shutup_z3)&local.z3_enabled)!=local.z3_enabled)
       write_autoconfig_z3(address,data);
@@ -761,6 +731,7 @@ addrbank auto_z3_bank = {
       auto_read_32_z3, auto_read_16_z3,
       ABFLAG_NONE, MB_READ, MB_WRITE
 };
+/*
 addrbank test_bank = {
       test_read_32, test_read_16, test_read_8,
       test_write_32, test_write_16, test_write_8,
@@ -768,6 +739,7 @@ addrbank test_bank = {
       test_read_32, test_read_16,
       ABFLAG_IO, MB_READ, MB_WRITE
 };
+*/
 addrbank mobo_bank = {
       ps_read_32, ps_read_16, ps_read_8,
       ps_write_32, ps_write_16, ps_write_8,
@@ -932,21 +904,22 @@ extern "C" void make_dummy_address_bank(uint32_t address)
    int add=address>>16;
    RANGE_MAP(add,add,dmmy_bank); // dummy
 }
-void uae_emulator(int enable_jit)
+void uae_emulator(int enable_jit, int cpu_model)
 {
-   z3660_printf("[Core1] Starting UAE%s emulator\n",enable_jit?"JIT":"");
-   currprefs.cpu_model              = changed_prefs.cpu_model=68040;
-   currprefs.fpu_model              = changed_prefs.fpu_model=68040;
-   currprefs.mmu_model              = changed_prefs.mmu_model=68040;
+   z3660_printf("[Core1] Starting UAE%s_%s emulator\n",enable_jit?"JIT":"",cpu_model==68030?"030":"040");
+   currprefs.cpu_model              = changed_prefs.cpu_model=cpu_model;
+   currprefs.fpu_model              = changed_prefs.fpu_model=cpu_model==68030?68882:68040;
+   currprefs.mmu_model              = changed_prefs.mmu_model=0;//enable_jit?0:cpu_model;
    currprefs.cpu_compatible         = changed_prefs.cpu_compatible=false;
    currprefs.address_space_24       = changed_prefs.address_space_24=false;
    currprefs.cpu_cycle_exact        = changed_prefs.cpu_cycle_exact=false;
    currprefs.cpu_memory_cycle_exact = changed_prefs.cpu_memory_cycle_exact=false;
    currprefs.int_no_unimplemented   = changed_prefs.int_no_unimplemented=false;
    currprefs.fpu_no_unimplemented   = changed_prefs.fpu_no_unimplemented=false;
+   currprefs.crash_auto_reset       = changed_prefs.crash_auto_reset=true;
 //   currprefs.blitter_cycle_exact    = changed_prefs.blitter_cycle_exact=false;
    currprefs.m68k_speed             = changed_prefs.m68k_speed=-1;//M68K_SPEED_25MHZ_CYCLES;
-   currprefs.comptrustbyte          = changed_prefs.comptrustbyte=true;
+   currprefs.comptrustbyte          = changed_prefs.comptrustbyte=1;
    if(enable_jit)
    {
       currprefs.cachesize              = changed_prefs.cachesize=32*1024;
@@ -959,7 +932,7 @@ void uae_emulator(int enable_jit)
    }
    currprefs.fpu_strict             = changed_prefs.fpu_strict=true;
 
-//   regs.natmem_offset=(uae_u8*)0x08000000;
+   regs.natmem_offset=(uae_u8*)0;//0x08000000;
    for(int i=0;i<MEMORY_BANKS;i++) // zero all memory banks vars
    {
       memset(&mem_banks[i],0,sizeof(addrbank));
@@ -1068,49 +1041,35 @@ void uae_emulator(int enable_jit)
 }
 extern SHARED *shared;
 int jit_enabled_last=-1;
+void print_histogram_dataabort(void);
+
 void z3660_tasks(void)
 {
-   static long int count=100000000;
+   static long int count=10000000;
    if(--count>0) return;
-   count=100000000;
+   count=10000000;
+   if(shared->printhist_dataabort)
+   {
+      shared->printhist_dataabort=0;
+      print_histogram_dataabort();
+   }
+
    int jit_enabled=shared->jit_enabled;
    if(jit_enabled!=jit_enabled_last)
    {
       jit_enabled_last=jit_enabled;
       if(jit_enabled)
       {
+         printf("[Core1] JIT enabled\n");
          currprefs.cachesize = changed_prefs.cachesize=32*1024;
          currprefs.compfpu   = changed_prefs.compfpu=true;
       }
       else
       {
+         printf("[Core1] JIT disabled\n");
          currprefs.cachesize = changed_prefs.cachesize=0;
          currprefs.compfpu   = changed_prefs.compfpu=false;
       }
       set_special(SPCFLAG_MODE_CHANGE);
    }
-#if 0
-   if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
-   {
-
-//      z3660_printf("Reset active (DOWN)...\n\r");
-      while(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0){}
-//      z3660_printf("Reset inactive (UP)...\n\r");
-      cpu_emulator_reset_core0();
-      ovl=1;
-      m68k_reset_newcpu(1);
-      reset_autoconfig();
-      init_m68k();
-      build_cpufunctbl();
-      m68k_setpc_normal (regs.pc);
-//      doint();
-      fill_prefetch_quick ();
-      set_cycles (start_cycles);
-      regs.stopped=false;
-      set_special(0);
-      write_reg(0x10,0x80000000);
-      dmb();
-      write_reg(0x10,0x00000000);
-   }
-#endif
 }

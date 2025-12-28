@@ -4,6 +4,8 @@
 
 void decompress_rle_smush1_data(uint8_t * src, uint8_t * dst, uint32_t size, uint16_t width, uint16_t height, uint16_t pitch)
 {
+	(void)size;
+	(void)width;
     int size_line, h, length;
     uint8_t code, val;
 

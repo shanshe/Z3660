@@ -4,7 +4,7 @@
 /*                                                                 */
 /* Version: 2018.3                                                 */
 /*                                                                 */
-/* Copyright (c) 2010-2016 Xilinx, Inc.  All rights reserved.      */
+/* Copyright (c) 2010-2019 Xilinx, Inc.  All rights reserved.      */
 /*                                                                 */
 /* Description : Cortex-A9 Linker Script                           */
 /*                                                                 */
@@ -38,6 +38,7 @@ ENTRY(_vector_table)
 SECTIONS
 {
 .text : {
+   . = ALIGN(2048);
    KEEP (*(.vectors))
    *(.boot)
    *(.text)
@@ -112,6 +113,10 @@ SECTIONS
 
 .got : {
    *(.got)
+} > ps7_ddr_0
+
+.note.gnu.build-id : {
+   KEEP (*(.note.gnu.build-id))
 } > ps7_ddr_0
 
 .ctors : {

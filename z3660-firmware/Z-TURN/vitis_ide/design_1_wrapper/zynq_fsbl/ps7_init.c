@@ -115,11 +115,17 @@ unsigned long ps7_pll_init_data_3_0[] = {
     // .. .. 
     EMIT_MASKWRITE(0XF8000114, 0x003FFFF0U ,0x0012C220U),
     // .. .. .. START: UPDATE FB_DIV
-    // .. .. .. PLL_FDIV = 0x20
+    // .. .. .. PLL_FDIV = 0x20 (533 MHz) / 0x28 (667 MHz) / 0x30 (800 MHz)
     // .. .. .. ==> 0XF8000104[18:12] = 0x00000020U
     // .. .. ..     ==> MASK : 0x0007F000U    VAL : 0x00020000U
     // .. .. .. 
-    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00020000U),
+#ifdef DDR_667MHZ
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00028000U), // 667 MHz
+#elif defined(DDR_800MHZ)
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00030000U), // 800 MHz
+#else
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00020000U), // 533 MHz (default)
+#endif
     // .. .. .. FINISH: UPDATE FB_DIV
     // .. .. .. START: BY PASS PLL
     // .. .. .. PLL_BYPASS_FORCE = 1
@@ -4060,11 +4066,17 @@ unsigned long ps7_pll_init_data_2_0[] = {
     // .. .. 
     EMIT_MASKWRITE(0XF8000114, 0x003FFFF0U ,0x0012C220U),
     // .. .. .. START: UPDATE FB_DIV
-    // .. .. .. PLL_FDIV = 0x20
+    // .. .. .. PLL_FDIV = 0x20 (533 MHz) / 0x28 (667 MHz) / 0x30 (800 MHz)
     // .. .. .. ==> 0XF8000104[18:12] = 0x00000020U
     // .. .. ..     ==> MASK : 0x0007F000U    VAL : 0x00020000U
     // .. .. .. 
-    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00020000U),
+#ifdef DDR_667MHZ
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00028000U), // 667 MHz
+#elif defined(DDR_800MHZ)
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00030000U), // 800 MHz
+#else
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00020000U), // 533 MHz (default)
+#endif
     // .. .. .. FINISH: UPDATE FB_DIV
     // .. .. .. START: BY PASS PLL
     // .. .. .. PLL_BYPASS_FORCE = 1
@@ -8158,11 +8170,17 @@ unsigned long ps7_pll_init_data_1_0[] = {
     // .. .. 
     EMIT_MASKWRITE(0XF8000114, 0x003FFFF0U ,0x0012C220U),
     // .. .. .. START: UPDATE FB_DIV
-    // .. .. .. PLL_FDIV = 0x20
+    // .. .. .. PLL_FDIV = 0x20 (533 MHz) / 0x28 (667 MHz) / 0x30 (800 MHz)
     // .. .. .. ==> 0XF8000104[18:12] = 0x00000020U
     // .. .. ..     ==> MASK : 0x0007F000U    VAL : 0x00020000U
     // .. .. .. 
-    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00020000U),
+#ifdef DDR_667MHZ
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00028000U), // 667 MHz
+#elif defined(DDR_800MHZ)
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00030000U), // 800 MHz
+#else
+    EMIT_MASKWRITE(0XF8000104, 0x0007F000U ,0x00020000U), // 533 MHz (default)
+#endif
     // .. .. .. FINISH: UPDATE FB_DIV
     // .. .. .. START: BY PASS PLL
     // .. .. .. PLL_BYPASS_FORCE = 1

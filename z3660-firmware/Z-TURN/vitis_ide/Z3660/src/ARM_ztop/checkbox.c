@@ -11,28 +11,46 @@ extern sFONT *Font;
 CheckBox *cb_scsi_boot;
 void cb_scsi_boot_action(void *cb)
 {
+   (void)cb;
    cb_scsi_boot->checked=!cb_scsi_boot->checked;
 }
 CheckBox *cb_autoc_ram;
 void cb_autoc_ram_action(void *cb)
 {
+   (void)cb;
    cb_autoc_ram->checked=!cb_autoc_ram->checked;
 }
 CheckBox *cb_autoc_rtg;
 void cb_autoc_rtg_action(void *cb)
 {
+   (void)cb;
    cb_autoc_rtg->checked=!cb_autoc_rtg->checked;
 }
 CheckBox *cb_test;
 void cb_test_action(void *cb)
 {
+   (void)cb;
    cb_test->checked=!cb_test->checked;
 }
 CheckBox *cb_cpuram;
 void cb_cpuram_action(void *cb)
 {
+   (void)cb;
    cb_cpuram->checked=!cb_cpuram->checked;
 }
+CheckBox *cb_mount_sd_0x76;
+void cb_mount_sd_0x76_action(void *cb)
+{
+   (void)cb;
+   cb_mount_sd_0x76->checked=!cb_mount_sd_0x76->checked;
+}
+CheckBox *cb_mount_sd_root;
+void cb_mount_sd_root_action(void *cb)
+{
+   (void)cb;
+   cb_mount_sd_root->checked=!cb_mount_sd_root->checked;
+}
+
 CheckBox *cb_preset[PRESET_CB_MAX]; // 8 preset + 1 use no preset
 void cb_preset_action(void *cb)
 {
@@ -65,7 +83,37 @@ void cb_preset_action(void *cb)
 
    }
 }
+CheckBox *cb_doubled_cursor;
+void cb_doubled_cursor_action(void *cb)
+{
+   (void)cb;
+   cb_doubled_cursor->checked=!cb_doubled_cursor->checked;
+}
 
+CheckBox *cb_monitor_switch_CTS;
+void cb_cb_monitor_switch_CTS_action(void *cb)
+{
+   (void)cb;
+   cb_monitor_switch_CTS->checked=!cb_monitor_switch_CTS->checked;
+}
+CheckBox *cb_monitor_switch_SEL;
+void cb_cb_monitor_switch_SEL_action(void *cb)
+{
+   (void)cb;
+   cb_monitor_switch_SEL->checked=!cb_monitor_switch_SEL->checked;
+}
+CheckBox *cb_monitor_switch_CTS_level;
+void cb_cb_monitor_switch_CTS_level_action(void *cb)
+{
+   (void)cb;
+   cb_monitor_switch_CTS_level->checked=!cb_monitor_switch_CTS_level->checked;
+}
+CheckBox *cb_monitor_switch_SEL_level;
+void cb_cb_monitor_switch_SEL_level_action(void *cb)
+{
+   (void)cb;
+   cb_monitor_switch_SEL_level->checked=!cb_monitor_switch_SEL_level->checked;
+}
 int8_t is_cursor_at_checkbox(CheckBox *cb)
 {
    if(mousex>=cb->x && mousex<=cb->x+cb->w
@@ -120,8 +168,15 @@ void checkboxes_run(void)
    checkbox_run(cb_autoc_rtg);
    checkbox_run(cb_test);
    checkbox_run(cb_cpuram);
+   checkbox_run(cb_mount_sd_0x76);
+   checkbox_run(cb_mount_sd_root);
    for(int i=0;i<PRESET_CB_MAX;i++)
       checkbox_run(cb_preset[i]);
+   checkbox_run(cb_doubled_cursor);
+   checkbox_run(cb_monitor_switch_CTS);
+   checkbox_run(cb_monitor_switch_SEL);
+   checkbox_run(cb_monitor_switch_CTS_level);
+   checkbox_run(cb_monitor_switch_SEL_level);
 }
 void init_checkboxes(void)
 {
@@ -165,6 +220,22 @@ void init_checkboxes(void)
    cb_cpuram->action=cb_cpuram_action;
    cb_cpuram->tab=TAB_BOOT;
 
+   cb_mount_sd_0x76=(CheckBox *)malloc(sizeof(CheckBox));
+   cb_mount_sd_0x76->w=14;
+   cb_mount_sd_0x76->h=14;
+   cb_mount_sd_0x76->is_pressed=0;
+   cb_mount_sd_0x76->b_was_at_cursor=0;
+   cb_mount_sd_0x76->action=cb_mount_sd_0x76_action;
+   cb_mount_sd_0x76->tab=TAB_BOOT;
+
+   cb_mount_sd_root=(CheckBox *)malloc(sizeof(CheckBox));
+   cb_mount_sd_root->w=14;
+   cb_mount_sd_root->h=14;
+   cb_mount_sd_root->is_pressed=0;
+   cb_mount_sd_root->b_was_at_cursor=0;
+   cb_mount_sd_root->action=cb_mount_sd_root_action;
+   cb_mount_sd_root->tab=TAB_BOOT;
+
    for(int i=0;i<PRESET_CB_MAX;i++)
    {
       cb_preset[i]=(CheckBox *)malloc(sizeof(CheckBox));
@@ -175,6 +246,47 @@ void init_checkboxes(void)
       cb_preset[i]->action=cb_preset_action;
       cb_preset[i]->tab=TAB_PRESET;
    }
+
+   cb_doubled_cursor=(CheckBox *)malloc(sizeof(CheckBox));
+   cb_doubled_cursor->w=14;
+   cb_doubled_cursor->h=14;
+   cb_doubled_cursor->is_pressed=0;
+   cb_doubled_cursor->b_was_at_cursor=0;
+   cb_doubled_cursor->action=cb_doubled_cursor_action;
+   cb_doubled_cursor->tab=TAB_INFO;
+
+   cb_monitor_switch_CTS=(CheckBox *)malloc(sizeof(CheckBox));
+   cb_monitor_switch_CTS->w=14;
+   cb_monitor_switch_CTS->h=14;
+   cb_monitor_switch_CTS->is_pressed=0;
+   cb_monitor_switch_CTS->b_was_at_cursor=0;
+   cb_monitor_switch_CTS->action=cb_cb_monitor_switch_CTS_action;
+   cb_monitor_switch_CTS->tab=TAB_INFO;
+
+   cb_monitor_switch_SEL=(CheckBox *)malloc(sizeof(CheckBox));
+   cb_monitor_switch_SEL->w=14;
+   cb_monitor_switch_SEL->h=14;
+   cb_monitor_switch_SEL->is_pressed=0;
+   cb_monitor_switch_SEL->b_was_at_cursor=0;
+   cb_monitor_switch_SEL->action=cb_cb_monitor_switch_SEL_action;
+   cb_monitor_switch_SEL->tab=TAB_INFO;
+
+   cb_monitor_switch_CTS_level=(CheckBox *)malloc(sizeof(CheckBox));
+   cb_monitor_switch_CTS_level->w=14;
+   cb_monitor_switch_CTS_level->h=14;
+   cb_monitor_switch_CTS_level->is_pressed=0;
+   cb_monitor_switch_CTS_level->b_was_at_cursor=0;
+   cb_monitor_switch_CTS_level->action=cb_cb_monitor_switch_CTS_level_action;
+   cb_monitor_switch_CTS_level->tab=TAB_INFO;
+
+   cb_monitor_switch_SEL_level=(CheckBox *)malloc(sizeof(CheckBox));
+   cb_monitor_switch_SEL_level->w=14;
+   cb_monitor_switch_SEL_level->h=14;
+   cb_monitor_switch_SEL_level->is_pressed=0;
+   cb_monitor_switch_SEL_level->b_was_at_cursor=0;
+   cb_monitor_switch_SEL_level->action=cb_cb_monitor_switch_SEL_level_action;
+   cb_monitor_switch_SEL_level->tab=TAB_INFO;
+
 }
 void checkboxes_repaint(void)
 {
@@ -183,8 +295,15 @@ void checkboxes_repaint(void)
    checkbox_repaint(cb_autoc_rtg);
    checkbox_repaint(cb_test);
    checkbox_repaint(cb_cpuram);
+   checkbox_repaint(cb_mount_sd_0x76);
+   checkbox_repaint(cb_mount_sd_root);
    for(int i=0;i<PRESET_CB_MAX;i++)
       checkbox_repaint(cb_preset[i]);
+   checkbox_repaint(cb_doubled_cursor);
+   checkbox_repaint(cb_monitor_switch_CTS);
+   checkbox_repaint(cb_monitor_switch_SEL);
+   checkbox_repaint(cb_monitor_switch_CTS_level);
+   checkbox_repaint(cb_monitor_switch_SEL_level);
 }
 void paint_checkboxes(void)
 {
@@ -198,11 +317,25 @@ void paint_checkboxes(void)
       CHECKBOX(cb_test,cb_test->checked);
    if(cb_cpuram->tab==selected_tab)
       CHECKBOX(cb_cpuram,cb_cpuram->checked);
+   if(cb_mount_sd_0x76->tab==selected_tab)
+      CHECKBOX(cb_mount_sd_0x76,cb_mount_sd_0x76->checked);
+   if(cb_mount_sd_root->tab==selected_tab)
+      CHECKBOX(cb_mount_sd_root,cb_mount_sd_root->checked);
    for(int i=0;i<PRESET_CB_MAX;i++)
    {
       if(cb_preset[i]->tab==selected_tab)
          CHECKBOX(cb_preset[i],cb_preset[i]->checked);
    }
+   if(cb_doubled_cursor->tab==selected_tab)
+      CHECKBOX(cb_doubled_cursor,cb_doubled_cursor->checked);
+   if(cb_monitor_switch_CTS->tab==selected_tab)
+      CHECKBOX(cb_monitor_switch_CTS,cb_monitor_switch_CTS->checked);
+   if(cb_monitor_switch_SEL->tab==selected_tab)
+      CHECKBOX(cb_monitor_switch_SEL,cb_monitor_switch_SEL->checked);
+   if(cb_monitor_switch_CTS_level->tab==selected_tab)
+      CHECKBOX(cb_monitor_switch_CTS_level,cb_monitor_switch_CTS_level->checked);
+   if(cb_monitor_switch_SEL_level->tab==selected_tab)
+      CHECKBOX(cb_monitor_switch_SEL_level,cb_monitor_switch_SEL_level->checked);
 }
 void recalculate_coords_checkboxes(void)
 {
@@ -221,11 +354,30 @@ void recalculate_coords_checkboxes(void)
    cb_cpuram->x=win.x+270+80;
    cb_cpuram->y=win.y+74+16+16+16+16;
 
+   cb_mount_sd_0x76->x=win.x+70+80;
+   cb_mount_sd_0x76->y=win.y+74+16+16+16+16;
+
+   cb_mount_sd_root->x=win.x+70+80;
+   cb_mount_sd_root->y=win.y+74+16+16+16+16+16;
+
    for(int i=0;i<PRESET_CB_MAX;i++)
    {
       cb_preset[i]->x=win.x+270+92;
       cb_preset[i]->y=win.y+37+(Font->Height+5)*i;
    }
+
+   cb_doubled_cursor->x=win.x+84+40;
+   cb_doubled_cursor->y=win.y+74+16+16+16+16+16;
+
+   cb_monitor_switch_CTS->x=win.x+84+40;
+   cb_monitor_switch_CTS->y=win.y+74+16+16+16+16+16+16;
+   cb_monitor_switch_SEL->x=win.x+84+40;
+   cb_monitor_switch_SEL->y=win.y+74+16+16+16+16+16+16+16;
+   cb_monitor_switch_CTS_level->x=win.x+84+180;
+   cb_monitor_switch_CTS_level->y=win.y+74+16+16+16+16+16+16;
+   cb_monitor_switch_SEL_level->x=win.x+84+180;
+   cb_monitor_switch_SEL_level->y=win.y+74+16+16+16+16+16+16+16;
+
 }
 void checkboxes_action(void)
 {
@@ -234,6 +386,13 @@ void checkboxes_action(void)
    checkbox_action(cb_autoc_rtg);
    checkbox_action(cb_test);
    checkbox_action(cb_cpuram);
+   checkbox_action(cb_mount_sd_0x76);
+   checkbox_action(cb_mount_sd_root);
    for(int i=0;i<PRESET_CB_MAX;i++)
       checkbox_action(cb_preset[i]);
+   checkbox_action(cb_doubled_cursor);
+   checkbox_action(cb_monitor_switch_CTS);
+   checkbox_action(cb_monitor_switch_SEL);
+   checkbox_action(cb_monitor_switch_CTS_level);
+   checkbox_action(cb_monitor_switch_SEL_level);
 }

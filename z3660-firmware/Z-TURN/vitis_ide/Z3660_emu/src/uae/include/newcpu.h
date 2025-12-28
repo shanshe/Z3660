@@ -14,7 +14,7 @@
 #include "memory.h"
 #include "machdep/m68k.h"
 #include "sysconfig.h"
-#include "events.h"
+//#include "events.h"
 //#include "thread.h"
 
 extern const int areg_byteinc[];
@@ -42,16 +42,17 @@ struct cputbl {
 #define MAX_JIT_CACHE 32768
 typedef uae_u32 REGPARAM3 compop_func(uae_u32) REGPARAM;
 
-#define COMP_OPCODE_ISJUMP      0x0001
-#define COMP_OPCODE_LONG_OPCODE 0x0002
-#define COMP_OPCODE_CMOV        0x0004
-#define COMP_OPCODE_ISADDX      0x0008
-#define COMP_OPCODE_ISCJUMP     0x0010
-#define COMP_OPCODE_USES_FPU    0x0020
+#define COMP_OPCODE_ISJUMP      0x00000001
+#define COMP_OPCODE_LONG_OPCODE 0x00000002
+#define COMP_OPCODE_CMOV        0x00000004
+#define COMP_OPCODE_ISADDX      0x00000008
+#define COMP_OPCODE_ISCJUMP     0x00000010
+#define COMP_OPCODE_USES_FPU    0x00000020
+#define COMP_BAD                0x40000000
 
 struct comptbl {
 	compop_func* handler;
-	uae_u32 specific;
+   uae_u32 specific;
 	uae_u32 opcode;
 };
 #endif
@@ -152,6 +153,8 @@ struct regstruct
 	uae_u32* raw_cputbl_count;
 	uintptr mem_banks;
 	uintptr cache_tags;
+	int pissoff;
+
 #endif
 };
 

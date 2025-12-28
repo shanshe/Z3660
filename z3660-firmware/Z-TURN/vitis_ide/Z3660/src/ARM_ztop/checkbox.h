@@ -22,7 +22,14 @@ extern CheckBox *cb_autoc_ram;
 extern CheckBox *cb_autoc_rtg;
 extern CheckBox *cb_test;
 extern CheckBox *cb_cpuram;
+extern CheckBox *cb_mount_sd_0x76;
+extern CheckBox *cb_mount_sd_root;
 extern CheckBox *cb_preset[PRESET_CB_MAX];
+extern CheckBox *cb_doubled_cursor;
+extern CheckBox *cb_monitor_switch_CTS;
+extern CheckBox *cb_monitor_switch_SEL;
+extern CheckBox *cb_monitor_switch_CTS_level;
+extern CheckBox *cb_monitor_switch_SEL_level;
 
 #define CHECKBOX(t,checked) do {\
 	FILLRECT( t->x+3, t->y+2, t->w-6, t->h-2, 0x00A8A8A8); \

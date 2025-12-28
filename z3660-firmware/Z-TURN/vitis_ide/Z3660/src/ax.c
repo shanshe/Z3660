@@ -6,7 +6,6 @@
 #include "interrupt.h"
 #include "sleep.h"
 #include <stdlib.h>
-#include "ax.h"
 #include "memorymap.h"
 #include "xtime_l.h"
 #include <math.h>
@@ -26,8 +25,8 @@ float a2[11]={0};
 float b0[11]={0};
 float b1[11]={0};
 float b2[11]={0};
-void lowpass_filter(int16_t *output, int output_samples);
-void equalizer(int16_t *output, int output_samples);
+void lowpass_filter(int16_t *output, unsigned int output_samples);
+void equalizer(int16_t *output, unsigned int output_samples);
 
 int32_t preamp=64;
 float vl=1.0,vr=1.0;
@@ -97,7 +96,7 @@ void audio_init_i2s() {
 // returns 1 if adau1701 found, otherwise 0
 // set audio_tx_buffer before!
 int audio_adau_init(int program_dsp) {
-
+   (void)program_dsp;
    return(1);
 }
 
@@ -121,6 +120,7 @@ void audio_debug_timer(int zdata) {
 
 // audio formatter interrupt, triggered whenever a period is completed
 void isr_audio_tx(void *dummy) {
+   (void)dummy;
    uint32_t val = XAudioFormatter_ReadReg(XPAR_XAUDIOFORMATTER_0_BASEADDR, XAUD_FORMATTER_STS + XAUD_FORMATTER_MM2S_OFFSET);
    val |= (1<<31); // clear irq
    XAudioFormatter_WriteReg(XPAR_XAUDIOFORMATTER_0_BASEADDR,
@@ -197,7 +197,7 @@ int audio_swab(uint16_t audio_buf_samples, uint32_t offset, int byteswap) {
 
    // is the distance of reader (audio dma) and writer (amiga) in the ring buffer too small?
    // then signal this condition so amiga can adjust
-   if (abs(txcount-offset) < AUDIO_BYTES_PER_PERIOD) {
+   if (abs((int32_t)txcount-(int32_t)offset) < AUDIO_BYTES_PER_PERIOD) {
       audio_buffer_collision = 1;
       //DEBUG_AUDIO("[aswap] ring collision %d\n", abs(txcount-offset));
    } else {
@@ -262,7 +262,7 @@ void resample_s16(int16_t *input, int16_t *output, int in_sample_rate,
 }
 float lpf_wl1=0.,lpf_wl2=0.;
 float lpf_wr1=0.,lpf_wr2=0.;
-void lowpass_filter(int16_t *output, int output_samples)
+void lowpass_filter(int16_t *output, unsigned int output_samples)
 {
    // low pass filter
 //#define DIRECT_FORM_I
@@ -330,7 +330,7 @@ void lowpass_filter(int16_t *output, int output_samples)
 }
 float bpf_wl1[10]={0.},bpf_wl2[10]={0.};
 float bpf_wr1[10]={0.},bpf_wr2[10]={0.};
-void bandpass_filter(int band, int16_t *output, int output_samples)
+void bandpass_filter(int band, int16_t *output, unsigned int output_samples)
 {
    // low pass filter
 //#define DIRECT_FORM_I
@@ -397,7 +397,7 @@ void bandpass_filter(int band, int16_t *output, int output_samples)
 #endif
 }
 extern uint32_t audio_params[];
-void equalizer(int16_t *output, int output_samples)
+void equalizer(int16_t *output, unsigned int output_samples)
 {
    for(int i=0;i<10;i++)
    {

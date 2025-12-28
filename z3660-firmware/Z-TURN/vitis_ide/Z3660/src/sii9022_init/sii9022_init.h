@@ -1,7 +1,7 @@
 /*
  * sii9022_init.h
  *
- *  Created on: 2017Äê8ÔÂ24ÈÕ
+ *  Created on: 2017ï¿½ï¿½8ï¿½ï¿½24ï¿½ï¿½
  *      Author: pgsimple
  */
 
@@ -10,10 +10,14 @@
 
 #include "xil_types.h"
 #include "../rtg/zz_video_modes.h"
+#include "xiicps.h"
 
 int iic_write_8(uint8_t a,uint8_t data);
 int iic_master_init(void);
 int sii9022_init(zz_video_mode *vmode);
+extern XIicPs IicInstance;
+
+#define I2C_FREQ_SII9022 100000
 
 /* Video */
 #define SII9022_PIXEL_CLK_LSB_REG             0x00

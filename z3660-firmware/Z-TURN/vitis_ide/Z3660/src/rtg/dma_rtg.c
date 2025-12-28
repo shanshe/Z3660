@@ -174,8 +174,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
          case OP_P2C:
          case OP_P2D: {
-            SWAP16(data->x[0]);		SWAP16(data->x[1]);		SWAP16(data->x[2]);
-            SWAP16(data->y[0]);		SWAP16(data->y[1]);		SWAP16(data->y[2]);
+            SWAP16(data->x[0]);     SWAP16(data->x[1]);     SWAP16(data->x[2]);
+                                    SWAP16(data->y[1]);     SWAP16(data->y[2]);
 
             SWAP16(data->pitch[0]);		SWAP16(data->pitch[1]);
             SWAP32(data->offset[0]);	SWAP32(data->offset[1]);
@@ -184,7 +184,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             SWAP16(data->user[1]);
             if(debug_console.debug_rtg)
             {
-               printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
+               printf("x0: %d\n",data->x[0]);
                printf("x1: %d y1: %d\n",data->x[1],data->y[1]);
                printf("x2: %d y2: %d\n",data->x[2],data->y[2]);
                printf("p0: %d p1: %d\n",data->pitch[0],data->pitch[1]);
@@ -236,7 +236,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
          case OP_SPRITE_CLUT_BITMAP:
          case OP_SPRITE_BITMAP: {
-            SWAP16(data->x[2]);
+            SWAP16(data->x[2]);     SWAP16(data->y[2]);
             SWAP16(data->x[0]);		SWAP16(data->x[1]);
             SWAP16(data->y[0]);		SWAP16(data->y[1]);
 
@@ -249,6 +249,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             else
                bmp_data = (uint8_t*) ((uint32_t) ADDR_ADJ + data->offset[1]);
             int double_sprite=data->x[2];
+            int hires_sprite=data->y[2];
 
             clear_hw_sprite();
 
@@ -260,13 +261,17 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
                vs->sprite_y_offset = -(vs->sprite_y_offset);
             }
             vs->sprite_height = data->y[1];
+//            printf("double_sprite %d\n",double_sprite);
+//            printf("hires_sprite %d\n",hires_sprite);
+//            printf("Sprite Width %d\n",vs->sprite_width);
+//            printf("Sprite Height %d\n",vs->sprite_height);
 
             if (zdata == OP_SPRITE_BITMAP) {
-               update_hw_sprite(bmp_data, double_sprite);
+               update_hw_sprite(bmp_data, double_sprite, hires_sprite);
             }
             else {
                //printf("Making a %dx%d cursor (%i %i)\n", sprite_width, sprite_height, sprite_x_offset, sprite_y_offset);
-               update_hw_sprite_clut(bmp_data, data->clut1, vs->sprite_width, vs->sprite_height, data->u8offset, double_sprite);
+               update_hw_sprite_clut(bmp_data, data->clut1, vs->sprite_width, vs->sprite_height, data->u8offset, double_sprite, hires_sprite);
             }
             update_hw_sprite_pos(vs->sprite_x_base, vs->sprite_y_base);
             break;

@@ -43,9 +43,13 @@ void PrintP(struct point3D *P);
 void PrintPoint3D(struct point3D *P);
 
 void PrintRGBA(UBYTE *RGBA)
-{}
+{
+    (void)RGBA;
+}
 void pf(float x)
-{}
+{
+    (void)x;
+}
 void *Libmalloc(ULONG size)
 {
 	return(heap_alloc(size));
@@ -73,11 +77,21 @@ ULONG Libstrlen(void *p)
 	return(strlen(p));
 }
 void LibAlert(void *p1)
-{}
+{
+    (void)p1;
+}
 void Libsavefile(void *filename,void *pt,ULONG size)
-{}
+{
+    (void)filename;
+    (void)pt;
+    (void)size;
+}
 void Libloadfile(void *filename,void *pt,ULONG size)
-{}
+{
+    (void)filename;
+    (void)pt;
+    (void)size;
+}
 #include "soft3d_protos.h"
 #include "soft3d_opengl.h"
 
@@ -713,6 +727,7 @@ void PrintST(struct SOFT3D_texture *ST)
     if (!Wazp3D->DebugST.ON) return;
     Libprintf("SOFT3D_texture(%ld) %s  pt %ld NextST(%ld) TexFlags %ld \n",(ULONG)ST,ST->name,(ULONG)ST->pt,(ULONG)ST->nextST,(ULONG)ST->TexFlags);
 #else
+    (void)ST;
     return;
 #endif
 }
@@ -726,6 +741,7 @@ void PrintPix(union pixel3D *Pix)
     Libprintf("RGBA %ld %ld %ld %ld large %ld",(LONG)Pix->W.R,(LONG)Pix->W.G,(LONG)Pix->W.B,(LONG)Pix->W.A,(LONG)Pix->W.large);
     Libprintf(" ZWF ");  pf((float)Pix->L.z); pf(Pix->L.w); pf(Pix->W.F);Libprintf("\n");
 #else
+    (void)Pix;
     return;
 #endif
 }
@@ -735,6 +751,7 @@ void PrintP2(struct point3D *P)
 #ifdef WAZP3DDEBUG
     Libprintf("ClipXYZW; %ld; %ld; %ld; %ld; UV; %ld; %ld\n",(ULONG)P->x,(ULONG)P->y,(ULONG)(1000.0*P->z),(ULONG)(1000.0*P->w),(ULONG)(P->u),(ULONG)(P->v));
 #else
+    (void)P;
     return;
 #endif
 }
@@ -743,6 +760,7 @@ void PrintP(struct point3D *P)
 #ifdef WAZP3DDEBUG
     Libprintf("XYZ;UVW %f %f %f; %f %f %f\n",P->x,P->y,P->z,P->u,P->v,P->w);
 #else
+    (void)P;
     return;
 #endif
 }
@@ -858,6 +876,8 @@ void WriteImageBuffer(struct SOFT3D_context *SC)
 #ifdef AMIGA
     if(SC->ImageBuffer32!=NULL)
     WritePixelArray(SC->ImageBuffer32,SC->xUpdate,SC->yUpdate,SC->large*(32/8),&SC->rastport,SC->xUpdate,SC->yUpdate+SC->yoffset,SC->largeUpdate,SC->highUpdate,RECTFMT_RGBA);
+#else
+    (void)SC;
 #endif
 }
 /*==========================================================================*/
@@ -933,6 +953,9 @@ SVAR(high)
 //    chunk_list_dump(&freed_chunks, "Freed");
 
 #else
+    (void)sc;
+    (void)large;
+    (void)high;
     SFUNCTION(SOFT3D_AllocImageBuffer)
     Libprintf("WAZP3D/SOFT3D: cant use Soft to bitmap!!!\n");
 #endif
@@ -952,8 +975,12 @@ SFUNCTION(SOFT3D_Init)
 #ifdef SOFT3DLIB
     firstME=NULL;    /* Tracked memory-allocation    */
     if(OpenAmigaLibraries(exec)==FALSE) return(FALSE);
-    OpenSoft3DDLL();
+        OpenSoft3DDLL();
+#else
+    (void)exec;
 #endif
+#else
+    (void)exec;
 #endif
     return(TRUE);
 }
@@ -1231,6 +1258,10 @@ SVAR(ymax)
 /*=============================================================*/
 void SOFT3D_ClearImageBuffer(APTR sc,UWORD x,UWORD y,UWORD large,UWORD high,APTR rgba)
 {
+    (void)x;
+    (void)y;
+    (void)large;
+    (void)high;
 struct SOFT3D_context *SC=sc;
 UBYTE *RGBA=rgba;
 ULONG *ptRGBA32=(ULONG *)RGBA;
@@ -6441,6 +6472,7 @@ SFUNCTION(SOFT3D_CreateTexture)
 /*==================================================================*/
 void SOFT3D_UpdateTexture(APTR sc,APTR st,APTR pt)
 {
+    (void)sc;
 //struct SOFT3D_context *SC=sc;
 struct SOFT3D_texture *ST=st;
 UBYTE UseMip=ST->TexFlags AND 1;
@@ -7100,7 +7132,7 @@ void  SOFT3D_SetBitmap(APTR sc,void  *bm,APTR bmdata,ULONG bmformat,UWORD x,UWOR
 #define PIXFMT_RGB032   103
 #define PIXFMT_0BGR32   104
 #endif
-
+    (void)bm;
 struct SOFT3D_context *SC=sc;
 UBYTE *RGBA;
 ULONG Rbits,Gbits,Bbits;
@@ -7453,6 +7485,7 @@ UBYTE *Image8;                    /* = bitmap memory  */
     SC->bmHandle=LockBitMapTags((APTR)SC->bm,LBMI_BASEADDRESS,(ULONG)&Image8, TAG_DONE);
     return(SC->bmHandle!=NULL);
 #else
+    (void)SC;
     return(TRUE);
 #endif
 }
@@ -7465,6 +7498,8 @@ void UnLockBM(struct SOFT3D_context *SC)
 
     if(SC->bmHandle!=NULL)
         UnLockBitMap(SC->bmHandle);
+#else
+    (void)SC;
 #endif
 }
 /*=================================================================*/

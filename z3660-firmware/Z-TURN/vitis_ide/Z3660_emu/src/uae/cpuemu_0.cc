@@ -15085,8 +15085,10 @@ uae_u32 REGPARAM2 op_4839_0_ff(uae_u32 opcode)
 uae_u32 REGPARAM2 op_4840_0_ff(uae_u32 opcode)
 {
 	uae_u32 srcreg = (opcode & 7);
-	uae_s32 src = m68k_dreg(regs, srcreg);
+	uae_u32 src = m68k_dreg(regs, srcreg);
 	uae_u32 dst = ((src >> 16)&0xFFFF) | ((src&0xFFFF)<<16);
+	if(src==0x00000010 && srcreg==0)
+   printf("src %08lX %08lX\n",src,dst);
 	CLEAR_CZNV();
 	SET_ZFLG(((uae_s32)(dst)) == 0);
 	SET_NFLG(((uae_s32)(dst)) < 0);
@@ -36343,8 +36345,10 @@ uae_u32 REGPARAM2 op_003c_1_ff(uae_u32 opcode)
 {
 	MakeSR();
 	uae_s16 src = get_diword (2);
+//	printf("src 0x%04X\n",src);
 	src &= 0xFF;
 	regs.sr |= src;
+//   printf("regs.sr 0x%04X\n",regs.sr);
 	MakeFromSR();
 	m68k_incpc(4);
 	return 16 * CYCLE_UNIT / 2;
@@ -36414,12 +36418,16 @@ uae_u32 REGPARAM2 op_0a3c_1_ff(uae_u32 opcode)
 /* EORSR.W #<data>.W */
 uae_u32 REGPARAM2 op_0a7c_1_ff(uae_u32 opcode)
 {
+   uae_u16 src = get_diword (2);
+   printf("EORSR.W part1 regs.s %d 0x%04X %p\n",regs.s,src,regs.pc_p);
 	if (!regs.s) {
+	   printf("Exception 8 EORSR.W part2\n");
 		Exception(8);
 		return 4 * CYCLE_UNIT / 2;
 	}
-	MakeSR();
-	uae_s16 src = get_diword (2);
+   printf("EORSR.W\n");
+   MakeSR();
+//	uae_s16 src = get_diword (2);
 	if(regs.t0) check_t0_trace();
 	regs.sr ^= src;
 	MakeFromSR_T0();

@@ -96,7 +96,10 @@ u32 InitSD(const char *filename)
 		fsbl_printf(DEBUG_GENERAL,"SD: Unable to open file %s: %d\n", boot_file, rc);
 		return XST_FAILURE;
 	}
-
+	if(f_size(&fil)<2L*1024*1024) // at least 2 MB ?
+	{
+		return XST_FAILURE;
+	}
 	return XST_SUCCESS;
 
 }

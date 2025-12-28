@@ -7,7 +7,8 @@
 #include "xuartps.h"
 #include "main.h"
 #include "interrupt.h"
-#include "xil_types.h"
+#include "adc.h"
+#include "usb.h"
 #include "xil_cache.h"
 #include "xil_cache_l.h"
 //#include "xparameters.h"
@@ -34,6 +35,7 @@
 #define VDMA_DEVICE_ID   XPAR_AXIVDMA_0_DEVICE_ID
 
 extern const char *bootmode_names[];
+extern int cached_videomode;
 
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
@@ -57,50 +59,56 @@ uint16_t sprite_request_pos_x = 0;
 uint16_t sprite_request_pos_y = 0;
 
 uint16_t color16[8]={(uint16_t)((0x0f<<11)|(0x1f<<5)|(0x0f)),
-                     (uint16_t)((0x0f<<11)|(0x00<<5)|(0x00)),
-                     (uint16_t)((0x00<<11)|(0x1f<<5)|(0x00)),
-                     (uint16_t)((0x00<<11)|(0x00<<5)|(0x0f)),
-                     (uint16_t)((0x0f<<11)|(0x1f<<5)|(0x00)),
-                     (uint16_t)((0x00<<11)|(0x1f<<5)|(0x0f)),
-                     (uint16_t)((0x0f<<11)|(0x00<<5)|(0x0f)),
-                     (uint16_t)((0x04<<11)|(0x08<<5)|(0x04)),
+      (uint16_t)((0x0f<<11)|(0x00<<5)|(0x00)),
+      (uint16_t)((0x00<<11)|(0x1f<<5)|(0x00)),
+      (uint16_t)((0x00<<11)|(0x00<<5)|(0x0f)),
+      (uint16_t)((0x0f<<11)|(0x1f<<5)|(0x00)),
+      (uint16_t)((0x00<<11)|(0x1f<<5)|(0x0f)),
+      (uint16_t)((0x0f<<11)|(0x00<<5)|(0x0f)),
+      (uint16_t)((0x04<<11)|(0x08<<5)|(0x04)),
 };
 uint32_t color32[8]={(uint32_t)((0xf0L<<16)|(0xf0L<<8)|(0xf0L)),
-                     (uint32_t)((0xf0L<<16)|(0x00L<<8)|(0x00L)),
-                     (uint32_t)((0x00L<<16)|(0xf0L<<8)|(0x00L)),
-                     (uint32_t)((0x00L<<16)|(0x00L<<8)|(0xf0L)),
-                     (uint32_t)((0xf0L<<16)|(0xf0L<<8)|(0x00L)),
-                     (uint32_t)((0x00L<<16)|(0xf0L<<8)|(0xf0L)),
-                     (uint32_t)((0xf0L<<16)|(0x00L<<8)|(0xf0L)),
-                     (uint32_t)((0x40L<<16)|(0x40L<<8)|(0x40L)),
+      (uint32_t)((0xf0L<<16)|(0x00L<<8)|(0x00L)),
+      (uint32_t)((0x00L<<16)|(0xf0L<<8)|(0x00L)),
+      (uint32_t)((0x00L<<16)|(0x00L<<8)|(0xf0L)),
+      (uint32_t)((0xf0L<<16)|(0xf0L<<8)|(0x00L)),
+      (uint32_t)((0x00L<<16)|(0xf0L<<8)|(0xf0L)),
+      (uint32_t)((0xf0L<<16)|(0x00L<<8)|(0xf0L)),
+      (uint32_t)((0x40L<<16)|(0x40L<<8)|(0x40L)),
 };
 zz_video_mode preset_video_modes[ZZVMODE_NUM] = {
-    //   HRES       VRES    HSTART  HEND    HMAX    VSTART  VEND    VMAX    POLARITY    MHZ     PIXELCLOCK HZ   VERTICAL HZ     HDMI    MUL/DIV/DIV2
-    {    1280,      720,    1390,   1430,   1650,    725,    730,    750,    0,          74,     74250000,       60,             1,      49, 2, 33 },
-    {     800,      600,     840,    968,   1056,    601,    605,    628,    0,          40,     40000000,       60,             1,      14, 1, 35 },
-    {     640,      480,     656,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             1,      15, 1, 60 },
-    {    1024,      768,    1048,   1184,   1344,    771,    777,    806,    0,          65,     65000000,       60,             1,      13, 1, 20 },
-    {    1280,     1024,    1328,   1440,   1688,   1025,   1028,   1066,    0,         108,    108000000,       60,             1,      54, 5, 10 },
-    {    1920,     1080,    2008,   2052,   2200,   1084,   1089,   1125,    0,         148,    148500000,       60,             1,      27, 1, 18 },
-    {     720,      576,     732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,             1,      45, 2, 83 },
-    {    1920,     1080,    2448,   2492,   2640,   1084,   1089,   1125,    0,         148,    148500000,       50,             1,      27, 1, 18 },
-    {     720,      480,     720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             1,      19, 1, 75 },
-    {     640,      512,     840,    968,   1056,    601,    605,    628,    0,          40,     40000000,       60,             1,      14, 1, 35 },
-    {    1600,     1200,    1704,   1880,   2160,   1201,   1204,   1242,    0,         161,     16089999,       60,             1,      21, 1, 13 },
-    {    2560,     1440,    2680,   2944,   3328,   1441,   1444,   1465,    0,         146,     15846000,       30,             1,      41, 2, 14 },
-    {     720,      576,     732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,             1,      31, 1,115 }, // 720x576 non-standard VSync (PAL Amiga)
-    {     720,      480,     720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             1,      61, 5, 49 }, // 720x480 non-standard VSync (PAL Amiga)
-    {     720,      576,     732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,             1,      59, 7, 31 }, // 720x576 non-standard VSync (NTSC Amiga)
-    {     720,      480,     720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             1,      37, 3, 49 }, // 720x480 non-standard VSync (NTSC Amiga)
-    {     640,      400,     656,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,             1,      15, 1, 60 },
-    {    1280,      800,    1328,   1360,   1440,    803,    809,    823,    0,          66,     65770000,       60,             1,      40, 2, 30 },
-    {    1920,     1200,    1988,   2000,   2080,   1221,   1229,   1235,    0,         148,    148200000,       60,             1,      27, 1, 18 },
-    {    1600,      900,    1668,   1680,   1760,    912,    920,    926,    0,          93,     93340000,       60,             1,      28, 1, 30 },
-    {    1680,     1050,    1728,   1760,   1840,   1053,   1059,   1080,    0,         114,    114048000,       60,             1,      57, 2, 25 },
-    // The final entry here is the custom video mode, accessible through registers for debug purposes.
-    {    1280,      720,    1390,   1430,   1650,    725,    730,    750,    0,          75,     75000000,       60,             1,      15, 1, 20 },
+      //   HRES       VRES    HSTART  HEND    HMAX    VSTART  VEND    VMAX    POLARITY    MHZ     PIXELCLOCK HZ   VERTICAL HZ    HDMI    MUL/DIV/DIV2
+      {    1280,      720,    1390,   1430,   1650,    725,    730,    750,    0,          74,     74250000,       60,            1,      49, 2, 33 },
+      {     800,      600,     840,    968,   1056,    601,    605,    628,    0,          40,     40000000,       60,            1,      14, 1, 35 },
+      {     640,      480,     656,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,            1,      15, 1, 60 },
+      {    1024,      768,    1048,   1184,   1344,    771,    777,    806,    0,          65,     65000000,       60,            1,      13, 1, 20 },
+      {    1280,     1024,    1328,   1440,   1688,   1025,   1028,   1066,    0,         108,    108000000,       60,            1,      54, 5, 10 },
+      {    1920,     1080,    2008,   2052,   2200,   1084,   1089,   1125,    0,         150,    150000000,       60,            1,      27, 1, 18 },
+      {     720,      576,     732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,            1,      45, 2, 83 },
+      {    1920,     1080,    2448,   2492,   2640,   1084,   1089,   1125,    0,         148,    148500000,       50,            1,      27, 1, 18 },
+      {     720,      480,     720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,            1,      19, 1, 75 },
+      {     640,      512,     840,    968,   1056,    601,    605,    628,    0,          40,     40000000,       60,            1,      14, 1, 35 },
+      {    1600,     1200,    1704,   1880,   2160,   1201,   1204,   1242,    0,         161,     16089999,       60,            1,      21, 1, 13 },
+      {    2560,     1440,    2680,   2944,   3328,   1441,   1444,   1465,    0,         146,     15846000,       30,            1,      41, 2, 14 },
+      {     720,      576,     732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,            1,      31, 1,115 }, // 720x576 non-standard VSync (PAL Amiga)
+      {     720,      480,     720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,            1,      61, 5, 49 }, // 720x480 non-standard VSync (PAL Amiga)
+      {     720,      576,     732,    796,    864,    581,    586,    625,    1,          27,     27000000,       50,            1,      59, 7, 31 }, // 720x576 non-standard VSync (NTSC Amiga)
+      {     720,      480,     720,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,            1,      37, 3, 49 }, // 720x480 non-standard VSync (NTSC Amiga)
+      {     640,      400,     656,    752,    800,    490,    492,    525,    0,          25,     25175000,       60,            1,      15, 1, 60 },
+      {    1280,      800,    1328,   1360,   1440,    803,    809,    823,    0,          66,     65770000,       60,            1,      40, 2, 30 },
+      {    1920,     1200,    1988,   2000,   2080,   1221,   1229,   1235,    0,         148,    148200000,       60,            1,      27, 1, 18 },
+      {    1600,      900,    1668,   1680,   1760,    912,    920,    926,    0,          93,     93340000,       60,            1,      28, 1, 30 },
+      {    1680,     1050,    1728,   1760,   1840,   1053,   1059,   1080,    0,         114,    114048000,       60,            1,      57, 2, 25 },
+      {    1366,      768,    1380,   1436,   1500,    769,    772,    800,    0,          72,     72000000,       60,            1,      36, 2, 25 },
+      // The final entry here is the custom video mode, accessible through registers for debug purposes.
+      {    1280,      720,    1390,   1430,   1650,    725,    730,    750,    0,          74,     74250000,       60,            1,      49, 2, 33 },
 };
-
+zz_video_mode cached_preset_video_mode = {
+              0,        0,       0,      0,      0,      0,      0,      0,    0,           0,            0,        0,            1,       0, 0,  0
+};
+zz_video_mode temp_preset_video_mode = {
+              0,        0,       0,      0,      0,      0,      0,      0,    0,           0,            0,        0,            1,       0, 0,  0
+};
 void do_update_hw_sprite_pos(int16_t x, int16_t y);
 void do_clip_hw_sprite(int16_t offset_x, int16_t offset_y);
 
@@ -115,8 +123,13 @@ ZZ_VIDEO_STATE* video_init() {
    vs.colormode = 0;
    vs.framebuffer_size=800*600*1;
    interrupt_init();
+   
+   // Configure USB interrupts immediately after interrupt system init
+//   printf("[VIDEO_INIT] Configuring USB interrupts early...\n");
+   fpga_interrupt_connect(isr_video, isr_audio_tx, isr_usb, INT_IPL_ON_THIS_CORE);
+//   printf("[VIDEO_INIT] USB interrupt configuration completed\n");
 
-//   video_reset();
+   //   video_reset();
 
    return(&vs);
 }
@@ -124,6 +137,8 @@ void set_pixelclock(zz_video_mode *mode);
 void set_palette(uint32_t zdata,uint16_t op_palette);
 void handle_cache_flush(uint32_t address,uint32_t size)
 {
+   (void)address;
+   (void)size;
 #ifndef NO_L1_CACHE_FLUSH
 #ifdef L1_CACHE_ENABLED
    Xil_L1DCacheFlush();
@@ -131,28 +146,28 @@ void handle_cache_flush(uint32_t address,uint32_t size)
 #endif
 #ifndef NO_L2_CACHE_FLUSH
 #ifdef L2_CACHE_ENABLED
-	Xil_L2CacheFlush();
+   Xil_L2CacheFlush();
 #endif
 #endif
-//	Xil_DCacheFlushRange((INTPTR) address, size);
+   //	Xil_DCacheFlushRange((INTPTR) address, size);
 }
 
 void video_reset(void) {
-//   if(reset_frame_buffer)
-//      memset((uint32_t*)vs.framebuffer,0,1920*1080*2);
-//   Xil_ExceptionDisable();
-//   video_mode_init(ZZVMODE_1920x1080_60, 0, MNTVA_COLOR_16BIT565);
-//   Xil_ExceptionEnable();
-//   set_pixelclock(&preset_video_modes[ZZVMODE_800x600]);
-//   sii9022_init(&preset_video_modes[ZZVMODE_800x600]);
-//   init_vdma(800,600, 2, 1, (uint32_t)vs.framebuffer);
-//   if(reset_frame_buffer)
-//      memset((uint32_t*)frameBuf,0,800*600*4);
-//   set_pixelclock(&preset_video_modes[ZZVMODE_1920x1080_60]);
-//   sii9022_init(&preset_video_modes[ZZVMODE_1920x1080_60]);
-//   init_vdma(1920,1080, 1, 1, (uint32_t)frameBuf,&preset_video_modes[ZZVMODE_1920x1080_60]);
+   //   if(reset_frame_buffer)
+   //      memset((uint32_t*)vs.framebuffer,0,1920*1080*2);
+   //   Xil_ExceptionDisable();
+   //   video_mode_init(ZZVMODE_1920x1080_60, 0, MNTVA_COLOR_16BIT565);
+   //   Xil_ExceptionEnable();
+   //   set_pixelclock(&preset_video_modes[ZZVMODE_800x600]);
+   //   sii9022_init(&preset_video_modes[ZZVMODE_800x600]);
+   //   init_vdma(800,600, 2, 1, (uint32_t)vs.framebuffer);
+   //   if(reset_frame_buffer)
+   //      memset((uint32_t*)frameBuf,0,800*600*4);
+   //   set_pixelclock(&preset_video_modes[ZZVMODE_1920x1080_60]);
+   //   sii9022_init(&preset_video_modes[ZZVMODE_1920x1080_60]);
+   //   init_vdma(1920,1080, 1, 1, (uint32_t)frameBuf,&preset_video_modes[ZZVMODE_1920x1080_60]);
    rtg_init();
-//   dump_vdma_status(&vdma);
+   //   dump_vdma_status(&vdma);
 
    vs.framebuffer_pan_width = 0;
    vs.framebuffer_pan_offset = 0;
@@ -167,81 +182,100 @@ void video_reset(void) {
    vs.sprite_width = 16;
    vs.sprite_height = 16;
 
-   sprite_request_hide = 1;
-//#define MPG_VIDEO_TEST
+//   sprite_request_hide = 1;
+   {
+      vs.sprite_x = 2000;
+      vs.sprite_y = 2000;
+      video_formatter_write((vs.sprite_y << 16) | vs.sprite_x, MNTVF_OP_SPRITE_XY);
+//      sprite_request_hide = 0;
+      vs.sprite_showing = 0;
+   }
+   //#define MPG_VIDEO_TEST
 #ifdef MPG_VIDEO_TEST
-//   static FIL fil;      /* File object */
+   //   static FIL fil;      /* File object */
    static FATFS fatfs;
    TCHAR *Path = DEFAULT_ROOT;
    TCHAR *filename = DEFAULT_ROOT "Bailando.mpg";
-//   TCHAR *filename = DEFAULT_ROOT "BraculaCondemorII.mpg";
-   f_mount(&fatfs, Path, 1); // 1 mount immediately
+   //   TCHAR *filename = DEFAULT_ROOT "BraculaCondemorII.mpg";
+   f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
 
    f_open(&fil,filename, FA_OPEN_ALWAYS | FA_READ);
 
    f_lseek(&fil, 0);
 
-//   UINT NumBytesRead;
-//   printf("Reading %s file\n",filename);
-//   f_read(&fil, (void*)((uint32_t)vs.framebuffer), 1080,&NumBytesRead);
+   //   UINT NumBytesRead;
+   //   printf("Reading %s file\n",filename);
+   //   f_read(&fil, (void*)((uint32_t)vs.framebuffer), 1080,&NumBytesRead);
 
-//   f_close(&fil);
-//   printf("\nFile read %d\n",NumBytesRead);
-//   reset_video(NO_RESET_FRAMEBUFFER);
-//   f_lseek(&fil, 0);
+   //   f_close(&fil);
+   //   printf("\nFile read %d\n",NumBytesRead);
+   //   reset_video(NO_RESET_FRAMEBUFFER);
+   //   f_lseek(&fil, 0);
 
    original_h=256;
    video_mode_init(ZZVMODE_640x480, NO_SCALE, MNTVA_COLOR_32BIT);
    set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + 0), vs.vmode_hsize/vs.vmode_hdiv);
    memset(vs.framebuffer,0,vs.framebuffer_size);
-//   fill_rect_solid(40, 40, 800-80, 600-80, swap16(color[color_reset&3]), MNTVA_COLOR_16BIT565);
-//   color_reset++;
-//   color_reset&=3;
+   //   fill_rect_solid(40, 40, 800-80, 600-80, swap16(color[color_reset&3]), MNTVA_COLOR_16BIT565);
+   //   color_reset++;
+   //   color_reset&=3;
    set_pixelclock(&preset_video_modes[vs.video_mode]);
    sii9022_init(&preset_video_modes[vs.video_mode]);
 
-   fpga_interrupt_connect(isr_video,isr_audio_tx,INT_IPL_ON_THIS_CORE);
+   fpga_interrupt_connect(isr_video,isr_audio_tx,isr_usb,INT_IPL_ON_THIS_CORE);
    Xil_ExceptionEnable();
    player_mpeg(&fil,filename);
-//   Xil_ExceptionDisable();
+   //   Xil_ExceptionDisable();
    f_close(&fil);
 #endif
 #define BOOT_SCREEN
 #ifdef BOOT_SCREEN
 
-//   memset((uint32_t*)vs.framebuffer,0,800*600*2);
+   //   memset((uint32_t*)vs.framebuffer,0,800*600*2);
    while(video_formatter_read(0)==1);
    while(video_formatter_read(0)==0);
    original_h=256;
    int vr=0;
    switch(config.bootscreen_resolution)
    {
-   	   case RES_1920x1080:
-   		   vr=ZZVMODE_1920x1080_60;
-   		   break;
-   	   case RES_1280x720:
-   		   vr=ZZVMODE_1280x720;
-   		   break;
-   	   case RES_800x600:
-   	   default:
-   		vr=ZZVMODE_800x600;
-   		   break;
+   case RES_1920x1080:
+      vr=ZZVMODE_1920x1080_60;
+      break;
+   case RES_1280x720:
+      vr=ZZVMODE_1280x720;
+      break;
+   case RES_800x600:
+   default:
+      vr=ZZVMODE_800x600;
+      break;
    }
    video_mode_init(vr, NO_SCALE, MNTVA_COLOR_16BIT565);
    set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + 0), vs.vmode_hsize/vs.vmode_hdiv);
    memset(vs.framebuffer,0,vs.framebuffer_size);
-//   fill_rect_solid(0, 0, 800, 600, swap16(0x8410), MNTVA_COLOR_16BIT565);
-//   color_reset++;
-//   color_reset&=3;
-// It is already done in video_mode_init...
-//   set_pixelclock(&preset_video_modes[vs.video_mode]);
-//   sii9022_init(&preset_video_modes[vs.video_mode]);
+   //   fill_rect_solid(0, 0, 800, 600, swap16(0x8410), MNTVA_COLOR_16BIT565);
+   //   color_reset++;
+   //   color_reset&=3;
+   // It is already done in video_mode_init...
+   //   set_pixelclock(&preset_video_modes[vs.video_mode]);
+   //   sii9022_init(&preset_video_modes[vs.video_mode]);
    while(video_formatter_read(0)==1);
    while(video_formatter_read(0)==0);
    init_vdma(vs.vmode_hsize,vs.vmode_vsize, 2, 1, (uint32_t)vs.framebuffer);
 #else
    memset(vs.framebuffer,0,vs.size);
 #endif
+   cached_videomode=-1;
+}
+uint32_t dump_vdma_status(XAxiVdma *InstancePtr);
+void video_mode_reset(void)
+{
+   printf("vdma status before reset\n");
+   dump_vdma_status(&vdma);
+   video_mode_init(ZZVMODE_1280x720, NO_SCALE, MNTVA_COLOR_16BIT565);
+   init_vdma(preset_video_modes[ZZVMODE_1280x720].hres,preset_video_modes[ZZVMODE_1280x720].vres, 2, 1, (uint32_t)vs.framebuffer);
+   printf("init_vdma()\n");
+   dump_vdma_status(&vdma);
+   cached_videomode=-1;
 }
 void reset_init(void)
 {
@@ -296,17 +330,18 @@ void play_init(int bm)
    sound_active=0;
    buff_offset=0;
    static FIL fil;      /* File object */
-   static FATFS fatfs;
+//   static FATFS fatfs;
    int chunk_size=1920;
-   TCHAR *Path = DEFAULT_ROOT;
-   f_mount(&fatfs, Path, 1); // 1 mount immediately
-   char Filenames[4][100]={DEFAULT_ROOT "sound/spa/1_060_CPU_selected.mp3",
-                           DEFAULT_ROOT "sound/spa/2_musashi_emulator_selected.mp3",
-                           DEFAULT_ROOT "sound/spa/3_UAE_emulator_selected.mp3",
-                           DEFAULT_ROOT "sound/spa/4_JIT_emulator_selected.mp3"};
+//   TCHAR *Path = DEFAULT_ROOT;
+//   f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
+   char Filenames[4][200];
+   sprintf(Filenames[0],DEFAULT_ROOT "sound/%s/1_060_CPU_selected.mp3",config.sound_language);
+   sprintf(Filenames[1],DEFAULT_ROOT "sound/%s/2_musashi_emulator_selected.mp3",config.sound_language);
+   sprintf(Filenames[2],DEFAULT_ROOT "sound/%s/3_UAE_emulator_selected.mp3",config.sound_language);
+   sprintf(Filenames[3],DEFAULT_ROOT "sound/%s/4_JIT_emulator_selected.mp3",config.sound_language);
    int ret=f_open(&fil, Filenames[bm], FA_OPEN_EXISTING | FA_READ);
    if(ret!=0)
- 	  printf("Audio File open failed!!!!\n");
+      printf("Audio File open failed!!!!\n");
    unsigned int NumBytesRead;
    int filesize=f_size(&fil);
    f_rewind(&fil);
@@ -315,7 +350,7 @@ void play_init(int bm)
    Xil_L1DCacheFlush();
    Xil_L2CacheFlush();
    f_close(&fil);
-   f_mount(NULL, Path, 1); // NULL unmount, 0 delayed
+//   f_umount(NULL, Path, 1); // NULL unmount, 0 delayed
    write_rtg_register(REG_ZZ_AUDIO_PARAM, 0);
    write_rtg_register(REG_ZZ_AUDIO_VAL, (uint32_t)DECODED);
 
@@ -385,8 +420,8 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
    iteration++;
    int h=vs.vmode_vsize;
 
-//   static int i=0,j=0,k=1;
-//   int bar_w=10;
+   //   static int i=0,j=0,k=1;
+   //   int bar_w=10;
    int w=vs.vmode_hsize;
    if(vs.scalemode)
    {
@@ -395,7 +430,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       if(original_h<256)
          h=original_h;
    }
-/*
+   /*
    int jmax=80*4-20;
    int imax=80*4;
    if(original_h<=256)
@@ -436,8 +471,8 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       fill_rect_solid(w-delta-bar_w,         delta,     bar_w, h-2*delta-bar_w, rgb, vs.colormode);
    }
    color_reset++;
-*/
-/*
+    */
+   /*
    Point P0,P1;
    Color color;
    P0.x=400;
@@ -446,7 +481,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
    P1.y=200;
    color.argb=0x0000FF00;
    drawline(P0,P1, color);
-*/
+    */
 #define scalex(X) ((((X)*vs.vmode_hsize)>>(vs.scalemode?1:0))/800)
 #define scaley(Y) ((((Y)*vs.vmode_vsize)>>(vs.scalemode?1:0))/600)
    Color grey;
@@ -475,8 +510,8 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       bT.H.h0=255;
       bT.H.h1=128;
       bT.H.h2=64;
-//      drawFilledTriangle(P,T.color.argb);
-       if((iteration&0x100)==0x100)
+      //      drawFilledTriangle(P,T.color.argb);
+      if((iteration&0x100)==0x100)
          drawShadedTriangle(bT);
       else
          drawWireframeTriangle(bT.P,grey);//bT.color);
@@ -504,7 +539,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       gT.H.h0=64;
       gT.H.h1=128;
       gT.H.h2=255;
-//      drawFilledTriangle(P,T.color.argb);
+      //      drawFilledTriangle(P,T.color.argb);
       if((iteration&0x100)==0x100)
          drawShadedTriangle(gT);
       else
@@ -528,7 +563,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       rT.H.h0=255;
       rT.H.h1=128;
       rT.H.h2=64;
-//      drawFilledTriangle(P,T.color.argb);
+      //      drawFilledTriangle(P,T.color.argb);
       if((iteration&0x100)==0x100)
          drawShadedTriangle(rT);
       else
@@ -567,7 +602,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
    Color white;
    white.argb=0x00FFFFFF;
 
-    P0.x=40-2;
+   P0.x=40-2;
    P1.x=w-40+2;
    P0.y=h/2+30-2;
    P1.y=h/2+30-2;
@@ -610,7 +645,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
    }
    else
    {
-      strcat(message,"Will delete all env files");
+      strcat(message,"Will use config from z3660cfg.txt");
    }
    strcat(message," after full bar");
    displayStringAt(&Font20,0,h/2+42,(uint8_t*)message,CENTER_MODE);
@@ -621,7 +656,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       no_init=0;
    }
 
-//   usleep(10000);
+   //   usleep(10000);
    handle_cache_flush(((uint32_t)vs.framebuffer) + vs.framebuffer_pan_offset,vs.framebuffer_size);
    while(video_formatter_read(0)==1) //wait vblank
    {
@@ -658,18 +693,18 @@ int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
          return(XST_FAILURE);
       }
    }
-      status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
-      if (status != XST_SUCCESS) {
-         printf("VDMA Configuration Initialization failed, status: %d\n", status);
-         printf("Halted\n");
-         while(1);
-         return(status);
-      }
+   status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
+   if (status != XST_SUCCESS) {
+      printf("VDMA Configuration Initialization failed, status: %d\n", status);
+      printf("Halted\n");
+      while(1);
+      return(status);
+   }
    //printf("VDMA MM2S DRE: %d\n", vdma.HasMm2SDRE);
    //printf("VDMA Config MM2S DRE: %d\n", Config->HasMm2SDRE);
 
    uint32_t stride = hsize * (Config->Mm2SStreamWidth >> 3);
-   if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (hsize / hdiv)) {
+   if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (uint32_t)(hsize / hdiv)) {
       stride = (vs.framebuffer_pan_width * (Config->Mm2SStreamWidth >> 3)) * stride_div;
    }
 
@@ -691,7 +726,7 @@ int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    status = XAxiVdma_DmaConfig(&vdma, XAXIVDMA_READ, &ReadCfg);
    if (status != XST_SUCCESS) {
-      printf("VDMA Read channel config failed, status: %d\n", status);
+//      printf("VDMA Read channel config failed, status: %d\n", status);
       return(status);
    }
 
@@ -721,15 +756,15 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
          return(XST_FAILURE);
       }
    }
-      status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
-      if (status != XST_SUCCESS) {
-         printf("VDMA Configuration Initialization failed, status: %d\n", status);
-         printf("Halted\n");
-         while(1);
-         return(status);
-      }
+   status = XAxiVdma_CfgInitialize(&vdma, Config, Config->BaseAddress);
+   if (status != XST_SUCCESS) {
+      printf("VDMA Configuration Initialization failed, status: %d\n", status);
+      printf("Halted\n");
+      while(1);
+      return(status);
+   }
    uint32_t stride = hsize * (Config->Mm2SStreamWidth >> 3);
-   if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (hsize / hdiv)) {
+   if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (uint32_t)(hsize / hdiv)) {
       stride = (vs.framebuffer_pan_width * (Config->Mm2SStreamWidth >> 3)) * stride_div;
    }
 
@@ -749,7 +784,7 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    status = XAxiVdma_DmaConfig(&vdma, XAXIVDMA_READ, &ReadCfg);
    if (status != XST_SUCCESS) {
-      printf("VDMA Read channel config failed, status: %d\n", status);
+//      printf("VDMA Read channel config failed, status: %d\n", status);
       return(status);
    }
 
@@ -770,8 +805,9 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 uint32_t ticks=0;
 void isr_video(void *dummy)
 {
+   (void)dummy;
    int vblank=video_formatter_read(0);
-/*
+   /*
    static int c=0;
    static int s=0;
    if(vblank)
@@ -781,10 +817,10 @@ void isr_video(void *dummy)
 	   {
 		   c=0;
 		   s++;
-		   printf("[Core 0] vb %d %08lX\n",s,*((volatile uint32_t*)0xF8F0183C));
+		   printf("[Core0] vb %d %08lX\n",s,*((volatile uint32_t*)0xF8F0183C));
 	   }
    }
-*/
+    */
    if (!vblank) {
       // if this is not the vblank interrupt, set up the split buffer
       // TODO: VDMA doesn't seem to like switching buffers in the middle of a frame.
@@ -823,7 +859,7 @@ void isr_video(void *dummy)
       {
 #ifndef NO_L1_CACHE_FLUSH
 #ifdef L1_CACHE_ENABLED
-    	  Xil_L1DCacheFlush();
+         Xil_L1DCacheFlush();
 #endif
 #endif
       }
@@ -943,7 +979,7 @@ uint32_t xClk_Wiz_CfgInitialize(XClk_Wiz *InstancePtr, XClk_Wiz_Config *CfgPtr,
    return(XST_SUCCESS);
 
 }
-*/
+ */
 void set_pixelclock(zz_video_mode *mode) {
    XClk_Wiz_CfgInitialize(&clkwiz, &conf, XPAR_CLK_WIZ_1_BASEADDR);
 
@@ -959,7 +995,9 @@ void set_pixelclock(zz_video_mode *mode) {
 }
 
 void video_formatter_init(int scalemode, int colormode, int width, int height,
-      int htotal, int vtotal, int hss, int hse, int vss, int vse,
+      int htotal, int vtotal,
+      int hss   , int vss   ,
+      int hse   , int vse   ,
       int polarity) {
    uint32_t height_crop=height+1;
    if(original_h<256) height_crop=(original_h+1)<<1;
@@ -973,7 +1011,7 @@ void video_formatter_init(int scalemode, int colormode, int width, int height,
    video_formatter_write(colormode, MNTVF_OP_COLORMODE);
    Xil_ExceptionEnable();
 
-//   video_formatter_valign();
+   //   video_formatter_valign();
 }
 void video_system_init(zz_video_mode *mode, int hdiv, int vdiv) {
 
@@ -991,7 +1029,6 @@ void video_mode_init(int mode, int scalemode, int colormode) {
    vs.video_mode = mode;
    vs.scalemode = scalemode;
    vs.colormode = colormode;
-
    int hdiv = 1, vdiv = 1;
    stride_div = 1;
    uint32_t size;
@@ -1024,10 +1061,10 @@ void video_mode_init(int mode, int scalemode, int colormode) {
    video_system_init(vmode, hdiv, vdiv);
 
    video_formatter_init(scalemode, colormode,
-         vmode->hres, vmode->vres,
-         vmode->hmax, vmode->vmax,
-         vmode->hstart, vmode->hend,
-         vmode->vstart, vmode->vend,
+         vmode->hres  , vmode->vres,
+         vmode->hmax  , vmode->vmax,
+         vmode->hstart, vmode->vstart,
+         vmode->hend  , vmode->vend,
          vmode->polarity);
 
    // FIXME ???
@@ -1039,7 +1076,7 @@ void video_mode_init(int mode, int scalemode, int colormode) {
    vs.split_pos = 1; // force update slpit_pos from split_request_pos and write to videoformatter
 }
 
-void update_hw_sprite(uint8_t *data, int double_sprite)
+void update_hw_sprite(uint8_t *data, int double_sprite, int hires_sprite)
 {
    uint8_t cur_bit = 0x80;
    uint8_t cur_color = 0, out_pos = 0, iter_offset = 0;
@@ -1049,51 +1086,99 @@ void update_hw_sprite(uint8_t *data, int double_sprite)
    uint16_t h = vs.sprite_height;
    uint8_t line_pitch = (w / 8) * 2;
 
-   for (uint8_t y_line = 0; y_line < h; y_line++) {
-      if (w <= 16) {
-         cur_bytes[0] = data[y_line * line_pitch];
-         cur_bytes[1] = data[(y_line * line_pitch) + 2];
-         cur_bytes[2] = data[(y_line * line_pitch) + 1];
-         cur_bytes[3] = data[(y_line * line_pitch) + 3];
-      }
-      else {
-         cur_bytes[0] = data[y_line * line_pitch];
-         cur_bytes[1] = data[(y_line * line_pitch) + 4];
-         cur_bytes[2] = data[(y_line * line_pitch) + 1];
-         cur_bytes[3] = data[(y_line * line_pitch) + 5];
-         cur_bytes[4] = data[(y_line * line_pitch) + 2];
-         cur_bytes[5] = data[(y_line * line_pitch) + 6];
-         cur_bytes[6] = data[(y_line * line_pitch) + 3];
-         cur_bytes[7] = data[(y_line * line_pitch) + 7];
-      }
-
-      while (out_pos < 8) {
-         for (uint8_t i = 0; i < line_pitch; i += 2) {
-            cur_color = (cur_bytes[i] & cur_bit) ? 1 : 0;
-            if (cur_bytes[i + 1] & cur_bit) cur_color += 2;
-
-            sprite_buf[(y_line * 32) + out_pos + iter_offset] = colors[cur_color] & 0x00ffffff;
-            iter_offset += 8;
+   if(!double_sprite)
+   {
+      for (uint8_t y_line = 0; y_line < h; y_line++) {
+         if (w <= 16) {
+            cur_bytes[0] = data[(y_line * line_pitch) + 0];
+            cur_bytes[1] = data[(y_line * line_pitch) + 2];
+            cur_bytes[2] = data[(y_line * line_pitch) + 1];
+            cur_bytes[3] = data[(y_line * line_pitch) + 3];
+         }
+         else {
+            cur_bytes[0] = data[(y_line * line_pitch) + 0];
+            cur_bytes[1] = data[(y_line * line_pitch) + 4];
+            cur_bytes[2] = data[(y_line * line_pitch) + 1];
+            cur_bytes[3] = data[(y_line * line_pitch) + 5];
+            cur_bytes[4] = data[(y_line * line_pitch) + 2];
+            cur_bytes[5] = data[(y_line * line_pitch) + 6];
+            cur_bytes[6] = data[(y_line * line_pitch) + 3];
+            cur_bytes[7] = data[(y_line * line_pitch) + 7];
          }
 
-         out_pos++;
-         cur_bit >>= 1;
-         iter_offset = 0;
+         while (out_pos < 8) {
+            for (uint8_t i = 0; i < line_pitch; i += 2) {
+               cur_color = (cur_bytes[i] & cur_bit) ? 1 : 0;
+               if (cur_bytes[i + 1] & cur_bit) cur_color += 2;
+
+               sprite_buf[(y_line * 32) + out_pos + iter_offset] = colors[cur_color] & 0x00ffffff;
+               iter_offset += 8;
+            }
+
+            out_pos++;
+            cur_bit >>= 1;
+            iter_offset = 0;
+         }
+         cur_bit = 0x80;
+         out_pos = 0;
       }
-      cur_bit = 0x80;
-      out_pos = 0;
+   }
+   else
+   {
+      for (uint8_t y_line = 0; y_line < h/2; y_line++) {
+         if(!hires_sprite)
+         {
+            cur_bytes[0] = data[(y_line * line_pitch/2) + 0];
+            cur_bytes[1] = data[(y_line * line_pitch/2) + 2];
+            cur_bytes[2] = data[(y_line * line_pitch/2) + 1];
+            cur_bytes[3] = data[(y_line * line_pitch/2) + 3];
+         }
+         else
+         {
+            cur_bytes[0] = data[(y_line * line_pitch) + 0];
+            cur_bytes[1] = data[(y_line * line_pitch) + 4];
+            cur_bytes[2] = data[(y_line * line_pitch) + 1];
+            cur_bytes[3] = data[(y_line * line_pitch) + 5];
+            cur_bytes[4] = data[(y_line * line_pitch) + 2];
+            cur_bytes[5] = data[(y_line * line_pitch) + 6];
+            cur_bytes[6] = data[(y_line * line_pitch) + 3];
+            cur_bytes[7] = data[(y_line * line_pitch) + 7];
+         }
+         while (out_pos < 8) {
+            for (uint8_t i = 0; i < line_pitch/2; i += 2) {
+               cur_color = (cur_bytes[i] & cur_bit) ? 1 : 0;
+               if (cur_bytes[i + 1] & cur_bit) cur_color += 2;
+
+               sprite_buf[((y_line*2  ) * 32) + (out_pos*2  ) + iter_offset*2] = colors[cur_color] & 0x00ffffff;
+               sprite_buf[((y_line*2  ) * 32) + (out_pos*2+1) + iter_offset*2] = colors[cur_color] & 0x00ffffff;
+               sprite_buf[((y_line*2+1) * 32) + (out_pos*2  ) + iter_offset*2] = colors[cur_color] & 0x00ffffff;
+               sprite_buf[((y_line*2+1) * 32) + (out_pos*2+1) + iter_offset*2] = colors[cur_color] & 0x00ffffff;
+               iter_offset += 8;
+            }
+
+            out_pos++;
+            cur_bit >>= 1;
+            iter_offset = 0;
+         }
+         cur_bit = 0x80;
+         out_pos = 0;
+
+      }
    }
 
    sprite_request_update_data = 1;
 }
 
-void update_hw_sprite_clut(uint8_t *data_, uint8_t *colors, uint16_t w, uint16_t h, uint8_t keycolor, int double_sprite)
+void update_hw_sprite_clut(uint8_t *data_, uint8_t *colors, uint16_t w, uint16_t h, uint8_t keycolor, int double_sprite, int hires_sprite)
 {
+   (void)hires_sprite;
    uint8_t *data = data_;
    uint8_t color[4];
+   int max_w=double_sprite?16:32;
+   int max_h=double_sprite?24:48;
 
-   for (int y = 0; y < h && y < 48; y++) {
-      for (int x = 0; x < w && x < 32; x++) {
+   for (int y = 0; y < h && y < max_h; y++) {
+      for (int x = 0; x < w && x < max_w; x++) {
          if (data[x] == keycolor) {
             *((uint32_t *)color) = 0x00ff00ff;
          }
@@ -1105,7 +1190,15 @@ void update_hw_sprite_clut(uint8_t *data_, uint8_t *colors, uint16_t w, uint16_t
             if (*((uint32_t *)color) == 0x00FF00FF)
                *((uint32_t *)color) = 0x00FE00FE;
          }
+         if(!double_sprite)
          sprite_buf[(y * 32) + x] = *((uint32_t *)color);
+         else
+         {
+            sprite_buf[((y*2  ) * 32) + x*2  ] = *((uint32_t *)color);
+            sprite_buf[((y*2  ) * 32) + x*2+1] = *((uint32_t *)color);
+            sprite_buf[((y*2+1) * 32) + x*2  ] = *((uint32_t *)color);
+            sprite_buf[((y*2+1) * 32) + x*2+1] = *((uint32_t *)color);
+         }
       }
       data += w;
    }
@@ -1153,7 +1246,7 @@ void do_update_hw_sprite_pos(int16_t x, int16_t y) {
    else
       vs.sprite_x_adj = vs.sprite_x + 2;
 
-//   vs.sprite_y = y + vs.split_pos - vs.sprite_y_offset + 1;
+   //   vs.sprite_y = y + vs.split_pos - vs.sprite_y_offset + 1;
    vs.sprite_y = y - vs.sprite_y_offset + 1;
 
    // vertically doubled mode

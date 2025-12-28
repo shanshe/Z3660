@@ -15,9 +15,10 @@
 #include "xscugic.h"
 #include "xscutimer.h"
 #include "memorymap.h"
+#include "ps7_init_simple.h"
 
-#define DEFAULT_NOPS_WRITE 2
-#define DEFAULT_NOPS_READ 2
+#define DEFAULT_NOPS_WRITE 0
+#define DEFAULT_NOPS_READ 0
 
 #define MUSASHI_EMULATOR
 #define UAE_EMULATOR
@@ -282,6 +283,7 @@ uint32_t video_formatter_read(uint16_t op)
  */
 extern "C" void cpu_emulator_reset_core0(void)
 {
+   printf("Sending reset to Core0\n");
    shared->reset_emulator=1;
    shared->shared_data=1;
    while(shared->reset_emulator==1){}
@@ -307,31 +309,13 @@ void configure_gpio(void)
    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_13, 1);
    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_13, 1);
    XGpioPs_WritePin(&GpioPs, PS_MIO_13, 1);
-   //    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_8, 1);
-   //    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_8, 1);
-   //    XGpioPs_WritePin(&GpioPs, PS_MIO_8, 1);
+   XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_8, 1);
+   XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_8, 1);
+//   XGpioPs_WritePin(&GpioPs, PS_MIO_8, 1); - Don't disable as 060 will take the bus
 
    z3660_printf("[Core1] Configured GPIO ...\n\r");
 }
-int nbg_arm=0;
-int nbg_arm_old=-1;
-
-
-extern "C" void ipl_main_read(void);
-extern "C" unsigned int READ_NBG_ARM(void)
-{
-   //   return(XGpioPs_ReadPin(&GpioPs, PS_MIO_15));
-   /*
-	ipl_main_read();
-	if(nbg_arm==1 && nbg_arm_old==0)
-	{
-		Xil_L1DCacheFlush();
-	}
-	nbg_arm_old=nbg_arm;
-	return(nbg_arm);
-    */
-   return(0);
-}
+volatile int nbg_arm=0;
 
 int access_failure=0;
 extern u32 DataAbortAddr;
@@ -357,11 +341,13 @@ void ipl_interrupt_handler(XGpioPs *InstancePtr)
 }
  */
 int ipl_read=0;
+volatile int read_reset=1;
 extern "C" void ipl_main_read(void)
 {
-   if(ipl_read==1)
+   if(ipl_read>0)
    {
-      ipl_read=0;
+      ipl_read--;
+      if(ipl_read<0) ipl_read=0;
       int read_irq1,read_irq2;
       //    read_irq=XGpioPs_ReadPin(gpio, PS_MIO_0)|(XGpioPs_ReadPin(gpio, PS_MIO_9)<<1)|(XGpioPs_ReadPin(gpio, PS_MIO_12)<<2);
       uint32_t read1=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
@@ -383,33 +369,51 @@ extern "C" void ipl_main_read(void)
          }
       }while (read_irq1!=read_irq2);
       read_irq=read_irq2;
+
+      read_reset=(read1>>(n040RSTI   ))&1;
    }
 }
 void ipl_interrupt_handler(void *CallBackRef, u32 Bank, u32 Status)
 {
-   ipl_read=1;
+   ipl_read++;
    //    z3660_printf("Interrupt!\n");
 }
 void SWInterruptHandler(void *data)
 {
-   z3660_printf("[Core1] SW Interrupt!!! (Recoverable Error)\n");
+   printf("[Core1] SW Interrupt!!! (Recoverable Error)\n");
+   while(1);
 }
 void hard_reboot(void);
 void UndefinedExceptionHandler(void *data)
 {
-   z3660_printf("[Core1] Undefined Exception!!! (Unrecoverable Error)\n");
+   printf("[Core1] Undefined Exception!!! (Unrecoverable Error)\n");
+   while(1);
    hard_reboot();
 }
 void PrefetchAbortHandler(void* data)
 {
-   z3660_printf("[Core1] Prefetch Abort!!! (Unrecoverable Error)\n");
+   printf("[Core1] Prefetch Abort!!! (Unrecoverable Error)\n");
    while(1);
+   hard_reboot();
+}
+uint16_t histogram_dataabort[65536]={0};
+void print_histogram_dataabort(void)
+{
+   for(int j=0;j<2048;j++)
+   {
+      printf("0x%3X",j);
+      for(int i=0;i<32;i++)
+      {
+         printf(" %5d",histogram_dataabort[j*32+i]);
+      }
+      printf("\n");
+   }
 }
 void DataAbortHandler(void *data)
 {
    unsigned int FaultAddress;
    FaultAddress = mfcp(XREG_CP15_DATA_FAULT_ADDRESS);
-
+   histogram_dataabort[FaultAddress>>16]++;
    uint32_t opcode=(*((uint32_t *)DataAbortAddr))>>16;
    //    unsigned int reg=(opcode>>12)&0x0F; // ARM jit code is always compiled using R2 register as address read/write, so we don't need to ask for the register
    //        0xe780 0xe500 0xe580 // STR_rRi
@@ -505,7 +509,7 @@ void ipl_configure_interrupt(void)
    int intr_target_reg;
    //#define INT_INTERRUPT_ID_0 63 // video
    //#define INT_INTERRUPT_ID_1 64 // audio
-#define INT_INTERRUPT_ID_2 65 // video
+#define INT_INTERRUPT_ID_2 65 // vblank
    /*
     intr_target_reg = XScuGic_DistReadReg(&intc,XSCUGIC_SPI_TARGET_OFFSET_CALC(INT_INTERRUPT_ID_0));
     intr_target_reg &= ~(0x000000FF << ((INT_INTERRUPT_ID_0%4)*8));
@@ -533,12 +537,15 @@ void ipl_configure_interrupt(void)
    XGpioPs_IntrEnablePin(&GpioPs,PS_MIO_9);
    XGpioPs_IntrEnablePin(&GpioPs,PS_MIO_12);
    XGpioPs_IntrEnablePin(&GpioPs,PS_MIO_15);
+   XGpioPs_IntrEnablePin(&GpioPs,n040RSTI);
    XGpioPs_SetIntrTypePin(&GpioPs,PS_MIO_0,XGPIOPS_IRQ_TYPE_EDGE_BOTH);
    XGpioPs_SetIntrTypePin(&GpioPs,PS_MIO_9,XGPIOPS_IRQ_TYPE_EDGE_BOTH);
    XGpioPs_SetIntrTypePin(&GpioPs,PS_MIO_12,XGPIOPS_IRQ_TYPE_EDGE_BOTH);
    XGpioPs_SetIntrTypePin(&GpioPs,PS_MIO_15,XGPIOPS_IRQ_TYPE_EDGE_BOTH);
+   XGpioPs_SetIntrTypePin(&GpioPs,n040RSTI,XGPIOPS_IRQ_TYPE_EDGE_FALLING);
    XGpioPs_SetCallbackHandler(&GpioPs,(void *)&GpioPs,ipl_interrupt_handler);
    XScuGic_Enable(&intc,XPAR_XGPIOPS_0_INTR);
+
    // Interrupts are enabled for both cores, so we disable here what is not needed
    //    *((volatile uint32_t*)0xF8F01834)=0x03010302; // FIXME: disable interrupt for core 0 and core 1
    //    *((volatile uint32_t*)0xF8F0183C)&=~0x02000000; // FIXME: disable interrupt for core 1
@@ -564,16 +571,17 @@ void isr_video(void *dummy)
       {
          c=0;
          s++;
-         printf("[Core 1] vb %d %08lX\n",s,*((volatile uint32_t*)0xF8F0183C));
+         printf("[Core1] vb %d %08lX\n",s,*((volatile uint32_t*)0xF8F0183C));
       }
 #endif
       Xil_L1DCacheFlush();
       //      Xil_L2CacheFlush();
    }
 }
+
 int fpga_interrupt_connect(void)
 {
-#define ENABLE_VBLANK_INTERRUPT
+//#define ENABLE_VBLANK_INTERRUPT
 #ifdef ENABLE_VBLANK_INTERRUPT
    XScuGic_SetPriorityTriggerType(&intc,INT_INTERRUPT_ID_2, 0xA0, 0x03); // vblank priority 0xA0 (0xF8-0x00), rising edge 0x03
    //int result=
@@ -583,6 +591,7 @@ int fpga_interrupt_connect(void)
 #endif
    return(XST_SUCCESS);
 }
+uint32_t get_current_cpu_frequency();
 
 int main()
 {
@@ -608,6 +617,26 @@ int main()
    for(int i=0;i<256;i++)
       MMUL2Table[i]=0;//(0x00F00000+(i<<12))|0x5BA;
    printf("MMUL2Table = %08lx\n",((uint32_t)&MMUL2Table));
+
+   // Configure ARM PLL frequency based on silicon version
+   int silicon_ver = ps7GetSiliconVersion();
+   float silicon_MHZ=666.666667;
+   if (silicon_ver == 1) {
+      silicon_MHZ=666.666667;
+   } else if (silicon_ver == 2) {
+      silicon_MHZ=766.666667;
+   } else if (silicon_ver == 3) {
+      silicon_MHZ=866.666667;
+   }
+
+   printf("[Core1] ARM Silicon Version %d -> %3.3f MHz Max\n", silicon_ver, silicon_MHZ);
+   
+   init_shared();
+
+   if(silicon_ver > 1) {
+      ps7_init_custom(shared->arm_freq_code); // 0=667, 1=767, 2=867 MHz, 3=900 MHz, 4=933 MHz, 5=967 MHz, 6=1000 MHz
+   }
+   printf("Current CPU Frequency: %3.3f MHz\n",get_current_cpu_frequency()/1000000.0f);
 
    for(int i=0x010;i<0x080;i++) // Mother Board RAM
       SetTlbAttributes(i*0x100000UL,RESERVED);
@@ -640,9 +669,9 @@ int main()
 
    finish_Attributes();
 
-   init_shared();
-
    configure_gpio();
+   for(int i=0;i<65536;i++)
+      histogram_dataabort[i]=0;
 
    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_DATA_ABORT_INT    , DataAbortHandler,0);
    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_PREFETCH_ABORT_INT, PrefetchAbortHandler,0);
@@ -664,6 +693,8 @@ int main()
    local.load_rom_emu   =shared->load_rom_emu;
    local.load_romext_emu=shared->load_romext_emu;
 
+   write_reg(REG4,1); // enable ARM bus
+
    while(1)
    {
       if(shared->shared_data)
@@ -673,13 +704,21 @@ int main()
 #ifdef MUSASHI_EMULATOR
          shared->shared_data=0; // ack to core0
          printf("[Core1] ACK to Core0\n");
-         if(shared->cfg_emu==UAEJIT)
+         if(shared->cfg_emu==UAE_030)
          {
-            uae_emulator(1);
+            uae_emulator(0,68030);
          }
-         else if(shared->cfg_emu==UAE_)
+         else if(shared->cfg_emu==UAEJIT_030)
          {
-            uae_emulator(0);
+            uae_emulator(1,68030);
+         }
+         else if(shared->cfg_emu==UAE_040)
+         {
+            uae_emulator(0,68040);
+         }
+         else if(shared->cfg_emu==UAEJIT_040)
+         {
+            uae_emulator(1,68040);
          }
          else if(shared->cfg_emu==MUSASHI)
          {
@@ -692,13 +731,21 @@ int main()
          }
 #else
          shared->shared_data=0; // ack to core0
-         if(shared->cfg_emu==UAEJIT)
+         if(shared->cfg_emu==UAE_030)
          {
-            uae_emulator(1);
+            uae_emulator(0,68030);
          }
-         else// if(shared->cfg_emu==UAE_)
+         else if(shared->cfg_emu==UAEJIT_030)
          {
-            uae_emulator(0);
+            uae_emulator(1,68030);
+         }
+         else if(shared->cfg_emu==UAE_040)
+         {
+            uae_emulator(0,68040);
+         }
+         else// if(shared->cfg_emu==UAEJIT_040)
+         {
+            uae_emulator(1,68040);
          }
 #endif
 #else

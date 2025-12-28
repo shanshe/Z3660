@@ -14,6 +14,7 @@
 
 #include "uae/types.h"
 #include "options.h"
+#include "newcpu.h"
 
 #undef EVENT_DEBUG
 
@@ -81,9 +82,9 @@ enum {
 };
 
 extern int pissoff_value;
-extern int pissoff;
+//extern int pissoff;
 
-#define countdown pissoff
+#define countdown regs.pissoff
 
 extern struct ev eventtab[ev_max];
 extern struct ev2 eventtab2[ev2_max];
@@ -95,18 +96,18 @@ STATIC_INLINE void cycles_do_special (void)
 {
 #ifdef JIT
 	if (currprefs.cachesize) {
-		if (pissoff >= 0)
-			pissoff = -1;
+		if (regs.pissoff >= 0)
+			regs.pissoff = -1;
 	} else
 #endif
 	{
-		pissoff = 0;
+		regs.pissoff = 0;
 	}
 }
 
 STATIC_INLINE void do_extra_cycles(int cycles_to_add)
 {
-	pissoff -= cycles_to_add;
+	regs.pissoff -= cycles_to_add;
 }
 
 STATIC_INLINE evt_t get_cycles(void)

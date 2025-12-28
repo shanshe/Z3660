@@ -39,7 +39,8 @@ void slider_action(Slider *s)
    s->b_was_at_cursor=0;
    if( selected_tab==s->tab && is_cursor_at_slider(s) )
    {
-      s->pos=(mousex-s->x-3)/((s->w-6)/((s->max-s->min)/s->step))*s->step+s->min;
+      int newpos=(mousex-s->x-3)/((s->w-6)/((s->max-s->min)/s->step))*s->step+s->min;
+      s->pos+=newpos>s->pos?s->step:-s->step;
       if(s->pos>s->max) s->pos=s->max;
       if(s->pos<s->min) s->pos=s->min;
       SLIDER(s);
@@ -95,7 +96,7 @@ void slider_bptoff_strpos(char *str)
 void init_sliders(void)
 {
    slider_cpufreq=(Slider *)malloc(sizeof(Slider));
-   slider_cpufreq->w=(CPUFREQ_MAX-CPUFREQ_MIN)*2;
+   slider_cpufreq->w=100;
    slider_cpufreq->h=14;
    slider_cpufreq->is_pressed=0;
    slider_cpufreq->b_was_at_cursor=0;
@@ -147,34 +148,34 @@ void sliders_action(void)
 }
 void recalculate_coords_sliders(void)
 {
-   slider_cpufreq->x=win.x+300-(CPUFREQ_MAX-100)*2;
-   slider_cpufreq->y=win.y+win.t+tab_h+10+12;
+   slider_cpufreq->x=win.x+300;
+   slider_cpufreq->y=win.y+win.t+TAB_HEIGHT+10+12;
 
    slider_bpton->x=win.x+104;
-   slider_bpton->y=win.y+win.t+tab_h+10+12+14;
+   slider_bpton->y=win.y+win.t+TAB_HEIGHT+10+12+14;
 
    slider_bptoff->x=win.x+104;
-   slider_bptoff->y=win.y+win.t+tab_h+10+12+14+14+10;
+   slider_bptoff->y=win.y+win.t+TAB_HEIGHT+10+12+14+14+10;
 }
 void paint_slider_cpufreq(void)
 {
    Font->BackColor=0x00A8A8A8;
    Font->TextColor=0x00000000;
-   displayStringAt(Font,win.x+12+30,win.y+win.t+tab_h+10,(uint8_t*)"Boot Mode Selection",LEFT_MODE);
-   displayStringAt(Font,win.x+200-(CPUFREQ_MAX-100)*2,win.y+win.t+tab_h+10+12+2,(uint8_t*)"CPU Frequency",LEFT_MODE);
+   displayStringAt(Font,win.x+12+30,win.y+win.t+TAB_HEIGHT+10,(uint8_t*)"Boot Mode Selection",LEFT_MODE);
+   displayStringAt(Font,win.x+200,win.y+win.t+TAB_HEIGHT+10+12+2,(uint8_t*)"CPU Frequency",LEFT_MODE);
    SLIDER(slider_cpufreq);
 }
 void paint_slider_bpton(void)
 {
    Font->BackColor=0x00A8A8A8;
    Font->TextColor=0x00000000;
-   displayStringAt(Font,win.x+18,win.y+win.t+tab_h+10+12+2+12,(uint8_t*)"Beeper Ton",LEFT_MODE);
+   displayStringAt(Font,win.x+18,win.y+win.t+TAB_HEIGHT+10+12+2+12,(uint8_t*)"Beeper Ton",LEFT_MODE);
    SLIDER(slider_bpton);
 }
 void paint_slider_bptoff(void)
 {
    Font->BackColor=0x00A8A8A8;
    Font->TextColor=0x00000000;
-   displayStringAt(Font,win.x+18,win.y+win.t+tab_h+10+12+2+12+12+12,(uint8_t*)"Beeper Toff",LEFT_MODE);
+   displayStringAt(Font,win.x+18,win.y+win.t+TAB_HEIGHT+10+12+2+12+12+12,(uint8_t*)"Beeper Toff",LEFT_MODE);
    SLIDER(slider_bptoff);
 }

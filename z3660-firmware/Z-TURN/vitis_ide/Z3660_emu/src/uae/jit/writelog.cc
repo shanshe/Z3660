@@ -5,9 +5,11 @@
  *
  * Copyright 2001 Bernd Schmidt
  */
+#if 0
 #include <cstdarg>
 #include <cstdio>
 #include <iostream>
+#endif
 
 #include "sysdeps.h"
 #include "uae/uaestring.h"
@@ -30,7 +32,10 @@ void console_out(const TCHAR* format, ...)
 	va_start(parms, format);
 	_vsntprintf(buffer, WRITE_LOG_BUF_SIZE - 1, format, parms);
 	va_end(parms);
+#if 0
 	cout << buffer << endl;
+#endif
+	printf("%s", buffer);
 }
 
 void f_out(FILE* f, const TCHAR* format, ...)
@@ -44,7 +49,10 @@ void f_out(FILE* f, const TCHAR* format, ...)
 	va_start(parms, format);
 	_vsntprintf(buffer, WRITE_LOG_BUF_SIZE - 1, format, parms);
 	va_end(parms);
+#if 0
 	cout << buffer << endl;
+#endif
+	printf("%s", buffer);
 }
 
 TCHAR console_getch(void)

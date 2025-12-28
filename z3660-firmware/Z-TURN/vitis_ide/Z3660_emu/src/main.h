@@ -29,12 +29,21 @@ extern int shutup_z2;
 #define PS_MIO_13    13 // MIO 13
 #define PS_MIO_15    15 // MIO 15
 
+#define REG0 0x00
+#define REG1 0x04
+#define REG2 0x08
+#define REG3 0x0C
+#define REG4 0x10
+#define REG5 0x14
+#define REG6 0x18
+#define REG7 0x1C
+#define REG8 0x20
+
 // Reset Input signal
 #define n040RSTI     10 // MIO 10
 
 #define REG_BASE_ADDRESS XPAR_Z3660_0_BASEADDR
 
-#define write_reg64(Offset,Data) (*(volatile uint64_t *)(REG_BASE_ADDRESS+(Offset)))=(Data)
 #define write_reg(Offset,Data)   (*(volatile uint32_t *)(REG_BASE_ADDRESS+(Offset)))=(Data)
 
 #define read_mem32(Offset) (*(volatile uint32_t *)(REG_BASE_ADDRESS+0x14000000+((Offset&0x00FFFFFF)<<2)))=(0)
@@ -55,51 +64,55 @@ extern int shutup_z2;
 #define LINE_  (3<<2) // not used for now...
 
 typedef struct {
-	volatile uint32_t shared_data;         // 0xFFFF0000
-	volatile uint32_t write_rtg;           // 0xFFFF0004
-	volatile uint32_t write_rtg_addr;      // 0xFFFF0008
-	volatile uint32_t write_rtg_data;      // 0xFFFF000C
-	volatile uint32_t core0_hold;          // 0xFFFF0010
-	volatile uint32_t core0_hold_ack;      // 0xFFFF0014
-	volatile uint32_t irq;                 // 0xFFFF0018
-	volatile uint32_t uart_semaphore;      // 0xFFFF001C
-	volatile uint32_t jit_enabled;         // 0xFFFF0020
-	volatile uint32_t reset_emulator;      // 0xFFFF0024
-	volatile uint32_t load_rom_emu;        // 0xFFFF0028
-	volatile uint32_t load_rom_addr;       // 0xFFFF002C
-	volatile uint32_t int_available;       // 0xFFFF0030
-	volatile uint32_t cfg_emu;             // 0xFFFF0034
-	volatile uint32_t write_scsi;          // 0xFFFF0038
-	volatile uint32_t write_scsi_addr;     // 0xFFFF003C
-	volatile uint32_t write_scsi_data;     // 0xFFFF0040
-	volatile uint32_t write_scsi_type;     // 0xFFFF0044
-	volatile uint32_t read_scsi;           // 0xFFFF0048
-	volatile uint32_t read_scsi_addr;      // 0xFFFF004C
-	volatile uint32_t read_scsi_data;      // 0xFFFF0050
-	volatile uint32_t read_scsi_type;      // 0xFFFF0054
-	volatile uint32_t scsiboot_rom_loaded; // 0xFFFF0058
-	volatile uint32_t write_scsi_in_progress; // 0xFFFF005C
-	volatile uint32_t read_rtg;            // 0xFFFF0060
-	volatile uint32_t read_rtg_addr;       // 0xFFFF0064
-	volatile uint32_t read_rtg_data;       // 0xFFFF0068
-	volatile uint32_t mmu_core1_add;       // 0xFFFF006C
-	volatile uint32_t z3_enabled;          // 0xFFFF0070
-	volatile uint32_t load_ext_rom_addr;   // 0xFFFF0074
-	volatile uint32_t load_romext_emu;     // 0xFFFF0078
-	volatile uint32_t nops_write;          // 0xFFFF007C
-	volatile uint32_t nops_read;           // 0xFFFF0080
-	volatile uint32_t disassemble;         // 0xFFFF0088
-	volatile uint32_t musashi_step;        // 0xFFFF008C
-	volatile uint32_t reset_emulator_dis;  // 0xFFFF0090
-	volatile uint32_t z2_enabled;          // 0xFFFF0094
+   volatile uint32_t shared_data;         // 0xFFFF0000
+   volatile uint32_t write_rtg;           // 0xFFFF0004
+   volatile uint32_t write_rtg_addr;      // 0xFFFF0008
+   volatile uint32_t write_rtg_data;      // 0xFFFF000C
+   volatile uint32_t core0_hold;          // 0xFFFF0010
+   volatile uint32_t core0_hold_ack;      // 0xFFFF0014
+   volatile uint32_t irq;                 // 0xFFFF0018
+   volatile uint32_t uart_semaphore;      // 0xFFFF001C
+   volatile uint32_t jit_enabled;         // 0xFFFF0020
+   volatile uint32_t reset_emulator;      // 0xFFFF0024
+   volatile uint32_t load_rom_emu;        // 0xFFFF0028
+   volatile uint32_t load_rom_addr;       // 0xFFFF002C
+   volatile uint32_t int_available;       // 0xFFFF0030
+   volatile uint32_t cfg_emu;             // 0xFFFF0034
+   volatile uint32_t write_scsi;          // 0xFFFF0038
+   volatile uint32_t write_scsi_addr;     // 0xFFFF003C
+   volatile uint32_t write_scsi_data;     // 0xFFFF0040
+   volatile uint32_t write_scsi_type;     // 0xFFFF0044
+   volatile uint32_t read_scsi;           // 0xFFFF0048
+   volatile uint32_t read_scsi_addr;      // 0xFFFF004C
+   volatile uint32_t read_scsi_data;      // 0xFFFF0050
+   volatile uint32_t read_scsi_type;      // 0xFFFF0054
+   volatile uint32_t scsiboot_rom_loaded; // 0xFFFF0058
+   volatile uint32_t write_scsi_in_progress; // 0xFFFF005C
+   volatile uint32_t read_rtg;            // 0xFFFF0060
+   volatile uint32_t read_rtg_addr;       // 0xFFFF0064
+   volatile uint32_t read_rtg_data;       // 0xFFFF0068
+   volatile uint32_t mmu_core1_add;       // 0xFFFF006C
+   volatile uint32_t z3_enabled;          // 0xFFFF0070
+   volatile uint32_t load_ext_rom_addr;   // 0xFFFF0074
+   volatile uint32_t load_romext_emu;     // 0xFFFF0078
+   volatile uint32_t nops_write;          // 0xFFFF007C
+   volatile uint32_t nops_read;           // 0xFFFF0080
+   volatile uint32_t disassemble;         // 0xFFFF0084
+   volatile uint32_t musashi_step;        // 0xFFFF0088
+   volatile uint32_t reset_emulator_dis;  // 0xFFFF008C
+   volatile uint32_t z2_enabled;          // 0xFFFF0090
+   volatile uint32_t printhist_dataabort; // 0xFFFF0094
+   volatile uint32_t arm_freq_code;       // 0xFFFF0098
 } SHARED;
 
 enum BOOTMODE{
-	CPU,
-	MUSASHI,
-	UAE_,
-	UAEJIT,
-	BOOTMODE_NUM
+   CPU,
+   MUSASHI,
+   UAE_030,
+   UAEJIT_030,
+   UAE_040,
+   UAEJIT_040,
+   BOOTMODE_NUM
 };
 typedef struct {
    uint32_t load_rom_emu;

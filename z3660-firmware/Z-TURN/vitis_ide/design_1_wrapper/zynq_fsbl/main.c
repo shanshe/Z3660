@@ -232,9 +232,20 @@ int main(void)
 	u32 HandoffAddress = 0;
 	u32 Status = XST_SUCCESS;
 	u32 RegVal;
+	
+	// Debug: mostrar configuración DDR compilada
+#ifdef DDR_667MHZ
+	fsbl_printf(DEBUG_GENERAL,"FSBL: DDR configuration set to 667 MHz (FBDIV=0x28)\r\n");
+#elif defined(DDR_800MHZ)
+	fsbl_printf(DEBUG_GENERAL,"FSBL: DDR configuration set to 800 MHz (FBDIV=0x30)\r\n");
+#else
+	fsbl_printf(DEBUG_GENERAL,"FSBL: DDR configuration set to 533 MHz (FBDIV=0x20)\r\n");
+#endif
+	
 	/*
 	 * PCW initialization for MIO,PLL,CLK and DDR
 	 */
+	fsbl_printf(DEBUG_GENERAL,"FSBL: Starting PS7 initialization...\r\n");
 	Status = ps7_init();
 	if (Status != FSBL_PS7_INIT_SUCCESS) {
 		fsbl_printf(DEBUG_GENERAL,"PS7_INIT_FAIL : %s\r\n",
@@ -452,13 +463,13 @@ int main(void)
 		 */
 		Status = InitSD("Z3660.BIN");
 		if (Status != XST_SUCCESS) {
-			printf("SD_INIT_FAIL (Z3660.BIN)\r\n");
+			printf("\r\n[SD Init] FAIL (Z3660.BIN)\r\n");
 			Status = InitSD("FAILSAFE.BIN");
 			if (Status != XST_SUCCESS) {
-				printf("SD_INIT_FAIL (FAILSAFE.BIN)\r\n");
+				printf("\r\n[SD Init] FAIL (FAILSAFE.BIN)\r\n");
 				Status = InitSD("BOOT.BIN");
 				if (Status != XST_SUCCESS) {
-					printf("SD_INIT_FAIL (BOOT.BIN)\r\n");
+					printf("\r\n[SD Init] FAIL (BOOT.BIN)\r\n");
 					printf("SOS, I can't boot!!!\r\n");
 					while(1)
 					{
@@ -468,13 +479,13 @@ int main(void)
 //					FsblFallback();
 				}
 				else
-					printf("SD Init Done (BOOT.BIN)\r\n");
+					printf("\r\n[SD Init] Done (BOOT.BIN)\r\n");
 			}
 			else
-				printf("SD Init Done (FAILSAFE.BIN)\r\n");
+				printf("\r\n[SD Init] Done (FAILSAFE.BIN)\r\n");
 		}
 		else
-			printf("SD Init Done (Z3660.BIN)\r\n");
+			printf("\r\n[SD Init] Done (Z3660.BIN)\r\n");
 		MoveImage = SDAccess;
 	} else
 

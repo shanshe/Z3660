@@ -73,79 +73,79 @@ word. */
 typedef unsigned char byte;
 
 typedef enum { STYLE_BIT, STYLE_BIN, STYLE_BPI, STYLE_HEX, STYLE_HEX_RAW,
-                  STYLE_MCS, STYLE_IHEX , STYLE_JEDEC, STYLE_AUTO} FILE_STYLE;
+   STYLE_MCS, STYLE_IHEX , STYLE_JEDEC, STYLE_AUTO} FILE_STYLE;
 #define false 0
 #define true 1
 #define bool int
-typedef struct
-{
+   typedef struct
+   {
 
-   char ncdFilename[100]; // key 'a'
-  char partName[100]; // key 'b'
-  char date[100]; // key 'c'
-  char dtime[100]; // key 'd'
-  uint32_t length; // The length of the byte data that follows, multiply by 8 to get bitstream length.
-  byte *buffer; // Each byte is reversed, Xilinx does things MSB first and JTAG does things LSB first!
-  char filename[100];
-  bool Error;
-  char errorStr[100];
-  FILE *logfile;
-  unsigned int offset;
-  unsigned int rlength; /* if != 0 length of data to read/verify*/
-}  BitFile;
+      char ncdFilename[100]; // key 'a'
+      char partName[100]; // key 'b'
+      char date[100]; // key 'c'
+      char dtime[100]; // key 'd'
+      uint32_t length; // The length of the byte data that follows, multiply by 8 to get bitstream length.
+      byte *buffer; // Each byte is reversed, Xilinx does things MSB first and JTAG does things LSB first!
+      char filename[100];
+      bool Error;
+      char errorStr[100];
+      FILE *logfile;
+      unsigned int offset;
+      unsigned int rlength; /* if != 0 length of data to read/verify*/
+   }  BitFile;
 
-  void error(const char *str);
-  void readField(char *field, FILE *fp);
-  void processData(BitFile *bf,FILE *fp);
-  int  readBitfile(FILE *fp);
-  int  readBIN(FILE *fp, bool do_bitrev);
-  int  readHEXRAW(FILE *fp);
-  int  readMCSfile(FILE *fp);
-  unsigned char checksum(char * buf);
+   void error(const char *str);
+   void readField(char *field, FILE *fp);
+   void processData(BitFile *bf,FILE *fp);
+   int  readBitfile(FILE *fp);
+   int  readBIN(FILE *fp, bool do_bitrev);
+   int  readHEXRAW(FILE *fp);
+   int  readMCSfile(FILE *fp);
+   unsigned char checksum(char * buf);
 
-  void append(BitFile *bf,uint32_t  val, unsigned cnt);
-  void append_file(BitFile *bf,char const *file);
-  int readFile(FILE *fp, FILE_STYLE in_style);
+   void append(BitFile *bf,uint32_t  val, unsigned cnt);
+   void append_file(BitFile *bf,char const *file);
+   int readFile(FILE *fp, FILE_STYLE in_style);
 
-  // Set offset of requested operation in bytes.
-  inline void setOffset(BitFile *bf,unsigned int of)        { bf->offset = of; }
+   // Set offset of requested operation in bytes.
+   inline void setOffset(BitFile *bf,unsigned int of)        { bf->offset = of; }
 
-  // Return offset of requested operation in bytes.
-  inline unsigned int getOffset(BitFile *bf)           { return bf->offset; }
+   // Return offset of requested operation in bytes.
+   inline unsigned int getOffset(BitFile *bf)           { return bf->offset; }
 
-  // Set length of requested operation in bytes.
-  inline void setRLength(BitFile *bf,unsigned int lt)       { bf->rlength = lt; }
+   // Set length of requested operation in bytes.
+   inline void setRLength(BitFile *bf,unsigned int lt)       { bf->rlength = lt; }
 
-  // Return length of requested operation in bytes.
-  inline unsigned int getRLength(BitFile *bf)          { return bf->rlength; }
+   // Return length of requested operation in bytes.
+   inline unsigned int getRLength(BitFile *bf)          { return bf->rlength; }
 
-  // Return pointer to data buffer.
-  inline byte *getData(BitFile *bf)                        { return bf->buffer; }
+   // Return pointer to data buffer.
+   inline byte *getData(BitFile *bf)                        { return bf->buffer; }
 
-  // Return length of bitfile in bits.
-  inline uint32_t getLength(BitFile *bf)              { return bf->length*8; }
+   // Return length of bitfile in bits.
+   inline uint32_t getLength(BitFile *bf)              { return bf->length*8; }
 
-  // Return length of bitfile in bytes.
-  inline uint32_t getLengthBytes(BitFile *bf)              { return bf->length; }
+   // Return length of bitfile in bytes.
+   inline uint32_t getLengthBytes(BitFile *bf)              { return bf->length; }
 
-  inline const char *getError(BitFile *bf){
-    if(!bf->Error)return("");
-    bf->Error=false;
-    return bf->errorStr;
-  }
-/*
+   inline const char *getError(BitFile *bf){
+      if(!bf->Error)return("");
+      bf->Error=false;
+      return bf->errorStr;
+   }
+   /*
   inline const char *getNCDFilename(BitFile *bf){return bf->ncdFilename;}
   inline const char *getPartName(BitFile *bf){return bf->partName;}
   inline const char *getDate(BitFile *bf){return bf->date;}
   inline const char *getTime(BitFile *bf){return bf->dtime;}*/
-  void setNCDFields(const char * partname);
-  void setLength(unsigned int bit_count);
-  uint32_t saveAs(FILE_STYLE style, const char *device, FILE *fp);
-  int get_bit(unsigned int idx);
-  void set_bit(unsigned int idx, int blow);
+   void setNCDFields(const char * partname);
+   void setLength(unsigned int bit_count);
+   uint32_t saveAs(FILE_STYLE style, const char *device, FILE *fp);
+   int get_bit(unsigned int idx);
+   void set_bit(unsigned int idx, int blow);
 
-  const char * styleToString(FILE_STYLE style);
-  int styleFromString(const char *stylestr, FILE_STYLE *style);
+   const char * styleToString(FILE_STYLE style);
+   int styleFromString(const char *stylestr, FILE_STYLE *style);
 
 
 #endif //BITFILE_H

@@ -63,6 +63,7 @@ int special_mem, special_mem_default;
 /* do not use get_n_addr */
 int jit_n_addr_unsafe;
 #endif
+#if 0
 static int mem_hardreset;
 static bool roms_modified;
 
@@ -93,8 +94,9 @@ static int bogomem_aliasing;
 
 /* The address space setting used during the last reset.  */
 static bool last_address_space_24;
-
+#endif
 addrbank *mem_banks[MEMORY_BANKS];
+#if 0
 
 /* This has two functions. It either holds a host address that, when added
 to the 68k address, gives the host address corresponding to that 68k
@@ -156,7 +158,7 @@ int addr_valid (const TCHAR *txt, uaecptr addr, uae_u32 len)
 
 static int illegal_count;
 /* A dummy bank that only contains zeros */
-#if 0
+
 static uae_u32 REGPARAM3 dummy_lget (uaecptr) REGPARAM;
 static uae_u32 REGPARAM3 dummy_wget (uaecptr) REGPARAM;
 static uae_u32 REGPARAM3 dummy_bget (uaecptr) REGPARAM;
@@ -2080,8 +2082,6 @@ static void set_direct_memory(addrbank *ab)
 		ab->baseaddr_direct_w = ab->baseaddr;
 }
 
-#endif
-
 static void init_mem_banks (void)
 {
 	// unsigned so i << 16 won't overflow to negative when i >= 32768
@@ -2091,7 +2091,6 @@ static void init_mem_banks (void)
 	//delete_shmmaps (0, 0xFFFF0000);
 #endif
 }
-#if 0
 static void map_banks_set(addrbank *bank, int start, int size, int realsize)
 {
 	bank->startmask = start << 16;
@@ -3860,6 +3859,7 @@ void memory_put_byte(uaecptr addr, uae_u32 v)
 		*m = (uae_u8)v;
 	}
 }
+//#endif
 
 uae_u8 *memory_get_real_address(uaecptr addr)
 {

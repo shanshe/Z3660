@@ -1,9 +1,11 @@
 #define _tcscmp strcmp
 #define _stprintf sprintf
+#define _sntprintf snprintf
 #define _tcsncmp strncmp
 #define _istspace isspace
 #define _tcscpy strcpy
 #define _vsntprintf vsnprintf
+#define _tcslen strlen
 
 #include "uae/types.h"
 //#include <string.h>

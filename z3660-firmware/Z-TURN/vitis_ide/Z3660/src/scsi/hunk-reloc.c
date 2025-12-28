@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "cpu_emulator.h"
 #include "hunk-reloc.h"
 #include "xpseudo_asm_gcc.h"
 #include "z3660_scsi_enums.h"

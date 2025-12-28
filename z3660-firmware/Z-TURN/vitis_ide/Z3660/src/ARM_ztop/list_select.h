@@ -17,10 +17,31 @@ typedef struct {
 	int num_items;
 } ListSelect;
 
+enum TIMINGS{
+   T50,
+   T55,
+   T60,
+   T65,
+   T70,
+   T75,
+   T80,
+   T85,
+   T90,
+   T95,
+   T100,
+   T105,
+   T110,
+   T115,
+   T120,
+   TIMINGS_NUM
+};
+
 extern ListSelect *ls_kickstart;
 extern ListSelect *ls_kickstart_ext;
 extern ListSelect *ls_scsi[7];
 extern ListSelect *ls_screen_res;
+extern ListSelect *ls_timings;
+extern ListSelect *ls_arm_frequency;
 
 #define LISTSEL(x,y,w,h) do {\
 	FILLRECT(   x+3, y+2, w-6, h-2, 0x00A8A8A8); \
@@ -44,7 +65,8 @@ void paint_ls_scsi(void);
 void paint_ls_kickstart_ext(void);
 void recalculate_coords_list_select(void);
 void paint_ls_kickstart(void);
-void paint_ls_screen(void);
-
+void paint_ls_screen_res(void);
+void paint_ls_timings(void);
+void paint_ls_arm_frequency(void);
 
 #endif // _LIST_SELECT_H_

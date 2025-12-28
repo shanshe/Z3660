@@ -1031,7 +1031,7 @@ void m68k_modify_timeslice(int cycles)
 
 void m68k_end_timeslice(void)
 {
-	m68ki_initial_cycles = GET_CYCLES();
+	m68ki_initial_cycles -= GET_CYCLES();
 	SET_CYCLES(0);
 }
 

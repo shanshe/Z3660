@@ -58,6 +58,7 @@ void print_hdmi_ln(int xpos, char *message, int line_inc);
 int do_exit = 0;
 void ctrl_c(int sig)
 {
+   (void)sig;
    do_exit = 1;
 }
 #define bool int
@@ -322,8 +323,9 @@ static int last_pos = -1;
 
 unsigned long get_id(Jtag *jtag,IOBase *io, int chainpos, int num)
 {
+   (void)io;
    bool verbose = getVerbose_jtag(jtag);
-//   int num = getChain(jtag,io,true);
+   //   int num = getChain(jtag,io,true);
    if (selectDevice(jtag,chainpos)<0)
    {
       printf( "Invalid chain position %d, must be >= 0 and < %d\n",
@@ -364,9 +366,10 @@ int getFile_and_Attribute_from_name(
       char *name1, char * action, char * section,
       unsigned int *offset, FILE_STYLE *style, unsigned int *length)
 {
-   char name[100]="z3660.jed:w:0:JEDEC";
+   (void)name1;
+   unsigned char name[100]="z3660.jed:w:0:JEDEC";
    char filename[256];
-   char *p = name, *q;
+   unsigned char *p = name, *q;
    int len;
    char localaction = 'w';
    char localsection = 'a';
@@ -378,12 +381,12 @@ int getFile_and_Attribute_from_name(
       return 0;
    else
    {
-      char message[100];
+      char message[120];
       sprintf(message,"command %s",name);
       print_hdmi_ln(0,message,1);
       printf("%s\n",message);
 
-      q = strchr(p,':');
+      q = (unsigned char *)strchr((char *)p,':');
 #if defined(__WIN32__)
       if (p[1]  == ':') {
          /* Assume we have a DOS path.
@@ -395,12 +398,12 @@ int getFile_and_Attribute_from_name(
       if (q)
          len = q-p;
       else
-         len = strlen(p);
+         len = strlen((char *)p);
       if (len>0)
       {
          char temp[256-4];
          int num = (len>232)?232:len;
-         strncpy(temp, p, num);
+         strncpy(temp, (char *)p, 256-5);
          temp[num] = 0;
          sprintf(filename,"1:/%s",temp);
       }
@@ -413,12 +416,12 @@ int getFile_and_Attribute_from_name(
    /* Action*/
    if(p)
    {
-      q = strchr(p,':');
+      q = (unsigned char *)strchr((char *)p,':');
 
       if (q)
          len = q-p;
       else
-         len = strlen(p);
+         len = strlen((char *)p);
       if (len == 1)
          localaction = *p;
       else
@@ -437,11 +440,11 @@ int getFile_and_Attribute_from_name(
    /*Offset/Area*/
    if(p)
    {
-      q = strchr(p,':');
+      q = (unsigned char *)strchr((char *)p,':');
       if (q)
          len = q-p;
       else
-         len = strlen(p);
+         len = strlen((char *)p);
       if (!isdigit(*p))
       {
          localsection = *p;
@@ -449,7 +452,7 @@ int getFile_and_Attribute_from_name(
             *section = localsection;
          p++;
       }
-      localoffset = strtol(p, NULL, 0);
+      localoffset = strtol((char *)p, NULL, 0);
       if (offset)
          *offset = localoffset;
       p = q;
@@ -460,14 +463,14 @@ int getFile_and_Attribute_from_name(
    if(p )
    {
       int res = 0;
-      q = strchr(p,':');
+      q = (unsigned char *)strchr((char *)p,':');
 
       if (q)
          len = q-p;
       else
-         len = strlen(p);
+         len = strlen((char *)p);
       if (len)
-         res = styleFromString(p, &localstyle);
+         res = styleFromString((char *)p, &localstyle);
       if(res)
       {
          printf( "\nUnknown format \"%*s\"\n", len, p);
@@ -483,14 +486,14 @@ int getFile_and_Attribute_from_name(
 
    if(p)
    {
-      locallength = strtol(p, NULL, 0);
-      p = strchr(p,':');
+      locallength = strtol((char *)p, NULL, 0);
+      p = (unsigned char *)strchr((char *)p,':');
       if (length)
          *length = locallength;
       if(p)
          p ++;
    }
-/*
+   /*
    if  (tolower(localaction) == 'r')
    {
       if (!(strcmp(filename,"stdout")))
@@ -547,9 +550,9 @@ int init_xc3sprog(void)
    bool    verbose   = false;
    unsigned int jtag_freq= 0;
    int      chainpos     = 0;
-//   int      nchainpos    = 1;
+   //   int      nchainpos    = 1;
    char const *serial  = 0;
-
+   printf("init_xc3sprog()\n");
    int res = getIO( &iobase, serial, verbose, jtag_freq);
    if (res) /* some error happend*/
    {
@@ -581,24 +584,30 @@ int init_xc3sprog(void)
    int size = (id & 0x000ff000)>>13;
    ProgAlgXC95X_init(&jtag, &iobase, size);
 
-   char userid[10];
+   char userid[10]={0,0,0,0,0,0,0,0,0,0};
    flow_enable();
    flow_usercode(userid);
    flow_disable();
    if(!isnumber(userid[2]) || !isnumber(userid[3]))
    {
       sprintf(message,"Read a Bad CPLD firmware version. CPLD erased? JTAG error?");
+      print_hdmi_ln(0,message,1);
+      printf("%s\n",message);
+      return 4;
    }
    else
    {
-      if(userid[1]=='0')
+      if(userid[0]=='z' && userid[1]=='3' && userid[2]=='6' && userid[3]=='6')
          sprintf(message,"CPLD firmware 1.03 BETA 8 or lower");
-      if(userid[1]=='B')
+      else if(userid[1]=='B')
          sprintf(message,"CPLD firmware 1.0%c BETA %c%c",userid[0],userid[2],userid[3]);
       else if(userid[1]=='A')
          sprintf(message,"CPLD firmware 1.0%c ALFA %c%c",userid[0],userid[2],userid[3]);
       else
-         sprintf(message,"CPLD firmware 1.0%c rev %c%c",userid[0],userid[2],userid[3]);
+         sprintf(message,"CPLD firmware 1.0%c rev. %c%c",userid[0],userid[2],userid[3]);
+      print_hdmi_ln(0,message,1);
+      printf("%s\n",message);
+      return(1); // CPLD seems ok
    }
    print_hdmi_ln(0,message,1);
    printf("%s\n",message);
@@ -607,7 +616,7 @@ int init_xc3sprog(void)
 int main_xc3sprog(void)
 {
    char arg[100]="z3660.jed:w:0:JEDEC";
-//   char args[100]="z3660.jed:v:0:JEDEC";
+   //   char args[100]="z3660.jed:v:0:JEDEC";
    bool    verbose   = false;
    bool     erase    = false;
    int      nchainpos    = 1;
@@ -619,16 +628,16 @@ int main_xc3sprog(void)
    print_hdmi_ln(0,message,1);
    printf("%s\n",message);
 
-//   if(1 < 1 && !reconfigure && !erase && !rUsercode) detectchain = true;
+   //   if(1 < 1 && !reconfigure && !erase && !rUsercode) detectchain = true;
 
-//   if(chaintest && !spiflash)
-//      test_IRChain(&jtag, &iobase, test_count);
+   //   if(chaintest && !spiflash)
+   //      test_IRChain(&jtag, &iobase, test_count);
 
-//   if (detectchain && !spiflash)
-//   {
-//      detect_chain(&jtag, &iobase);
-//      return 0;
-//   }
+   //   if (detectchain && !spiflash)
+   //   {
+   //      detect_chain(&jtag, &iobase);
+   //      return 0;
+   //   }
 
 
 
@@ -652,10 +661,12 @@ int main_xc3sprog(void)
          idToDescription(id));
 }
 
-
+FRESULT f_clk_mount (FATFS* fs, const TCHAR* path, BYTE opt);
 int programXC95X(Jtag *jtag, IOBase *io, unsigned long id, char *arg,
       bool verbose, bool erase, char *device)
 {
+   (void)verbose;
+   (void)device;
    int ret = 0;
    int size = (id & 0x000ff000)>>13;
    ProgAlgXC95X_init(jtag, io, size);
@@ -675,7 +686,7 @@ int programXC95X(Jtag *jtag, IOBase *io, unsigned long id, char *arg,
    static FATFS fatfs;
    TCHAR *Path = DEFAULT_ROOT;
 
-   f_mount(&fatfs, Path, 1); // 1 mount immediately
+   f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
 
    int ret1= getFile_and_Attribute_from_name
          (arg, &action, NULL, &jedecfile_offset,

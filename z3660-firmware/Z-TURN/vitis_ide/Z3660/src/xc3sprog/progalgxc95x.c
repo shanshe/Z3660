@@ -39,7 +39,8 @@ byte XSC_BLANK_CHECK=0xe5;
 byte BYPASS=0xff;
 int _gettimeofday (struct timeval *tv, void *tzvp)
 {
-
+   (void)tv;
+   (void)tzvp;
    return(0);
 }
 #define deltaT(tvp1, tvp2) (((tvp2)->tv_sec-(tvp1)->tv_sec)*1000000 + \
@@ -80,7 +81,7 @@ void ProgAlgXC95X_init(Jtag *j,IOBase *io, int s)
 
 void flow_enable()
 {
-//   printf("flow_enable()\n");
+   //   printf("flow_enable()\n");
    byte data[1];
    shiftIR(alg.jtag,alg.io,&ISC_ENABLE,0);
    data[0]=0x15;
@@ -90,7 +91,7 @@ void flow_enable()
 
 void flow_disable()
 {
-//   printf("flow_disable()\n");
+   //   printf("flow_disable()\n");
    shiftIR(alg.jtag,alg.io,&ISC_DISABLE,0);
    usleep(100);
    shiftIR(alg.jtag,alg.io,&BYPASS,0);
@@ -100,21 +101,21 @@ void flow_disable()
 
 void flow_error_exit()
 {
-//   printf("flow_error_exit()\n");
+   //   printf("flow_error_exit()\n");
    shiftIR(alg.jtag,alg.io,&ISC_NOOP,0);
    cycleTCK(alg.jtag,alg.io,1,1);
 }
 void print_hdmi_ln(int xpos, char *message, int line_inc);
 int flow_blank_check()
 {
-//   printf("flow_blank_check()\n");
+   //   printf("flow_blank_check()\n");
    byte i_data[3]={0x3,0,0};
    byte o_data[3];
    shiftIR(alg.jtag,alg.io,&XSC_BLANK_CHECK,0);
    shiftDR(alg.jtag,alg.io,i_data, 0,18,0,true);
    cycleTCK(alg.jtag,alg.io,500,1);
    shiftDR(alg.jtag,alg.io,0,o_data,18,0,true);
-//   if(getVerbose_jtag(alg.jtag))
+   //   if(getVerbose_jtag(alg.jtag))
    {
       char message[100];
       if ((o_data[0] & 0x03) == 0x01)
@@ -131,7 +132,7 @@ int flow_blank_check()
 
 int flow_erase()
 {
-//   printf("flow_erase()\n");
+   //   printf("flow_erase()\n");
    char message[100];
    sprintf(message,"Erasing device");
    print_hdmi_ln(0,message,1);
@@ -152,7 +153,7 @@ int flow_erase()
 
 int flow_usercode(char *userid)
 {
-//   printf("flow_usercode()\n");
+   //   printf("flow_usercode()\n");
    char message[100];
    sprintf(message,"Reading CPLD Usercode");
    print_hdmi_ln(0,message,1);
@@ -179,7 +180,8 @@ void print_hdmi_ln(int xpos, char *message, int line_inc);
 
 int flow_array_program(JedecFile *file)
 {
-//   printf("flow_array_program()\n");
+   (void)file;
+   //   printf("flow_array_program()\n");
    byte preamble[1]= {0x01};
    byte i_data[MaxDRegLength+2];
    byte o_data[MaxDRegLength+3];
@@ -195,7 +197,7 @@ int flow_array_program(JedecFile *file)
    printf("Programming\n");
    for(sec=0;sec < MaxSector;sec++)
    {
-//      if(getVerbose_jtag(alg.jtag))
+      //      if(getVerbose_jtag(alg.jtag))
       {
          char message[100];
          sprintf(message,"Programming Sector %3d/%3d", sec+1,MaxSector);
@@ -260,7 +262,7 @@ int flow_array_program(JedecFile *file)
       }
    }
    gettimeofday(tv+1, NULL);
-//   if(getVerbose_jtag(alg.jtag))
+   //   if(getVerbose_jtag(alg.jtag))
    {
       char message[100];
       sprintf(message,"P"); // P of "Programming"
@@ -269,8 +271,8 @@ int flow_array_program(JedecFile *file)
       print_hdmi_ln(0,message,1);
       printf("%s\n", message);
 
-//      printf( "\nProgramming  time %.1f ms\n",
-//            (double)deltaT(tv, tv + 1)/1.0e3);
+      //      printf( "\nProgramming  time %.1f ms\n",
+      //            (double)deltaT(tv, tv + 1)/1.0e3);
    }
    return 0;
 }
@@ -278,7 +280,8 @@ int flow_array_program(JedecFile *file)
 
 int flow_array_verify(JedecFile *file)
 {
-//   printf("flow_array_verify()\n");
+   (void)file;
+   //   printf("flow_array_verify()\n");
    byte preamble[1]= {0x03};
    byte i_data[MaxDRegLength+2];
    byte o_data[MaxDRegLength+2];
@@ -298,7 +301,7 @@ int flow_array_verify(JedecFile *file)
    printf("Verifying\n");
    for(sec=0;sec < MaxSector;sec++)
    {
-//      if(getVerbose_jtag(alg.jtag))
+      //      if(getVerbose_jtag(alg.jtag))
       {
          char message[100];
          sprintf(message,"Verifying Sector %3d/%3d", sec+1,MaxSector);
@@ -360,7 +363,7 @@ int flow_array_verify(JedecFile *file)
    }
 
    gettimeofday(tv+1, NULL);
-//   if(getVerbose_jtag(alg.jtag))
+   //   if(getVerbose_jtag(alg.jtag))
    {
       char message[100];
       sprintf(message,"V"); // V for "Verifying"
@@ -369,8 +372,8 @@ int flow_array_verify(JedecFile *file)
       print_hdmi_ln(0,message,1);
       printf("%s\n", message);
 
-//      printf( "\nSuccess! Verify time %.1f ms\n",
-//            (double)deltaT(tv, tv + 1)/1.0e3);
+      //      printf( "\nSuccess! Verify time %.1f ms\n",
+      //            (double)deltaT(tv, tv + 1)/1.0e3);
    }
    return 0;
 }
@@ -383,7 +386,7 @@ void alg_array_program(JedecFile *file)
 int alg_array_verify(JedecFile *file)
 {
    int ret;
-//   printf("alg_array_verify()\n");
+   //   printf("alg_array_verify()\n");
    flow_enable();
    ret = flow_array_verify(file);
    flow_disable();

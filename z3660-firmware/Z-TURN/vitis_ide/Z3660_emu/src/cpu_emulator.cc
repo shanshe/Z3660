@@ -23,6 +23,7 @@ extern "C" {
 #include "cpu_emulator.h"
 #include <xil_mmu.h>
 #include "xil_cache.h"
+#include <xil_cache_l.h>
 #include "defines.h"
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
@@ -33,7 +34,55 @@ extern "C" void init_ovl_chip_ram_bank(void);
 extern "C" void init_z2_scsi_bank(unsigned int ini);
 extern "C" void init_z3_ram_bank(unsigned int ini);
 extern "C" void init_rtg_bank(unsigned int ini);
-extern "C" unsigned int READ_NBG_ARM(void);
+extern "C" void ipl_main_read(void);
+extern volatile int nbg_arm;
+extern XGpioPs GpioPs;
+#define NBR_ARM(X)        XGpioPs_WritePin(&GpioPs, PS_MIO_8, X);
+//#define READ_NBG
+#ifdef READ_NBG
+int nbg_arm_old=-1;
+static inline void READ_NBG_ARM(void)
+{
+   ipl_main_read();
+   if(nbg_arm!=0)
+   {
+      write_reg(REG4,0x0); // ARM Bus Hi-Z
+      NBR_ARM(1);
+      usleep(10);
+      NBR_ARM(0);
+      do
+      {
+         ipl_main_read();
+      }while(nbg_arm!=0);
+   }
+
+   if(nbg_arm==0 && nbg_arm_old==1)
+   {
+      Xil_L1DCacheFlush();
+   }
+   nbg_arm_old=nbg_arm;
+}
+#else
+#define READ_NBG_ARM()
+#endif
+//#define USE_BUS_REQUEST
+inline void BUS_REQUEST(void)
+{
+#ifdef USE_BUS_REQUEST
+   do
+   {
+      ipl_main_read();
+      if(nbg_arm)
+         Xil_L1DCacheFlush();
+   }while(nbg_arm!=0);
+#endif
+}
+inline void BUS_RELINQUISH(void)
+{
+#ifdef USE_BUS_REQUEST
+//   NBR_ARM(1);
+#endif
+}
 
 extern "C" unsigned int rtg_regs_read_32(uaecptr address);
 extern "C" unsigned int rtg_regs_read_16(uaecptr address);
@@ -72,7 +121,8 @@ void cpu_emulator_reset(void)
 int intlev(void);
 extern "C" void z3660_printf(const TCHAR *format, ...);
 extern "C" void ipl_main_read(void);
-
+extern volatile int read_reset;
+extern int read_reset_last;
 void musashi_emulator(void)
 {
    z3660_printf("[Core1] Starting Musashi emulator\n");
@@ -113,6 +163,18 @@ void musashi_emulator(void)
              }
       }
       disasm_enable=shared->disassemble;
+
+      if(read_reset==0 && read_reset_last==1)
+      {
+         z3660_printf("[Core1] Reset active (DOWN)...\n\r");
+         do{
+            uint32_t read1=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
+            read_reset=(read1>>(n040RSTI   ))&1;
+         }while(read_reset==0);
+         z3660_printf("[Core1] Reset inactive (UP)...\n\r");
+         cpu_emulator_reset();
+      }
+      read_reset_last=read_reset;
 /*
       if(XGpioPs_ReadPin(&GpioPs, n040RSTI)==0)
       {
@@ -159,12 +221,12 @@ void reset_autoconfig(void)
        autoConfigBaseRTG = 0x10000000;         // RTG
        configured_z3|=2;
        unsigned int ini=(autoConfigBaseRTG>>20)&0xFFF;
-       z3660_printf("[Core1] Autoconfig RTG to 0x%04X\n",(autoConfigBaseRTG>>16)&0xFFFF);
        // The following MMU operation hangs the access of the core0
        // so we hold here core0
        shared->core0_hold=1;
        shared->shared_data=1;
        while(shared->core0_hold_ack==0);
+       z3660_printf("[Core1] Autoconfig RTG to 0x%04X\n",(autoConfigBaseRTG>>16)&0xFFFF);
 
        rtg_cache_policy_core1(ini, RTG_FB_CACHE_POLICY_FOR_EMU, RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
 
@@ -219,6 +281,7 @@ extern "C" uint32_t read_autoconfig_z2(uint32_t address)
          break;
       case 0x0008: // er_Flags
          if((configured_z2&1) == 0 && (local.z2_enabled&1) == 1) data = 0x7FFFFFFF; // 0b0111 flags inverted 1000 io,shutup,extension,reserved(1)
+         break;
       case 0x000A:
          data = 0xFFFFFFFF; // inverted zero
          break;
@@ -494,19 +557,28 @@ extern "C" void write_autoconfig_z3(uint32_t address, uint32_t data,int type)
 #endif
 }
 extern "C" void bus_error(void);
+void m68ki_exception_bus_error(void);
+uint16_t no_decode_table[65536]={0};
+int no_decode_counter=0;
 inline int not_decode(uint32_t address)
 {
-//   return(0);
 #if 1
+
+   for(int i=0;i<no_decode_counter;i++)
+   {
+      if((address>>16)==no_decode_table[i])
+         return(1);
+   }
+
    if(0
       ||(address>=0x10000000 && address<0x40000000)
 //      ||(address>=0x78000000 && address<0xFF000000)
 //      ||(address>=RTG_BASE && address<0x40000000)
-      ||(address>=0x00E00000 && address<0x00E80000)
+//      ||(address>=0x00E00000 && address<0x00E80000) // rommy goes here
 //      ||(address>=0x00DD0000 && address<0x00DE0000) mobo IDE (SCSI control)
       ||(address>=0x00C00000 && address<0x00DC0000)
       ||(address>=0x00B80000 && address<0x00BF0000)
-//      ||(address>=0x7e000000 && address<0x80000000) part of mobo ram
+//      ||(address>=0x01000000 && address<0x08000000) // mobo ram
       ||(address>=0x80000000 && address<0xFF000000)
       ||(address>=0xFF010000)
    )
@@ -514,6 +586,8 @@ inline int not_decode(uint32_t address)
       return(1);
    }
    return(0);
+#else
+   retur(0);
 #endif
 }
 extern LOCAL local;
@@ -626,8 +700,8 @@ unsigned int read_long(unsigned int address)
    }
    if(not_decode(address))
    {
-//      z3660_printf(" Read Long\n");
-      return(0xFFFFFFFF);
+//      printf("Read Long from add %08X\n",address);
+      return(0);
    }
    if(address>=0x00E80000 && address<0x00E90000)
    {
@@ -753,8 +827,8 @@ unsigned int read_word(unsigned int address)
    }
    if(not_decode(address))
    {
-//      z3660_printf(" Read Word\n");
-      return(0XFFFF);
+//      printf("Read Word from add %08X\n",address);
+      return(0);
    }
    if(address>=0x00E80000 && address<0x00E90000)
    {
@@ -907,8 +981,8 @@ unsigned int read_byte(unsigned int address)
    }
    if(not_decode(address))
    {
-//      z3660_printf(" Read Byte\n");
-      return(0xFF);
+//      printf("Read Byte from add %08X\n",address);
+      return(0);
    }
    if(address>=0x00E80000 && address<0x00E90000)
    {
@@ -1023,7 +1097,7 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
    }
    if(not_decode(address))
    {
-//      z3660_printf(" Write Byte\n");
+//      printf("Write Byte to add %08X data %08X\n",address,value);
       return;
    }
    if(address>=0x00E80000 && address<0x00E90000)
@@ -1054,7 +1128,6 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
    }
    ps_write_8(address,value);
 }
-//void m68k_write_memory_16(uint32_t address, uint32_t value)
 void m68k_write_memory_16(unsigned int address, unsigned int value)
 {
    if(ovl==1 && address<0x00800000)
@@ -1121,7 +1194,7 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
    }
    if(not_decode(address))
    {
-//      z3660_printf(" Write Word\n");
+//      printf("Write Word to add %08X data %08X\n",address,value);
       return;
    }
    if(address>=0x00E80000 && address<0x00E90000)
@@ -1152,7 +1225,6 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
    }
    ps_write_16(address,value);
 }
-//void m68k_write_memory_32(uint32_t address, uint32_t value)
 void m68k_write_memory_32(unsigned int address, unsigned int value)
 {
    if(ovl==1 && address<0x00800000)
@@ -1219,7 +1291,7 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
    }
    if(not_decode(address))
    {
-//      z3660_printf(" Write Long\n");
+//      printf("Write Long to add %08X data %08X\n",address,value);
       return;
    }
    if(address>=0x00E80000 && address<0x00E90000)
@@ -1252,14 +1324,14 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
 }
 #define NOP asm(" nop")
 
-inline void NOPX_WRITE(void)
+static inline void NOPX_WRITE(void)
 {
    for(int i=shared->nops_write;i>0;i--)
    {
       NOP;
    }
 }
-inline void NOPX_READ(void)
+static inline void NOPX_READ(void)
 {
    for(int i=shared->nops_read;i>0;i--)
    {
@@ -1277,301 +1349,216 @@ void check_bus_error(uint32_t v,uint32_t address)
    }
 }
 */
-#define WRITE_FINISH_DELAYED
-//#define READ_THROUGH_REGS
-//#define WRITE_THROUGH_REGS
+#define READ_THROUGH_REGS
+#define WRITE_THROUGH_REGS
 extern "C" void make_dummy_address_bank(uint32_t address);
 long int timeout;
-void wait_read_ack(uint32_t address)
+#define WAIT_TIMEOUT 1000000
+#define WAIT_TIMEOUT2 2500000
+void wait_read_ack(uint32_t address, int type)
 {
-   timeout=100000;
+//   while(read_reg(REG5)==0x80000000);          // previous write ack
+   timeout=WAIT_TIMEOUT;
    do {
       NOPX_READ();
       timeout--;
    }
-   while(read_reg(0x14)==0 && timeout>0);          // read ack
+   while(read_reg(REG5)==0 && timeout>0);          // read ack
    if(timeout<=0)
    {
-      if(read_reg(0x14)==0)
+      if(read_reg(REG5)==0)
       {
-         timeout=100000;
+         timeout=WAIT_TIMEOUT2;
+//         printf("READ %s Memory access timeout: 0x%08lx\n",type==0?"BYTE":type==1?"WORD":"LONG",address);
+         if(address>0x00100000)
+         {
+            make_dummy_address_bank(address);
+            no_decode_table[no_decode_counter++]=address>>16;
+         }
          do {
             NOPX_READ();
             timeout--;
          }
-         while(read_reg(0x14)==0 && timeout>0);
+         while(read_reg(REG5)==0 && timeout>0);
          if(timeout<=0)
          {
-            printf("READ Memory access timeout: 0x%08lx\n",address);
-            write_reg(0x10,0x80000000); // force exit ARM state machine
-            bus_error();
+            write_reg(REG4,0x80000001); // force exit ARM state machine
+//            if(shared->cfg_emu==MUSASHI)
+//               m68ki_exception_bus_error();
+//            else
+//               bus_error();
          }
       }
    }
 }
-void wait_write_ack(uint32_t address)
+static inline void wait_write_ack(int address)
 {
-   timeout=100000;
-   while(read_reg(0x14)==0 && timeout>0)          // read ack
+#if 0
+   while(read_reg(REG5)==0x80000000);
+#else
+   long int timeout1=1000000;
+
+   while(read_reg(REG5)==0x80000000 && timeout1>0)          // previous write ack
    {
-      NOPX_WRITE();
-      timeout--;
+      NOP;
+      timeout1--;
    }
-   if(timeout<=0)
+   if(timeout1==0)
    {
-      if(read_reg(0x14)==0)
-      {
-         timeout=100000;
-         do {
-            NOPX_WRITE();
-            timeout--;
-         }
-         while(read_reg(0x14)==0 && timeout>0);
-         if(timeout<=0)
-         {
-            printf("WRITE Memory access timeout: 0x%08lx\n",address);
-            write_reg(0x10,0x80000000); // force exit ARM state machine
-            bus_error();
-         }
-      }
+      uint32_t reg4=read_reg(REG4);
+      write_reg(REG4,0x80000000|reg4);
+//      printf("timeout wait write_ack\n");
+      write_reg(REG4,reg4);
    }
+#endif
+}
+uint32_t last_bank=-1;
+extern "C" void arm_write_amiga_long(uint32_t address, uint32_t data)
+{
+   BUS_REQUEST();
+   while(read_reg(REG4)&(1<<4)); // Wait pipe empty
+#ifndef WRITE_THROUGH_REGS
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+      write_reg(REG6,bank);
+      last_bank=bank;
+   }
+#endif
+#ifdef WRITE_THROUGH_REGS
+   write_reg(REG2,address);
+   write_reg(REG3,data);
+   NOP;
+   write_reg(REG4,0x11|WRITE_|LONG_); // command write
+#else
+   write_mem32(address,data);
+#endif
+   BUS_RELINQUISH();
+}
+extern "C" void arm_write_amiga_word(uint32_t address, uint32_t data)
+{
+   BUS_REQUEST();
+   while(read_reg(REG4)&(1<<4)); // Wait pipe empty
+#ifndef WRITE_THROUGH_REGS
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+      write_reg(REG6,bank);
+      last_bank=bank;
+   }
+#endif
+#ifdef WRITE_THROUGH_REGS
+   write_reg(REG2,address);
+   write_reg(REG3,data);
+   NOP;
+   write_reg(REG4,0x11|WRITE_|WORD_); // command write
+#else
+   write_mem16(address,data);
+#endif
+   BUS_RELINQUISH();
+}
+extern "C" void arm_write_amiga_byte(uint32_t address, uint32_t data)
+{
+   BUS_REQUEST();
+   while(read_reg(REG4)&(1<<4)); // Wait pipe empty
+#ifndef WRITE_THROUGH_REGS
+   uint32_t bank=(address>>24)&0xFF;
+   if(bank!=last_bank)
+   {
+      write_reg(REG6,bank);
+      last_bank=bank;
+   }
+#endif
+#ifdef WRITE_THROUGH_REGS
+   write_reg(REG2,address);
+   write_reg(REG3,data);
+   NOP;
+   write_reg(REG4,0x11|WRITE_|BYTE_); // command write
+#else
+   write_mem8(address,data);
+#endif
+   BUS_RELINQUISH();
 }
 
-int write_pending=0;
-uint32_t last_bank=-1;
-uint32_t last_address=-1;
-inline void arm_write_amiga_long(uint32_t address, uint32_t data)
+extern "C" uint32_t arm_read_amiga_long(uint32_t address)
 {
-   while(READ_NBG_ARM()!=0);
-#ifndef WRITE_THROUGH_REGS
-   uint32_t bank=(address>>24)&0xFF;
-   if(bank!=last_bank)
-   {
-      write_reg(0x18,bank);
-      last_bank=bank;
-   }
-#endif
-#ifdef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
-#ifdef WRITE_THROUGH_REGS
-//   write_reg64(0x08,(((uint64_t)data)<<32)|address);
-   write_reg(0x08,address);
-   NOP;
-   write_reg(0x0C,data);
-   NOP;
-   write_reg(0x10,0x11|WRITE_|LONG_); // command write
-   NOP;
-#else
-   NOP;
-   write_mem32(address,data);
-   last_address=address;
-#endif
-   write_pending=1;
-#ifndef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
-}
-inline void arm_write_amiga_word(uint32_t address, uint32_t data)
-{
-   while(READ_NBG_ARM()!=0);
-#ifndef WRITE_THROUGH_REGS
-   uint32_t bank=(address>>24)&0xFF;
-   if(bank!=last_bank)
-   {
-      write_reg(0x18,bank);
-      last_bank=bank;
-   }
-#endif
-#ifdef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
-#ifdef WRITE_THROUGH_REGS
-//   write_reg64(0x08,(((uint64_t)data)<<32)|address);
-   write_reg(0x08,address);
-   NOP;
-   write_reg(0x0C,data);
-   NOP;
-   write_reg(0x10,0x11|WRITE_|WORD_); // command write
-   NOP;
-#else
-   NOP;
-   write_mem16(address,data);
-   last_address=address;
-#endif
-   write_pending=1;
-#ifndef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
-}
-inline void arm_write_amiga_byte(uint32_t address, uint32_t data)
-{
-   while(READ_NBG_ARM()!=0);
-#ifndef WRITE_THROUGH_REGS
-   uint32_t bank=(address>>24)&0xFF;
-   if(bank!=last_bank)
-   {
-      write_reg(0x18,bank);
-      last_bank=bank;
-   }
-#endif
-#ifdef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
-#ifdef WRITE_THROUGH_REGS
-//   write_reg64(0x08,(((uint64_t)data)<<32)|address);
-   write_reg(0x08,address);
-   NOP;
-   write_reg(0x0C,data);
-   NOP;
-   write_reg(0x10,0x11|WRITE_|BYTE_); // command write
-   NOP;
-#else
-   NOP;
-   write_mem8(address,data);
-   last_address=address;
-#endif
-   write_pending=1;
-#ifndef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
-}
-inline uint32_t arm_read_amiga_long(uint32_t address)
-{
-   if((address&0xFFFFFF00)==0x6F043000)
-      printf("%08lX\n",address);
-   while(READ_NBG_ARM()!=0);
+   BUS_REQUEST();
+   while(read_reg(REG4)&(1<<4)); // Wait pipe empty
 #ifdef READ_THROUGH_REGS
-   write_reg(0x08,address);           // address
+   write_reg(REG2,address);           // address
 #else
    uint32_t bank=(address>>24)&0xFF;
    if(bank!=last_bank)
    {
-      write_reg(0x18,bank);
+      write_reg(REG6,bank);
       last_bank=bank;
    }
 #endif
-#ifdef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
+   wait_write_ack(address);
 #ifdef READ_THROUGH_REGS
    NOP;
-   write_reg(0x10,0x11|READ_|LONG_);  // command read
+   write_reg(REG4,0x11|READ_|LONG_);  // command read
 #else
-   NOP;
    read_mem32(address);
-   last_address=address;
 #endif
-   wait_read_ack(address);
-   check_bus_error(read_reg(0x14),address);
-   uint32_t data_read=read_reg(0x1C); // read data
+   wait_read_ack(address,2);
+   check_bus_error(read_reg(REG5),address);
+   uint32_t data_read=read_reg(REG7); // read data
+   BUS_RELINQUISH();
    return(data_read);
 }
-inline uint32_t arm_read_amiga_word(uint32_t address)
+extern "C" uint32_t arm_read_amiga_word(uint32_t address)
 {
-   if((address&0xFFFFFF00)==0x6F043000)
-      printf("%08lX\n",address);
-   while(READ_NBG_ARM()!=0);
+   BUS_REQUEST();
+   while(read_reg(REG4)&(1<<4)); // Wait pipe empty
 #ifdef READ_THROUGH_REGS
-   write_reg(0x08,address);           // address
+   write_reg(REG2,address);           // address
 #else
    uint32_t bank=(address>>24)&0xFF;
    if(bank!=last_bank)
    {
-      write_reg(0x18,bank);
+      write_reg(REG6,bank);
       last_bank=bank;
    }
 #endif
-#ifdef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
+   wait_write_ack(address);
 #ifdef READ_THROUGH_REGS
    NOP;
-   write_reg(0x10,0x11|READ_|WORD_);  // command read
+   write_reg(REG4,0x11|READ_|WORD_);  // command read
 #else
-   NOP;
    read_mem16(address);
-   last_address=address;
 #endif
-   wait_read_ack(address);
-   check_bus_error(read_reg(0x14),address);
-   uint32_t data_read=read_reg(0x1C); // read data
+   wait_read_ack(address,1);
+   check_bus_error(read_reg(REG5),address);
+   uint32_t data_read=read_reg(REG7); // read data
+   BUS_RELINQUISH();
    return(data_read);
 }
-inline uint32_t arm_read_amiga_byte(uint32_t address)
+extern "C" uint32_t arm_read_amiga_byte(uint32_t address)
 {
-   if((address&0xFFFFFF00)==0x6F043000)
-      printf("%08lX\n",address);
-   while(READ_NBG_ARM()!=0);
+   BUS_REQUEST();
+   while(read_reg(REG4)&(1<<4)); // Wait pipe empty
 #ifdef READ_THROUGH_REGS
-   write_reg(0x08,address);           // address
+   write_reg(REG2,address);           // address
 #else
    uint32_t bank=(address>>24)&0xFF;
    if(bank!=last_bank)
    {
-      write_reg(0x18,bank);
+      write_reg(REG6,bank);
       last_bank=bank;
    }
 #endif
-#ifdef WRITE_FINISH_DELAYED
-   if(write_pending)
-   {
-      write_pending=0;
-      wait_write_ack(address);
-      check_bus_error(read_reg(0x14),address);
-   }
-#endif
+   wait_write_ack(address);
 #ifdef READ_THROUGH_REGS
    NOP;
-   write_reg(0x10,0x11|READ_|BYTE_);  // command read
+   write_reg(REG4,0x11|READ_|BYTE_);  // command read
 #else
-   NOP;
    read_mem8(address);
-   last_address=address;
 #endif
-   wait_read_ack(address);
-   check_bus_error(read_reg(0x14),address);
-   uint32_t data_read=read_reg(0x1C); // read data
+   wait_read_ack(address,0);
+   check_bus_error(read_reg(REG5),address);
+   uint32_t data_read=read_reg(REG7); // read data
+   BUS_RELINQUISH();
    return(data_read);
 }
 extern "C" void ps_write_32(unsigned int address, unsigned int value)
@@ -1698,7 +1685,7 @@ extern "C" unsigned int ps_read_32(unsigned int address)
                );
    }
 }
-
+/*
 extern "C" void test_write_32(unsigned int address, unsigned int value)
 {
    printf("test_write_32 %08lX %08lX\n",address,value);
@@ -1829,7 +1816,7 @@ extern "C" unsigned int test_read_32(unsigned int address)
                );
    }
 }
-
+*/
 unsigned int  m68k_read_disassembler_8(unsigned int address)
 {
    return(read_byte(address));

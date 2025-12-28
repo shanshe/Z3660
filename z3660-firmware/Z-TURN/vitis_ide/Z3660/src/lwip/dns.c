@@ -85,7 +85,7 @@
  *----------------------------------------------------------------------------*/
 
 #define LWIP_DNS 1
-#include "lwip/opt.h"
+#include "../lwip/opt.h"
 #define LWIP_DNS 1
 #if LWIP_DNS /* don't build if not configured for use in lwipopts.h */
 

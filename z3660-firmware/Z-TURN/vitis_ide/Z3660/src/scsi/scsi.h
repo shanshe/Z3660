@@ -7,10 +7,10 @@
 //#include <ff.h>
 #include "../defines.h"
 
-#define be16toh(val) __builtin_bswap16(val)
-#define htobe16(val) __builtin_bswap16(val)
-#define htobe32(val) __builtin_bswap32(val)
-#define be32toh(val) __builtin_bswap32(val)
+//#define be16toh(val) __builtin_bswap16(val)
+//#define htobe16(val) __builtin_bswap16(val)
+//#define htobe32(val) __builtin_bswap32(val)
+//#define be32toh(val) __builtin_bswap32(val)
 
 #define MAX_NUM_MAPPED_ITEMS 8
 
@@ -299,7 +299,7 @@ typedef enum {
 
 int piscsi_init();
 void piscsi_shutdown();
-void piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len);
+int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len);
 void piscsi_unmap_drive(uint8_t index);
 PISCSI_DEV *piscsi_get_dev(uint8_t index);
 

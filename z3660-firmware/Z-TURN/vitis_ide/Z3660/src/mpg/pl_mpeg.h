@@ -164,9 +164,13 @@ See below for detailed the API documentation.
 
 #include <stdint.h>
 //#include <stdio.h>
-
+//#define PL_MPEG_USE_FILE
+#if PL_MPEG_USE_FILE
+#include <inttypes.h>
+#else
 #include "pl_mpeg_player.h"
 #include "../main.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -266,8 +270,7 @@ typedef void(*plm_audio_decode_callback)
 // Callback function for plm_buffer when it needs more data
 
 typedef void(*plm_buffer_load_callback)(plm_buffer_t *self, void *user);
-
-
+#if PL_MPEG_USE_FILE
 
 // -----------------------------------------------------------------------------
 // plm_* public API
@@ -290,7 +293,7 @@ plm_t *plm_create_with_file(XFILE *fh, int close_when_done);
 // whole file is in memory. The memory is not copied. Pass TRUE to
 // free_when_done to let plmpeg call free() on the pointer when plm_destroy()
 // is called.
-
+#endif
 plm_t *plm_create_with_memory(uint8_t *bytes, size_t length, int free_when_done);
 
 
@@ -469,7 +472,7 @@ plm_frame_t *plm_seek_frame(plm_t *self, double time, int seek_exact);
 #define PLM_BUFFER_DEFAULT_SIZE (128 * 1024)
 #endif
 
-
+#if PL_MPEG_USE_FILE
 // Create a buffer instance with a filename. Returns NULL if the file could not
 // be opened.
 
@@ -481,7 +484,7 @@ plm_buffer_t *plm_buffer_create_with_filename(const char *filename);
 
 plm_buffer_t *plm_buffer_create_with_file(XFILE *fh, int close_when_done);
 
-
+#endif
 // Create a buffer instance with a pointer to memory as source. This assumes
 // the whole file is in memory. The bytes are not copied. Pass 1 to
 // free_when_done to let plmpeg call free() on the pointer when plm_destroy()
@@ -840,7 +843,7 @@ void plm_handle_end(plm_t *self);
 void plm_read_video_packet(plm_buffer_t *buffer, void *user);
 void plm_read_audio_packet(plm_buffer_t *buffer, void *user);
 void plm_read_packets(plm_t *self, int requested_type);
-
+#if PL_MPEG_USE_FILE
 plm_t *plm_create_with_filename(const char *filename) {
 	plm_buffer_t *buffer = plm_buffer_create_with_filename(filename);
 	if (!buffer) {
@@ -848,12 +851,11 @@ plm_t *plm_create_with_filename(const char *filename) {
 	}
 	return plm_create_with_buffer(buffer, TRUE);
 }
-
 plm_t *plm_create_with_file(XFILE *fh, int close_when_done) {
 	plm_buffer_t *buffer = plm_buffer_create_with_file(fh, close_when_done);
 	return plm_create_with_buffer(buffer, TRUE);
 }
-
+#endif
 plm_t *plm_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *buffer = plm_buffer_create_with_memory(bytes, length, free_when_done);
 	return plm_create_with_buffer(buffer, TRUE);
@@ -988,6 +990,8 @@ int plm_get_num_video_streams(plm_t *self) {
 }
 
 int plm_get_width(plm_t *self) {
+	printf("plm_init_decoders(self) %d\n",plm_init_decoders(self));
+	printf("self->video_decoder %p\n",self->video_decoder);
 	return (plm_init_decoders(self) && self->video_decoder)
 		? plm_video_get_width(self->video_decoder)
 		: 0;
@@ -1327,7 +1331,9 @@ struct plm_buffer_t {
 	int has_ended;
 	int free_when_done;
 	int close_when_done;
+#if PL_MPEG_USE_FILE
 	XFILE *fh;
+#endif
 	plm_buffer_load_callback load_callback;
 	void *load_callback_user_data;
 	uint8_t *bytes;
@@ -1360,7 +1366,7 @@ int plm_buffer_find_start_code(plm_buffer_t *self, int code);
 int plm_buffer_no_start_code(plm_buffer_t *self);
 int16_t plm_buffer_read_vlc(plm_buffer_t *self, const plm_vlc_t *table);
 uint16_t plm_buffer_read_vlc_uint(plm_buffer_t *self, const plm_vlc_uint_t *table);
-
+#if PL_MPEG_USE_FILE
 plm_buffer_t *plm_buffer_create_with_filename(const char *filename) {
 	XFILE *fh = Xopen(filename, "rb");
 	if (!fh) {
@@ -1385,7 +1391,7 @@ plm_buffer_t *plm_buffer_create_with_file(XFILE *fh, int close_when_done) {
 	plm_buffer_set_load_callback(self, plm_buffer_load_file_callback, NULL);
 	return self;
 }
-
+#endif
 plm_buffer_t *plm_buffer_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *self = (plm_buffer_t *)malloc(sizeof(plm_buffer_t));
 	memset(self, 0, sizeof(plm_buffer_t));
@@ -1418,9 +1424,11 @@ plm_buffer_t *plm_buffer_create_for_appending(size_t initial_capacity) {
 }
 
 void plm_buffer_destroy(plm_buffer_t *self) {
+#if PL_MPEG_USE_FILE
 	if (self->fh && self->close_when_done) {
 		Xclose(self->fh);
 	}
+#endif
 	if (self->free_when_done) {
 		free(self->bytes);
 	}
@@ -1485,14 +1493,16 @@ void plm_buffer_rewind(plm_buffer_t *self) {
 
 void plm_buffer_seek(plm_buffer_t *self, size_t pos) {
 	self->has_ended = FALSE;
-
+#if PL_MPEG_USE_FILE
 	if (self->mode == PLM_BUFFER_MODE_FILE) {
 		Xseek(self->fh, pos, SEEK_SET);
 //		printf("seek to pos 0x%08x\n",pos);
 		self->bit_index = 0;
 		self->length = 0;
 	}
-	else if (self->mode == PLM_BUFFER_MODE_RING) {
+	else
+#endif
+	if (self->mode == PLM_BUFFER_MODE_RING) {
 		if (pos != 0) {
 			// Seeking to non-0 is forbidden for dynamic-mem buffers
 			return;
@@ -1507,9 +1517,13 @@ void plm_buffer_seek(plm_buffer_t *self, size_t pos) {
 }
 
 size_t plm_buffer_tell(plm_buffer_t *self) {
+#if PL_MPEG_USE_FILE
 	return self->mode == PLM_BUFFER_MODE_FILE
 		? Xtell(self->fh) + (self->bit_index >> 3) - self->length
 		: self->bit_index >> 3;
+#else
+	return self->bit_index >> 3;
+#endif
 }
 
 void plm_buffer_discard_read_bytes(plm_buffer_t *self) {
@@ -1524,7 +1538,7 @@ void plm_buffer_discard_read_bytes(plm_buffer_t *self) {
 		self->length -= byte_pos;
 	}
 }
-
+#if PL_MPEG_USE_FILE
 void plm_buffer_load_file_callback(plm_buffer_t *self, void *user) {
 	PLM_UNUSED(user);
 
@@ -1544,7 +1558,7 @@ void plm_buffer_load_file_callback(plm_buffer_t *self, void *user) {
 		self->has_ended = TRUE;
 	}
 }
-
+#endif
 int plm_buffer_has_ended(plm_buffer_t *self) {
 	return self->has_ended;
 }
@@ -2777,21 +2791,23 @@ plm_frame_t *plm_video_decode(plm_video_t *self) {
 }
 
 int plm_video_has_header(plm_video_t *self) {
+	printf("Checking for sequence header...\n");
 	if (self->has_sequence_header) {
 		return TRUE;
 	}
-
+printf("Looking for sequence header...\n");
 	if (self->start_code != PLM_START_SEQUENCE) {
 		self->start_code = plm_buffer_find_start_code(self->buffer, PLM_START_SEQUENCE);
 	}
+printf("Found start code: %d\n", self->start_code);
 	if (self->start_code == -1) {
 		return FALSE;
 	}
-
+printf("Decoding sequence header...\n");
 	if (!plm_video_decode_sequence_header(self)) {
 		return FALSE;
 	}
-
+printf("Sequence header decoded successfully.\n");
 	return TRUE;
 }
 

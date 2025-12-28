@@ -42,9 +42,9 @@ typedef struct Vec2 {
 } Vec2;
 
 typedef struct {
-   int32_t	a[5];
-   int32_t	b[5];
-   int32_t	c[5];
+   int32_t a[5];
+   int32_t b[5];
+   int32_t c[5];
 } TriangleDef;
 
 typedef struct {
@@ -98,7 +98,7 @@ enum color_formats {
    MNTVA_COLOR_8BIT,
    MNTVA_COLOR_16BIT565,
    MNTVA_COLOR_32BIT,
-   //	MNTVA_COLOR_1BIT,
+   //   MNTVA_COLOR_1BIT,
    MNTVA_COLOR_15BIT,
    MNTVA_COLOR_NUM,
 };
@@ -110,10 +110,10 @@ enum color_formats {
 #define swap16(a) __builtin_bswap16(a)
 
 // see http://amigadev.elowar.com/read/ADCD_2.1/Libraries_Manual_guide/node0351.html
-#define JAM1	    0	      /* jam 1 color into raster */
-#define JAM2	    1	      /* jam 2 colors into raster */
-#define COMPLEMENT  2	      /* XOR bits into raster */
-#define INVERSVID   4	      /* inverse video for drawing modes */
+#define JAM1       0      /* jam 1 color into raster */
+#define JAM2       1      /* jam 2 colors into raster */
+#define COMPLEMENT 2      /* XOR bits into raster */
+#define INVERSVID  4      /* inverse video for drawing modes */
 
 // Graphics minterm drawing modes
 enum gfx_minterm_modes {
@@ -159,47 +159,47 @@ enum gfx_minterm_modes {
 #define SET_FG_PIXEL32_MASK(a) \
       dp[x + a] = fg_color ^ (dp[x + a] & (color_mask ^ 0xFFFFFFFF));
 
-#define SET_FG_PIXEL                \
-      switch (color_format) {       \
-         case MNTVA_COLOR_8BIT:     \
-            SET_FG_PIXEL8(0); break;   \
-         case MNTVA_COLOR_16BIT565: \
-         case MNTVA_COLOR_15BIT:    \
-            SET_FG_PIXEL16(0); break;  \
-         case MNTVA_COLOR_32BIT:    \
-            SET_FG_PIXEL32(0); break;  \
+#define SET_FG_PIXEL                  \
+      switch (color_format) {         \
+         case MNTVA_COLOR_8BIT:       \
+            SET_FG_PIXEL8(0); break;  \
+         case MNTVA_COLOR_16BIT565:   \
+         case MNTVA_COLOR_15BIT:      \
+            SET_FG_PIXEL16(0); break; \
+         case MNTVA_COLOR_32BIT:      \
+            SET_FG_PIXEL32(0); break; \
       }
 
-#define SET_FG_PIXEL_MASK              \
-      switch (color_format) {          \
-         case MNTVA_COLOR_8BIT:        \
+#define SET_FG_PIXEL_MASK                 \
+      switch (color_format) {             \
+         case MNTVA_COLOR_8BIT:           \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MNTVA_COLOR_16BIT565:    \
-         case MNTVA_COLOR_15BIT:       \
+         case MNTVA_COLOR_16BIT565:       \
+         case MNTVA_COLOR_15BIT:          \
             SET_FG_PIXEL16(0); break;     \
-         case MNTVA_COLOR_32BIT:       \
+         case MNTVA_COLOR_32BIT:          \
             SET_FG_PIXEL32(0); break;     \
       }
 
 #define SET_BG_PIXEL \
-      switch (color_format) {       \
-         case MNTVA_COLOR_8BIT:     \
-            SET_BG_PIXEL8(0); break;   \
-         case MNTVA_COLOR_16BIT565: \
-         case MNTVA_COLOR_15BIT:    \
-            SET_BG_PIXEL16(0); break;  \
-         case MNTVA_COLOR_32BIT:    \
-            SET_BG_PIXEL32(0); break;  \
+      switch (color_format) {         \
+         case MNTVA_COLOR_8BIT:       \
+            SET_BG_PIXEL8(0); break;  \
+         case MNTVA_COLOR_16BIT565:   \
+         case MNTVA_COLOR_15BIT:      \
+            SET_BG_PIXEL16(0); break; \
+         case MNTVA_COLOR_32BIT:      \
+            SET_BG_PIXEL32(0); break; \
       }
 
-#define SET_BG_PIXEL_MASK              \
-      switch (color_format) {          \
-         case MNTVA_COLOR_8BIT:        \
+#define SET_BG_PIXEL_MASK                 \
+      switch (color_format) {             \
+         case MNTVA_COLOR_8BIT:           \
             SET_BG_PIXEL8_MASK(0); break; \
-         case MNTVA_COLOR_16BIT565:    \
-         case MNTVA_COLOR_15BIT:       \
+         case MNTVA_COLOR_16BIT565:       \
+         case MNTVA_COLOR_15BIT:          \
             SET_BG_PIXEL16(0); break;     \
-         case MNTVA_COLOR_32BIT:       \
+         case MNTVA_COLOR_32BIT:          \
             SET_BG_PIXEL32(0); break;     \
 	}
 
@@ -411,114 +411,125 @@ enum gfx_minterm_modes {
             break; \
 	}
 
-#define HANDLE_MINTERM_PIXEL_8(s, d) \
-      switch(draw_mode) {\
-         case MINTERM_NOR: \
-            s &= ~(d); \
+#define HANDLE_MINTERM_PIXEL_8(s, d)      \
+      switch(draw_mode) {                 \
+         case MINTERM_NOR:                \
+            d = ~(s | d);                 \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MINTERM_ONLYDST: \
-            d = d & ~(s); break; \
-         case MINTERM_NOTSRC: \
+         case MINTERM_ONLYDST:            \
+            d = ~s & d;                   \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MINTERM_ONLYSRC: \
-            s &= (d ^ 0xFF); \
+         case MINTERM_NOTSRC:             \
+            d = ~s;                       \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MINTERM_INVERT: \
-            d ^= 0xFF; break; \
-         case MINTERM_EOR: \
-            d ^= s; break; \
-         case MINTERM_NAND: \
-            s = ~(d & ~(s)) & mask; \
+         case MINTERM_ONLYSRC:            \
+            d = s & ~d;                   \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MINTERM_AND: \
-            s &= d; \
+         case MINTERM_INVERT:             \
+            d = ~d; break;                \
+         case MINTERM_EOR:                \
+            d = (s ^ d) & mask; break;    \
+         case MINTERM_NAND:               \
+            d = ~(s & d) & mask;          \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MINTERM_NEOR: \
-            d ^= ~(s & mask); break; \
+         case MINTERM_AND:                \
+            d = s & d;                    \
+            SET_FG_PIXEL8_MASK(0); break; \
+         case MINTERM_NEOR:               \
+            d = ~(s ^ d) & mask; break;   \
          case MINTERM_DST: /* This one does nothing. */ \
-            return; break; \
-         case MINTERM_NOTONLYSRC: \
-            d |= (s & mask); break; \
-         case MINTERM_SRC: \
+            return; break;                \
+         case MINTERM_NOTONLYSRC:         \
+            d = (~s | d) & mask; break;   \
+         case MINTERM_SRC:                \
+            d = s;                        \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MINTERM_NOTONLYDST: \
-            s = ~(d & s) & mask; \
+         case MINTERM_NOTONLYDST:         \
+            d = (~d | s) & mask;          \
             SET_FG_PIXEL8_MASK(0); break; \
-         case MINTERM_OR: \
-            d |= (s & mask); break; \
+         case MINTERM_OR:                 \
+            d = (s | d) & mask; break;    \
       }
 
-#define HANDLE_MINTERM_PIXEL_16(s, d) \
-      switch (draw_mode) { \
-         case MINTERM_NOR: \
-            s &= ~(d); \
-            SET_FG_PIXEL16_MASK(0); break; \
-         case MINTERM_ONLYDST: \
-            d = d & ~(s); break; \
-         case MINTERM_ONLYSRC: \
-            s &= (d ^ 0xFFFF); \
-            SET_FG_PIXEL16_MASK(0); break; \
-         case MINTERM_INVERT: \
-            d ^= 0xFFFF; break; \
-         case MINTERM_EOR: \
-            d ^= s; break; \
-         case MINTERM_NAND: \
-            s = ~(d | ~(s)) & color_mask; \
-            SET_FG_PIXEL16_MASK(0); break; \
-         case MINTERM_AND: \
-            s &= d; \
-            SET_FG_PIXEL16_MASK(0); break; \
-         case MINTERM_NEOR: \
-            d ^= ~(s & color_mask); break; \
+#define HANDLE_MINTERM_PIXEL_16(s, d)         \
+      switch(draw_mode) {                     \
+         case MINTERM_NOR:                    \
+            d = ~(s | d);                     \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_ONLYDST:                \
+            d = ~s & d;                       \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_NOTSRC:                 \
+            d = ~s;                           \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_ONLYSRC:                \
+            d = (s & ~d) & 0xFFFF;            \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_INVERT:                 \
+            d ^= 0xFFFF; break;               \
+         case MINTERM_EOR:                    \
+            d = (s ^ d) & color_mask; break;  \
+         case MINTERM_NAND:                   \
+            d = ~(s & d) & color_mask;        \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_AND:                    \
+            d = s & d;                        \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_NEOR:                   \
+            d = ~(s ^ d) & color_mask; break; \
          case MINTERM_DST: /* This one does nothing. */ \
-            return; break; \
-         case MINTERM_NOTONLYSRC: \
-            d |= (s & color_mask); break; \
-         case MINTERM_NOTSRC: \
-         case MINTERM_SRC: \
-            SET_FG_PIXEL16_MASK(0); break; \
-         case MINTERM_NOTONLYDST: \
-            d = ~(d & s) & color_mask; \
-            SET_FG_PIXEL16_MASK(0); break; \
-         case MINTERM_OR: \
-            d |= (s & color_mask); break; \
+            return; break;                    \
+         case MINTERM_NOTONLYSRC:             \
+            d = (~s | d) & color_mask; break; \
+         case MINTERM_SRC:                    \
+            d = s;                            \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_NOTONLYDST:             \
+            d = (~d | s) & color_mask;        \
+            SET_FG_PIXEL16_MASK(0); break;    \
+         case MINTERM_OR:                     \
+            d = (s | d) & color_mask; break;  \
       }
 
-#define HANDLE_MINTERM_PIXEL_32(s, d) \
-      switch (draw_mode) { \
-         case MINTERM_NOR: \
-            s &= ~(d); \
-            SET_FG_PIXEL32_MASK(0); break; \
-         case MINTERM_ONLYDST: \
-            d = d & ~(s); break; \
-         case MINTERM_ONLYSRC: \
-            s &= (d ^ 0x00FFFFFF); \
-            SET_FG_PIXEL32_MASK(0); break; \
-         case MINTERM_INVERT: \
-            d ^= 0x00FFFFFF; break; \
-         case MINTERM_EOR: \
-            d ^= s; break; \
-         case MINTERM_NAND: \
-            s = ~(d | ~(s)) & color_mask; \
-            SET_FG_PIXEL32_MASK(0); break; \
-         case MINTERM_AND: \
-            s &= d; \
-            SET_FG_PIXEL32_MASK(0); break; \
-         case MINTERM_NEOR: \
-            d ^= ~(s & color_mask);	break; \
+#define HANDLE_MINTERM_PIXEL_32(s, d)         \
+      switch(draw_mode) {                     \
+         case MINTERM_NOR:                    \
+            d = ~(s | d);                     \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_ONLYDST:                \
+            d = ~s & d;                       \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_NOTSRC:                 \
+            d = ~s;                           \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_ONLYSRC:                \
+            d = (s & ~d) & 0x00FFFFFF;        \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_INVERT:                 \
+            d ^= 0x00FFFFFF; break;           \
+         case MINTERM_EOR:                    \
+            d = (s ^ d) & color_mask; break;  \
+         case MINTERM_NAND:                   \
+            d = ~(s & d) & color_mask;        \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_AND:                    \
+            d = s & d;                        \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_NEOR:                   \
+            d = ~(s ^ d) & color_mask; break; \
          case MINTERM_DST: /* This one does nothing. */ \
-            return; break; \
-         case MINTERM_NOTONLYSRC: \
-            d |= (s & color_mask); break; \
-         case MINTERM_NOTSRC: \
-         case MINTERM_SRC: \
-            SET_FG_PIXEL32_MASK(0); break; \
-         case MINTERM_NOTONLYDST: \
-            d = ~(d & s) & color_mask; \
-            SET_FG_PIXEL32_MASK(0); break; \
-         case MINTERM_OR: \
-            d |= (s & color_mask); \
-            break; \
+            return; break;                    \
+         case MINTERM_NOTONLYSRC:             \
+            d = (~s | d) & color_mask; break; \
+         case MINTERM_SRC:                    \
+            d = s;                            \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_NOTONLYDST:             \
+            d = (~d | s) & color_mask;        \
+            SET_FG_PIXEL32_MASK(0); break;    \
+         case MINTERM_OR:                     \
+            d = (s | d) & color_mask; break;  \
+            break;                            \
       }
 
 #pragma pack(4)

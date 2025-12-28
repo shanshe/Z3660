@@ -72,12 +72,12 @@ enum zz_reg_offsets {
    REG_ZZ_FW_VERSION     = 0x1A0,
    REG_ZZ_ETH_RX_ADDRESS = 0x1A4,
    REG_ZZ_INT_STATUS     = 0x1A8,
-   REG_ZZ_USB_CAPACITY   = 0x1AC,
+   REG_ZZ_USB_PORTSC1    = 0x1AC,
 
-   REG_ZZ_USBBLK_TX      = 0x1B0,
-   REG_ZZ_USBBLK_RX      = 0x1B4,
-   REG_ZZ_USB_STATUS     = 0x1B8,
-   REG_ZZ_USB_BUFSEL     = 0x1BC,
+   REG_ZZ_USB_CMD_OP     = 0x1B0,
+   REG_ZZ_USB_STATUS     = 0x1B4,
+   REG_ZZ_USB_READ0      = 0x1B8,
+   REG_ZZ_USB_RESERVED1  = 0x1BC,
 
    REG_ZZ_DECODER_PARAM  = 0x1C0,
    REG_ZZ_DECODER_VAL    = 0x1C4,
@@ -149,14 +149,42 @@ enum zz_reg_offsets {
    REG_ZZ_PRESET_SEL_TXT = 0x298,
    REG_ZZ_DELETE_PRESET  = 0x29C,
 
-   //NOT USED 0x2A0 - 0x2FC
+   // USB parameter registers (dedicated to avoid BUFSEL corruption)
+   REG_ZZ_USB_PARAM0     = 0x2A0,  // Device/Endpoint/Direction flags
+   REG_ZZ_USB_PARAM1     = 0x2A4,  // Setup packet pointer
+   REG_ZZ_USB_PARAM2     = 0x2A8,  // Data buffer pointer
+   REG_ZZ_USB_PARAM3     = 0x2AC,  // Data length
+   REG_ZZ_USB_PARAM4     = 0x2B0,  // Additional parameter (interval, etc.)
+   REG_ZZ_USB_PARAM5     = 0x2B4,  // Reserved for future use
+   REG_ZZ_USB_PARAM6     = 0x2B8,  // Reserved for future use
+   REG_ZZ_USB_PARAM7     = 0x2BC,  // Reserved for future use
+
+   // MPEG acceleration registers
+   REG_ZZ_MPEG_CMD_OP    = 0x2C0,  // MPEG operation command
+   REG_ZZ_MPEG_STATUS    = 0x2C4,  // MPEG operation status
+   REG_ZZ_MPEG_PARAM0    = 0x2C8,  // MPEG parameter 0 (width/data_ptr)
+   REG_ZZ_MPEG_PARAM1    = 0x2CC,  // MPEG parameter 1 (height/data_len)
+   REG_ZZ_MPEG_PARAM2    = 0x2D0,  // MPEG parameter 2 (framerate_num/sync_time)
+   REG_ZZ_MPEG_PARAM3    = 0x2D4,  // MPEG parameter 3 (framerate_den/reserved)
+   REG_ZZ_MPEG_COUNT     = 0x2D8,  // MPEG data length/frame count
+   REG_ZZ_MPEG_INFO      = 0x2DC,  // MPEG decoder information
+   REG_ZZ_MPEG_FIFOTX    = 0x2E0,  // MPEG FIFO write index (68k -> ARM)
+   REG_ZZ_MPEG_FIFORX    = 0x2E4,  // MPEG FIFO read index (ARM -> 68k)
+   REG_ZZ_MPEG_FIFO_SIZE = 0x2E8,  // MPEG FIFO size in bytes
+   REG_ZZ_MPEG_FIFO_ADDR = 0x2EC,  // MPEG FIFO buffer base address
+
+   //NOT USED 0x2E0 - 0x2FC
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
    REG_ZZ_OP_NOP         = 0x308,
    REG_ZZ_OP_CAPTUREMODE = 0x30C,
 
-   //NOT USED 0x310 - 0x4FC
+   REG_ZZ_MOUNT_SD_0x76  = 0x310,
+   REG_ZZ_MOUNT_SD_ROOT  = 0x314,
+   REG_ZZ_MONITOR_SWITCH = 0x318,
+
+   //NOT USED 0x31C - 0x4FC
 
    REG_ZZ_SEL_KS_TXT     = 0x500,
    REG_ZZ_SEL_SCSI_TXT   = 0x600,
@@ -195,7 +223,7 @@ enum zz_reg_offsets {
 */
 };
 
-enum zz9k_card_features {
+enum z3660_card_features {
    CARD_FEATURE_NONE,
    CARD_FEATURE_SECONDARY_PALETTE,
    CARD_FEATURE_NONSTANDARD_VSYNC,

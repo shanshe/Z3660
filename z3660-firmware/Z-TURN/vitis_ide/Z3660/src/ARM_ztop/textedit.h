@@ -18,12 +18,21 @@ typedef struct {
 	int inverted;
 	int last_cursor_pos;
 	uint8_t mac_address[6];
+	int timeout,time;
 } TextEdit;
 
 #define PRESET_MAX_LENGTH 31
+#define TIMINGS_PHASE_MAX_LENGTH 4
+#define TIMINGS_DIVIDER_MAX_LENGTH 2
+#define TIMINGS_TE_PHASE_MAX 5
+#define TIMINGS_TE_DIVIDER_MAX 5
+#define TIMINGS_DM_MAX 2
 
 extern TextEdit *mac_textedit;
 extern TextEdit *preset_textedit[PRESET_CB_MAX];
+extern TextEdit *timings_phase_textedit[TIMINGS_TE_PHASE_MAX+1]; // +1 emu_extra
+extern TextEdit *timings_divider_textedit[TIMINGS_TE_DIVIDER_MAX];
+extern TextEdit *timings_muldiv_textedit[TIMINGS_DM_MAX];
 
 extern sFONT *Font;
 

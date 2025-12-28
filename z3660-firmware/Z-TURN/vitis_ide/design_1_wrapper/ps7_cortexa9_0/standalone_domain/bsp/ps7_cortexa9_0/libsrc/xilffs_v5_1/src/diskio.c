@@ -230,6 +230,13 @@ Label:
 	return s;
 }
 
+DSTATUS disk_reinitialize (
+   BYTE pdrv   /* Physical drive number (0) */
+)
+{
+   Stat[pdrv]=STA_NOINIT;
+   return(disk_initialize(pdrv));
+}
 /*-----------------------------------------------------------------------*/
 /* Initialize Disk Drive						 */
 /*-----------------------------------------------------------------------*/

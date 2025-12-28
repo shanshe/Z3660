@@ -206,11 +206,16 @@ struct AslIFace*               IAsl              =NULL;
 
 typedef uint8_t UBYTE;
 typedef uint16_t UWORD;
-typedef uint32_t ULONG;
+typedef char test_long_size[sizeof(unsigned long int) == 4?1:-1];
+typedef char test_long_size[sizeof(unsigned int) == 4?1:-1];
+typedef char test_long_size[sizeof(uint32_t) == 4?1:-1];
+typedef char test_word_size[sizeof(uint16_t) == 2?1:-1];
+typedef char test_byte_size[sizeof(uint8_t) == 1?1:-1];
+//typedef uint32_t ULONG;
 typedef uint8_t BOOL;
-//typedef int8_t BYTE;
-//typedef int16_t WORD;
-typedef int32_t LONG;
+typedef int8_t BYTE;
+typedef int16_t WORD;
+//typedef int32_t LONG;
 typedef void * APTR;
 #define TRUE 1U
 //#define FALSE 0
@@ -902,6 +907,9 @@ NLOOP(nb/4)
     Libprintf("[%ld\t][%ld\t] %ld\t%ld\t%ld\t%ld\n",(ULONG)pt,(ULONG)4*n,(ULONG)pt[0],(ULONG)pt[1],(ULONG)pt[2],(ULONG)pt[3]);
     pt=&(pt[4]);
     }
+#else
+    (void)pt;
+    (void)nb;
 #endif
 }
 /*==================================================================================*/

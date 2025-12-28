@@ -29,21 +29,23 @@ Jtag jtag;
 void setVerbose_jtag(Jtag *j,bool v) { j->verbose = v; }
 bool getVerbose_jtag(Jtag *j) { return j->verbose; }
 DeviceID getDeviceID(Jtag *j,unsigned int dev){
+   (void)j;
+   (void)dev;
    //  if(dev>=sizeof(j->devices))return 0;
    return 0x09608093;
 }
 
 void Jtag_init(Jtag *j,IOBase *iob)
 {
-//   j->MAXNUMDEVICES=1;
+   //   j->MAXNUMDEVICES=1;
 
    j->verbose = false;
-//   j->io=iob;
-//   j->current_state = UNKNOWN;
+   //   j->io=iob;
+   //   j->current_state = UNKNOWN;
    j->postDRState = RUN_TEST_IDLE;
    j->postIRState = RUN_TEST_IDLE;
-//   j->deviceIndex = -1;
-//   j->numDevices  = -1;
+   //   j->deviceIndex = -1;
+   //   j->numDevices  = -1;
    j->shiftDRincomplete=false;
    j->debug = false;
    iob->verbose=false;
@@ -51,6 +53,7 @@ void Jtag_init(Jtag *j,IOBase *iob)
 
 void Jtag_end(Jtag *j)
 {
+   (void)j;
 }
 
 /* Detect chain length on first start, return chain length else*/

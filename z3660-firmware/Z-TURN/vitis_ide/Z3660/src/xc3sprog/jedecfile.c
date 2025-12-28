@@ -41,7 +41,7 @@ int jedec_get_fuse(jedec_data_t jed, unsigned idx)
    unsigned int bval, bit;
    if(idx >= jed->fuse_count)
       printf("jedec_get_fuse exception\n"); // exception
-//   printf("jedec_get_fuse() idx %d jed->fuse_list %08X\n",idx,jed->fuse_list);
+   //   printf("jedec_get_fuse() idx %d jed->fuse_list %08X\n",idx,jed->fuse_list);
 
    bval = idx / 8;
    bit  = idx % 8;
@@ -374,7 +374,7 @@ int readFile_jedec(FIL *fp)
 {
    unsigned char ch;
    struct state_mach m;
-//   printf("readFile_jedec()\n");
+   //   printf("readFile_jedec()\n");
    if(!fp)
       return 1;
 

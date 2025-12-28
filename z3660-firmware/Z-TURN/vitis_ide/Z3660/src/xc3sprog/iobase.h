@@ -22,7 +22,7 @@ Changes:
 Dmitry Teytelman [dimtey@gmail.com] 14 Jun 2006 [applied 13 Aug 2006]:
     Code cleanup for clean -Wall compile.
     Extensive changes to support FT2232 driver.
-*/
+ */
 
 #ifndef IOBASE_H
 #define IOBASE_H
@@ -45,17 +45,17 @@ extern IOBase iobase;
 
 void IOBase_init(IOBase *io);
 
-  void setVerbose_io(IOBase *io,bool v);
-  void shiftTDITDO(IOBase *io, unsigned char *tdi, unsigned char *tdo, int length, bool last);
-  void shiftTDI(IOBase *io, unsigned char *tdi, int length, bool last);
-  void shiftTDO(IOBase *io,unsigned char *tdo, int length, bool last);
-  void shift(IOBase *io,bool tdi, int length, bool last);
-  void set_tms(IOBase *io,bool value);
-  void flush_tms(IOBase *io);
+void setVerbose_io(IOBase *io,bool v);
+void shiftTDITDO(IOBase *io, unsigned char *tdi, unsigned char *tdo, int length, bool last);
+void shiftTDI(IOBase *io, unsigned char *tdi, int length, bool last);
+void shiftTDO(IOBase *io,unsigned char *tdo, int length, bool last);
+void shift(IOBase *io,bool tdi, int length, bool last);
+void set_tms(IOBase *io,bool value);
+void flush_tms(IOBase *io);
 
-  void txrx_block(unsigned char *tdi, unsigned char *tdo, int length, bool last);
-  void tx_tms(unsigned char *pat, int length);
-  void settype(int subtype);
+void txrx_block(unsigned char *tdi, unsigned char *tdo, int length, bool last);
+void tx_tms(unsigned char *pat, int length);
+void settype(int subtype);
 
 //  void nextTapState(Jtag *j,bool tms);
 

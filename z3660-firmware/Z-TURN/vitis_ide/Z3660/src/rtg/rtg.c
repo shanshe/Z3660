@@ -27,6 +27,16 @@
 #include "str_zzregs.h"
 #include "../lwip.h"
 #include "../ARM_ztop/slider.h"
+#include "../usb.h"
+#include "../z3660_usb_handler.h"
+#include "../z3660_debug_arm.h"
+#include "../usb/ehci.h"
+#include "../pt/pt.h"
+#include "../mpg/z3660_mpeg_handler.h"
+#include "../mpg/libmpeg_arm/mpeg2dec_arm_comm_arm.h"
+
+extern arm_decoder_shared_arm_t *bridge_state_arm;
+extern uint32_t mpeg_param_registers[4];
 
 typedef enum {
    MA_DECODE_INIT,
@@ -49,7 +59,9 @@ int decode_ma_init(uint8_t* input_buffer, size_t input_buffer_size);
 int ma_get_hz();
 int decode_ma_samples(void* output_buffer, int max_samples);
 int delete_selected_preset(void);
-
+int cached_videomode=-1;
+int cached_colormode=-1;
+int cached_scalemode=-1;
 extern DEBUG_CONSOLE debug_console;
 void DEBUG_AUDIO(const char *format, ...)
 {
@@ -83,8 +95,8 @@ uint32_t read_rtg_register(uint32_t zaddr);
 extern uint32_t revision_alfa;
 uint32_t gpio=0;
 uint16_t ack_request=0;
-uint32_t custom_vmode_param=0;
-uint32_t custom_video_mode=ZZVMODE_CUSTOM;
+volatile uint32_t custom_vmode_param=0;
+volatile uint32_t custom_video_mode=ZZVMODE_CUSTOM;
 ENV_FILE_VARS env_file_vars_temp[9]; // really size 8
 int preset_selected=-1;
 //int bm=0,sb=0,ar=0,cr=0,ks=0,ext_ks=0;
@@ -212,6 +224,23 @@ void rtg_init(void)
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_KS_TXT)=0;
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_SCSI_TXT)=0;
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_PRESET_TXT)=0;
+   
+   // Initialize USB handler system
+   printf("Initializing Z3660 USB handler...\n");
+   z3660_usb_handler_init();
+   
+   // Initialize MPEG handler system
+   printf("Initializing Z3660 MPEG handler...\n");
+   z3660_mpeg_handler_init();
+/*
+   // Initialize USB OTG system
+   printf("Initializing USB OTG system...\n");
+   if (usb_otg_init() == 0) {
+      printf("USB OTG initialized successfully\n");
+   } else {
+      printf("USB OTG initialization failed\n");
+   }
+*/
 }
 uint32_t *address;
 uint32_t zdata;
@@ -219,7 +248,7 @@ uint32_t op_data=0;
 uint32_t zaddr;
 
 
-int eth_backlog_nag_counter_max=ETH_BACKLOG_NAG_COUNTER_MAX;
+uint32_t eth_backlog_nag_counter_max=ETH_BACKLOG_NAG_COUNTER_MAX;
 #ifdef CPU_EMULATOR
 #define IDLE_TASK_COUNT_MAX 300000
 #else
@@ -240,10 +269,14 @@ void load_preset_to_config(void)
       temp_config.autoconfig_rtg=env_file_vars_temp[preset_selected].autoconfig_rtg;
       temp_config.enable_test=env_file_vars_temp[preset_selected].enable_test;
       temp_config.cpu_ram=env_file_vars_temp[preset_selected].cpu_ram;
+      temp_config.mount_sd_0x76=env_file_vars_temp[preset_selected].mount_sd_0x76;
+      temp_config.mount_sd_root=env_file_vars_temp[preset_selected].mount_sd_root;
       temp_config.cpufreq=env_file_vars_temp[preset_selected].cpufreq;
       temp_config.kickstart=env_file_vars_temp[preset_selected].kickstart;
       temp_config.ext_kickstart=env_file_vars_temp[preset_selected].ext_kickstart;
       temp_config.bootscreen_resolution=env_file_vars_temp[preset_selected].bootscreen_resolution;
+      temp_config.arm_frequency=env_file_vars_temp[preset_selected].arm_frequency;
+      temp_config.doubled_cursor=env_file_vars_temp[preset_selected].doubled_cursor;
       for(int i=0;i<7;i++)
       {
          temp_config.scsi_num[i]=env_file_vars_temp[preset_selected].scsi_num[i];
@@ -253,6 +286,7 @@ void load_preset_to_config(void)
 
       temp_config.bp_ton=env_file_vars_temp[preset_selected].bp_ton;
       temp_config.bp_toff=env_file_vars_temp[preset_selected].bp_toff;
+      temp_config.monitor_switch=env_file_vars_temp[preset_selected].monitor_switch;
    }
    else
    {
@@ -278,7 +312,11 @@ int ethernet_thread(struct pt *pt)
    PT_BEGIN(pt);
    while(1)
    {
-      // check for queued up ethernet frames and interrupt amiga
+      if(interrupt_enabled_ethernet && ethernet_get_backlog()>0)
+      {
+         eth_backlog_nag_counter++;
+      }
+         // check for queued up ethernet frames and interrupt amiga
       PT_WAIT_UNTIL(pt,eth_backlog_nag_counter > eth_backlog_nag_counter_max);
       eth_backlog_nag_counter = 0;
 //               if((amiga_interrupt_get()&AMIGA_INTERRUPT_ETH)==0)
@@ -298,9 +336,63 @@ int ethernet_thread(struct pt *pt)
    PT_END(pt);
 
 }
+int usb_thread(struct pt *pt)
+{
+   static int usb_task_counter=0;
+   PT_BEGIN(pt);
+   while(1)
+   {
+      PT_WAIT_UNTIL(pt,++usb_task_counter>200);  // Reduced USB async processing frequency
+      usb_task_counter=0;
+      z3660_usb_process_async_requests(pt);
+   }
+   PT_END(pt);
+      // CRITICAL: Process pending ASYNC USB interrupt requests
+   // This checks for ASYNC requests waiting for data and completes them when ready
+
+}
 void other_tasks(void)
 {
    static int idle_task_count=0;
+#if 0
+   static int usb_check_count=0;
+   static int usb_status_check_count=0;
+   // Check USB interrupt status every 5000 calls (less frequent than missed interrupt check)
+   if(++usb_status_check_count > 5000) {
+      usb_status_check_count = 0;
+//      check_usb_interrupt_status("Periodic check in other_tasks");
+   }
+
+   // Check for missed USB interrupts every 50000 calls (greatly reduced frequency)
+   if(++usb_check_count > 5000) {
+      usb_check_count = 0;
+      
+      // Check if USB is initialized and online
+      extern int z3660_usb_is_offline(void);
+      if (!z3660_usb_is_offline()) {
+         // Check EHCI registers for pending interrupts
+         extern struct ehci_ctrl ehcic[];
+         struct ehci_ctrl *ehci_ctrl = &ehcic[0];
+         if (ehci_ctrl && ehci_ctrl->hcor) {
+            uint32_t usbsts = ehci_readl(&ehci_ctrl->hcor->or_usbsts);
+            uint32_t usbintr = ehci_readl(&ehci_ctrl->hcor->or_usbintr);
+            uint32_t pending = usbsts & usbintr;
+            
+            if (pending) {
+               static int missed_count = 0;
+               printf("[USB CHECK] *** MISSED USB INTERRUPT DETECTED! #%d ***\n", ++missed_count);
+               printf("[USB CHECK] USBSTS=0x%08lx USBINTR=0x%08lx PENDING=0x%08lx\n",
+                      (unsigned long)usbsts, (unsigned long)usbintr, (unsigned long)pending);
+               
+               // Manually call the USB ISR to handle the missed interrupt
+               printf("[USB CHECK] Manually calling isr_usb to handle missed interrupt...\n");
+               extern void isr_usb(void *dummy);
+               isr_usb(NULL);
+            }
+         }
+      }
+   }
+#endif
    if(idle_task_count++> idle_task_count_max)
    {
       idle_task_count=0;
@@ -501,9 +593,11 @@ int rtg_thread(struct pt *pt)
                {
                   zaddr-=0x2000;
                   zdata=handle_piscsi_read(zaddr&0x1FFFFC, 2);
+/*
                   int add_bits=gpio&0x3;
                   if(add_bits)
                      printf("read SCSI add 0x%08lX\n",zaddr);
+*/
                   write_reg_s01(REG5,zdata);
                }
                else
@@ -544,6 +638,7 @@ uint32_t read_rtg_register(uint32_t zaddr)
    if(zaddr&3)
       printf("read unaligned to 0x%08X\n",zaddr);
     */
+   // Debug all register reads to detect if Amiga is communicating
    if(debug_console.debug_rtg)
    {
       printf("READ RTG reg 0x%lX %s\n",zaddr,zz_reg_offsets_string[zaddr]);
@@ -606,7 +701,11 @@ uint32_t read_rtg_register(uint32_t zaddr)
          data=env_file_vars_temp[preset_selected].cpufreq;
          break;
       case REG_ZZ_EMULATION_USED:
-         data=env_file_vars_temp[preset_selected].boot_mode==UAEJIT || env_file_vars_temp[preset_selected].boot_mode==UAE || env_file_vars_temp[preset_selected].boot_mode==MUSASHI;
+         data=   env_file_vars_temp[preset_selected].boot_mode==UAEJIT_030
+              || env_file_vars_temp[preset_selected].boot_mode==UAE_030
+              || env_file_vars_temp[preset_selected].boot_mode==UAEJIT_040
+              || env_file_vars_temp[preset_selected].boot_mode==UAE_040
+              || env_file_vars_temp[preset_selected].boot_mode==MUSASHI;
          break;
       case REG_ZZ_SCSIBOOT_EN:
          data=env_file_vars_temp[preset_selected].scsiboot==YES;
@@ -619,6 +718,16 @@ uint32_t read_rtg_register(uint32_t zaddr)
          break;
       case REG_ZZ_CPU_RAM_EN:
          data=env_file_vars_temp[preset_selected].cpu_ram==YES;
+         break;
+      case REG_ZZ_MOUNT_SD_0x76:
+         data=env_file_vars_temp[preset_selected].mount_sd_0x76==YES;
+         break;
+      case REG_ZZ_MOUNT_SD_ROOT:
+         data=env_file_vars_temp[preset_selected].mount_sd_root==YES;
+         break;
+      case REG_ZZ_MONITOR_SWITCH:
+         data=env_file_vars_temp[preset_selected].monitor_switch;
+//         printf("monitor_switch 0x%08lX\n",data);
          break;
       case REG_ZZ_TEST_ENABLE:
          data=env_file_vars_temp[preset_selected].enable_test;
@@ -691,6 +800,152 @@ uint32_t read_rtg_register(uint32_t zaddr)
          data=preset_selected;
          printf("read preset_selected %ld\n",data);
          break;
+
+      case REG_ZZ_USB_PORTSC1: {
+         data = usb_handle_register_read(REG_ZZ_USB_PORTSC1);
+         if(debug_console.debug_usb)
+            printf("[USB] Command PORTSC1: 0x%lx\n", data);
+         break;
+      }
+
+      case REG_ZZ_USB_STATUS: {
+         // Return USB system status and operation results
+         data = usb_handle_register_read(REG_ZZ_USB_STATUS);
+         if(debug_console.debug_usb)
+            printf("[USB] Status read: 0x%lx\n", data);
+         break;
+      }
+#if 0      
+      case REG_ZZ_USB_BU FSEL: {
+         // Return current buffer selection
+         data = usb_handle_register_read(REG_ZZ_USB_BU FSEL);
+         if(debug_console.debug_usb)
+            printf("[USB] Buffer select read: 0x%lx\n", data);
+         break;
+      }
+#endif
+      // USB register reads - provide status and data from ARM to Amiga
+      case REG_ZZ_USB_READ0: {
+         // Return number of connected USB devices
+         data = usb_handle_register_read(REG_ZZ_USB_READ0);
+         if(debug_console.debug_usb)
+            printf("[USB] Device count read: %ld\n", data);
+         break;
+      }
+
+      // USB Parameter registers - dedicated for USB operations
+      case REG_ZZ_USB_PARAM0: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM0);
+         if(debug_console.debug_usb)
+            printf("[USB] Param0 read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM1: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM1);
+         if(debug_console.debug_usb)
+            printf("[USB] Param1 read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM2: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM2);
+         if(debug_console.debug_usb)
+            printf("[USB] Param2 read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM3: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM3);
+         if(debug_console.debug_usb)
+            printf("[USB] Param3 read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM4: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM4);
+         if(debug_console.debug_usb)
+            printf("[USB] Param4 read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM5: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM5);
+         if(debug_console.debug_usb)
+            printf("[USB] Param5 read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM6: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM6);
+         if(debug_console.debug_usb)
+            printf("[USB] Param6 read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM7: {
+         data = usb_handle_register_read(REG_ZZ_USB_PARAM7);
+         if(debug_console.debug_usb)
+            printf("[USB] Param7 read: 0x%lx\n", data);
+         break;
+      }
+      
+      // MPEG acceleration register reads
+      case REG_ZZ_MPEG_STATUS: {
+         // Get status from ARM MPEG handler
+         printf("[MPEG] Status read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_PARAM0:
+      case REG_ZZ_MPEG_PARAM1:
+      case REG_ZZ_MPEG_PARAM2:
+      case REG_ZZ_MPEG_PARAM3: {
+         // Read MPEG parameters from ARM
+         int param_idx = (address - REG_ZZ_MPEG_PARAM0) / 4;
+         data = mpeg_param_registers[param_idx];
+         if(debug_console.debug_rtg)
+            printf("[MPEG] Param%d read: 0x%lx\n", param_idx, data);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_COUNT: {
+         // Get frame count or data length
+         data=swap32(bridge_state_arm->frames_decoded);
+//         printf("[MPEG] Count read: %lu\n", data);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_INFO: {
+         // Get decoder information
+         printf("[MPEG] Info read: 0x%lx\n", data);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_FIFOTX: {
+         // Get FIFO write index (68k -> ARM)
+         printf("[MPEG] FIFO TX read: %lu\n", data);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_FIFORX: {
+         // Get FIFO read index (ARM -> 68k)
+         printf("[MPEG] FIFO RX read: %lu\n", data);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_FIFO_SIZE: {
+         // Get FIFO buffer size
+         printf("[MPEG] FIFO SIZE read: %lu\n", data);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_FIFO_ADDR: {
+         // Get FIFO buffer address
+         printf("[MPEG] FIFO ADDR read: 0x%lx\n", data);
+         break;
+      }
+      
       default:
          if(debug_console.debug_rtg)
             printf("Read from unknown 0x%X RTG register\n",address);
@@ -709,6 +964,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
    }
    if(zaddr&3)
       printf("write unaligned to 0x%08lX\n",zaddr);
+
    if(debug_console.debug_rtg)
    {
       printf("WRITE RTG reg 0x%lX = %ld (0x%lX) %s\n",zaddr,zdata,zdata,zz_reg_offsets_string[zaddr]);
@@ -737,6 +993,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case REG_ZZ_ORIG_RES:
          original_w=(zdata>>16)&0xFFFF;
          original_h=(zdata    )&0xFFFF;
+         printf("original_h %d\n",original_h);
          break;
       case REG_ZZ_BLIT_SRC:
          blitter_src_offset = zdata;
@@ -764,6 +1021,9 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
             if (zdata & 32) {
                amiga_interrupt_clear(AMIGA_INTERRUPT_AUDIO);
             }
+            if (zdata & 64) {
+               amiga_interrupt_clear(AMIGA_INTERRUPT_USB);
+            }
          } else {
             //printf("[enable] eth: %d\n", (int)zdata);
             interrupt_enabled_ethernet = zdata & 1;
@@ -783,15 +1043,18 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
             int colormode = (zdata & 0xf00) >> 8;
             int scalemode = (zdata & 0xf000) >> 12;
             printf("mode: %d color: %d scale: %d\n", mode, colormode, scalemode);
-            video_mode_init(mode, scalemode, colormode);
+            if(cached_videomode!=mode || cached_colormode!=colormode || cached_scalemode!=scalemode)
+               video_mode_init(mode, scalemode, colormode);
+            else
+               printf("video mode cached\n");
+            cached_videomode=mode;
+            cached_colormode=colormode;
+            cached_scalemode=scalemode;
          }
          else
          {
             printf("[RTG] Error mode: %d\n", mode);
          }
-         // FIXME
-         // remember selected video mode
-         // video_mode = zdata;
          break;
       }
       case REG_ZZ_SPRITE_X:
@@ -814,15 +1077,16 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
             break;
          }
          //double
-         uint8_t* bmp_data = (uint8_t*) (((uint32_t) video_state->framebuffer) + blitter_src_offset);
+         uint8_t* bmp_data = (uint8_t*) (((uint8_t *) video_state->framebuffer) + blitter_src_offset);
 
          video_state->sprite_x_offset = rect_x1;
          video_state->sprite_y_offset = rect_y1;
          video_state->sprite_width  = rect_x2;
          video_state->sprite_height = rect_y2;
          int double_sprite = rect_x3;
+         int hires_sprite = rect_y3;
          clear_hw_sprite();
-         update_hw_sprite(bmp_data, double_sprite);
+         update_hw_sprite(bmp_data, double_sprite, hires_sprite);
          update_hw_sprite_pos();
          break;
       }
@@ -901,7 +1165,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case REG_ZZ_FILLRECT:
          //         printf("FILLRECT blitter_dst_offset %lx\n",blitter_dst_offset);
          //         printf("         %d %d %d %d \n",rect_x1,rect_y1,rect_x2,rect_y2);
-         set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
+         set_fb((uint32_t*) (((uint8_t *) video_state->framebuffer) + blitter_dst_offset),
                blitter_dst_pitch);
          uint8_t mask = zdata;
 
@@ -914,7 +1178,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          break;
 
       case REG_ZZ_COPYRECT: {
-         set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
+         set_fb((uint32_t*) (((uint8_t *) video_state->framebuffer) + blitter_dst_offset),
                blitter_dst_pitch);
          mask = blitter_colormode_hibyte;
 
@@ -923,20 +1187,20 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
                if (mask == 0xFF || (mask != 0xFF && (blitter_colormode != MNTVA_COLOR_8BIT)))
                   copy_rect_nomask(rect_x1, rect_y1, rect_x2, rect_y2, rect_x3,
                         rect_y3, blitter_colormode,
-                        (uint32_t*) (((uint32_t) video_state->framebuffer)
+                        (uint32_t*) (((uint8_t *) video_state->framebuffer)
                               + blitter_dst_offset),
                               blitter_dst_pitch, MINTERM_SRC);
                else
                   copy_rect(rect_x1, rect_y1, rect_x2, rect_y2, rect_x3,
                         rect_y3, blitter_colormode,
-                        (uint32_t*) (((uint32_t) video_state->framebuffer)
+                        (uint32_t*) (((uint8_t *) video_state->framebuffer)
                               + blitter_dst_offset),
                               blitter_dst_pitch, mask);
                break;
             case 2: // BlitRectNoMaskComplete
                copy_rect_nomask(rect_x1, rect_y1, rect_x2, rect_y2, rect_x3,
                      rect_y3, blitter_colormode,
-                     (uint32_t*) (((uint32_t) video_state->framebuffer)
+                     (uint32_t*) (((uint8_t *) video_state->framebuffer)
                            + blitter_src_offset),
                            blitter_src_pitch, mask); // Mask in this case is minterm/opcode.
                break;
@@ -947,9 +1211,9 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 
       case REG_ZZ_FILLTEMPLATE: {
          uint8_t draw_mode = blitter_colormode_hibyte;
-         uint8_t* tmpl_data = (uint8_t*) (((uint32_t) video_state->framebuffer)
+         uint8_t* tmpl_data = (uint8_t*) (((uint8_t *) video_state->framebuffer)
                + blitter_src_offset);
-         set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
+         set_fb((uint32_t*) (((uint8_t *) video_state->framebuffer) + blitter_dst_offset),
                blitter_dst_pitch);
 
          uint8_t bpp = 2 * blitter_colormode;
@@ -981,42 +1245,82 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 /*
       case REG_ZZ_SCRATCH_COPY: { // Copy crap from scratch area
          for (int i = 0; i < rect_y1; i++) {
-            memcpy   ((uint32_t*) (((uint32_t) video_state->framebuffer) + video_state->frameBuf_pan_offset + (i * rect_x1)),
+            memcpy   ((uint32_t*) (((uint8_t *) video_state->framebuffer) + video_state->frameBuf_pan_offset + (i * rect_x1)),
                (uint32_t*) ((uint32_t)Z3_SCRATCH_ADDR + (i * rect_x1)),rect_x1);
          }
       break;
    }
 */
-/* TODO: custom video mode
       case ZZ_CUSTOM_VIDMODE: // Custom video mode param
          custom_vmode_param = zdata;
          break;
 
       case ZZ_CUSTOM_VIDMODE_DATA: { // Custom video mode data
          switch(custom_vmode_param) {
-            case VMODE_PARAM_HRES:        preset_video_modes[custom_video_mode].hres=zdata;     break;
-            case VMODE_PARAM_VRES:        preset_video_modes[custom_video_mode].vres=zdata;     break;
-            case VMODE_PARAM_HSTART:      preset_video_modes[custom_video_mode].hstart=zdata;   break;
-            case VMODE_PARAM_HEND:        preset_video_modes[custom_video_mode].hend=zdata;     break;
-            case VMODE_PARAM_HMAX:        preset_video_modes[custom_video_mode].hmax=zdata;     break;
-            case VMODE_PARAM_VSTART:      preset_video_modes[custom_video_mode].vstart=zdata;   break;
-            case VMODE_PARAM_VEND:        preset_video_modes[custom_video_mode].vend=zdata;     break;
-            case VMODE_PARAM_VMAX:        preset_video_modes[custom_video_mode].vmax=zdata;     break;
-            case VMODE_PARAM_POLARITY:    preset_video_modes[custom_video_mode].polarity=zdata; break;
+            case VMODE_PARAM_HRES:     temp_preset_video_mode.hres=zdata;
+printf("framebuffer_pan_offset %lX\n",video_state->framebuffer_pan_offset);
+printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
+            printf("hres %ld\n"    ,zdata);break;
+            case VMODE_PARAM_VRES:     temp_preset_video_mode.vres=zdata;     printf("vres %ld\n"    ,zdata);break;
+            case VMODE_PARAM_HSTART:   temp_preset_video_mode.hstart=zdata;   printf("hstart %ld\n"  ,zdata);break;
+            case VMODE_PARAM_HEND:     temp_preset_video_mode.hend=zdata;     printf("hend %ld\n"    ,zdata);break;
+            case VMODE_PARAM_HMAX:     temp_preset_video_mode.hmax=zdata;     printf("hmax %ld\n"    ,zdata);break;
+            case VMODE_PARAM_VSTART:   temp_preset_video_mode.vstart=zdata;   printf("vstart %ld\n"  ,zdata);break;
+            case VMODE_PARAM_VEND:     temp_preset_video_mode.vend=zdata;     printf("vend %ld\n"    ,zdata);break;
+            case VMODE_PARAM_VMAX:     temp_preset_video_mode.vmax=zdata;     printf("vmax %ld\n"    ,zdata);break;
+            case VMODE_PARAM_POLARITY: temp_preset_video_mode.polarity=zdata; printf("polarity %ld\n",zdata);break;
+
             case VMODE_PARAM_PHZ: {
+               zz_video_mode *tpvm=&temp_preset_video_mode;
                float phz=zdata;
                if(phz<1e6)
                   return;
-               uint32_t mul=50,mul_temp=50;
+/*
+               if((tpvm->hres   > tpvm->hstart) ||
+                  (tpvm->hstart > tpvm->hend  ) ||
+                  (tpvm->hend   > tpvm->hmax  ))
+               {
+                  printf("Video mode error detected: hres %d < hstart %d < hend %d < hmax %d ?\n",tpvm->hres,tpvm->hstart,tpvm->hend,tpvm->hmax);
+                  return;
+               }
+               if((tpvm->vres   > tpvm->vstart) ||
+                  (tpvm->vstart > tpvm->vend  ) ||
+                  (tpvm->vend   > tpvm->vmax  ))
+               {
+                  printf("Video mode error detected: vres %d < vstart %d < vend %d < vmax %d ?\n",tpvm->vres,tpvm->vstart,tpvm->vend,tpvm->vmax);
+                  return;
+               }
+               if(tpvm->hres<640)
+               {
+                  phz          *=2;
+                  tpvm->hres   *=2;
+                  tpvm->hstart *=2;
+                  tpvm->hend   *=2;
+                  tpvm->hmax   *=2;
+               }
+               if(tpvm->vres<400)
+               {
+                  phz          *=2;
+                  tpvm->vres   *=2;
+                  tpvm->vstart *=2;
+                  tpvm->vend   *=2;
+                  tpvm->vmax   *=2;
+               }
+*/
+               printf("pixelclock %ld Hz\n",(uint32_t)phz);
+               uint32_t mul=1;
                uint32_t div=1;
                uint32_t div2=1;
                float min_error=1e6;
-               // explore best solution
-               do {
-                  for(int div1=1;div1<=4;div1++)
+               for(uint32_t mul_temp=1;mul_temp<63;mul_temp++)
+               {
+                  for(int div1=1;div1<=8;div1++)
                   {
-                     int div2_temp=mul_temp*100.e6/(div1*phz);
-                     if((div2_temp>0)&&(div2_temp<64))
+                     int div2_temp=(((float)mul_temp)*100.e6)/(((float)div1)*phz);
+                     if(  (div2_temp>0)&&(div2_temp<128)
+                       && (((mul_temp*100)/div1)< 3200) // VCO < 3200 MHz
+                       && (((mul_temp*100)/div1)>= 800) // VCO > 1000 MHz
+                       )
                      {
                         float error=fabs(phz-mul_temp*100.e6/(div1*div2_temp));
                         if(error<min_error)
@@ -1029,24 +1333,43 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
                      }
                   }
                }
-               while(--mul_temp>5);
                uint32_t phz_int=mul*100.e6/(div*div2);
-               printf("Best mode: PixelClock=%d,mul=%d, div=%d, div2=%d\n",phz_int,mul,div,div2);
-               preset_video_modes[custom_video_mode].phz=phz_int;
-               preset_video_modes[custom_video_mode].mhz=(int16_t)(phz_int*1.e-6+0.5);
-               preset_video_modes[custom_video_mode].vhz=60;
-               preset_video_modes[custom_video_mode].hdmi=0;
+               printf("Best mode: PixelClock=%ld,mul=%ld, div=%ld, div2=%ld\n",phz_int,mul,div,div2);
+               tpvm->phz=phz_int;
+               tpvm->mhz=(int16_t)(phz_int*1.e-6+0.5);
+               tpvm->vhz=(int16_t)(((float)phz_int)/((float)(tpvm->hmax*tpvm->vmax))+0.5);
+               tpvm->hdmi=1;
 
-               preset_video_modes[custom_video_mode].mul=mul;
-               preset_video_modes[custom_video_mode].div=div;
-               preset_video_modes[custom_video_mode].div2=div2;
+               tpvm->mul=mul;
+               tpvm->div=div;
+               tpvm->div2=div2;
+               if((cached_preset_video_mode.hres     != tpvm->hres)
+                ||(cached_preset_video_mode.vres     != tpvm->vres)
+                ||(cached_preset_video_mode.hstart   != tpvm->hstart)
+                ||(cached_preset_video_mode.hend     != tpvm->hend)
+                ||(cached_preset_video_mode.hmax     != tpvm->hmax)
+                ||(cached_preset_video_mode.vstart   != tpvm->vstart)
+                ||(cached_preset_video_mode.vend     != tpvm->vend)
+                ||(cached_preset_video_mode.vmax     != tpvm->vmax)
+                ||(cached_preset_video_mode.polarity != tpvm->polarity)
+                ||(cached_preset_video_mode.phz      != tpvm->phz)
+                ||(cached_preset_video_mode.mhz      != tpvm->mhz)
+                ||(cached_preset_video_mode.vhz      != tpvm->vhz)
+                ||(cached_preset_video_mode.hdmi     != tpvm->hdmi)
+                ||(cached_preset_video_mode.mul      != tpvm->mul)
+                ||(cached_preset_video_mode.div      != tpvm->div)
+                ||(cached_preset_video_mode.div2     != tpvm->div2)
+               )
+                  cached_videomode=-1;
+               // save this video mode as cached version
+               memcpy(&cached_preset_video_mode,tpvm,sizeof(temp_preset_video_mode));
+               memcpy(&preset_video_modes[custom_video_mode],tpvm,sizeof(temp_preset_video_mode));
             }
             break;
             default: break;
          }
          break;
       }
-*/
 /*
       case 0x56: // Set custom video mode index
          custom_video_mode = zdata;
@@ -1085,10 +1408,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          uint8_t planes = (zdata & 0xFF00) >> 8;
          uint8_t mask = (zdata & 0xFF);
          uint8_t layer_mask = blitter_user2;
-         uint8_t* bmp_data = (uint8_t*) (((uint32_t) video_state->framebuffer)
+         uint8_t* bmp_data = (uint8_t*) (((uint8_t *) video_state->framebuffer)
                + blitter_src_offset);
 
-         set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
+         set_fb((uint32_t*) (((uint8_t *) video_state->framebuffer) + blitter_dst_offset),
                blitter_dst_pitch);
 
          p2c_rect(rect_x1, 0, rect_x2, rect_y2, rect_x3,
@@ -1102,10 +1425,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          uint8_t planes = (zdata & 0xFF00) >> 8;
          uint8_t mask = (zdata & 0xFF);
          uint8_t layer_mask = blitter_user2;
-         uint8_t* bmp_data = (uint8_t*) (((uint32_t) video_state->framebuffer)
+         uint8_t* bmp_data = (uint8_t*) (((uint8_t *) video_state->framebuffer)
                + blitter_src_offset);
 
-         set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
+         set_fb((uint32_t*) (((uint8_t *) video_state->framebuffer) + blitter_dst_offset),
                blitter_dst_pitch);
          p2d_rect(rect_x1, 0, rect_x2, rect_y2, rect_x3,
                rect_y3, draw_mode, planes, mask, layer_mask, rect_rgb,
@@ -1115,7 +1438,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
 
       case REG_ZZ_DRAWLINE: {
          uint8_t draw_mode = blitter_colormode_hibyte;
-         set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
+         set_fb((uint32_t*) (((uint8_t *) video_state->framebuffer) + blitter_dst_offset),
                blitter_dst_pitch);
 
          // rect_x3 contains the pattern. if all bits are set for both the mask and the pattern,
@@ -1134,7 +1457,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       }
 
       case REG_ZZ_INVERTRECT:
-         set_fb((uint32_t*) (((uint32_t) video_state->framebuffer) + blitter_dst_offset),
+         set_fb((uint32_t*) (((uint8_t *) video_state->framebuffer) + blitter_dst_offset),
                blitter_dst_pitch);
          invert_rect(rect_x1, rect_y1, rect_x2, rect_y2,
                zdata & 0xFF, blitter_colormode);
@@ -1380,58 +1703,123 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          }
          break;
       }
-/*
-      case REG_ZZ_USBBLK_TX_HI: {
-         usb_storage_write_block = ((uint32_t) zdata) << 16;
+      // USB Command Operation register - receives Poseidon commands from Amiga
+      case REG_ZZ_USB_CMD_OP: {
+         if(debug_console.debug_usb)
+            printf("[USB] Command operation: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_CMD_OP, zdata);
          break;
       }
-      case REG_ZZ_USBBLK_TX_LO: {
-         usb_storage_write_block |= zdata;
-         if (usb_storage_available) {
-            usb_status = zz_usb_write_blocks(0, usb_storage_write_block, usb_read_write_num_blocks, (void*)USB_BLOCK_STORAGE_ADDRESS);
-         } else {
-            printf("[USB] TX but no storage available!\n");
-         }
+#if 0
+      // USB Command Data register - receives data for Poseidon commands
+      case REG_ZZ_USB_CMD_DATA: {
+         if(debug_console.debug_usb)
+            printf("[USB] Command data: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_CMD_DATA, zdata);
          break;
       }
-      case REG_ZZ_USBBLK_RX_HI: {
-         usb_storage_read_block = ((uint32_t) zdata) << 16;
-         break;
-      }
-      case REG_ZZ_USBBLK_RX_LO: {
-         usb_storage_read_block |= zdata;
-         if (usb_storage_available) {
-            usb_status = zz_usb_read_blocks(0, usb_storage_read_block, usb_read_write_num_blocks, (void*)USB_BLOCK_STORAGE_ADDRESS);
-         } else {
-            printf("[USB] RX but no storage available!\n");
-         }
-         break;
-      }
+#endif
+      // USB Status register - controls USB state and operations
       case REG_ZZ_USB_STATUS: {
-         //printf("[USB] write to status/blocknum register: %d\n", zdata);
-         if (zdata==0) {
-            // reset USB
-            // FIXME memory leaks?
-            //usb_storage_available = zz_usb_init();
+         if (zdata == 0) {
+            // Reset USB system
+//            if(debug_console.debug_usb)
+//               printf("[USB] Resetting USB system\n");
+//            usb_otg_shutdown();
+            if (zz_usb_init() == 1) {
+               if(debug_console.debug_usb)
+                  printf("[USB] USB system initialized successfully\n");
+            } else {
+               if(debug_console.debug_usb)
+                  printf("[USB] USB system initialization failed\n");
+            }
          } else {
-            // set number of blocks to read/write at once
-            usb_read_write_num_blocks = zdata;
+            // Pass status/control data to USB handler
+            if(debug_console.debug_usb)
+               printf("[USB] Status write %0lx\n", zdata);
+            usb_handle_register_write(REG_ZZ_USB_STATUS, zdata);
          }
          break;
       }
-      case REG_ZZ_USB_BUFSEL: {
-         //printf("[USB] select buffer: %d\n", zdata);
-         usb_selected_buffer_block = zdata;
-         mntzorro_write(MNTZ_BASE_ADDR, MNTZORRO_REG5, usb_selected_buffer_block);
+#if 0      
+      // USB Buffer Select register - selects active buffer for operations
+      case REG_ZZ_USB_BU FSEL: {
+         usb_handle_register_write(REG_ZZ_USB_BU FSEL, zdata);
          break;
       }
-*/
+#endif
+      // USB Command Data register - receives data for Poseidon count
+      case REG_ZZ_USB_READ0: {
+         if(debug_console.debug_usb)
+            printf("[USB] Command Read0: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_READ0, zdata);
+         break;
+      }
+      // USB Parameter registers - dedicated for USB operations
+      case REG_ZZ_USB_PARAM0: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param0 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM0, zdata);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM1: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param1 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM1, zdata);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM2: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param2 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM2, zdata);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM3: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param3 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM3, zdata);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM4: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param4 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM4, zdata);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM5: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param5 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM5, zdata);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM6: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param6 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM6, zdata);
+         break;
+      }
+      
+      case REG_ZZ_USB_PARAM7: {
+         if(debug_console.debug_usb)
+            printf("[USB] Param7 write: 0x%lx\n", zdata);
+         usb_handle_register_write(REG_ZZ_USB_PARAM7, zdata);
+         break;
+      }
+      
       case REG_ZZ_DEBUG: {
          debug_lowlevel = zdata;
+         // Process debug message through ARM debug system
+         z3660_debug_arm_process_message(zdata);
          break;
       }
       case REG_ZZ_CPU_FREQ:
-         printf("[REG_ZZ_CPU_FREQ] %ld MHz\n", zdata);
+         printf("[REG_ZZ_CPU_FREQ] %lu MHz\n", zdata);
          if((zdata>=CPUFREQ_MIN) && (zdata<=CPUFREQ_MAX))
          {
             //            configure_clk(zdata, 0, 1, 0);
@@ -1455,7 +1843,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          printf("[ARM_RUN] %lx\n", arm_run_address);
          if (arm_run_address > 0) {
             core1_trampoline = (volatile void (*)(
-                  volatile struct ZZ9K_ENV*)) arm_run_address;
+                  volatile struct Z3660_ENV*)) arm_run_address;
             printf("[ARM_RUN] signaling second core.\n");
             Xil_DCacheFlush();
             Xil_ICacheInvalidate();
@@ -1528,6 +1916,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case REG_ZZ_OP_DATA: // idx + RGB data
          op_data=zdata;
          //        printf("1000 <= 0x%08X\n",zdata);
+         break;
       case REG_ZZ_OP:
          //        printf("1004 <= %d\n",zdata);
          if(zdata==OP_PALETTE)
@@ -1540,10 +1929,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          }
          break;
       case REG_ZZ_OP_NOP:
-         //        printf("1008 <= %d\n",zdata);
+         printf("OP_NOP <= %ld\n",zdata);
          break;
       case REG_ZZ_OP_CAPTUREMODE:
-         printf("CAPTUREMODE <= %ld\n",zdata);
+//         printf("CAPTUREMODE <= %ld\n",zdata);
          //            zz_set_monswitch(!zdata);
          break;
       case REG_ZZ_JIT_ENABLE:
@@ -1553,7 +1942,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case REG_ZZ_BOOTMODE:
          if(preset_selected>=0)
          {
-            if(zdata>=0 && zdata<BOOTMODE_NUM)
+            if(zdata<BOOTMODE_NUM)
             {
                printf("BOOTMODE %ld (%s)\n",zdata,bootmode_names[zdata]);
                if(preset_selected>=0)
@@ -1639,7 +2028,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          }
          break;
       case REG_ZZ_PRESET_SEL:
-         if(zdata>=0 && zdata<=7)
+         if(zdata<=7)
          {
             preset_selected=zdata;
             printf("[ENV] Preset %d selected\n",preset_selected);
@@ -1690,6 +2079,34 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          {
             env_file_vars_temp[preset_selected].autoconfig_rtg=zdata;
             printf("AUTOCONFIG RTG %s\n",zdata?"enabled":"disabled");
+         }
+         break;
+      case REG_ZZ_CPU_RAM_EN:
+         if(preset_selected>=0)
+         {
+            env_file_vars_temp[preset_selected].cpu_ram=zdata;
+            printf("CPU RAM %s\n",zdata?"enabled":"disabled");
+         }
+         break;
+      case REG_ZZ_MOUNT_SD_0x76:
+         if(preset_selected>=0)
+         {
+            env_file_vars_temp[preset_selected].mount_sd_0x76=zdata;
+            printf("MOUNT SD 0x76 %s\n",zdata?"enabled":"disabled");
+         }
+         break;
+      case REG_ZZ_MOUNT_SD_ROOT:
+         if(preset_selected>=0)
+         {
+            env_file_vars_temp[preset_selected].mount_sd_root=zdata;
+            printf("MOUNT SD ROOT %s\n",zdata?"enabled":"disabled");
+         }
+         break;
+      case REG_ZZ_MONITOR_SWITCH:
+         if(preset_selected>=0)
+         {
+            env_file_vars_temp[preset_selected].monitor_switch=zdata;
+            printf("MONITOR SWITCH 0x%02lX\n",zdata);
          }
          break;
       case REG_ZZ_KS_SEL:
@@ -1815,7 +2232,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       {
          int j=0;
          char c=-1;
-         if(zdata>=0 && zdata<=19)
+         if(zdata<=19)
          {
             while(c!=0)
             {
@@ -1832,7 +2249,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       {
          int j=0;
          char c=-1;
-         if(zdata>=0 && zdata<=7)
+         if(zdata<=7)
          {
             while(c!=0)
             {
@@ -1884,6 +2301,62 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
             printf("Delete Preset magic code not valid: 0x%lx\n",zdata);
          }
          break;
+         
+      // MPEG acceleration register writes
+      case REG_ZZ_MPEG_CMD_OP: {
+         printf("[MPEG RTG] MPEG command 0x%lx received\n", zdata);
+         // Forward MPEG commands to dedicated handler
+         mpeg_param_registers[0]=z3660_mpeg_process_command(zdata);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_PARAM0:
+      case REG_ZZ_MPEG_PARAM1:
+      case REG_ZZ_MPEG_PARAM2:
+      case REG_ZZ_MPEG_PARAM3: {
+         // Store MPEG parameters for ARM
+         extern uint32_t mpeg_param_registers[4];
+         int param_idx = (address - REG_ZZ_MPEG_PARAM0) / 4;
+         mpeg_param_registers[param_idx] = zdata;
+         if(debug_console.debug_rtg)
+            printf("[MPEG] Param%d write: 0x%lx\n", param_idx, zdata);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_COUNT: {
+         // Store data length or frame count
+         printf("[MPEG] Count write: %lu\n", zdata);
+         break;
+      }
+      
+      case REG_ZZ_MPEG_INFO: {
+         // Store decoder information/control
+         printf("[MPEG] Info write: 0x%lx\n", zdata);
+         break;
+      }
+      
+      // Implement MPEG FIFO registers
+      case REG_ZZ_MPEG_FIFOTX: {
+         // Set FIFO write index (68k -> ARM)
+         printf("[MPEG] FIFO TX write index set: %lu\n", zdata);
+         break;
+      }
+      case REG_ZZ_MPEG_FIFORX: {
+         // Set FIFO read index (ARM -> 68k)
+         printf("[MPEG] FIFO RX read index set: %lu\n", zdata);
+         break;
+      }
+      case REG_ZZ_MPEG_FIFO_SIZE: {
+         // Set FIFO buffer size
+         printf("[MPEG] FIFO size set: %lu bytes\n", zdata);
+         break;
+      }
+      case REG_ZZ_MPEG_FIFO_ADDR: {
+         // Set FIFO buffer address
+         printf("[MPEG] FIFO address set: 0x%lx\n", zdata);
+         break;
+      }
+
       default:
          if(debug_console.debug_rtg)
             printf("Write to unknown %08lx RTG register\n",address); // write to an unknown RTG register

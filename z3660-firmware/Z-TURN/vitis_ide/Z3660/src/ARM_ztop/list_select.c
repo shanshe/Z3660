@@ -8,11 +8,34 @@ extern int16_t mousex,mousey;
 extern WIN win;
 extern const char *resolution_names[RES_NUM];
 extern sFONT *Font;
+void textedits_timings_reload(void);
+extern int timing_selected;
 
 ListSelect *ls_kickstart;
 ListSelect *ls_kickstart_ext;
 ListSelect *ls_scsi[7];
 ListSelect *ls_screen_res;
+ListSelect *ls_timings;
+ListSelect *ls_arm_frequency;
+
+const char *timings_names[TIMINGS_NUM] = {
+      " 50 MHz",
+      " 55 MHz",
+      " 60 MHz",
+      " 65 MHz",
+      " 70 MHz",
+      " 75 MHz",
+      " 80 MHz",
+      " 85 MHz",
+      " 90 MHz",
+      " 95 MHz",
+      "100 MHz",
+      "105 MHz",
+      "110 MHz",
+      "115 MHz",
+      "120 MHz",
+};
+
 
 int8_t is_cursor_at_listselect(ListSelect *ls)
 {
@@ -60,6 +83,8 @@ void list_selects_run(void)
    ls_run(ls_kickstart_ext);
    for(int i=0;i<7;i++)
       ls_run(ls_scsi[i]);
+   ls_run(ls_timings);
+   ls_run(ls_arm_frequency);
 }
 void listselect_action(void *ls_)
 {
@@ -71,7 +96,18 @@ void listselect_action(void *ls_)
       ls->selected_item=0;
    displayStringAt(Font,ls->x+18,ls->y+2,(uint8_t *)ls->text[ls->selected_item],LEFT_MODE);
 }
-
+void listselect_timings_action(void *ls_)
+{
+   ListSelect *ls=(ListSelect *)ls_;
+   if(ls->selected_item<0)
+      ls->selected_item=0;
+   ls->selected_item++;
+   if(ls->selected_item>=ls->num_items)
+      ls->selected_item=0;
+   displayStringAt(Font,ls->x+18,ls->y+2,(uint8_t *)ls->text[ls->selected_item],LEFT_MODE);
+   timing_selected=ls->selected_item;
+   textedits_timings_reload();
+}
 
 void init_listselects(void)
 {
@@ -156,6 +192,29 @@ void init_listselects(void)
          ls_scsi[i]->num_items++;
       }
    }
+
+   ls_timings=(ListSelect *)malloc(sizeof(ListSelect));
+   ls_timings->w=70; // 120 MHz 7*8=56 + 14
+   ls_timings->h=Font->Height+2;
+   ls_timings->is_pressed=0;
+   ls_timings->b_was_at_cursor=0;
+   ls_timings->action=listselect_timings_action;
+   ls_timings->tab=TAB_TIMINGS;
+   for(int i=0;i<TIMINGS_NUM;i++)
+      strcpy(ls_timings->text[i],timings_names[i]);
+   ls_timings->num_items=TIMINGS_NUM;
+
+   ls_arm_frequency=(ListSelect *)malloc(sizeof(ListSelect));
+   ls_arm_frequency->w=50; // 667 4*8=32 + 18
+   ls_arm_frequency->h=Font->Height+2;
+   ls_arm_frequency->is_pressed=0;
+   ls_arm_frequency->b_was_at_cursor=0;
+   ls_arm_frequency->action=listselect_action;
+   ls_arm_frequency->tab=TAB_INFO;
+   for(int i=0;i<FREQ_NUM;i++)
+      strcpy(ls_arm_frequency->text[i],arm_frequency_names[i]);
+   ls_arm_frequency->num_items=FREQ_NUM;
+
 }
 void list_select_repaint(void)
 {
@@ -164,6 +223,8 @@ void list_select_repaint(void)
    ls_repaint(ls_kickstart_ext);
    for(int i=0;i<7;i++)
       ls_repaint(ls_scsi[i]);
+   ls_repaint(ls_timings);
+   ls_repaint(ls_arm_frequency);
 }
 void paint_ls_scsi(void)
 {
@@ -172,7 +233,7 @@ void paint_ls_scsi(void)
    for(int i=0;i<7;i++)
    {
       temp[4]=i+'0';
-      displayStringAt(Font,win.x+12,win.y+win.t+11+tab_h+17*i,(uint8_t*)temp,LEFT_MODE);
+      displayStringAt(Font,win.x+12,win.y+win.t+11+TAB_HEIGHT+17*i,(uint8_t*)temp,LEFT_MODE);
       LISTSEL(ls_scsi[i]->x,ls_scsi[i]->y,ls_scsi[i]->w,ls_scsi[i]->h);
       displayStringAt(Font,ls_scsi[i]->x+18,ls_scsi[i]->y+2,(uint8_t *)ls_scsi[i]->text[ls_scsi[i]->selected_item],LEFT_MODE);
    }
@@ -181,37 +242,55 @@ void paint_ls_scsi(void)
 void recalculate_coords_list_select(void)
 {
    ls_screen_res->x=win.x+124;
-   ls_screen_res->y=win.y+win.t+tab_h+10+12+5+20+50+10;
+   ls_screen_res->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+10;
 
    ls_kickstart->x=win.x+84;
-   ls_kickstart->y=win.y+win.t+tab_h+10+12+5+20+50+16+16;
+   ls_kickstart->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+16+16+16;
 
    ls_kickstart_ext->x=win.x+84;
-   ls_kickstart_ext->y=win.y+win.t+tab_h+10+12+5+20+50+17+16+16;
+   ls_kickstart_ext->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+17+16+16+16;
 
    for(int i=0;i<7;i++)
    {
       ls_scsi[i]->x=win.x+50;
-      ls_scsi[i]->y=win.y+win.t+8+tab_h+17*i;
+      ls_scsi[i]->y=win.y+win.t+8+TAB_HEIGHT+17*i;
    }
+
+   ls_timings->x=win.x+128;
+   ls_timings->y=win.y+win.t+TAB_HEIGHT+10;
+
+   ls_arm_frequency->x=win.x+124+224-8;
+   ls_arm_frequency->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+10;
 }
 void paint_ls_kickstart(void)
 {
-   displayStringAt(Font,win.x+12,win.y+win.t+tab_h+10+12+2+25+50+16+16   ,(uint8_t*)"Kickstart ",LEFT_MODE);
+   displayStringAt(Font,win.x+12,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+16+16+16   ,(uint8_t*)"Kickstart ",LEFT_MODE);
    LISTSEL(ls_kickstart->x,ls_kickstart->y,ls_kickstart->w,ls_kickstart->h);
    displayStringAt(Font,ls_kickstart->x+18,ls_kickstart->y+2,(uint8_t *)ls_kickstart->text[ls_kickstart->selected_item],LEFT_MODE);
 }
 void paint_ls_kickstart_ext(void)
 {
-   displayStringAt(Font,win.x+12,win.y+win.t+tab_h+10+12+2+25+50+16+16+17,(uint8_t*)"Ext Kicks.",LEFT_MODE);
+   displayStringAt(Font,win.x+12,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+16+16+16+17,(uint8_t*)"Ext Kicks.",LEFT_MODE);
    LISTSEL(ls_kickstart_ext->x,ls_kickstart_ext->y,ls_kickstart_ext->w,ls_kickstart_ext->h);
    displayStringAt(Font,ls_kickstart_ext->x+18,ls_kickstart_ext->y+2,(uint8_t *)ls_kickstart_ext->text[ls_kickstart_ext->selected_item],LEFT_MODE);
 }
-void paint_ls_screen(void)
+void paint_ls_screen_res(void)
 {
-   displayStringAt(Font,win.x+12,win.y+win.t+tab_h+10+12+2+25+50+10,(uint8_t*)"Boot Screen Res",LEFT_MODE);
+   displayStringAt(Font,win.x+12,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+10,(uint8_t*)"Boot Screen Res",LEFT_MODE);
    LISTSEL(ls_screen_res->x,ls_screen_res->y,ls_screen_res->w,ls_screen_res->h);
    displayStringAt(Font,ls_screen_res->x+18,ls_screen_res->y+2,(uint8_t *)ls_screen_res->text[ls_screen_res->selected_item],LEFT_MODE);
+}
+void paint_ls_timings(void)
+{
+   displayStringAt(Font,win.x+22,win.y+win.t+TAB_HEIGHT+10,(uint8_t*)"Timing Freq.",LEFT_MODE);
+   LISTSEL(ls_timings->x,ls_timings->y,ls_timings->w,ls_timings->h);
+   displayStringAt(Font,ls_timings->x+18,ls_timings->y+2,(uint8_t *)ls_timings->text[ls_timings->selected_item],LEFT_MODE);
+}
+void paint_ls_arm_frequency(void)
+{
+   displayStringAt(Font,win.x+12+224,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+10,(uint8_t*)"ARM freq (MHz)",LEFT_MODE);
+   LISTSEL(ls_arm_frequency->x,ls_arm_frequency->y,ls_arm_frequency->w,ls_arm_frequency->h);
+   displayStringAt(Font,ls_arm_frequency->x+18,ls_arm_frequency->y+2,(uint8_t *)ls_arm_frequency->text[ls_arm_frequency->selected_item],LEFT_MODE);
 }
 
 void list_select_action(ListSelect *b)
@@ -234,4 +313,6 @@ void list_selects_action(void)
    list_select_action(ls_kickstart_ext);
    for(int i=0;i<7;i++)
       list_select_action(ls_scsi[i]);
+   list_select_action(ls_timings);
+   list_select_action(ls_arm_frequency);
 }

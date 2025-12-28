@@ -1,3 +1,4 @@
+#if 0
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -24,6 +25,7 @@ typedef struct {
 app_t App_t;
 FIL* Xopen(const char *filename, const char *mode)
 {
+    (void)mode;
 	f_open(&fil, filename , FA_OPEN_ALWAYS | FA_READ);
 	return(&fil);
 }
@@ -53,7 +55,8 @@ void app_on_video(plm_t *player, plm_frame_t *frame, void *user);
 void app_on_audio(plm_t *player, plm_samples_t *samples, void *user);
 
 app_t * app_create(XFILE *fh,const char *filename, int texture_mode) {
-	app_t *self = &App_t;
+    (void)texture_mode;
+    app_t *self = &App_t;
 
 	memset(self, 0, sizeof(app_t));
 
@@ -236,7 +239,8 @@ void plm_frame_to_bgra_shanshe(plm_frame_t *frame, uint8_t *dest) {
 uint32_t frame_count=0;
 
 void app_on_video(plm_t *mpeg, plm_frame_t *frame, void *user) {
-	app_t *self = (app_t *)user;
+    (void)mpeg;
+    app_t *self = (app_t *)user;
 
 	// Hand the decoded data over to OpenGL. For the RGB texture mode, the
 	// YCrCb->RGB conversion is done on the CPU.
@@ -261,6 +265,10 @@ void app_on_video(plm_t *mpeg, plm_frame_t *frame, void *user) {
 }
 
 void app_on_audio(plm_t *mpeg, plm_samples_t *samples, void *user) {
+    (void)mpeg;
+    (void)samples;
+    (void)user;
+
 //	app_t *self = (app_t *)user;
 
 	// Hand the decoded samples over to SDL
@@ -282,3 +290,4 @@ void player_mpeg(FIL *fh,char *filename)
 	}
 	app_destroy(app);
 }
+#endif

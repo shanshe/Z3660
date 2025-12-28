@@ -18,6 +18,7 @@
 #include "scsi.h"
 #include "../config_file.h"
 #include "../debug_console.h"
+#include "../cpu_emulator.h"
 
 extern CONFIG config;
 #define BE(val) be32toh(val)
@@ -26,9 +27,9 @@ extern CONFIG config;
 // Uncomment the line below to enable debug output
 //#define PISCSI_DEBUG
 uint32_t used_dma=0;
-//#define MEMCPY memcpy
-#define MEMCPY memcpy_neon
-extern void *(memcpy_neon)(void * s1, const void * s2, u32 n);
+#define MEMCPY memcpy
+//#define MEMCPY memcpy_neon
+//extern void *(memcpy_neon)(void * s1, const void * s2, u32 n);
 
 #ifdef PISCSI_DEBUG
 #define read8(a) *(uint8_t*)(a)
@@ -121,7 +122,7 @@ int piscsi_init() {
    }
    num_partition_names = 0;
    TCHAR *Path = DEFAULT_ROOT;
-   f_mount(&fatfs, Path, 1); // 1 mount immediately
+   f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
    // force to load piscsi always
    piscsi_rom_ptr = NULL;
    if (piscsi_rom_ptr == NULL) {
@@ -173,7 +174,9 @@ int piscsi_init() {
          if(config.hdf[config.scsi_num[i]][0]!=0)
             piscsi_map_drive(config.hdf[config.scsi_num[i]], i, 0, 0);
    }
+   uint32_t root_partition_length=-1L;
    // and now the SD partitions
+   DEBUG("[PISCSI] Init mount_sd_0x76=%d\n",config.mount_sd_0x76);
    uint8_t buff[512];
    DRESULT ret = disk_read(0,buff,0,1);
    if(ret==0)
@@ -185,12 +188,31 @@ int piscsi_init() {
          uint32_t p0_Start = b[8] | (b[9] << 8) | (b[10] << 16) | (b[11] << 24);
          uint32_t p0_Len = b[12] | (b[13] << 8) | (b[14] << 16) | (b[15] << 24);
          if(p0_Type != 0) {
+            if(i==0 && p0_Type != 0x76) root_partition_length=p0_Start-0x800;
             printf("Partition %d: type 0x%02X, start 0x%08lX, length 0x%08lx\n",i,p0_Type, p0_Start, p0_Len);
-            if(p0_Type == 0x76)// || p0_Type == 0x0E || p0_Type == 0x07)
+            if(p0_Type == 0x76
+               || p0_Type == 0x0E // FAT16
+               || p0_Type == 0x07 // exFAT
+               || p0_Type == 0x0C // FAT32 CHS
+               || p0_Type == 0x0B // FAT32 LBA
+               )
             {
-               piscsi_map_drive("",10+i,p0_Start,p0_Len);
+               if(config.mount_sd_0x76)
+               {
+                  piscsi_map_drive("",11+i,p0_Start,p0_Len); // 10 reserved for the full SD
+               }
             }
          }
+      }
+   }
+   // and finally, the full SD
+   DEBUG("[PISCSI] Init mount_sd_root=%d\n",config.mount_sd_root);
+   if(config.mount_sd_root)
+   {
+      if(root_partition_length!=(uint32_t)-1L)
+      {
+         printf("Full SD start 0, length 0x%08lx\n", root_partition_length);
+         piscsi_map_drive("",10,0,root_partition_length);
       }
    }
    Xil_L1DCacheFlush();
@@ -241,7 +263,7 @@ void piscsi_shutdown() {
       filesystems[i].FS_ID = 0;
       filesystems[i].handler = 0;
    }
-   f_mount(NULL,DEFAULT_ROOT,1);
+   f_umount(DEFAULT_ROOT);
    printf("...Done\n");
    Xil_ExceptionEnable();
 }
@@ -330,7 +352,11 @@ void piscsi_find_partitions(PISCSI_DEV *d) {
    ACTIVITY_LED_OFF; // OFF
    return;
 }
-
+int isPrintableChar(char c)
+{
+   if(c>=' ' && c<='~') return 1; // printable chars
+   return(0);
+}
 int piscsi_parse_rdb(PISCSI_DEV *d) {
    ACTIVITY_LED_ON; // ON
    FIL *fd = d->fd;
@@ -348,7 +374,14 @@ int piscsi_parse_rdb(PISCSI_DEV *d) {
       else
       {
          //DRESULT res = 
-         disk_read(0,block,i * 512 + d->start_block,PISCSI_MAX_BLOCK_SIZE/512);
+//         disk_read(0,block,i * 512 + d->start_block,PISCSI_MAX_BLOCK_SIZE/512);
+         disk_read(0,block,i + d->start_block,1);
+
+         printf("disk_read block %08lX i=%d %02X%02X%02X%02X ",(uint32_t)(i * 512 + d->start_block),i,block[0],block[1],block[2],block[3]);
+         printf("%c",isPrintableChar(block[0])?block[0]:'.');
+         printf("%c",isPrintableChar(block[1])?block[1]:'.');
+         printf("%c",isPrintableChar(block[2])?block[2]:'.');
+         printf("%c\n",isPrintableChar(block[3])?block[3]:'.');
       }
       Xil_L1DCacheFlush();
       uint32_t first = be32toh(*((uint32_t *)&block[0]));
@@ -590,13 +623,13 @@ PISCSI_DEV *piscsi_get_dev(uint8_t index) {
 
 FIL fd[8];
 
-void piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len) {
+int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len) {
    if (index > NUM_SCSI_UNITS_MAX) {
       if(index<8)
          printf("[PISCSI] Drive index %d out of range.\nUnable to map file %s to drive.\n", index, filename);
       else
          printf("[PISCSI] Drive index %d out of range.\n", index);
-      return;
+      return -1;
    }
 
    PISCSI_DEV *d = &devs[index];
@@ -607,7 +640,7 @@ void piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t
       int ret = f_open(tmp_fd,filename, FA_READ|FA_WRITE|FA_OPEN_EXISTING);
       if (ret != FR_OK) {
          printf("[PISCSI] Failed to open file %s, could not map drive %d.\n", filename, index);
-         return;
+         return -1;
       }
 
       char hdfID[512];
@@ -650,6 +683,7 @@ void piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t
          d->s = 63;
          d->c = p0_Len / (d->s * d->h);
          d->block_size = 512;
+         return -1;
       }
    }
    DEBUG("[PISCSI] CHS: %ld %d %d\n", d->c, d->h, d->s);
@@ -660,7 +694,7 @@ void piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t
    piscsi_find_filesystems(d);
    DEBUG("Done file systems.\n");
 
-   if(d->fd>(FIL *)1)
+   if(d->fd>(FIL *)1) // only for hdf files
    {
       DEBUG("Enabling fast seek.\n");
       d->fd->cltbl = d->SeekTbl;         // Enable fast seek (set address of buffer)
@@ -677,7 +711,7 @@ void piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t
       }
    }
    DEBUG("Done partitions.\n");
-
+   return 0;
 }
 
 void piscsi_unmap_drive(uint8_t index) {
@@ -899,7 +933,42 @@ void piscsi_debugme(uint32_t index) {
       break;
    }
 }
+void read_disk(PISCSI_DEV *d,uint8_t *map,uint32_t blocks_to_read)
+{
+   uint32_t block_count=0;
+   uint32_t blocks_to_read_copy=blocks_to_read;
+   while(blocks_to_read_copy>0)
+   {
+#define MAX_BLOCKS_AT_ONCE 4096
+      int blocks=blocks_to_read_copy>MAX_BLOCKS_AT_ONCE?MAX_BLOCKS_AT_ONCE:blocks_to_read_copy;
+      DRESULT res = disk_read(0,(uint8_t *)map+block_count*d->block_size,d->lba + d->start_block+block_count,blocks);
+      if(res!=RES_OK)
+      {
+         printf("SCSI ERROR!!! disk_read result=%d\n",res);
+         printf("SCSI ERROR!!! block count=%ld\n",blocks_to_read);
+      }
+      blocks_to_read_copy-=blocks;
+      block_count+=blocks;
+   }
+}
+void write_disk(PISCSI_DEV *d,uint8_t *map,uint32_t blocks_to_write)
+{
+   uint32_t block_count=0;
+   uint32_t blocks_to_write_copy=blocks_to_write;
+   while(blocks_to_write_copy>0)
+   {
+      int blocks=blocks_to_write_copy>MAX_BLOCKS_AT_ONCE?MAX_BLOCKS_AT_ONCE:blocks_to_write_copy;
+      DRESULT res = disk_write(0,(uint8_t *)map+block_count*d->block_size,d->lba + d->start_block+block_count,blocks);
+      if(res!=RES_OK)
+      {
+         printf("SCSI ERROR!!! disk_write result=%d\n",res);
+         printf("SCSI ERROR!!! block count=%ld\n",blocks_to_write);
+      }
+      blocks_to_write_copy-=blocks;
+      block_count+=blocks;
+   }
 
+}
 void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
    ACTIVITY_LED_ON; // ON
    uint32_t map;
@@ -945,7 +1014,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
 
       map = piscsi_u32_read[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32_read[2]);
       if ( (config.cpu_ram        && (map>=0x08000000) && (map<0x10000000))
-            ||(config.autoconfig_ram && (map>=0x40000000) && (map<0x50000000))
+         ||(config.autoconfig_ram && (map>=0x40000000) && (map<0x50000000))
       )
       {
          if(map>=0x40000000) map-=(0x40000000-0x20000000);
@@ -954,17 +1023,23 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
-            f_read(d->fd, (uint8_t *)map, piscsi_u32_read[1],&n_bytes);
+            FRESULT res=f_read(d->fd, (uint8_t *)map, piscsi_u32_read[1],&n_bytes);
+            if(res!=FR_OK)
+            {
+               printf("SCSI ERROR!!! f_read result=%d\n",res);
+               printf("SCSI ERROR!!! d->fd->obj=%ld\n",(uint32_t)&d->fd->obj);
+            }
             DEBUG("            Bytes read %d\n",n_bytes);
             if(n_bytes!=piscsi_u32_read[1])
             {
                printf("SCSI ERROR!!! bytes_to_read=%ld, bytes_read=%d\n",piscsi_u32_read[1],n_bytes);
+               printf("SCSI ERROR!!! d->fd=%ld\n",(uint32_t)d->fd);
             }
          }
          else
          {
-            //DRESULT res = 
-            disk_read(0,(uint8_t *)map,d->lba + d->start_block,piscsi_u32_read[1]/ d->block_size);
+            uint32_t blocks_to_read=piscsi_u32_read[1]/ d->block_size;
+            read_disk(d,(uint8_t *)map,blocks_to_read);
          }
       } else {
          DEBUG("[PISCSI-%ld] No mapped range found for read.\n", val);
@@ -976,17 +1051,20 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
-            f_read(d->fd, buffer, piscsi_u32_read[1], &n_bytes);
+            FRESULT res=f_read(d->fd, buffer, piscsi_u32_read[1], &n_bytes);
+            if(res!=FR_OK)
+               printf("SCSI ERROR!!! f_read result=%d\n",res);
             DEBUG("            Bytes read %d\n",n_bytes);
             if(n_bytes!=piscsi_u32_read[1])
             {
                printf("SCSI ERROR!!! bytes_to_read=%ld, bytes_read=%d\n",piscsi_u32_read[1],n_bytes);
+               printf("SCSI ERROR!!! d->fd=%ld\n",(uint32_t)d->fd);
             }
          }
          else
          {
-            //DRESULT res = 
-            disk_read(0,buffer,d->lba + d->start_block,piscsi_u32_read[1]/ d->block_size);
+            uint32_t blocks_to_read=piscsi_u32_read[1]/ d->block_size;
+            read_disk(d,(uint8_t *)buffer,blocks_to_read);
          }
       }
       Xil_L1DCacheFlush();
@@ -1054,8 +1132,8 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          }
          else
          {
-            //DRESULT res = 
-            disk_write(0,(uint8_t *)map,d->lba + d->start_block,piscsi_u32_write[1]/d->block_size);
+            uint32_t blocks_to_write=piscsi_u32_write[1]/ d->block_size;
+            write_disk(d,(uint8_t *)map,blocks_to_write);
          }
       }
       else {
@@ -1077,8 +1155,8 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          }
          else
          {
-            //DRESULT res = 
-            disk_write(0,buffer,d->lba + d->start_block,piscsi_u32_write[1]/d->block_size);
+            uint32_t blocks_to_write=piscsi_u32_write[1]/ d->block_size;
+            write_disk(d,(uint8_t *)buffer,blocks_to_write);
          }
       }
       Xil_L1DCacheFlush();
@@ -1311,7 +1389,9 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
       {
          printf("[PISCSI] LOADFS Address 0x%08lX not mapped in FPGA RAM...\n",val);
       }
-      break;
+      Xil_L1DCacheFlush();
+      Xil_L2CacheFlush();
+   break;
    }
    case PISCSI_DBG_VAL1:
    case PISCSI_DBG_VAL2:
@@ -1333,7 +1413,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
       {
          char *str=(char*)val+1;
          char drivename[20];
-         int i;
+         unsigned int i;
          for(i=0;i<strlen(str);i++)
          {
             drivename[i]=str[i];
@@ -1345,10 +1425,10 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          for(int k=0;k<NUM_SCSI_UNITS_MAX;k++)
          {
             PISCSI_DEV *d = &devs[k];
-            for (int i = 0; i < d->num_partitions; i++) {
+            for (unsigned int i = 0; i < d->num_partitions; i++) {
                char tempname[20];
                strcpy(tempname,(char *)(d->pb[i]->pb_DriveName + 1));
-               int j;
+               unsigned int j;
                for(j=0;j<strlen(tempname);j++)
                {
                   if(tempname[j]>='a' && tempname[j]<='z')
@@ -1397,7 +1477,9 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
       partition_renamed2:
       break;
    }
-
+   case PISCSI_CMD_BLOCKS:
+      printf("[!!!PISCSI] WARN: Write to read only register PISCSI_CMD_BLOCKS (%.8lX: %ld)\n", addr, val);
+      break;
    default:
       //            DEBUG("[!!!PISCSI] WARN: Unhandled %s register write to %.8lX: %ld\n", op_type_names[type], addr, val);
       printf("[!!!PISCSI] WARN: Unhandled register write to %.8lX: %ld\n", addr, val);
@@ -1493,7 +1575,7 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
       break;
    case PISCSI_CMD_BLOCKS: {
       uint32_t blox = devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size;
-      DEBUG("[PISCSI] %s Read from BLOCKS %d: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
+      DEBUG("[PISCSI] %s Read from BLOCKS [drive %d]: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
       DEBUG("filesize: %lld (%lld blocks*block_size)\n", devs[piscsi_cur_drive].fs, ((FSIZE_t)blox)*devs[piscsi_cur_drive].block_size);
       ACTIVITY_LED_OFF; // OFF
       return blox;
@@ -1510,7 +1592,7 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
    case PISCSI_CMD_BLOCKS7: {
       piscsi_cur_drive=(addr-PISCSI_CMD_BLOCKS0) / 4;
       uint32_t blox = devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size;
-      DEBUG("[PISCSI] %s Read from BLOCKS %d: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
+      DEBUG("[PISCSI] %s Read from BLOCKS [drive %d]: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
       DEBUG("filesize: %lld (%lld blocks*block_size)\n", devs[piscsi_cur_drive].fs, ((FSIZE_t)blox)*devs[piscsi_cur_drive].block_size);
       ACTIVITY_LED_OFF; // OFF
       return blox;
@@ -1526,7 +1608,7 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
    case PISCSI_CMD_BLOCKS17: {
       piscsi_cur_drive=10+(addr-PISCSI_CMD_BLOCKS10) / 4;
       uint32_t blox = devs[piscsi_cur_drive].fs / devs[piscsi_cur_drive].block_size;
-      DEBUG("[PISCSI] %s Read from BLOCKS %d: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
+      DEBUG("[PISCSI] %s Read from BLOCKS [drive %d]: %ld\n", op_type_names[type], piscsi_cur_drive, blox);
       DEBUG("filesize: %lld (%lld blocks*block_size)\n", devs[piscsi_cur_drive].fs, ((FSIZE_t)blox)*devs[piscsi_cur_drive].block_size);
       ACTIVITY_LED_OFF; // OFF
       return blox;

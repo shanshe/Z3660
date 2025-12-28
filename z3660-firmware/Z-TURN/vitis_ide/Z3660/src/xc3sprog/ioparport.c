@@ -97,6 +97,7 @@ int  detectcable(void)
 
 int Init(unsigned int freq, IOpp_mode mode)
 {
+   (void)freq;
    iopp.debug=0;
 
    iopp.total=0;
@@ -256,16 +257,16 @@ int write_data(unsigned char data)
    if(clock_used)
    {
       XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x25C, 0x00000003);
-//      while(XClk_Wiz_ReadReg(XPAR_CLK_WIZ_0_BASEADDR, 0x004)==0);
+      //      while(XClk_Wiz_ReadReg(XPAR_CLK_WIZ_0_BASEADDR, 0x004)==0);
    }
-//   else
+   //   else
    {
    }
    if(data&iopp.tck_value) //=0x04
    {
       // JP1
       XGpioPs_WritePin(&GpioPs, JP1_PIN, 1);
-//      printf("TMS %d TDI %d\n",!!(data&iopp.tms_value),!!(data&iopp.tdi_value));
+      //      printf("TMS %d TDI %d\n",!!(data&iopp.tms_value),!!(data&iopp.tdi_value));
    }
    else
    {
@@ -283,8 +284,8 @@ unsigned char read_status(unsigned char *status)
       *status=0;
    else
       *status=iopp.tdo_mask;
-//   debug_ioparport("READ fd %d, status %02X\n",fd,*status);
-//   printf("TDO status %d\n",!!*status);
+   //   debug_ioparport("READ fd %d, status %02X\n",fd,*status);
+   //   printf("TDO status %d\n",!!*status);
    return 0;
 }
 
@@ -310,13 +311,13 @@ I2C i2c;
 #define I2C_MASTER_STOP i2c.flags.b1
 #define I2C_SLAVE_ERROR i2c.flags.b2
 #define I2C_SDA_DIR_0 do{XGpioPs_SetDirectionPin(&GpioPs, JP2_PIN, 0);\
-                      XGpioPs_SetOutputEnablePin(&GpioPs, JP2_PIN, 0);}while(0)
+      XGpioPs_SetOutputEnablePin(&GpioPs, JP2_PIN, 0);}while(0)
 #define I2C_SDA_DIR_1 do{XGpioPs_SetDirectionPin(&GpioPs, JP2_PIN, 1);\
-                      XGpioPs_SetOutputEnablePin(&GpioPs, JP2_PIN, 1);}while(0)
+      XGpioPs_SetOutputEnablePin(&GpioPs, JP2_PIN, 1);}while(0)
 #define I2C_SCL_DIR_0 do{XGpioPs_SetDirectionPin(&GpioPs, JP1_PIN, 0);\
-                      XGpioPs_SetOutputEnablePin(&GpioPs, JP1_PIN, 0);}while(0)
+      XGpioPs_SetOutputEnablePin(&GpioPs, JP1_PIN, 0);}while(0)
 #define I2C_SCL_DIR_1 do{XGpioPs_SetDirectionPin(&GpioPs, JP1_PIN, 1);\
-                      XGpioPs_SetOutputEnablePin(&GpioPs, JP1_PIN, 1);}while(0)
+      XGpioPs_SetOutputEnablePin(&GpioPs, JP1_PIN, 1);}while(0)
 
 #define I2C_SDA_PORT_0 do{XGpioPs_WritePin(&GpioPs, JP2_PIN, 0);}while(0)
 #define I2C_SDA_PORT_1 do{XGpioPs_WritePin(&GpioPs, JP2_PIN, 1);}while(0)
@@ -328,7 +329,7 @@ I2C i2c;
 #define I2C_SDA_1() do{I2C_SDA_DIR_0;}while(0)
 #define I2C_SCL_1() do{I2C_SCL_DIR_0;while(XGpioPs_ReadPin(&GpioPs, JP1_PIN)==0){}}while(0)
 //#define i2c_delay() usleep(1)
-#define i2c_delay() do{__asm(" nop");dsb();}while(0)
+#define i2c_delay() do{for(int i_=0;i_<20;i_++) __asm(" nop");dsb();}while(0)
 void i2csw_start()
 {
    I2C_MASTER_ACK=0;
@@ -423,15 +424,15 @@ void i2c_send(uint8_t data)
    WriteBuffer[0]   =   data;
 
    Status = XIicPs_MasterSendPolled(&IicInstance, WriteBuffer,
-                 1, 0x20);
+         1, 0x20);
    if (Status != XST_SUCCESS) {
       i2c_ltc2990++;
-      printf("[I2C] write1 error %d\n",i2c_ltc2990);
+      debug_ioparport("[I2C] write1 error %d\n",i2c_ltc2990);
       return;
    }
-//   DEBUG_I2C("[I2C] write1 ok\n");
+   //   DEBUG_I2C("[I2C] write1 ok\n");
    while(XIicPs_BusIsBusy(&IicInstance)!=XST_SUCCESS) {}
-//   DEBUG_I2C("[I2C] write slave:%02x data:%02x ok\n", 0x20, data);
+   //   DEBUG_I2C("[I2C] write slave:%02x data:%02x ok\n", 0x20, data);
 }
 uint8_t i2c_receive(void)
 {
@@ -439,14 +440,14 @@ uint8_t i2c_receive(void)
    int Status;
    uint8_t ReadBuffer[1];
    Status = XIicPs_MasterRecvPolled(&IicInstance, ReadBuffer,
-                 1, 0x20);
+         1, 0x20);
    if (Status != XST_SUCCESS) {
       i2c_ltc2990++;
-      printf("[I2C] read error %d\n",i2c_ltc2990);
+      debug_ioparport("[I2C] read error %d\n",i2c_ltc2990);
       return(0);
    }
    while(XIicPs_BusIsBusy(&IicInstance)!=XST_SUCCESS) {}
-//   DEBUG_I2C("[I2C] write slave:%02x data:%02x ok\n", 0x20, ReadBuffer[0]);
+   //   DEBUG_I2C("[I2C] write slave:%02x data:%02x ok\n", 0x20, ReadBuffer[0]);
    return(ReadBuffer[0]);
 }
 
@@ -488,8 +489,8 @@ unsigned char read_status(unsigned char *status)
       uint8_t data=i2c_receive();
       *status=data&iopp.tdo_mask;
    }
-//   debug_ioparport("READ fd %d, status %02X\n",fd,*status);
-//   printf("TDO status %d\n",!!*status);
+   //   debug_ioparport("READ fd %d, status %02X\n",fd,*status);
+   //   printf("TDO status %d\n",!!*status);
    return 0;
 }
 void i2c_finish(void)

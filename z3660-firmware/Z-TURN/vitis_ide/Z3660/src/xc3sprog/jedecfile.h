@@ -34,17 +34,17 @@ typedef unsigned char byte;
 #define bool int
 
 struct jedec_data {
-      char device[MAX_SIZE];
-      char version[MAX_SIZE];
-      char date[MAX_SIZE];
+   char device[MAX_SIZE];
+   char version[MAX_SIZE];
+   char date[MAX_SIZE];
 
-      unsigned fuse_count;
-      unsigned pin_count;
-      unsigned vector_count;
-      unsigned checksum;
-      unsigned char fuse_default;
+   unsigned fuse_count;
+   unsigned pin_count;
+   unsigned vector_count;
+   unsigned checksum;
+   unsigned char fuse_default;
 
-      unsigned char*fuse_list;
+   unsigned char*fuse_list;
 };
 typedef struct jedec_data *jedec_data_t;
 extern jedec_data_t jed;
@@ -54,23 +54,23 @@ extern jedec_data_t jed;
 
 typedef struct
 {
-  struct jedec_data jed;
-  bool Error;
-  char errorStr[100];
-  FILE *logfile;
+   struct jedec_data jed;
+   bool Error;
+   char errorStr[100];
+   FILE *logfile;
 
 }  JedecFile;
 extern JedecFile jedecfile;
 
-  int readFile_jedec(FIL *fp);
-  inline unsigned int getLength_jedec(){return jedecfile.jed.fuse_count;}
-  inline unsigned short getChecksum(){return jedecfile.jed.checksum;}
-  char *getDevice();
-  char *getVersion();
-  char *getDate_jedec();
-  unsigned short calcChecksum();
-  void setLength(unsigned int fuse_count);
-  int get_fuse(unsigned int idx);
-  void set_fuse(unsigned int idx, int blow);
+int readFile_jedec(FIL *fp);
+inline unsigned int getLength_jedec(){return jedecfile.jed.fuse_count;}
+inline unsigned short getChecksum(){return jedecfile.jed.checksum;}
+char *getDevice();
+char *getVersion();
+char *getDate_jedec();
+unsigned short calcChecksum();
+void setLength(unsigned int fuse_count);
+int get_fuse(unsigned int idx);
+void set_fuse(unsigned int idx, int blow);
 
 #endif //JEDECFILE_H

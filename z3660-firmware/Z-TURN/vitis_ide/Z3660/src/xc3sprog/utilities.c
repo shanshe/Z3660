@@ -45,10 +45,12 @@ void detect_chain(Jtag *j,IOBase *io)
 #endif
 int  getIO( IOBase *io, char const *serial, bool verbose, unsigned int freq)
 {
+   (void)serial;
+   (void)freq;
    int res = 1;
    unsigned int use_freq = 0;
    IOBase_init(io);
-//   reset(IOParport());
+   //   reset(IOParport());
    setVerbose_io(io,verbose);
    res = Init(use_freq,IOPP_MODE_I2CSW);
    return res;
@@ -56,6 +58,7 @@ int  getIO( IOBase *io, char const *serial, bool verbose, unsigned int freq)
 
 const char *getCableName(int type)
 {
+   (void)type;
    return "pp";
 }
 

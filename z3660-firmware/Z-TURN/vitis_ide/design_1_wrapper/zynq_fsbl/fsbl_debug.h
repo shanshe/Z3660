@@ -31,8 +31,8 @@ extern "C" {
 #endif
 
 
-#define DEBUG_GENERAL	0x00000001    /* general debug  messages */
-#define DEBUG_INFO	0x00000002    /* More debug information */
+#define DEBUG_GENERAL   0x00000001    /* general debug  messages */
+#define DEBUG_INFO      0x00000002    /* More debug information */
 
 #if defined (FSBL_DEBUG_INFO)
 #define fsbl_dbg_current_types ((DEBUG_INFO) | (DEBUG_GENERAL))

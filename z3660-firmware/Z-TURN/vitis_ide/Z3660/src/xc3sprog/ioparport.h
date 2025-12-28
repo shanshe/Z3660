@@ -22,7 +22,7 @@ Changes:
 Dmitry Teytelman [dimtey@gmail.com] 14 Jun 2006 [applied 13 Aug 2006]:
     Code cleanup for clean -Wall compile.
     Changes to support new IOBase interface.
-*/
+ */
 
 
 
@@ -46,9 +46,9 @@ typedef enum {
 } IOpp_mode;
 typedef struct
 {
-  int total, debug;
-  unsigned char def_byte, tdi_value, tms_value, tck_value, tdo_mask, tdo_inv;
-  IOpp_mode mode;
+   int total, debug;
+   unsigned char def_byte, tdi_value, tms_value, tck_value, tdo_mask, tdo_inv;
+   IOpp_mode mode;
 } IOParport;
 
 int write_data(unsigned char data);
@@ -56,14 +56,14 @@ int write_control(unsigned char control);
 int read_control(unsigned char *control);
 unsigned char read_status(unsigned char *status);
 
-  int Init( unsigned int freq, IOpp_mode mode);
-  void tx(bool tms, bool tdi);
-  bool txrx(bool tms, bool tdi);
-  void tx_tdi_byte(unsigned char tdi_byte);
-  void tx_tms(unsigned char *pat, int length);
-  void txrx_block(unsigned char *tdi, unsigned char *tdo, int length, bool last);
+int Init( unsigned int freq, IOpp_mode mode);
+void tx(bool tms, bool tdi);
+bool txrx(bool tms, bool tdi);
+void tx_tdi_byte(unsigned char tdi_byte);
+void tx_tms(unsigned char *pat, int length);
+void txrx_block(unsigned char *tdi, unsigned char *tdo, int length, bool last);
 
-  void delay(int del);
-  int detectcable(void);
+void delay(int del);
+int detectcable(void);
 
 #endif // IOPARPORT_H

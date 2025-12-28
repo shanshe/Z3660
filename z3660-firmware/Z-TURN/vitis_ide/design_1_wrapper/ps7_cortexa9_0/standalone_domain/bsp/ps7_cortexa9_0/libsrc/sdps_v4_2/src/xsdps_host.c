@@ -894,7 +894,7 @@ RETURN_PATH:
 * 		- XST_FAILURE if failure
 *
 ******************************************************************************/
-s32 XSdPs_CalcBusSpeed(XSdPs *InstancePtr, u32 *Arg)
+s32 XSdPs_CalcBusSpeed_old(XSdPs *InstancePtr, u32 *Arg)
 {
 	s32 Status = XST_SUCCESS;
 

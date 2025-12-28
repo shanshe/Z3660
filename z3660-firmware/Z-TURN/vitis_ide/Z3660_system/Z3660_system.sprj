@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <systemproject:SystemProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdkproject="http://www.xilinx.com/sdkproject" xmlns:systemproject="http://www.xilinx.com/systemproject" name="Z3660_system" platform="C:/Users/shanshe/workspace/design_1_wrapper/export/design_1_wrapper/design_1_wrapper.xpfm" platformUID="xilinx:::0.0(custom)" sysConfig="design_1_wrapper" runtime="cpp" rootFSLocation="" linuxImage="" sysroot="">
-  <configuration name="Debug" id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293">
+  <configuration name="Beta" id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293">
     <configBuildOptions xsi:type="systemproject:SystemOptions">
       <applications name="Z3660" domainName="standalone_domain" domainPrettyName="standalone on ps7_cortexa9_0" appBuildConfig="Debug"/>
       <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Debug"/>
@@ -11,13 +11,6 @@
       <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Debug"/>
       <options xsi:type="sdkproject:SdkOptions" generateSdCard="true"/>
     </lastBuildOptions>
-  </configuration>
-  <configuration name="Release" id="com.xilinx.sdx.system.managedbuilder.releaseConfiguration.1709934088">
-    <configBuildOptions xsi:type="systemproject:SystemOptions">
-      <applications name="Z3660" domainName="standalone_domain" domainPrettyName="standalone on ps7_cortexa9_0" appBuildConfig="Release"/>
-      <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Release"/>
-      <options xsi:type="sdkproject:SdkOptions" generateSdCard="true"/>
-    </configBuildOptions>
   </configuration>
   <configuration name="Alfa" id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293.1561214690">
     <configBuildOptions xsi:type="systemproject:SystemOptions">
@@ -30,5 +23,30 @@
       <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Debug"/>
       <options xsi:type="sdkproject:SdkOptions" generateSdCard="true"/>
     </lastBuildOptions>
+  </configuration>
+  <configuration name="ReleaseAlfa" id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293.1561214690.1522685905">
+    <configBuildOptions xsi:type="systemproject:SystemOptions">
+      <applications name="Z3660" domainName="standalone_domain" domainPrettyName="standalone on ps7_cortexa9_0" appBuildConfig="Release"/>
+      <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Release"/>
+      <options xsi:type="sdkproject:SdkOptions" generateSdCard="true"/>
+    </configBuildOptions>
+    <lastBuildOptions xsi:type="systemproject:SystemOptions">
+      <applications name="Z3660" domainName="standalone_domain" domainPrettyName="standalone on ps7_cortexa9_0" appBuildConfig="Release"/>
+      <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Release"/>
+      <options xsi:type="sdkproject:SdkOptions" generateSdCard="true"/>
+    </lastBuildOptions>
+  </configuration>
+  <configuration name="ReleaseBeta" id="com.xilinx.sdx.system.managedbuilder.debugConfiguration.253360293.1266065354">
+    <configBuildOptions xsi:type="systemproject:SystemOptions">
+      <applications name="Z3660" domainName="standalone_domain" domainPrettyName="standalone on ps7_cortexa9_0" appBuildConfig="Debug"/>
+      <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Debug"/>
+      <options xsi:type="sdkproject:SdkOptions" generateSdCard="true"/>
+    </configBuildOptions>
+  </configuration>
+  <configuration name="Release" id="com.xilinx.sdx.system.managedbuilder.releaseConfiguration.1709934088">
+    <configBuildOptions xsi:type="systemproject:SystemOptions">
+      <applications name="Z3660" domainName="standalone_domain" domainPrettyName="standalone on ps7_cortexa9_0" appBuildConfig="Debug"/>
+      <applications name="Z3660_emu" domainName="standalone_ps7_cortexa9_1" domainPrettyName="standalone on ps7_cortexa9_1" appBuildConfig="Debug"/>
+    </configBuildOptions>
   </configuration>
 </systemproject:SystemProject>

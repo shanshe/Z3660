@@ -45,7 +45,7 @@
  * - IPv6 support
  */
 
-#include "lwip/apps/http_client.h"
+#include "http_client.h"
 
 #include "lwip/altcp_tcp.h"
 #include "lwip/dns.h"
@@ -54,12 +54,30 @@
 #include "lwip/altcp_tls.h"
 #include "lwip/init.h"
 
+#include "../lwip/cert.c"
+
+#if LWIP_ALTCP_TLS == 1
+#include "mbedtls/ssl.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define LWIP_DNS 1
+//#define LWIP_DNS 1
+#if !defined(LWIP_DNS) || (LWIP_DNS == 0)
+#error You have to define "LWIP_DNS  1" in LWIP opt.h file
+#endif
 
+#if !defined LWIP_ALTCP || (LWIP_ALTCP == 0)
+#error you have to define "LWIP_ALTCP  1" in LWIP opt.h file
+#endif
+
+#if !defined LWIP_ALTCP_TLS || (LWIP_ALTCP_TLS == 0)
+#error you have to define "LWIP_ALTCP_TLS  1" in LWIP opt.h file
+#endif
+#define LWIP_CALLBACK_API 1
+#define LWIP_DNS 1
 #if LWIP_TCP && LWIP_CALLBACK_API
 
 /**
@@ -76,7 +94,10 @@
 
 /** This string is passed in the HTTP header as "User-Agent: " */
 #ifndef HTTPC_CLIENT_AGENT
-#define HTTPC_CLIENT_AGENT "lwIP/" LWIP_VERSION_STRING " (http://savannah.nongnu.org/projects/lwip)"
+//#define HTTPC_CLIENT_AGENT "lwIP/" LWIP_VERSION_STRING " (http://savannah.nongnu.org/projects/lwip)"
+//#define HTTPC_CLIENT_AGENT "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15"
+#define HTTPC_CLIENT_AGENT "shanshe@github"
+
 #endif
 
 /* the various debug levels for this file */
@@ -87,44 +108,46 @@
 #define HTTPC_DEBUG_SERIOUS      (HTTPC_DEBUG | LWIP_DBG_LEVEL_SERIOUS)
 
 #define HTTPC_POLL_INTERVAL     1
-#define HTTPC_POLL_TIMEOUT      600 /* 300 seconds */
+#define HTTPC_POLL_TIMEOUT      30 /* 15 seconds */
 
 #define HTTPC_CONTENT_LEN_INVALID 0xFFFFFFFF
 
 /* GET request basic */
 #define HTTPC_REQ_11 "GET %s HTTP/1.1\r\n" /* URI */\
+    "Accept: %s\r\n" \
+    /*"Accept-Encoding: deflate, gzip\r\n"*/ \
     "User-Agent: %s\r\n" /* User-Agent */ \
-    "Accept: */*\r\n" \
-    "Connection: Close\r\n" /* we don't support persistent connections, yet */ \
+    /*"Connection: Close\r\n"*/ /* we don't support persistent connections, yet */ \
     "\r\n"
-#define HTTPC_REQ_11_FORMAT(uri) HTTPC_REQ_11, uri, HTTPC_CLIENT_AGENT
+#define HTTPC_REQ_11_FORMAT(uri, accept) HTTPC_REQ_11, uri, accept, HTTPC_CLIENT_AGENT
 
 /* GET request with host */
 #define HTTPC_REQ_11_HOST "GET %s HTTP/1.1\r\n" /* URI */\
+    "Accept: %s\r\n" \
+    /*"Accept-Encoding: deflate, gzip\r\n"*/ \
     "User-Agent: %s\r\n" /* User-Agent */ \
-    "Accept: */*\r\n" \
     "Host: %s\r\n" /* server name */ \
-    "Connection: Close\r\n" /* we don't support persistent connections, yet */ \
+    /*"Connection: Close\r\n"*/ /* we don't support persistent connections, yet */ \
     "\r\n"
-#define HTTPC_REQ_11_HOST_FORMAT(uri, srv_name) HTTPC_REQ_11_HOST, uri, HTTPC_CLIENT_AGENT, srv_name
+#define HTTPC_REQ_11_HOST_FORMAT(uri, accept, srv_name) HTTPC_REQ_11_HOST, uri, accept, HTTPC_CLIENT_AGENT, srv_name
 
 /* GET request with proxy */
 #define HTTPC_REQ_11_PROXY "GET http://%s%s HTTP/1.1\r\n" /* HOST, URI */\
+    "Accept: %s\r\n" \
     "User-Agent: %s\r\n" /* User-Agent */ \
-    "Accept: */*\r\n" \
     "Host: %s\r\n" /* server name */ \
     "Connection: Close\r\n" /* we don't support persistent connections, yet */ \
     "\r\n"
-#define HTTPC_REQ_11_PROXY_FORMAT(host, uri, srv_name) HTTPC_REQ_11_PROXY, host, uri, HTTPC_CLIENT_AGENT, srv_name
+#define HTTPC_REQ_11_PROXY_FORMAT(host, uri, accept, srv_name) HTTPC_REQ_11_PROXY, host, uri, accept, HTTPC_CLIENT_AGENT, srv_name
 
 /* GET request with proxy (non-default server port) */
 #define HTTPC_REQ_11_PROXY_PORT "GET http://%s:%d%s HTTP/1.1\r\n" /* HOST, host-port, URI */\
+    "Accept: %s\r\n" \
     "User-Agent: %s\r\n" /* User-Agent */ \
-    "Accept: */*\r\n" \
     "Host: %s\r\n" /* server name */ \
     "Connection: Close\r\n" /* we don't support persistent connections, yet */ \
     "\r\n"
-#define HTTPC_REQ_11_PROXY_PORT_FORMAT(host, host_port, uri, srv_name) HTTPC_REQ_11_PROXY_PORT, host, host_port, uri, HTTPC_CLIENT_AGENT, srv_name
+#define HTTPC_REQ_11_PROXY_PORT_FORMAT(host, host_port, uri, accept, srv_name) HTTPC_REQ_11_PROXY_PORT, host, host_port, uri, accept, HTTPC_CLIENT_AGENT, srv_name
 
 typedef enum ehttpc_parse_state {
   HTTPC_PARSE_WAIT_FIRST_LINE = 0,
@@ -283,7 +306,8 @@ httpc_tcp_recv(void *arg, struct altcp_pcb *pcb, struct pbuf *p, err_t r)
 {
   httpc_state_t* req = (httpc_state_t*)arg;
   LWIP_UNUSED_ARG(r);
-
+//  printf("tcp_recv\n");
+  req->timeout_ticks = HTTPC_POLL_TIMEOUT;
   if (p == NULL) {
     httpc_result_t result;
     if (req->parse_state != HTTPC_PARSE_RX_DATA) {
@@ -341,7 +365,7 @@ httpc_tcp_recv(void *arg, struct altcp_pcb *pcb, struct pbuf *p, err_t r)
     req->rx_content_len += p->tot_len;
 
     // ----- RESET TIMER TICKS HERE ------
-    req->timeout_ticks = HTTPC_POLL_TIMEOUT;
+//    req->timeout_ticks = HTTPC_POLL_TIMEOUT;
 
     if (req->recv_fn != NULL) {
       /* directly return here: the connection might already be aborted from the callback! */
@@ -359,8 +383,10 @@ static void
 httpc_tcp_err(void *arg, err_t err)
 {
   httpc_state_t* req = (httpc_state_t*)arg;
+//  printf("tcp_err\n");
   if (req != NULL) {
     /* pcb has already been deallocated */
+    printf("pcb has already been deallocated\n----> httpc_close()\n");
     req->pcb = NULL;
     httpc_close(req, HTTPC_RESULT_ERR_CLOSED, 0, err);
   }
@@ -374,6 +400,7 @@ httpc_tcp_poll(void *arg, struct altcp_pcb *pcb)
   httpc_state_t* req = (httpc_state_t*)arg;
   LWIP_UNUSED_ARG(pcb);
   if (req != NULL) {
+//    printf("tcp_poll %d\n",req->timeout_ticks);
     if (req->timeout_ticks) {
       req->timeout_ticks--;
     }
@@ -392,6 +419,7 @@ httpc_tcp_sent(void *arg, struct altcp_pcb *pcb, u16_t len)
   LWIP_UNUSED_ARG(arg);
   LWIP_UNUSED_ARG(pcb);
   LWIP_UNUSED_ARG(len);
+//  printf("tcp_sent\n");
   return ERR_OK;
 }
 
@@ -431,6 +459,7 @@ httpc_get_internal_addr(httpc_state_t* req, const ip_addr_t *ipaddr)
   }
 
   err = altcp_connect(req->pcb, &req->remote_addr, req->remote_port, httpc_tcp_connected);
+
   if (err == ERR_OK) {
     return ERR_OK;
   }
@@ -490,28 +519,32 @@ httpc_get_internal_dns(httpc_state_t* req, const char* server_name)
 }
 
 static int
-httpc_create_request_string(const httpc_connection_t *settings, const char* server_name, int server_port, const char* uri,
+httpc_create_request_string(const httpc_connection_t *settings, const char* server_name, int server_port, const char* uri, const char *accept,
                             int use_host, char *buffer, size_t buffer_size)
 {
   if (settings->use_proxy) {
     LWIP_ASSERT("server_name != NULL", server_name != NULL);
     if (server_port != HTTP_DEFAULT_PORT) {
-      return snprintf(buffer, buffer_size, HTTPC_REQ_11_PROXY_PORT_FORMAT(server_name, server_port, uri, server_name));
+      return snprintf(buffer, buffer_size, HTTPC_REQ_11_PROXY_PORT_FORMAT(server_name, server_port, uri, accept, server_name));
     } else {
-      return snprintf(buffer, buffer_size, HTTPC_REQ_11_PROXY_FORMAT(server_name, uri, server_name));
+      return snprintf(buffer, buffer_size, HTTPC_REQ_11_PROXY_FORMAT(server_name, uri, accept, server_name));
     }
   } else if (use_host) {
     LWIP_ASSERT("server_name != NULL", server_name != NULL);
-    return snprintf(buffer, buffer_size, HTTPC_REQ_11_HOST_FORMAT(uri, server_name));
+//    if(buffer)
+//      printf(HTTPC_REQ_11_HOST_FORMAT(uri, accept, server_name));
+    return snprintf(buffer, buffer_size, HTTPC_REQ_11_HOST_FORMAT(uri, accept, server_name));
   } else {
-    return snprintf(buffer, buffer_size, HTTPC_REQ_11_FORMAT(uri));
+//    if(buffer)
+//      printf(HTTPC_REQ_11_FORMAT(uri, accept));
+    return snprintf(buffer, buffer_size, HTTPC_REQ_11_FORMAT(uri, accept));
   }
 }
 
 /** Initialize the connection struct */
 static err_t
 httpc_init_connection_common(httpc_state_t **connection, const httpc_connection_t *settings, const char* server_name,
-                      u16_t server_port, const char* uri, altcp_recv_fn recv_fn, void* callback_arg, int use_host)
+                      u16_t server_port, const char* uri, const char*accept, altcp_recv_fn recv_fn, void* callback_arg, int use_host)
 {
   size_t alloc_len;
   mem_size_t mem_alloc_len;
@@ -524,7 +557,8 @@ httpc_init_connection_common(httpc_state_t **connection, const httpc_connection_
   LWIP_ASSERT("uri != NULL", uri != NULL);
 
   /* get request len */
-  req_len = httpc_create_request_string(settings, server_name, server_port, uri, use_host, NULL, 0);
+  req_len = httpc_create_request_string(settings, server_name, server_port, uri, accept, use_host, NULL, 0);
+//  printf("Request length %d\n",req_len);
   if ((req_len < 0) || (req_len > 0xFFFF)) {
     return ERR_VAL;
   }
@@ -564,10 +598,33 @@ httpc_init_connection_common(httpc_state_t **connection, const httpc_connection_
   }
   req->uri = req->server_name + server_name_len + 1;
   memcpy(req->uri, uri, uri_len + 1);
+//  printf("uri %s\n",uri);
 #endif
+
+#if LWIP_ALTCP_TLS == 0
   req->pcb = altcp_new(settings->altcp_allocator);
+#else
+/*  struct altcp_tls_config *tls_config = altcp_tls_create_config_client((u8_t *)CERTIFICATE, strlen(CERTIFICATE) + 1);
+  altcp_allocator_t allocator = {
+        .alloc = altcp_tls_alloc,
+        .arg = tls_config,
+  };
+  req->pcb = altcp_new(&allocator);
+*/
+
+  struct altcp_tls_config *tls_config = altcp_tls_create_config_client(NULL, 0);
+  req->pcb = altcp_tls_new(tls_config, IPADDR_TYPE_V4);
+  int err = mbedtls_ssl_set_hostname(altcp_tls_context(req->pcb), server_name);
+  if(err != ERR_OK)
+  {
+     printf("Error mbedtls_ssl_set_hostname %d\n",err);
+     return(err);
+  }
+#endif
+
   if(req->pcb == NULL) {
     httpc_free_state(req);
+    printf("req->pcb = NULL error\n");
     return ERR_MEM;
   }
   req->remote_port = settings->use_proxy ? settings->proxy_port : server_port;
@@ -578,7 +635,7 @@ httpc_init_connection_common(httpc_state_t **connection, const httpc_connection_
   altcp_sent(req->pcb, httpc_tcp_sent);
 
   /* set up request buffer */
-  req_len2 = httpc_create_request_string(settings, server_name, server_port, uri, use_host,
+  req_len2 = httpc_create_request_string(settings, server_name, server_port, uri, accept, use_host,
     (char *)req->request->payload, req_len + 1);
   if (req_len2 != req_len) {
     httpc_free_state(req);
@@ -598,9 +655,9 @@ httpc_init_connection_common(httpc_state_t **connection, const httpc_connection_
  */
 static err_t
 httpc_init_connection(httpc_state_t **connection, const httpc_connection_t *settings, const char* server_name,
-                      u16_t server_port, const char* uri, altcp_recv_fn recv_fn, void* callback_arg)
+                      u16_t server_port, const char* uri, const char* accept, altcp_recv_fn recv_fn, void* callback_arg)
 {
-  return httpc_init_connection_common(connection, settings, server_name, server_port, uri, recv_fn, callback_arg, 1);
+  return httpc_init_connection_common(connection, settings, server_name, server_port, uri, accept, recv_fn, callback_arg, 1);
 }
 
 
@@ -609,14 +666,14 @@ httpc_init_connection(httpc_state_t **connection, const httpc_connection_t *sett
  */
 static err_t
 httpc_init_connection_addr(httpc_state_t **connection, const httpc_connection_t *settings,
-                           const ip_addr_t* server_addr, u16_t server_port, const char* uri,
+                           const ip_addr_t* server_addr, u16_t server_port, const char* uri, const char* accept,
                            altcp_recv_fn recv_fn, void* callback_arg)
 {
   char *server_addr_str = ipaddr_ntoa(server_addr);
   if (server_addr_str == NULL) {
     return ERR_VAL;
   }
-  return httpc_init_connection_common(connection, settings, server_addr_str, server_port, uri,
+  return httpc_init_connection_common(connection, settings, server_addr_str, server_port, uri, accept,
     recv_fn, callback_arg, 1);
 }
 
@@ -635,7 +692,7 @@ httpc_init_connection_addr(httpc_state_t **connection, const httpc_connection_t 
  *         or an error code
  */
 err_t
-httpc_get_file(const ip_addr_t* server_addr, u16_t port, const char* uri, const httpc_connection_t *settings,
+httpc_get_file(const ip_addr_t* server_addr, u16_t port, const char* uri, const char* accept, const httpc_connection_t *settings,
                altcp_recv_fn recv_fn, void* callback_arg, httpc_state_t **connection)
 {
   err_t err;
@@ -644,7 +701,7 @@ httpc_get_file(const ip_addr_t* server_addr, u16_t port, const char* uri, const 
   LWIP_ERROR("invalid parameters", (server_addr != NULL) && (uri != NULL) && (recv_fn != NULL), return ERR_ARG;);
 
   err = httpc_init_connection_addr(&req, settings, server_addr, port,
-    uri, recv_fn, callback_arg);
+    uri, accept, recv_fn, callback_arg);
   if (err != ERR_OK) {
     return err;
   }
@@ -680,15 +737,14 @@ httpc_get_file(const ip_addr_t* server_addr, u16_t port, const char* uri, const 
  *         or an error code
  */
 err_t
-httpc_get_file_dns(const char* server_name, u16_t port, const char* uri, const httpc_connection_t *settings,
+httpc_get_file_dns(const char* server_name, u16_t port, const char* uri, const char* accept, const httpc_connection_t *settings,
                    altcp_recv_fn recv_fn, void* callback_arg, httpc_state_t **connection)
 {
   err_t err;
   httpc_state_t* req;
 
   LWIP_ERROR("invalid parameters", (server_name != NULL) && (uri != NULL) && (recv_fn != NULL), return ERR_ARG;);
-
-  err = httpc_init_connection(&req, settings, server_name, port, uri, recv_fn, callback_arg);
+  err = httpc_init_connection(&req, settings, server_name, port, uri, accept, recv_fn, callback_arg);
   if (err != ERR_OK) {
     return err;
   }

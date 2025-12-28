@@ -283,10 +283,6 @@ typedef struct {
 #include "compemu_midfunc_arm2.h"
 #endif
 
-#if defined(CPU_i386) || defined(CPU_x86_64)
-#include "compemu_midfunc_x86.h"
-#endif
-
 #undef DECLARE_MIDFUNC
 
 extern int failure;

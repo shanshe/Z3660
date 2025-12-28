@@ -232,7 +232,7 @@ void handle_acc_op(uint16_t zdata)
                     Codec37Decoder_decode(Codec37Decoder_GetCur(), (uint8_t *)data->offset[0] + dest_offset, (uint8_t *)data->clut4);
                     //XTime_GetTime(&tim2);
                     //printf("c37 frame size: %d bytes", data->u32_user[0]);
-                    //printf("c37 frame decode time: %f ms\n", ((float)(tim2 - tim1) / (float)COUNTS_PER_SECOND) * 1000.0f);
+                    //printf("c37 frame decode time: %f ms\n", ((float)(tim2 - tim1) / (float)counts_per_second) * 1000.0f);
                     break;
                 }
                 case ACC_CMPTYPE_SMUSH_CODEC47: {
@@ -242,7 +242,7 @@ void handle_acc_op(uint16_t zdata)
                     Codec47Decoder_decode(Codec47Decoder_GetCur(), (uint8_t *)data->offset[0] + dest_offset, (uint8_t *)data->clut4);
                     //XTime_GetTime(&tim2);
                     //printf("c47 frame size: %d bytes", data->u32_user[0]);
-                    //printf("c47 frame decode time: %f ms\n", ((float)(tim2 - tim1) / (float)COUNTS_PER_SECOND) * 1000.0f);
+                    //printf("c47 frame decode time: %f ms\n", ((float)(tim2 - tim1) / (float)counts_per_second) * 1000.0f);
                     break;
                 }
                 case ACC_CMPTYPE_IMA_ADPCM_VBR: {

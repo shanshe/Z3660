@@ -13,8 +13,9 @@ UBYTE *wall;
 
 	wall=ME->pt;wall=wall+ME->size;
 	Libprintf("[ME %ld nextME %ld\t] pt=%ld \tsize=%ld \t<%s> \t[%c%c%c%c]\n ",ME,ME->nextME,ME->pt,ME->size,ME->name,wall[0],wall[1],wall[2],wall[3]);
+#else
+	(void)ME;
 #endif
-;
 }
 /*==================================================================================*/
 void MMDebug(ULONG level)

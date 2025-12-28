@@ -75,7 +75,7 @@ void XAudioFormatter_SetMM2SCallback(XAudioFormatter *InstancePtr,
 	}
 }
 
-void *XAudioFormatterS2MMIntrHandler(void *InstancePtr)
+void XAudioFormatterS2MMIntrHandler(void *InstancePtr)
 {
 	u32 Data;
 
@@ -106,7 +106,7 @@ void *XAudioFormatterS2MMIntrHandler(void *InstancePtr)
 	}
 }
 
-void *XAudioFormatterMM2SIntrHandler(void *InstancePtr)
+void XAudioFormatterMM2SIntrHandler(void *InstancePtr)
 {
 	u32 Data;
 

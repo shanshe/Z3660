@@ -3,25 +3,27 @@
 #include <inttypes.h>
 #include "ztop.h"
 
+#define NUM_BOOT_MODE_LABELS 6
+
 typedef struct {
-	int x;
-	int y;
-	int w;
-	int h;
-	char *text;
-	uint8_t is_pressed;
-	uint8_t b_was_at_cursor;
-	void (*action)();
-	Tabs tab;
-	int selected_item;
+   int x;
+   int y;
+   int w;
+   int h;
+   char *text;
+   uint8_t is_pressed;
+   uint8_t b_was_at_cursor;
+   void (*action)();
+   Tabs tab;
+   int selected_item;
 } ListButton;
 
 void listbuttons_run(void);
 void init_listbuttons(void);
-void b_list_action(void);
+void b_list_emu_action(void);
 void list_button_repaint(void);
 void recalculate_coords_list_button(void);
 void list_buttons_action(void);
-extern ListButton *b_list;
+extern ListButton *b_list_emu;
 
 #endif // _LIST_BUTTON_H_

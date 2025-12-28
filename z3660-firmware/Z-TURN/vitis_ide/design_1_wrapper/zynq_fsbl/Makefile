@@ -4,7 +4,7 @@ CC := arm-none-eabi-gcc
 CC_FLAGS :=  -MMD -MP       -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard 
 CFLAGS := 
 BSP_FLAGS := -O2 -c
-LN_FLAGS :=  -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec  -lrsa -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lrsa,-lxil,-lgcc,-lc,--end-group                                           -Wl,--gc-sections
+LN_FLAGS :=  -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec  -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--gc-sections
 
 c_SOURCES := $(wildcard *.c)
 S_SOURCES := $(wildcard *.S)
@@ -21,24 +21,49 @@ EXEC := fsbl.elf
 INCLUDEPATH := -Izynq_fsbl_bsp/ps7_cortexa9_0/include -I.
 LIBPATH := -Lzynq_fsbl_bsp/ps7_cortexa9_0/lib -L./
 
+# DDR frequency targets (without clean to preserve BSP libraries)
+ddr533: 
+	$(MAKE) clean
+	$(MAKE) CFLAGS="$(CFLAGS) -DDDR_533MHZ" all
+	cp $(EXEC) fsbl_ddr533.elf
+	@echo "FSBL DDR 533MHz created: fsbl_ddr533.elf"
+	
+ddr667:
+	$(MAKE) clean
+	$(MAKE) CFLAGS="$(CFLAGS) -DDDR_667MHZ" all
+	cp $(EXEC) fsbl_ddr667.elf
+	@echo "FSBL DDR 667MHz created: fsbl_ddr667.elf"
+
+ddr800:
+	$(MAKE) clean
+	$(MAKE) CFLAGS="$(CFLAGS) -DDDR_800MHZ" all
+	cp $(EXEC) fsbl_ddr800.elf
+	@echo "FSBL DDR 800MHz created: fsbl_ddr800.elf"
+
 all: $(EXEC)
 
 $(EXEC): $(LIBS) $(OBJS) $(INCLUDES)
-	$(CC) -o $@ $(sort $(OBJS)) $(CC_FLAGS) $(CFLAGS) $(LN_FLAGS) $(LIBPATH) $(LSCRIPT)
+	@echo Linkng $@
+	@$(CC) -o $@ $(sort $(OBJS)) $(CC_FLAGS) $(CFLAGS) $(LN_FLAGS) $(LIBPATH) $(LSCRIPT)
 
 $(LIBS):
 	$(MAKE) -C zynq_fsbl_bsp
 
 %.o:%.c
-	$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
+	@echo Compiling $@
+	@$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
 
 %.o:%.S
-	$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
+	@echo Assembling $@
+	@$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
 
 %.o:%.s
-	$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
+	@echo Assembling $@
+	@$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
 
 clean:
-	rm -rf $(OBJS) $(LIBS) $(EXEC) *.o
+	@echo Cleaning *.o *.d
+	@rm -rf $(OBJS) $(EXEC) *.o *.d
+	@rm -f $(LIBS)
 
 -include $(DEPFILES)

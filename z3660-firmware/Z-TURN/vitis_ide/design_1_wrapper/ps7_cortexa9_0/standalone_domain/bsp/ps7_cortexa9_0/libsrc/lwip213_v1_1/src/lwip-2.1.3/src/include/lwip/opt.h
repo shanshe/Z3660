@@ -919,7 +919,7 @@
  * LWIP_DHCP==1: Enable DHCP module.
  */
 #if !defined LWIP_DHCP || defined __DOXYGEN__
-#define LWIP_DHCP                       0
+#define LWIP_DHCP                       1
 #endif
 #if !LWIP_IPV4
 /* disable DHCP when IPv4 is disabled */
@@ -1496,7 +1496,7 @@
  * See @ref altcp_api
  */
 #if !defined LWIP_ALTCP || defined __DOXYGEN__
-#define LWIP_ALTCP                      0
+#define LWIP_ALTCP                      1
 #endif
 
 /** LWIP_ALTCP_TLS==1: enable TLS support for altcp API.
@@ -1505,7 +1505,7 @@
  * and LWIP_ALTCP_TLS_MBEDTLS option.
  */
 #if !defined LWIP_ALTCP_TLS || defined __DOXYGEN__
-#define LWIP_ALTCP_TLS                  0
+#define LWIP_ALTCP_TLS                  1
 #endif
 
 /**

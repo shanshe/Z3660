@@ -445,3 +445,147 @@ platform generate -domains
 platform generate -domains zynq_fsbl 
 platform generate -domains zynq_fsbl 
 platform generate -domains zynq_fsbl 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform generate
+platform generate -domains zynq_fsbl 
+platform generate -domains standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform active {design_1_wrapper}
+platform generate -domains 
+platform generate
+platform generate
+platform generate -domains standalone_domain 
+platform generate
+platform generate
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate
+platform generate
+platform generate -domains standalone_domain,zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform generate
+platform generate
+platform generate -domains 
+platform active {design_1_wrapper}
+domain create -name {freertos10_xilinx_ps7_cortexa9_0} -os {freertos} -proc {ps7_cortexa9_0} -arch {32-bit} -display-name {freertos10_xilinx_ps7_cortexa9_0} -desc {} -runtime {cpp}
+platform generate -domains 
+domain -report -json
+platform write
+platform generate
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0 
+bsp reload
+bsp reload
+platform generate -domains 
+domain active {standalone_domain}
+bsp reload
+domain active {freertos10_xilinx_ps7_cortexa9_0}
+bsp reload
+platform generate -domains 
+bsp reload
+bsp reload
+platform generate -domains 
+bsp reload
+platform clean
+platform generate
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0 
+bsp reload
+bsp reload
+platform generate -domains 
+bsp reload
+bsp removelib -name lwip213
+bsp write
+bsp reload
+catch {bsp regenerate}
+bsp setlib -name lwip213 -ver 1.1
+bsp write
+bsp reload
+catch {bsp regenerate}
+bsp config api_mode "SOCKET_API"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0 
+platform generate
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate
+platform generate -domains 
+platform generate -domains 
+platform clean
+platform clean
+platform generate
+platform active {design_1_wrapper}
+domain active {standalone_ps7_cortexa9_1}
+bsp reload
+platform generate
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_ps7_cortexa9_1 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate
+platform generate -domains 
+platform generate -domains 
+platform active {design_1_wrapper}
+domain active {standalone_domain}
+bsp reload
+bsp reload
+platform generate
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform generate -domains 
+platform clean
+platform generate
+platform clean
+platform active {design_1_wrapper}
+bsp reload
+bsp write
+domain active {standalone_domain}
+bsp reload
+bsp write
+domain active {standalone_ps7_cortexa9_1}
+bsp reload
+bsp write
+domain active {standalone_domain}
+bsp removelib -name lwip213
+bsp write
+bsp reload
+catch {bsp regenerate}
+bsp setlib -name lwip213 -ver 1.1
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate
+platform generate -domains 
+platform generate -domains zynq_fsbl 
+platform generate -domains standalone_domain 
