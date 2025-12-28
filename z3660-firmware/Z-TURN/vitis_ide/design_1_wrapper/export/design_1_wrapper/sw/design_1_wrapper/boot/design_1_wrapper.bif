@@ -5,5 +5,4 @@ the_ROM_image:
    <bitstream> 
   <elf,ps7_cortexa9_0>
   <elf,ps7_cortexa9_1>
-  <elf,ps7_cortexa9_0>
 }
