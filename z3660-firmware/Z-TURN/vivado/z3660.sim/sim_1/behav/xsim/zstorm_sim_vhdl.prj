@@ -1,0 +1,9 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../ZStorm.srcs/sources_1/new/TG68K.vhd" \
+"../../../../ZStorm.srcs/sources_1/new/TG68K_Pack.vhd" \
+"../../../../ZStorm.srcs/sources_1/new/TG68K_ALU.vhd" \
+"../../../../ZStorm.srcs/sources_1/new/TG68KdotC_Kernel.vhd" \
+
+# Do not sort compile order
+nosort

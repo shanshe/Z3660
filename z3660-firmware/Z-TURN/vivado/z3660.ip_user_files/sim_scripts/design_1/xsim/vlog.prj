@@ -1,0 +1,45 @@
+verilog xil_defaultlib --include "C:/Xilinx/Vivado/2023.2/data/xilinx_vip/include" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/ec67/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/6b2b/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/7fb4/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/434f/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/c2c6" \
+"../../../bd/design_1/ip/design_1_processing_system7_0_0/sim/design_1_processing_system7_0_0.v" \
+"../../../bd/design_1/ip/design_1_axis_data_fifo_0_0/sim/design_1_axis_data_fifo_0_0.v" \
+"../../../bd/design_1/ip/design_1_util_vector_logic_0_1/sim/design_1_util_vector_logic_0_1.v" \
+"../../../bd/design_1/ip/design_1_xlconcat_0_1/sim/design_1_xlconcat_0_1.v" \
+"../../../bd/design_1/ip/design_1_xlslice_0_0/sim/design_1_xlslice_0_0.v" \
+"../../../bd/design_1/ip/design_1_video_formatter_0_0/sim/design_1_video_formatter_0_0.v" \
+"../../../bd/design_1/ip/design_1_audio_formatter_0_0/sim/design_1_audio_formatter_0_0.v" \
+"../../../bd/design_1/ip/design_1_axi_register_slice_0_0_1/sim/design_1_axi_register_slice_0_0.v" \
+"../../../bd/design_1/ip/design_1_axis_register_slice_0_0/sim/design_1_axis_register_slice_0_0.v" \
+
+sv xil_defaultlib --include "C:/Xilinx/Vivado/2023.2/data/xilinx_vip/include" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/ec67/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/6b2b/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/7fb4/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/434f/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/c2c6" \
+"../../../bd/design_1/ip/design_1_i2s_transmitter_0_0/sim/design_1_i2s_transmitter_0_0.sv" \
+
+verilog xil_defaultlib --include "C:/Xilinx/Vivado/2023.2/data/xilinx_vip/include" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/ec67/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/6b2b/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/7fb4/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/434f/hdl" --include "../../../../z3660.gen/sources_1/bd/design_1/ipshared/c2c6" \
+"../../../bd/design_1/ip/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0_mmcm_pll_drp.v" \
+"../../../bd/design_1/ip/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0_clk_wiz.v" \
+"../../../bd/design_1/ip/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0.v" \
+"../../../bd/design_1/ip/design_1_clk_wiz_2_0/design_1_clk_wiz_2_0_mmcm_pll_drp.v" \
+"../../../bd/design_1/ip/design_1_clk_wiz_2_0/design_1_clk_wiz_2_0_clk_wiz.v" \
+"../../../bd/design_1/ip/design_1_clk_wiz_2_0/design_1_clk_wiz_2_0.v" \
+"../../../bd/design_1/ip/design_1_clk_wiz_3_0/design_1_clk_wiz_3_0_clk_wiz.v" \
+"../../../bd/design_1/ip/design_1_clk_wiz_3_0/design_1_clk_wiz_3_0.v" \
+"../../../bd/design_1/ip/design_1_cpuclk_iob_0_0/sim/design_1_cpuclk_iob_0_0.v" \
+"../../../bd/design_1/ip/design_1_xadc_wiz_0_0_1/design_1_xadc_wiz_0_0.v" \
+"../../../bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/sim/design_1_axi_dwidth_converter_0_0.v" \
+"../../../bd/design_1/ip/design_1_axi_protocol_convert_0_0/sim/design_1_axi_protocol_convert_0_0.v" \
+"../../../bd/design_1/ip/design_1_axi_register_slice_0_1/sim/design_1_axi_register_slice_0_1.v" \
+"../../../bd/design_1/ip/design_1_axi_register_slice_1_0/sim/design_1_axi_register_slice_1_0.v" \
+"../../../bd/design_1/ip/design_1_xlconcat_0_2/sim/design_1_xlconcat_0_2.v" \
+"../../../bd/design_1/ip/design_1_z3660_0_0/sim/design_1_z3660_0_0.v" \
+"../../../bd/design_1/ip/design_1_xbar_0/sim/design_1_xbar_0.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_115/sim/design_1_s00_regslice_115.v" \
+"../../../bd/design_1/ip/design_1_auto_pc_0/sim/design_1_auto_pc_0.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_114/sim/design_1_s00_regslice_114.v" \
+"../../../bd/design_1/ip/design_1_auto_cc_0/sim/design_1_auto_cc_0.v" \
+"../../../bd/design_1/ip/design_1_auto_pc_1/sim/design_1_auto_pc_1.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_116/sim/design_1_s00_regslice_116.v" \
+"../../../bd/design_1/ip/design_1_auto_pc_2/sim/design_1_auto_pc_2.v" \
+"../../../bd/design_1/sim/design_1.v" \
+
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

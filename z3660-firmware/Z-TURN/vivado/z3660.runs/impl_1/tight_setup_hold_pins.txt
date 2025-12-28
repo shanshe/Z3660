@@ -1,0 +1,14 @@
++==============================+===================+=========================================================+
+| Launch Setup Clock           | Launch Hold Clock | Pin                                                     |
++==============================+===================+=========================================================+
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/nTA_IOBUF_inst_i_1/D            |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[26]/CE |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[16]/CE |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[29]/CE |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[2]/CE  |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[3]/CE  |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[0]/CE  |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[7]/CE  |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[21]/CE |
+| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[10]/CE |
++------------------------------+-------------------+---------------------------------------------------------+
