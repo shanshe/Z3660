@@ -175,7 +175,7 @@ clean_kickrom:
 adf: all
 	@echo creating adf...
 	$(RM)   0_Z3660.adf
-	xdftool 0_Z3660.adf format z3660Drivers + makedir C + makedir Libs + makedir Libs/Picasso96 + makedir Libs/MHI + makedir Devs + makedir Devs/Monitors + makedir Devs/Networks + makedir Devs/AudioModes + makedir Devs/AHI
+	xdftool 0_Z3660.adf format z3660Drivers + makedir C + makedir Libs + makedir Libs/Picasso96 + makedir Libs/MHI + makedir Devs + makedir Devs/Monitors + makedir Devs/Networks + makedir Devs/AudioModes + makedir Devs/USBHardware + makedir Devs/AHI
 #	 + makedir Devs/USBHardware
 	xdftool 0_Z3660.adf write $(SRC_RTG)/Z3660.card Libs/Picasso96
 	xdftool 0_Z3660.adf write $(SRC_RTG)/Monitors/Z3660 Devs/Monitors
@@ -190,6 +190,7 @@ adf: all
 	xdftool 0_Z3660.adf write $(SRC_ZTP)/ZTop.info
 	xdftool 0_Z3660.adf write $(SRC_ZTP)/Disk.info
 	xdftool 0_Z3660.adf write $(SRC_SCSI)/z3660_scsi.device Devs
+	xdftool 0_Z3660.adf write poseidon/z3660_usb.device Devs/USBHardware
 #	xdftool 0_Z3660.adf write $(SRC_USB)/z3660_usb.device Devs/USBHardware
 	xdftool 0_Z3660.adf write $(SRC_W3D)/Wazp3D.library Libs/Warp3D.library + list
 

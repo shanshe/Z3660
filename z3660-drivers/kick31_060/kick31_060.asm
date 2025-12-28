@@ -9,7 +9,7 @@
 ;------------------------------------------------------------------------------
 ; Adapted to Z3660 RTG config
 ;------------------------------------------------------------------------------
-	INCLUDE "exec/types.i"
+    INCLUDE "exec/types.i"
     INCLUDE "exec/nodes.i"
     INCLUDE "exec/resident.i"
     INCLUDE "libraries/configvars.i"
@@ -53,10 +53,10 @@ _LVOFindConfigDev      EQU   -72
 
 ;------------------------------------------------------------------------------
 ; Code
-    dc.w      $1111        ;magic DiagROM ID
-BOOTROM_ENTER:            ;we arrive here with A5 = return address
-    or.w      #$700,SR        ;paranoid Disable()
-    move.w    #$7fff,$DFF096        ;disable DMA (for good measure)
+    dc.w      $1111              ;magic DiagROM ID
+BOOTROM_ENTER:                   ;we arrive here with A5 = return address
+    or.w      #$700,SR           ;paranoid Disable()
+    move.w    #$7fff,$DFF096     ;disable DMA (for good measure)
     lea       $BFE001,a0
     move.b    #3,$200(a0)        ;/LED, OVL as output
     move.b    #2,(a0)            ;LED=hi, OVL=0 -> ChipRAM available
@@ -74,26 +74,26 @@ BOOTROM_ENTER:            ;we arrive here with A5 = return address
     ;(20/30,xx040,LC060,EC060) are pushed into the trap vector trampoline
 
     ;test for 040/60
-    moveq     #CACRF_EnableI,d0        ; 020/30 only flag
+    moveq     #CACRF_EnableI,d0      ; 020/30 only flag
     movec.l   d0,CACR                ; this will crash on 68000/010 -> crashvector
     movec.l   CACR,d0
-    btst      #CACRB_EnableI,d0        ; this flag is ignored on 68040/60
+    btst      #CACRB_EnableI,d0      ; this flag is ignored on 68040/60
     bne.s     no_040_60
 
-    movec.l   PCR,d0                ; this will crash 040 -> crashvector
-    swap      d0                ; get upper 16 Bit
-    cmp.w     #$430,d0            ; ID for full 060 (EC/LC have 0x431)
-    bne.s     no_060_FPU            ; nope, no need for FP disable
+    movec.l   PCR,d0                 ; this will crash 040 -> crashvector
+    swap      d0                     ; get upper 16 Bit
+    cmp.w     #$430,d0               ; ID for full 060 (EC/LC have 0x431)
+    bne.s     no_060_FPU             ; nope, no need for FP disable
 
     moveq     #2,d0
-    movec.l   d0,PCR                ; disable FPU in PCR
+    movec.l   d0,PCR                 ; disable FPU in PCR
 
 no_060_FPU:
 no_040_60:
     moveq     #0,d0
     movec.l   d0,CACR                ; courtesy for 020/30/60 (note: doesn't apply to crash situation)
 crashvector:
-    move.l    a0,sp                ;restore Stack Pointer
+    move.l    a0,sp                  ;restore Stack Pointer
     move.l    a1,IllegalInstructionVector.w    ;restore Illegal Instruction and LineF vectors
     move.l    a2,Line1111Vector.w
 
@@ -108,23 +108,23 @@ crashvector:
      move.w   D0,$96(A4)        ; Disable all DMA.
         
      ; Set a blank, black display.
-     move.w   #$200,$0100(A4)    ; BPLCON0 = Blank screen.
-     move.w   #$0,$0110(A4)    ; Bitplane 0 data = all zeros.
-     move.w   #$0,$0180(A4)    ; Background colour = black.
+     move.w   #$200,$0100(A4)   ; BPLCON0 = Blank screen.
+     move.w   #$0,$0110(A4)     ; Bitplane 0 data = all zeros.
+     move.w   #$0,$0180(A4)     ; Background colour = black.
         
      moveq    #-1,d1
      lsr.w    #7,d1             ; longer delay for ZZ9000
      moveq    #-1,d0
 .wait2:
-     lsr.w    #8,d0            ; $ff.w
+     lsr.w    #8,d0             ; $ff.w
 .wait:
      move.w   d0,$dff180
      tst.b    $BFE001
-     dbf      d0,.wait        ; $ffff.w
+     dbf      d0,.wait          ; $ffff.w
      dbf      d1,.wait2
     endc      ;P5BARS
 
-    jmp       (A5)            ; return to Kickstart
+    jmp       (A5)              ; return to Kickstart
 
     cnop      0,4
 
@@ -135,12 +135,12 @@ NOSCSI_start:
     dc.l         NOSCSI_start
     dc.l         NOSCSI_end
     dc.b         0
-    dc.b         51    ;Version
-    dc.b         0     ;Type
-    dc.b         10    ;Priority
-    dc.l         scsiname                           ; "scsi.device"
-    dc.l         modulename                         ; "NoIDE by Chris Hodges"
-    dc.l         0     ; No init function
+    dc.b         51            ;Version
+    dc.b         0             ;Type
+    dc.b         10            ;Priority
+    dc.l         scsiname      ; "scsi.device"
+    dc.l         modulename    ; "NoIDE by Chris Hodges"
+    dc.l         0             ; No init function
 scsiname:
     dc.b         "scsi.device", 0
 modulename:
@@ -202,15 +202,15 @@ ExpansionIDInitFunc:
     move.b  #EXPANSION_ID,cd_Rom+er_Product(a0)
     move.b  #$70,cd_Rom+er_Flags(a0)
     move.w  #EXPANSION_MANUF,cd_Rom+er_Manufacturer(a0) ;
-	move.l  #$00000000,cd_Rom+er_SerialNumber(a0)
-	move.w  #$6000,cd_Rom+er_InitDiagVec(a0)
+    move.l  #$00000000,cd_Rom+er_SerialNumber(a0)
+    move.w  #$6000,cd_Rom+er_InitDiagVec(a0)
     jsr     _LVOAddConfigDev(A6)
-*	move.l  #$10000000,a0
-*	;error = ConfigBoard( board, configDev )
-*	;  D0                   A0     A1
+*    move.l  #$10000000,a0
+*    ;error = ConfigBoard( board, configDev )
+*    ;  D0                   A0     A1
 *
-*	jsr     _LVOConfigBoard(A6)
-*   move.l  #$10000000,cd_BoardAddr(a1)           ;Boot ROM address
+*    jsr     _LVOConfigBoard(A6)
+*    move.l  #$10000000,cd_BoardAddr(a1)           ;Boot ROM address
 
 .expdone:
     move.l  a6,a1
@@ -218,7 +218,7 @@ ExpansionIDInitFunc:
     jsr     _LVOCloseLibrary(a6)
 .noexp
 
-    movem.l (sp)+,d2-d3/a2-a3/a5/a6	
+    movem.l (sp)+,d2-d3/a2-a3/a5/a6
     moveq   #0,d0
     rts
 
@@ -233,3 +233,4 @@ ExpansionIDModEnd:
     endc    ;EXP_MODULE_ENABLED
 * SCSI rom will be here...
 RomStart:
+

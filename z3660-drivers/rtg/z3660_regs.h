@@ -19,7 +19,7 @@
  * https://spdx.org/licenses/GPL-3.0-or-later.html
  */
 
-#define uint8_t unsigned char
+#define uint8_t  unsigned char
 #define uint16_t unsigned short
 #define uint32_t unsigned long
 
@@ -86,12 +86,12 @@ enum zz_reg_offsets {
    REG_ZZ_FW_VERSION     = 0x1A0,
    REG_ZZ_ETH_RX_ADDRESS = 0x1A4,
    REG_ZZ_INT_STATUS     = 0x1A8,
-   REG_ZZ_USB_CAPACITY   = 0x1AC,
+   REG_ZZ_USB_PORTSC1    = 0x1AC,
 
-   REG_ZZ_USBBLK_TX      = 0x1B0,
-   REG_ZZ_USBBLK_RX      = 0x1B4,
-   REG_ZZ_USB_STATUS     = 0x1B8,
-   REG_ZZ_USB_BUFSEL     = 0x1BC,
+   REG_ZZ_USB_CMD_OP     = 0x1B0,
+   REG_ZZ_USB_STATUS     = 0x1B4,
+   REG_ZZ_USB_READ0      = 0x1B8,
+   REG_ZZ_USB_RESERVED1  = 0x1BC,
 
    REG_ZZ_DECODER_PARAM  = 0x1C0,
    REG_ZZ_DECODER_VAL    = 0x1C4,
@@ -147,7 +147,7 @@ enum zz_reg_offsets {
    REG_ZZ_SCSI_SEL_TXT   = 0x264,
    REG_ZZ_APPLY_SCSI     = 0x268,
    REG_ZZ_APPLY_ALL      = 0x26C,
- 
+
    REG_ZZ_SOFT3D_OP      = 0x270,
    REG_ZZ_TEST_ENABLE    = 0x274,
    REG_ZZ_BPTON          = 0x278,
@@ -163,7 +163,17 @@ enum zz_reg_offsets {
    REG_ZZ_PRESET_SEL_TXT = 0x298,
    REG_ZZ_DELETE_PRESET  = 0x29C,
 
-   //NOT USED 0x2A0 - 0x2FC
+   // USB parameter registers (dedicated to avoid BUFSEL corruption)
+   REG_ZZ_USB_PARAM0     = 0x2A0,  // Device/Endpoint/Direction flags
+   REG_ZZ_USB_PARAM1     = 0x2A4,  // Setup packet pointer
+   REG_ZZ_USB_PARAM2     = 0x2A8,  // Data buffer pointer
+   REG_ZZ_USB_PARAM3     = 0x2AC,  // Data length
+   REG_ZZ_USB_PARAM4     = 0x2B0,  // Additional parameter (interval, etc.)
+   REG_ZZ_USB_PARAM5     = 0x2B4,  // Reserved for future use
+   REG_ZZ_USB_PARAM6     = 0x2B8,  // Reserved for future use
+   REG_ZZ_USB_PARAM7     = 0x2BC,  // Reserved for future use
+
+   //NOT USED 0x2C0 - 0x2FC
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
@@ -307,7 +317,7 @@ struct GFXData {
 };
 #pragma pack(4)
 struct Soft3dData {
-    uint32_t offset[3];
-    uint32_t format[2];
-    uint16_t x[4], y[4];
+    volatile uint32_t offset[4];
+    volatile uint32_t format[2];
+    volatile uint16_t x[2], y[2];
 };

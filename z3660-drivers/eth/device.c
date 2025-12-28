@@ -298,7 +298,7 @@ SAVEDS LONG DevOpen(
 
 						// Register Interrupt server
 						if ((db->db_interrupt =
-						     AllocMem(sizeof(struct Interrupt), MEMF_PUBLIC | MEMF_CLEAR))) {
+						    AllocMem(sizeof(struct Interrupt), MEMF_PUBLIC | MEMF_CLEAR))) {
 							db->db_interrupt-> is_Node.ln_Type = NT_INTERRUPT;
 							db->db_interrupt-> is_Node.ln_Pri = -60;
 							db->db_interrupt-> is_Node.ln_Name = "Z3660Net";

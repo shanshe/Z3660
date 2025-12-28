@@ -19,7 +19,7 @@
  * https://spdx.org/licenses/GPL-3.0-or-later.html
  */
 
-#define uint8_t unsigned char
+#define uint8_t  unsigned char
 #define uint16_t unsigned short
 #define uint32_t unsigned long
 
@@ -86,12 +86,12 @@ enum zz_reg_offsets {
    REG_ZZ_FW_VERSION     = 0x1A0,
    REG_ZZ_ETH_RX_ADDRESS = 0x1A4,
    REG_ZZ_INT_STATUS     = 0x1A8,
-   REG_ZZ_USB_CAPACITY   = 0x1AC,
+   REG_ZZ_USB_PORTSC1    = 0x1AC,
 
-   REG_ZZ_USBBLK_TX      = 0x1B0,
-   REG_ZZ_USBBLK_RX      = 0x1B4,
-   REG_ZZ_USB_STATUS     = 0x1B8,
-   REG_ZZ_USB_BUFSEL     = 0x1BC,
+   REG_ZZ_USB_CMD_OP     = 0x1B0,
+   REG_ZZ_USB_STATUS     = 0x1B4,
+   REG_ZZ_USB_READ0      = 0x1B8,
+   REG_ZZ_USB_RESERVED1  = 0x1BC,
 
    REG_ZZ_DECODER_PARAM  = 0x1C0,
    REG_ZZ_DECODER_VAL    = 0x1C4,
@@ -130,15 +130,65 @@ enum zz_reg_offsets {
 
    REG_ZZ_LTC_VCC        = 0x230,
    REG_ZZ_CPU_RAM_EN     = 0x234,
-   REG_ZZ_KICKSTART_SEL  = 0x238,
-   REG_ZZ_EXT_KICKSTART_SEL= 0x23C,
+   REG_ZZ_KS_SEL         = 0x238,
+   REG_ZZ_EXT_KS_SEL     = 0x23C,
 
-   //NOT USED 0x240 - 0x2FC
+   REG_ZZ_KS_SEL_TXT     = 0x240,
+   REG_ZZ_EXT_KS_SEL_TXT = 0x244,
+   REG_ZZ_SCSI_SEL_0     = 0x248,
+   REG_ZZ_SCSI_SEL_1     = 0x24C,
+
+   REG_ZZ_SCSI_SEL_2     = 0x250,
+   REG_ZZ_SCSI_SEL_3     = 0x254,
+   REG_ZZ_SCSI_SEL_4     = 0x258,
+   REG_ZZ_SCSI_SEL_5     = 0x25C,
+
+   REG_ZZ_SCSI_SEL_6     = 0x260,
+   REG_ZZ_SCSI_SEL_TXT   = 0x264,
+   REG_ZZ_APPLY_SCSI     = 0x268,
+   REG_ZZ_APPLY_ALL      = 0x26C,
+
+   REG_ZZ_SOFT3D_OP      = 0x270,
+   REG_ZZ_TEST_ENABLE    = 0x274,
+   REG_ZZ_BPTON          = 0x278,
+   REG_ZZ_BPTOFF         = 0x27C,
+
+   REG_ZZ_FW_BETA        = 0x280,
+   REG_ZZ_FW_ALFA        = 0x284,
+   REG_ZZ_AUTOC_RTG_EN   = 0x288,
+   REG_ZZ_APPLY_MISC     = 0x28C,
+
+   REG_ZZ_APPLY_PRESET   = 0x290,
+   REG_ZZ_PRESET_SEL     = 0x294,
+   REG_ZZ_PRESET_SEL_TXT = 0x298,
+   REG_ZZ_DELETE_PRESET  = 0x29C,
+
+   // USB parameter registers (dedicated to avoid BUFSEL corruption)
+   REG_ZZ_USB_PARAM0     = 0x2A0,  // Device/Endpoint/Direction flags
+   REG_ZZ_USB_PARAM1     = 0x2A4,  // Setup packet pointer
+   REG_ZZ_USB_PARAM2     = 0x2A8,  // Data buffer pointer
+   REG_ZZ_USB_PARAM3     = 0x2AC,  // Data length
+   REG_ZZ_USB_PARAM4     = 0x2B0,  // Additional parameter (interval, etc.)
+   REG_ZZ_USB_PARAM5     = 0x2B4,  // Reserved for future use
+   REG_ZZ_USB_PARAM6     = 0x2B8,  // Reserved for future use
+   REG_ZZ_USB_PARAM7     = 0x2BC,  // Reserved for future use
+
+   //NOT USED 0x2C0 - 0x2FC
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
    REG_ZZ_OP_NOP         = 0x308,
    REG_ZZ_OP_CAPTUREMODE = 0x30C,
+
+   REG_ZZ_MOUNT_SD_0x76  = 0x310,
+   REG_ZZ_MOUNT_SD_ROOT  = 0x314,
+   REG_ZZ_MONITOR_SWITCH = 0x318,
+
+   //NOT USED 0x31C - 0x4FC
+
+   REG_ZZ_SEL_KS_TXT     = 0x500,
+   REG_ZZ_SEL_SCSI_TXT   = 0x600,
+   REG_ZZ_SEL_PRESET_TXT = 0x700,
 
 //   REG_ZZ_RX_BUFF        = 0x2000,
 //   REG_ZZ_TX_BUFF        = 0x8000
@@ -252,16 +302,22 @@ enum gfxdata_u8_types {
 
 #pragma pack(4)
 struct GFXData {
-    uint32_t offset[2];
-    uint32_t rgb[2];
-    uint16_t x[4], y[4];
-    uint16_t user[4];
-    uint16_t pitch[4];
-    uint8_t u8_user[8];
-    uint8_t op, mask, minterm, u8offset;
-    uint32_t u32_user[8];
-    uint8_t clut1[768];
-    uint8_t clut2[768];
-    uint8_t clut3[768];
-    uint8_t clut4[768];
+    volatile uint32_t offset[2];
+    volatile uint32_t rgb[2];
+    volatile uint16_t x[4], y[4];
+    volatile uint16_t user[4];
+    volatile uint16_t pitch[4];
+    volatile uint8_t u8_user[8];
+    volatile uint8_t op, mask, minterm, u8offset;
+    volatile uint32_t u32_user[8];
+    volatile uint8_t clut1[768];
+    volatile uint8_t clut2[768];
+    volatile uint8_t clut3[768];
+    volatile uint8_t clut4[768];
+};
+#pragma pack(4)
+struct Soft3dData {
+    volatile uint32_t offset[4];
+    volatile uint32_t format[2];
+    volatile uint16_t x[2], y[2];
 };

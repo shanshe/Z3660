@@ -10,9 +10,9 @@
 
 #define DEVICENAME Z3660Net.device
 #define DEVICEVERSION  1
-#define DEVICEREVISION 03
+#define DEVICEREVISION 4
 //#define DEVICEEXTRA
 #define DEVICEEXTRA Beta
-#define DEVICEDATE 29.06.2024
+#define DEVICEDATE 17.07.2025
 
 #endif
