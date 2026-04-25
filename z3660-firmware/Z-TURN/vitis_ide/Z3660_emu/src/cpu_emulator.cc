@@ -15,7 +15,7 @@ extern "C" {
 #include "memorymap.h"
 #include "uae/types.h"
 #include "sleep.h"
-#include "musashi/m68K.h"
+#include "musashi/m68k.h"
 #include <xgpiops.h>
 
 #include "m68kcpu.h"

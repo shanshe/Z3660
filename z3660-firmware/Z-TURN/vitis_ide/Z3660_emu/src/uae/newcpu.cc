@@ -23,7 +23,9 @@
 #include "options.h"
 #include "events.h"
 #define sleep sleep2
+#define usleep usleep2
 #include <sleep.h>
+#undef usleep
 #undef sleep
 //#include "uae.h"
 #include "memory.h"

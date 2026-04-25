@@ -1,5 +1,30 @@
 *.jou
 *.log
+*.str
+*.wdb
+*.backup
+*.tmp
+*.orig
+.Xil/
+
+# Vivado generated outputs
+z3660-firmware/Z-TURN/vivado/z3660.cache/
+z3660-firmware/Z-TURN/vivado/z3660.gen/
+z3660-firmware/Z-TURN/vivado/z3660.hw/
+z3660-firmware/Z-TURN/vivado/z3660.ip_user_files/
+z3660-firmware/Z-TURN/vivado/z3660.runs/
+z3660-firmware/Z-TURN/vivado/z3660.sim/
+z3660-firmware/Z-TURN/vivado/z3660.srcs/sources_1/bd/design_1/ip/*_imp_*/
+
+# Vitis/SDK generated outputs
+z3660-firmware/Z-TURN/vitis_ide/**/build/
+z3660-firmware/Z-TURN/vitis_ide/**/*.o
+z3660-firmware/Z-TURN/vitis_ide/**/*.d
+z3660-firmware/Z-TURN/vitis_ide/**/*.a
+z3660-firmware/Z-TURN/vitis_ide/**/*.elf
+z3660-firmware/Z-TURN/vitis_ide/**/*_ddr*.elf
+z3660-firmware/Z-TURN/vitis_ide/**/BOOT.BIN.tmp
+
 z3660-firmware/z3660_vivado/z3660/z3660.runs/
 z3660-firmware/z3660_vivado/z3660/z3660.cache/
 z3660-firmware/z3660_vivado/z3660/z3660.sdk/.metadata/.plugins/org.eclipse.core.resources/.history/
@@ -7,5 +32,4 @@ z3660-firmware/z3660_vivado/z3660/z3660.sdk/.metadata/.plugins/org.eclipse.core.
 *.d
 z3660-firmware/z3660_vivado/z3660/z3660.sdk/z3660/Debug/
 z3660-firmware/z3660_vivado/z3660/z3660.sdk/z3660/Release/
-*.str
 /.project

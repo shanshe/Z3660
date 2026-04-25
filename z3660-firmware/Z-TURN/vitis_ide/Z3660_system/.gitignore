@@ -1,4 +1,6 @@
-/Alfa/
+/Alfa/*
+!/Alfa/
+!/Alfa/system_cli.bif
 /Debug/
 /ReleaseAlfa/
 /Beta/
