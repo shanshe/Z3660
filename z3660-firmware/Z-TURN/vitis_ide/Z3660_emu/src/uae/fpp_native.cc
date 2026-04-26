@@ -33,11 +33,18 @@ static const double twoto32 = 4294967296.0;
 
 static uae_u32 fpu_mode_control = 0;
 static int fpu_prec;
-#include <sys/fenv.h>
-//#define FE_TONEAREST    0x00000000
-//#define FE_TOWARDZERO   0x00C00000
-//#define FE_DOWNWARD     0x00800000
-//#define FE_UPWARD       0x00400000
+#ifndef FE_TONEAREST
+#define FE_TONEAREST    0x00000000
+#endif
+#ifndef FE_TOWARDZERO
+#define FE_TOWARDZERO   0x00C00000
+#endif
+#ifndef FE_DOWNWARD
+#define FE_DOWNWARD     0x00800000
+#endif
+#ifndef FE_UPWARD
+#define FE_UPWARD       0x00400000
+#endif
 #define FE_MASK         0x00C00000
 
 //#define debug_f1(A) printf("%lf %s %lf ",a->fp,A,b->fp)

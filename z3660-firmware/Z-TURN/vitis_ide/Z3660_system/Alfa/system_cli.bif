@@ -1,0 +1,8 @@
+/* Z3660 command-line boot image */
+the_ROM_image:
+{
+  [bootloader] design_1_wrapper/zynq_fsbl/fsbl.elf
+  design_1_wrapper/hw/design_1_wrapper.bit
+  Z3660/build/ps7_cortexa9_0.elf
+  Z3660_emu/build/ps7_cortexa9_1.elf
+}

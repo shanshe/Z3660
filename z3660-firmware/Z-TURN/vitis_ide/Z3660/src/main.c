@@ -38,7 +38,7 @@
 #include "xil_misc_psreset_api.h"
 #include "config_file.h"
 #include "scsi/scsi.h"
-#include "LTC2990/ltc2990.h"
+#include "ltc2990/ltc2990.h"
 #include "../../Z3660_emu/src/defines.h"
 #include "ARM_ztop/slider.h"
 #include "debug_console.h"
