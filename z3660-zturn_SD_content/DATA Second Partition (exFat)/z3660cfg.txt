@@ -78,9 +78,18 @@ resistor 800.0
 # Room temperature in Celsius
 temperature 27.0
 
-# Select Test Amiga CHIP RAM access on start (it uses the ARM, not the CPU or EMU)
+# Select Test Amiga RAM access on start (it uses the ARM, not the CPU or EMU)
 enable_test YES
+#enable_test MIN
 #enable_test NO
+
+# Select Test Amiga ranges (test_range0 to test_range7)
+# First number is the start in hexadecimal format
+# Second number is the length finished with KB or MB (without space, minium unit 1KB)
+# Third string is an optional name
+test_range0 0x0 2048KB "Chip RAM"
+test_range1 0x07800000 8MB "Mother Board RAM"
+test_range2 0x08000000 128MB "Cpu Board RAM"
 
 # Select a boot screen resolution (1920x1080, 1280x720 or 800x600)
 bootscreen_resolution 1920x1080
@@ -89,3 +98,20 @@ bootscreen_resolution 1920x1080
 
 # Select a mac address for Ethernet
 mac_address 00:80:10:00:01:00
+
+# Set the BEEPER time on/off to simulate SCSI activity noise
+bp_ton 0.0005
+bp_toff 0.0108
+
+# Set the reset sound language (folder name at exFAT:/sound/XXX)
+sound_language spa
+#sound_language eng
+
+# Set the boot delay (>=2, in seconds)
+boot_delay 2
+
+# Set the SD Clock (25 or 50, in MHz)
+sd_clock 50
+
+# Set the selected monitor switch config (as a sum of values): 1 CTS, 2 SEL, 16 CTS level, 32 SEL level
+monitor_switch 17
