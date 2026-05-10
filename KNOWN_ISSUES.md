@@ -37,3 +37,9 @@ Also A4000T and A3000(T) will not work with any SCSI attached unit.
 <br><br>
  * v1.03 beta 2 CPLD and FPGA/ARM versions<br>
 The CPLD firmware implement DMA accesses, but EMU has not been implemented yet. So you can use DMA boards only with a 060 CPU.
+
+##Mpeg player and USB only usable with EMU
+ * v1.03 Beta 20<br>
+ Starting this beta 20 version, we have a mpeg library in the ARM (pl_mpeg.h) and a PIP system to decode and play mpeg 1 files in RTG modes. (See pl_mpeg.h for file limitations). The driver needs to be adapted to apply cache coherency between 060 and ARM system.<br>
+ The same applies to USB: the driver needs to apply cache coherency.<br>
+ 
