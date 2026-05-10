@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 /*
  * This file holds USB constants and structures that are needed for
  * USB device APIs.  These are used by the USB device model, which is
@@ -34,8 +33,9 @@
 #ifndef __LINUX_USB_CH9_H
 #define __LINUX_USB_CH9_H
 
-#include "types.h"	/* __u8 etc */
-#include "byteorder.h"	/* le16_to_cpu */
+#include <usb/asm/types.h>	/* __u8 etc */
+#include <usb/asm/byteorder.h>	/* le16_to_cpu */
+#include <usb/asm/unaligned.h>	/* get_unaligned() */
 
 /*-------------------------------------------------------------------------*/
 
@@ -106,13 +106,6 @@
 #define USB_REQ_LOOPBACK_DATA_READ	0x16
 #define USB_REQ_SET_INTERFACE_DS	0x17
 
-/* specific requests for USB Power Delivery */
-#define USB_REQ_GET_PARTNER_PDO		20
-#define USB_REQ_GET_BATTERY_STATUS	21
-#define USB_REQ_SET_PDO			22
-#define USB_REQ_GET_VDM			23
-#define USB_REQ_SEND_VDM		24
-
 /* The Link Power Management (LPM) ECN defines USB_REQ_TEST_AND_SET command,
  * used by hubs to put ports into a new L1 suspend state, except that it
  * forgot to define its number ...
@@ -138,19 +131,15 @@
  * Test Mode Selectors
  * See USB 2.0 spec Table 9-7
  */
-#define	USB_TEST_J		1
-#define	USB_TEST_K		2
-#define	USB_TEST_SE0_NAK	3
-#define	USB_TEST_PACKET		4
-#define	USB_TEST_FORCE_ENABLE	5
-
-/* Status Type */
-#define USB_STATUS_TYPE_STANDARD	0
-#define USB_STATUS_TYPE_PTM		1
+#define	TEST_J		1
+#define	TEST_K		2
+#define	TEST_SE0_NAK	3
+#define	TEST_PACKET	4
+#define	TEST_FORCE_EN	5
 
 /*
  * New Feature Selectors as added by USB 3.0
- * See USB 3.0 spec Table 9-7
+ * See USB 3.0 spec Table 9-6
  */
 #define USB_DEVICE_U1_ENABLE	48	/* dev may initiate U1 transition */
 #define USB_DEVICE_U2_ENABLE	49	/* dev may initiate U2 transition */
@@ -159,16 +148,10 @@
 
 #define USB_INTR_FUNC_SUSPEND_OPT_MASK	0xFF00
 /*
- * Suspend Options, Table 9-8 USB 3.0 spec
+ * Suspend Options, Table 9-7 USB 3.0 spec
  */
 #define USB_INTRF_FUNC_SUSPEND_LP	(1 << (8 + 0))
 #define USB_INTRF_FUNC_SUSPEND_RW	(1 << (8 + 1))
-
-/*
- * Interface status, Figure 9-5 USB 3.0 spec
- */
-#define USB_INTRF_STAT_FUNC_RW_CAP     1
-#define USB_INTRF_STAT_FUNC_RW         2
 
 #define USB_ENDPOINT_HALT		0	/* IN/OUT will STALL */
 
@@ -176,22 +159,6 @@
 #define USB_DEV_STAT_U1_ENABLED		2	/* transition into U1 state */
 #define USB_DEV_STAT_U2_ENABLED		3	/* transition into U2 state */
 #define USB_DEV_STAT_LTM_ENABLED	4	/* Latency tolerance messages */
-
-/*
- * Feature selectors from Table 9-8 USB Power Delivery spec
- */
-#define USB_DEVICE_BATTERY_WAKE_MASK	40
-#define USB_DEVICE_OS_IS_PD_AWARE	41
-#define USB_DEVICE_POLICY_MODE		42
-#define USB_PORT_PR_SWAP		43
-#define USB_PORT_GOTO_MIN		44
-#define USB_PORT_RETURN_POWER		45
-#define USB_PORT_ACCEPT_PD_REQUEST	46
-#define USB_PORT_REJECT_PD_REQUEST	47
-#define USB_PORT_PORT_PD_RESET		48
-#define USB_PORT_C_PORT_PD_CHANGE	49
-#define USB_PORT_CABLE_PD_RESET		50
-#define USB_DEVICE_CHARGING_POLICY	54
 
 /**
  * struct usb_ctrlrequest - SETUP data for a USB device control request
@@ -229,8 +196,7 @@ struct usb_ctrlrequest {
  * through the Linux-USB APIs, they are not converted to cpu byte
  * order; it is the responsibility of the client code to do this.
  * The single exception is when device and configuration descriptors (but
- * not other descriptors) are read from character devices
- * (i.e. /dev/bus/usb/BBB/DDD);
+ * not other descriptors) are read from usbfs (i.e. /proc/bus/usb/BBB/DDD);
  * in this case the fields are converted to host endianness by the kernel.
  */
 
@@ -263,8 +229,8 @@ struct usb_ctrlrequest {
 #define USB_DT_PIPE_USAGE		0x24
 /* From the USB 3.0 spec */
 #define	USB_DT_SS_ENDPOINT_COMP		0x30
-/* From the USB 3.1 spec */
-#define	USB_DT_SSP_ISOC_ENDPOINT_COMP	0x31
+/* From HID 1.11 spec */
+#define USB_DT_HID_REPORT		0x22
 
 /* Conventional codes for class-specific descriptors.  The convention is
  * defined in the USB "Common Class" Spec (3.11).  Individual class specs
@@ -326,10 +292,6 @@ struct usb_device_descriptor {
 #define USB_CLASS_CONTENT_SEC		0x0d	/* content security */
 #define USB_CLASS_VIDEO			0x0e
 #define USB_CLASS_WIRELESS_CONTROLLER	0xe0
-#define USB_CLASS_PERSONAL_HEALTHCARE	0x0f
-#define USB_CLASS_AUDIO_VIDEO		0x10
-#define USB_CLASS_BILLBOARD		0x11
-#define USB_CLASS_USB_TYPE_C_BRIDGE	0x12
 #define USB_CLASS_MISC			0xef
 #define USB_CLASS_APP_SPEC		0xfe
 #define USB_CLASS_VENDOR_SPEC		0xff
@@ -367,9 +329,6 @@ struct usb_config_descriptor {
 #define USB_CONFIG_ATT_BATTERY		(1 << 4)	/* battery powered */
 
 /*-------------------------------------------------------------------------*/
-
-/* USB String descriptors can contain at most 126 characters. */
-#define USB_MAX_STRING_LEN	126
 
 /* USB_DT_STRING: String descriptor */
 struct usb_string_descriptor {
@@ -422,6 +381,29 @@ struct usb_endpoint_descriptor {
 #define USB_DT_ENDPOINT_SIZE		7
 #define USB_DT_ENDPOINT_AUDIO_SIZE	9	/* Audio extension */
 
+/* Used to access common fields */
+struct usb_generic_descriptor {
+	__u8  bLength;
+	__u8  bDescriptorType;
+};
+
+struct __packed usb_class_hid_descriptor {
+	u8 bLength;
+	u8 bDescriptorType;
+	u16 bcdCDC;
+	u8 bCountryCode;
+	u8 bNumDescriptors;	/* 0x01 */
+	u8 bDescriptorType0;
+	u16 wDescriptorLength0;
+	/* optional descriptors are not supported. */
+};
+
+struct __packed usb_class_report_descriptor {
+	u8 bLength;	/* dummy */
+	u8 bDescriptorType;
+	u16 wLength;
+	u8 bData[0];
+};
 
 /*
  * Endpoints
@@ -436,10 +418,10 @@ struct usb_endpoint_descriptor {
 #define USB_ENDPOINT_XFER_INT		3
 #define USB_ENDPOINT_MAX_ADJUSTABLE	0x80
 
-#define USB_ENDPOINT_MAXP_MASK	0x07ff
-#define USB_EP_MAXP_MULT_SHIFT	11
-#define USB_EP_MAXP_MULT_MASK	(3 << USB_EP_MAXP_MULT_SHIFT)
-#define USB_EP_MAXP_MULT(m) \
+#define USB_ENDPOINT_MAXP_MASK		0x07ff
+#define USB_EP_MAXP_MULT_SHIFT		11
+#define USB_EP_MAXP_MULT_MASK		(3 << USB_EP_MAXP_MULT_SHIFT)
+#define USB_EP_MAXP_MULT(m)		\
 	(((m) & USB_EP_MAXP_MULT_MASK) >> USB_EP_MAXP_MULT_SHIFT)
 
 /* The USB 3.0 spec redefines bits 5:4 of bmAttributes as interrupt ep type. */
@@ -466,7 +448,7 @@ struct usb_endpoint_descriptor {
  *
  * Returns @epd's number: 0 to 15.
  */
-static __inline__ int usb_endpoint_num(const struct usb_endpoint_descriptor *epd)
+static inline int usb_endpoint_num(const struct usb_endpoint_descriptor *epd)
 {
 	return epd->bEndpointAddress & USB_ENDPOINT_NUMBER_MASK;
 }
@@ -478,7 +460,7 @@ static __inline__ int usb_endpoint_num(const struct usb_endpoint_descriptor *epd
  * Returns one of USB_ENDPOINT_XFER_{CONTROL, ISOC, BULK, INT} according
  * to @epd's transfer type.
  */
-static __inline__ int usb_endpoint_type(const struct usb_endpoint_descriptor *epd)
+static inline int usb_endpoint_type(const struct usb_endpoint_descriptor *epd)
 {
 	return epd->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK;
 }
@@ -489,7 +471,7 @@ static __inline__ int usb_endpoint_type(const struct usb_endpoint_descriptor *ep
  *
  * Returns true if the endpoint is of type IN, otherwise it returns false.
  */
-static __inline__ int usb_endpoint_dir_in(const struct usb_endpoint_descriptor *epd)
+static inline int usb_endpoint_dir_in(const struct usb_endpoint_descriptor *epd)
 {
 	return ((epd->bEndpointAddress & USB_ENDPOINT_DIR_MASK) == USB_DIR_IN);
 }
@@ -500,7 +482,7 @@ static __inline__ int usb_endpoint_dir_in(const struct usb_endpoint_descriptor *
  *
  * Returns true if the endpoint is of type OUT, otherwise it returns false.
  */
-static __inline__ int usb_endpoint_dir_out(
+static inline int usb_endpoint_dir_out(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return ((epd->bEndpointAddress & USB_ENDPOINT_DIR_MASK) == USB_DIR_OUT);
@@ -512,7 +494,7 @@ static __inline__ int usb_endpoint_dir_out(
  *
  * Returns true if the endpoint is of type bulk, otherwise it returns false.
  */
-static __inline__ int usb_endpoint_xfer_bulk(
+static inline int usb_endpoint_xfer_bulk(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return ((epd->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
@@ -525,7 +507,7 @@ static __inline__ int usb_endpoint_xfer_bulk(
  *
  * Returns true if the endpoint is of type control, otherwise it returns false.
  */
-static __inline__ int usb_endpoint_xfer_control(
+static inline int usb_endpoint_xfer_control(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return ((epd->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
@@ -539,7 +521,7 @@ static __inline__ int usb_endpoint_xfer_control(
  * Returns true if the endpoint is of type interrupt, otherwise it returns
  * false.
  */
-static __inline__ int usb_endpoint_xfer_int(
+static inline int usb_endpoint_xfer_int(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return ((epd->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
@@ -553,7 +535,7 @@ static __inline__ int usb_endpoint_xfer_int(
  * Returns true if the endpoint is of type isochronous, otherwise it returns
  * false.
  */
-static __inline__ int usb_endpoint_xfer_isoc(
+static inline int usb_endpoint_xfer_isoc(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return ((epd->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
@@ -567,7 +549,7 @@ static __inline__ int usb_endpoint_xfer_isoc(
  * Returns true if the endpoint has bulk transfer type and IN direction,
  * otherwise it returns false.
  */
-static __inline__ int usb_endpoint_is_bulk_in(
+static inline int usb_endpoint_is_bulk_in(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return usb_endpoint_xfer_bulk(epd) && usb_endpoint_dir_in(epd);
@@ -580,7 +562,7 @@ static __inline__ int usb_endpoint_is_bulk_in(
  * Returns true if the endpoint has bulk transfer type and OUT direction,
  * otherwise it returns false.
  */
-static __inline__ int usb_endpoint_is_bulk_out(
+static inline int usb_endpoint_is_bulk_out(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return usb_endpoint_xfer_bulk(epd) && usb_endpoint_dir_out(epd);
@@ -593,7 +575,7 @@ static __inline__ int usb_endpoint_is_bulk_out(
  * Returns true if the endpoint has interrupt transfer type and IN direction,
  * otherwise it returns false.
  */
-static __inline__ int usb_endpoint_is_int_in(
+static inline int usb_endpoint_is_int_in(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return usb_endpoint_xfer_int(epd) && usb_endpoint_dir_in(epd);
@@ -606,7 +588,7 @@ static __inline__ int usb_endpoint_is_int_in(
  * Returns true if the endpoint has interrupt transfer type and OUT direction,
  * otherwise it returns false.
  */
-static __inline__ int usb_endpoint_is_int_out(
+static inline int usb_endpoint_is_int_out(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return usb_endpoint_xfer_int(epd) && usb_endpoint_dir_out(epd);
@@ -619,7 +601,7 @@ static __inline__ int usb_endpoint_is_int_out(
  * Returns true if the endpoint has isochronous transfer type and IN direction,
  * otherwise it returns false.
  */
-static __inline__ int usb_endpoint_is_isoc_in(
+static inline int usb_endpoint_is_isoc_in(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return usb_endpoint_xfer_isoc(epd) && usb_endpoint_dir_in(epd);
@@ -632,7 +614,7 @@ static __inline__ int usb_endpoint_is_isoc_in(
  * Returns true if the endpoint has isochronous transfer type and OUT direction,
  * otherwise it returns false.
  */
-static __inline__ int usb_endpoint_is_isoc_out(
+static inline int usb_endpoint_is_isoc_out(
 				const struct usb_endpoint_descriptor *epd)
 {
 	return usb_endpoint_xfer_isoc(epd) && usb_endpoint_dir_out(epd);
@@ -642,11 +624,11 @@ static __inline__ int usb_endpoint_is_isoc_out(
  * usb_endpoint_maxp - get endpoint's max packet size
  * @epd: endpoint to be checked
  *
- * Returns @epd's max packet bits [10:0]
+ * Returns @epd's max packet
  */
-static __inline__ int usb_endpoint_maxp(const struct usb_endpoint_descriptor *epd)
+static inline int usb_endpoint_maxp(const struct usb_endpoint_descriptor *epd)
 {
-	return __le16_to_cpu(epd->wMaxPacketSize) & USB_ENDPOINT_MAXP_MASK;
+	return __le16_to_cpu(get_unaligned(&epd->wMaxPacketSize));
 }
 
 /**
@@ -655,7 +637,7 @@ static __inline__ int usb_endpoint_maxp(const struct usb_endpoint_descriptor *ep
  *
  * Return @epd's wMaxPacketSize[12:11] + 1
  */
-static __inline__ int
+static inline int
 usb_endpoint_maxp_mult(const struct usb_endpoint_descriptor *epd)
 {
 	int maxp = __le16_to_cpu(epd->wMaxPacketSize);
@@ -663,25 +645,11 @@ usb_endpoint_maxp_mult(const struct usb_endpoint_descriptor *epd)
 	return USB_EP_MAXP_MULT(maxp) + 1;
 }
 
-static __inline__ int usb_endpoint_interrupt_type(
+static inline int usb_endpoint_interrupt_type(
 		const struct usb_endpoint_descriptor *epd)
 {
 	return epd->bmAttributes & USB_ENDPOINT_INTRTYPE;
 }
-
-/*-------------------------------------------------------------------------*/
-
-/* USB_DT_SSP_ISOC_ENDPOINT_COMP: SuperSpeedPlus Isochronous Endpoint Companion
- * descriptor
- */
-struct usb_ssp_isoc_ep_comp_descriptor {
-	__u8  bLength;
-	__u8  bDescriptorType;
-	__le16 wReseved;
-	__le32 dwBytesPerInterval;
-} __attribute__ ((packed));
-
-#define USB_DT_SSP_ISOC_EP_COMP_SIZE		8
 
 /*-------------------------------------------------------------------------*/
 
@@ -698,7 +666,7 @@ struct usb_ss_ep_comp_descriptor {
 #define USB_DT_SS_EP_COMP_SIZE		6
 
 /* Bits 4:0 of bmAttributes if this is a bulk endpoint */
-static __inline__ int
+static inline int
 usb_ss_max_streams(const struct usb_ss_ep_comp_descriptor *comp)
 {
 	int		max_streams;
@@ -718,8 +686,6 @@ usb_ss_max_streams(const struct usb_ss_ep_comp_descriptor *comp)
 
 /* Bits 1:0 of bmAttributes if this is an isoc endpoint */
 #define USB_SS_MULT(p)			(1 + ((p) & 0x3))
-/* Bit 7 of bmAttributes if a SSP isoc endpoint companion descriptor exists */
-#define USB_SS_SSP_ISOC_COMP(p)		((p) & (1 << 7))
 
 /*-------------------------------------------------------------------------*/
 
@@ -748,23 +714,10 @@ struct usb_otg_descriptor {
 	__u8  bmAttributes;	/* support for HNP, SRP, etc */
 } __attribute__ ((packed));
 
-/* USB_DT_OTG (from OTG 2.0 supplement) */
-struct usb_otg20_descriptor {
-	__u8  bLength;
-	__u8  bDescriptorType;
-
-	__u8  bmAttributes;	/* support for HNP, SRP and ADP, etc */
-	__le16 bcdOTG;		/* OTG and EH supplement release number
-				 * in binary-coded decimal(i.e. 2.0 is 0200H)
-				 */
-} __attribute__ ((packed));
-
 /* from usb_otg_descriptor.bmAttributes */
 #define USB_OTG_SRP		(1 << 0)
 #define USB_OTG_HNP		(1 << 1)	/* swap host/device roles */
-#define USB_OTG_ADP		(1 << 2)	/* support ADP */
 
-#define OTG_STS_SELECTOR	0xF000		/* OTG status selector */
 /*-------------------------------------------------------------------------*/
 
 /* USB_DT_DEBUG:  for special highspeed devices, replacing serial console */
@@ -792,7 +745,6 @@ struct usb_interface_assoc_descriptor {
 	__u8  iFunction;
 } __attribute__ ((packed));
 
-#define USB_DT_INTERFACE_ASSOCIATION_SIZE	8
 
 /*-------------------------------------------------------------------------*/
 
@@ -887,8 +839,6 @@ struct usb_wireless_cap_descriptor {	/* Ultra Wide Band */
 	__u8  bReserved;
 } __attribute__((packed));
 
-#define USB_DT_USB_WIRELESS_CAP_SIZE	11
-
 /* USB 2.0 Extension descriptor */
 #define	USB_CAP_TYPE_EXT		2
 
@@ -901,8 +851,6 @@ struct usb_ext_cap_descriptor {		/* Link Power Management */
 #define USB_BESL_SUPPORT		(1 << 2)	/* supports BESL */
 #define USB_BESL_BASELINE_VALID		(1 << 3)	/* Baseline BESL valid*/
 #define USB_BESL_DEEP_VALID		(1 << 4)	/* Deep BESL valid */
-#define USB_SET_BESL_BASELINE(p)	(((p) & 0xf) << 8)
-#define USB_SET_BESL_DEEP(p)		(((p) & 0xf) << 12)
 #define USB_GET_BESL_BASELINE(p)	(((p) & (0xf << 8)) >> 8)
 #define USB_GET_BESL_DEEP(p)		(((p) & (0xf << 12)) >> 12)
 } __attribute__((packed));
@@ -946,163 +894,6 @@ struct usb_ss_container_id_descriptor {
 } __attribute__((packed));
 
 #define USB_DT_USB_SS_CONTN_ID_SIZE	20
-
-/*
- * SuperSpeed Plus USB Capability descriptor: Defines the set of
- * SuperSpeed Plus USB specific device level capabilities
- */
-#define	USB_SSP_CAP_TYPE	0xa
-struct usb_ssp_cap_descriptor {
-	__u8  bLength;
-	__u8  bDescriptorType;
-	__u8  bDevCapabilityType;
-	__u8  bReserved;
-	__le32 bmAttributes;
-#define USB_SSP_SUBLINK_SPEED_ATTRIBS	(0x1f << 0) /* sublink speed entries */
-#define USB_SSP_SUBLINK_SPEED_IDS	(0xf << 5)  /* speed ID entries */
-	__le16  wFunctionalitySupport;
-#define USB_SSP_MIN_SUBLINK_SPEED_ATTRIBUTE_ID	(0xf)
-#define USB_SSP_MIN_RX_LANE_COUNT		(0xf << 8)
-#define USB_SSP_MIN_TX_LANE_COUNT		(0xf << 12)
-	__le16 wReserved;
-	__le32 bmSublinkSpeedAttr[1]; /* list of sublink speed attrib entries */
-#define USB_SSP_SUBLINK_SPEED_SSID	(0xf)		/* sublink speed ID */
-#define USB_SSP_SUBLINK_SPEED_LSE	(0x3 << 4)	/* Lanespeed exponent */
-#define USB_SSP_SUBLINK_SPEED_LSE_BPS		0
-#define USB_SSP_SUBLINK_SPEED_LSE_KBPS		1
-#define USB_SSP_SUBLINK_SPEED_LSE_MBPS		2
-#define USB_SSP_SUBLINK_SPEED_LSE_GBPS		3
-
-#define USB_SSP_SUBLINK_SPEED_ST	(0x3 << 6)	/* Sublink type */
-#define USB_SSP_SUBLINK_SPEED_ST_SYM_RX		0
-#define USB_SSP_SUBLINK_SPEED_ST_ASYM_RX	1
-#define USB_SSP_SUBLINK_SPEED_ST_SYM_TX		2
-#define USB_SSP_SUBLINK_SPEED_ST_ASYM_TX	3
-
-#define USB_SSP_SUBLINK_SPEED_RSVD	(0x3f << 8)	/* Reserved */
-#define USB_SSP_SUBLINK_SPEED_LP	(0x3 << 14)	/* Link protocol */
-#define USB_SSP_SUBLINK_SPEED_LP_SS		0
-#define USB_SSP_SUBLINK_SPEED_LP_SSP		1
-
-#define USB_SSP_SUBLINK_SPEED_LSM	(0xff << 16)	/* Lanespeed mantissa */
-} __attribute__((packed));
-
-/*
- * USB Power Delivery Capability Descriptor:
- * Defines capabilities for PD
- */
-/* Defines the various PD Capabilities of this device */
-#define USB_PD_POWER_DELIVERY_CAPABILITY	0x06
-/* Provides information on each battery supported by the device */
-#define USB_PD_BATTERY_INFO_CAPABILITY		0x07
-/* The Consumer characteristics of a Port on the device */
-#define USB_PD_PD_CONSUMER_PORT_CAPABILITY	0x08
-/* The provider characteristics of a Port on the device */
-#define USB_PD_PD_PROVIDER_PORT_CAPABILITY	0x09
-
-struct usb_pd_cap_descriptor {
-	__u8  bLength;
-	__u8  bDescriptorType;
-	__u8  bDevCapabilityType; /* set to USB_PD_POWER_DELIVERY_CAPABILITY */
-	__u8  bReserved;
-	__le32 bmAttributes;
-#define USB_PD_CAP_BATTERY_CHARGING	(1 << 1) /* supports Battery Charging specification */
-#define USB_PD_CAP_USB_PD		(1 << 2) /* supports USB Power Delivery specification */
-#define USB_PD_CAP_PROVIDER		(1 << 3) /* can provide power */
-#define USB_PD_CAP_CONSUMER		(1 << 4) /* can consume power */
-#define USB_PD_CAP_CHARGING_POLICY	(1 << 5) /* supports CHARGING_POLICY feature */
-#define USB_PD_CAP_TYPE_C_CURRENT	(1 << 6) /* supports power capabilities defined in the USB Type-C Specification */
-
-#define USB_PD_CAP_PWR_AC		(1 << 8)
-#define USB_PD_CAP_PWR_BAT		(1 << 9)
-#define USB_PD_CAP_PWR_USE_V_BUS	(1 << 14)
-
-	__le16 bmProviderPorts; /* Bit zero refers to the UFP of the device */
-	__le16 bmConsumerPorts;
-	__le16 bcdBCVersion;
-	__le16 bcdPDVersion;
-	__le16 bcdUSBTypeCVersion;
-} __attribute__((packed));
-
-struct usb_pd_cap_battery_info_descriptor {
-	__u8 bLength;
-	__u8 bDescriptorType;
-	__u8 bDevCapabilityType;
-	/* Index of string descriptor shall contain the user friendly name for this battery */
-	__u8 iBattery;
-	/* Index of string descriptor shall contain the Serial Number String for this battery */
-	__u8 iSerial;
-	__u8 iManufacturer;
-	__u8 bBatteryId; /* uniquely identifies this battery in status Messages */
-	__u8 bReserved;
-	/*
-	 * Shall contain the Battery Charge value above which this
-	 * battery is considered to be fully charged but not necessarily
-	 * stopped off.
-	 */
-	__le32 dwChargedThreshold; /* in mWh */
-	/*
-	 * Shall contain the minimum charge level of this battery such
-	 * that above this threshold, a device can be assured of being
-	 * able to power up successfully (see Battery Charging 1.2).
-	 */
-	__le32 dwWeakThreshold; /* in mWh */
-	__le32 dwBatteryDesignCapacity; /* in mWh */
-	__le32 dwBatteryLastFullchargeCapacity; /* in mWh */
-} __attribute__((packed));
-
-struct usb_pd_cap_consumer_port_descriptor {
-	__u8 bLength;
-	__u8 bDescriptorType;
-	__u8 bDevCapabilityType;
-	__u8 bReserved;
-	__u8 bmCapabilities;
-/* port will oerate under: */
-#define USB_PD_CAP_CONSUMER_BC		(1 << 0) /* BC */
-#define USB_PD_CAP_CONSUMER_PD		(1 << 1) /* PD */
-#define USB_PD_CAP_CONSUMER_TYPE_C	(1 << 2) /* USB Type-C Current */
-	__le16 wMinVoltage; /* in 50mV units */
-	__le16 wMaxVoltage; /* in 50mV units */
-	__u16 wReserved;
-	__le32 dwMaxOperatingPower; /* in 10 mW - operating at steady state */
-	__le32 dwMaxPeakPower; /* in 10mW units - operating at peak power */
-	__le32 dwMaxPeakPowerTime; /* in 100ms units - duration of peak */
-#define USB_PD_CAP_CONSUMER_UNKNOWN_PEAK_POWER_TIME 0xffff
-} __attribute__((packed));
-
-struct usb_pd_cap_provider_port_descriptor {
-	__u8 bLength;
-	__u8 bDescriptorType;
-	__u8 bDevCapabilityType;
-	__u8 bReserved1;
-	__u8 bmCapabilities;
-/* port will oerate under: */
-#define USB_PD_CAP_PROVIDER_BC		(1 << 0) /* BC */
-#define USB_PD_CAP_PROVIDER_PD		(1 << 1) /* PD */
-#define USB_PD_CAP_PROVIDER_TYPE_C	(1 << 2) /* USB Type-C Current */
-	__u8 bNumOfPDObjects;
-	__u8 bReserved2;
-	__le32 wPowerDataObject[];
-} __attribute__((packed));
-
-/*
- * Precision time measurement capability descriptor: advertised by devices and
- * hubs that support PTM
- */
-#define	USB_PTM_CAP_TYPE	0xb
-struct usb_ptm_cap_descriptor {
-	__u8  bLength;
-	__u8  bDescriptorType;
-	__u8  bDevCapabilityType;
-} __attribute__((packed));
-
-#define USB_DT_USB_PTM_ID_SIZE		3
-/*
- * The size of the descriptor for the Sublink Speed Attribute Count
- * (SSAC) specified in bmAttributes[4:0]. SSAC is zero-based
- */
-#define USB_DT_USB_SSP_CAP_SIZE(ssac)	(12 + (ssac + 1) * 4)
-
 /*-------------------------------------------------------------------------*/
 
 /* USB_DT_WIRELESS_ENDPOINT_COMP:  companion descriptor associated with
@@ -1155,15 +946,25 @@ struct usb_connection_context {
 /*-------------------------------------------------------------------------*/
 
 /* USB 2.0 defines three speeds, here's how Linux identifies them */
-#if 1
+
 enum usb_device_speed {
 	USB_SPEED_UNKNOWN = 0,			/* enumerating */
 	USB_SPEED_LOW, USB_SPEED_FULL,		/* usb 1.1 */
 	USB_SPEED_HIGH,				/* usb 2.0 */
 	USB_SPEED_WIRELESS,			/* wireless (usb 2.5) */
 	USB_SPEED_SUPER,			/* usb 3.0 */
-	USB_SPEED_SUPER_PLUS,			/* usb 3.1 */
 };
+
+#ifdef __KERNEL__
+
+/**
+ * usb_speed_string() - Returns human readable-name of the speed.
+ * @speed: The speed to return human-readable name for.  If it's not
+ *   any of the speeds defined in usb_device_speed enum, string for
+ *   USB_SPEED_UNKNOWN will be returned.
+ */
+extern const char *usb_speed_string(enum usb_device_speed speed);
+
 #endif
 
 enum usb_device_state {
@@ -1242,8 +1043,21 @@ struct usb_set_sel_req {
  * As per USB compliance update, a device that is actively drawing
  * more than 100mA from USB must report itself as bus-powered in
  * the GetStatus(DEVICE) call.
- * https://compliance.usb.org/index.asp?UpdateFile=Electrical&Format=Standard#34
+ * http://compliance.usb.org/index.asp?UpdateFile=Electrical&Format=Standard#34
  */
 #define USB_SELF_POWER_VBUS_MAX_DRAW		100
+
+/**
+ * struct usb_string - wraps a C string and its USB id
+ * @id:the (nonzero) ID for this string
+ * @s:the string, in UTF-8 encoding
+ *
+ * If you're using usb_gadget_get_string(), use this to wrap a string
+ * together with its ID.
+ */
+struct usb_string {
+	u8 id;
+	const char *s;
+};
 
 #endif /* __LINUX_USB_CH9_H */

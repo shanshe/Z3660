@@ -75,7 +75,7 @@ void reset_interrupt_handler(void *CallBackRef, u32 Bank, u32 Status)
    //	if(XGpioPs_ReadPin(gpio, n040RSTI)==0) // hehehe if you read it, surely it is high...
    {
       read_reset=1;
-      printf("[Core0] Reset detected!\n");
+//      printf("[Core0] Reset detected!\n");
       cached_videomode=-1;
    }
 }
@@ -134,7 +134,8 @@ int fpga_interrupt_connect(void* isr_video,void* isr_audio_tx, void* isr_usb, in
    //int result=
    XScuGic_Connect(&int_handler, INT_INTERRUPT_ID_0, (Xil_ExceptionHandler)isr_video,NULL);
    XScuGic_Connect(&int_handler, INT_INTERRUPT_ID_1, (Xil_ExceptionHandler)isr_audio_tx,NULL);
-   XScuGic_Connect(&int_handler, INT_INTERRUPT_ID_2, (Xil_ExceptionHandler)isr_usb,NULL);
+   if(isr_usb!=NULL)
+      XScuGic_Connect(&int_handler, INT_INTERRUPT_ID_2, (Xil_ExceptionHandler)isr_usb,NULL);
 
    XScuGic_Enable(&int_handler, INT_INTERRUPT_ID_0);
    XScuGic_Enable(&int_handler, INT_INTERRUPT_ID_1);
@@ -159,7 +160,7 @@ int fpga_interrupt_connect(void* isr_video,void* isr_audio_tx, void* isr_usb, in
    XScuGic_Enable(&int_handler,XPAR_XGPIOPS_0_INTR);
    return(XST_SUCCESS);
 }
-
+#if 0
 /*
  * Check USB interrupt status for debugging purposes
  * This function examines the current USB interrupt state
@@ -227,3 +228,4 @@ void check_usb_interrupt_status(const char *context)
     printf("[USB ISR Check] Status check complete for: %s\n", context ? context : "Unknown context");
 }
 
+#endif

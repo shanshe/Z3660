@@ -232,20 +232,9 @@ int main(void)
 	u32 HandoffAddress = 0;
 	u32 Status = XST_SUCCESS;
 	u32 RegVal;
-	
-	// Debug: mostrar configuración DDR compilada
-#ifdef DDR_667MHZ
-	fsbl_printf(DEBUG_GENERAL,"FSBL: DDR configuration set to 667 MHz (FBDIV=0x28)\r\n");
-#elif defined(DDR_800MHZ)
-	fsbl_printf(DEBUG_GENERAL,"FSBL: DDR configuration set to 800 MHz (FBDIV=0x30)\r\n");
-#else
-	fsbl_printf(DEBUG_GENERAL,"FSBL: DDR configuration set to 533 MHz (FBDIV=0x20)\r\n");
-#endif
-	
 	/*
 	 * PCW initialization for MIO,PLL,CLK and DDR
 	 */
-	fsbl_printf(DEBUG_GENERAL,"FSBL: Starting PS7 initialization...\r\n");
 	Status = ps7_init();
 	if (Status != FSBL_PS7_INIT_SUCCESS) {
 		fsbl_printf(DEBUG_GENERAL,"PS7_INIT_FAIL : %s\r\n",

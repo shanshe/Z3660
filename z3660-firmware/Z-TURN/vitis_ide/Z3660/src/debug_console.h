@@ -44,6 +44,7 @@ typedef struct {
    uint8_t toggle_write_burst;
    uint8_t reset_cpld;
    uint8_t reset_fpga;
+   uint8_t overlay_enabled;
    CLOCKS clocks;
 } DEBUG_CONSOLE;
 void debug_console_loop(void);

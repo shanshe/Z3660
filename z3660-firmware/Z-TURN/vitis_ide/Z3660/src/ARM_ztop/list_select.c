@@ -233,7 +233,7 @@ void paint_ls_scsi(void)
    for(int i=0;i<7;i++)
    {
       temp[4]=i+'0';
-      displayStringAt(Font,win.x+12,win.y+win.t+11+TAB_HEIGHT+17*i,(uint8_t*)temp,LEFT_MODE);
+      displayStringAt(Font,win.x+12,win.y+win.t+11+TAB_HEIGHT+25+17*i,(uint8_t*)temp,LEFT_MODE);
       LISTSEL(ls_scsi[i]->x,ls_scsi[i]->y,ls_scsi[i]->w,ls_scsi[i]->h);
       displayStringAt(Font,ls_scsi[i]->x+18,ls_scsi[i]->y+2,(uint8_t *)ls_scsi[i]->text[ls_scsi[i]->selected_item],LEFT_MODE);
    }
@@ -245,15 +245,15 @@ void recalculate_coords_list_select(void)
    ls_screen_res->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+10;
 
    ls_kickstart->x=win.x+84;
-   ls_kickstart->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+16+16+16;
+   ls_kickstart->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+16+16+16+16;
 
    ls_kickstart_ext->x=win.x+84;
-   ls_kickstart_ext->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+17+16+16+16;
+   ls_kickstart_ext->y=win.y+win.t+TAB_HEIGHT+10+12+5+20+50+17+16+16+16+16;
 
    for(int i=0;i<7;i++)
    {
       ls_scsi[i]->x=win.x+50;
-      ls_scsi[i]->y=win.y+win.t+8+TAB_HEIGHT+17*i;
+      ls_scsi[i]->y=win.y+win.t+8+TAB_HEIGHT+25+17*i;
    }
 
    ls_timings->x=win.x+128;
@@ -264,13 +264,13 @@ void recalculate_coords_list_select(void)
 }
 void paint_ls_kickstart(void)
 {
-   displayStringAt(Font,win.x+12,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+16+16+16   ,(uint8_t*)"Kickstart ",LEFT_MODE);
+   displayStringAt(Font,win.x+12,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+16+16+16+16   ,(uint8_t*)"Kickstart ",LEFT_MODE);
    LISTSEL(ls_kickstart->x,ls_kickstart->y,ls_kickstart->w,ls_kickstart->h);
    displayStringAt(Font,ls_kickstart->x+18,ls_kickstart->y+2,(uint8_t *)ls_kickstart->text[ls_kickstart->selected_item],LEFT_MODE);
 }
 void paint_ls_kickstart_ext(void)
 {
-   displayStringAt(Font,win.x+12,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+16+16+16+17,(uint8_t*)"Ext Kicks.",LEFT_MODE);
+   displayStringAt(Font,win.x+12,win.y+win.t+TAB_HEIGHT+10+12+2+25+50+16+16+16+16+17,(uint8_t*)"Ext Kicks.",LEFT_MODE);
    LISTSEL(ls_kickstart_ext->x,ls_kickstart_ext->y,ls_kickstart_ext->w,ls_kickstart_ext->h);
    displayStringAt(Font,ls_kickstart_ext->x+18,ls_kickstart_ext->y+2,(uint8_t *)ls_kickstart_ext->text[ls_kickstart_ext->selected_item],LEFT_MODE);
 }

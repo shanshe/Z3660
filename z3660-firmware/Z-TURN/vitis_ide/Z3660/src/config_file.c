@@ -100,6 +100,7 @@ const char *config_item_names[CONFITEM_NUM] = {
       "arm_frequency",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
+      "MOBOCPU",
       "CPU",
       "MUSASHI",
       "UAE_030",
@@ -209,7 +210,8 @@ void write_config_file(char *filename)
    print_line(&fil,"\n");
    print_line(&fil,"##General Configuration\n");
    print_line(&fil,"\n");
-   print_line(&fil,"# Select boot mode: \"CPU\" for 060 CPU, \"MUSASHI\" \"UAE\" or \"UAEJIT\" for emulator\n");
+   print_line(&fil,"# Select boot mode:  \"MOBOCPU\" for Mother Board CPU, \"CPU\" for 060 CPU, \"MUSASHI\" \"UAE\" or \"UAEJIT\" for emulator\n");
+   print_line(&fil,"#bootmode MOBOCPU\n");
    print_line(&fil,"#bootmode CPU\n");
    print_line(&fil,"#bootmode MUSASHI\n");
    print_line(&fil,"#bootmode UAE\n");

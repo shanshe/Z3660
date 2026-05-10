@@ -116,20 +116,63 @@ void print_part (block_dev_desc_t *dev_desc);
 void  init_part (block_dev_desc_t *dev_desc);
 void dev_print(block_dev_desc_t *dev_desc);
 #else
-static inline block_dev_desc_t* get_dev(char* ifname, int dev) { return NULL; }
-static inline block_dev_desc_t* ide_get_dev(int dev) { return NULL; }
-static inline block_dev_desc_t* sata_get_dev(int dev) { return NULL; }
-static inline block_dev_desc_t* scsi_get_dev(int dev) { return NULL; }
-static inline block_dev_desc_t* usb_stor_get_dev(int dev) { return NULL; }
-static inline block_dev_desc_t* mmc_get_dev(int dev) { return NULL; }
-static inline block_dev_desc_t* systemace_get_dev(int dev) { return NULL; }
-static inline block_dev_desc_t* mg_disk_get_dev(int dev) { return NULL; }
+static inline block_dev_desc_t* get_dev(char* ifname, int dev)
+{
+	(void)ifname;
+	(void)dev;
+	return NULL;
+}
+static inline block_dev_desc_t* ide_get_dev(int dev)
+{
+	(void)dev;
+	return NULL;
+}
+static inline block_dev_desc_t* sata_get_dev(int dev)
+{
+	(void)dev;
+	return NULL;
+}
+static inline block_dev_desc_t* scsi_get_dev(int dev)
+{
+	(void)dev;
+	return NULL;
+}
+static inline block_dev_desc_t* usb_stor_get_dev(int dev)
+{
+	(void)dev;
+	return NULL;
+}
+static inline block_dev_desc_t* mmc_get_dev(int dev)
+{
+	(void)dev;
+	return NULL;
+}
+static inline block_dev_desc_t* systemace_get_dev(int dev)
+{
+	(void)dev;
+	return NULL;
+}
 
 static inline int get_partition_info (block_dev_desc_t * dev_desc, int part,
-	disk_partition_t *info) { return -1; }
-static inline void print_part (block_dev_desc_t *dev_desc) {}
-static inline void  init_part (block_dev_desc_t *dev_desc) {}
-static inline void dev_print(block_dev_desc_t *dev_desc) {}
+	disk_partition_t *info)
+{
+	(void)dev_desc;
+	(void)part;
+	(void)info;
+	return -1;
+}
+static inline void print_part (block_dev_desc_t *dev_desc)
+{
+	(void)dev_desc;
+}
+static inline void  init_part (block_dev_desc_t *dev_desc)
+{
+	(void)dev_desc;
+}
+static inline void dev_print(block_dev_desc_t *dev_desc)
+{
+	(void)dev_desc;
+}
 #endif
 
 #ifdef CONFIG_MAC_PARTITION

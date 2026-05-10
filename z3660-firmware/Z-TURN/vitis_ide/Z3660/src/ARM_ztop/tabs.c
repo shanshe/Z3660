@@ -394,8 +394,8 @@ void paint_tab_boot(void)
    displayStringAt(Font,win.x+224,win.y+win.t+TAB_HEIGHT+10+12+2+25+32,(uint8_t*)"AUTOC RTG enabled",LEFT_MODE);
    displayStringAt(Font,win.x+224,win.y+win.t+TAB_HEIGHT+10+12+2+25+48,(uint8_t*)"     TEST enabled",LEFT_MODE);
    displayStringAt(Font,win.x+224,win.y+win.t+TAB_HEIGHT+10+12+2+25+64,(uint8_t*)"  CPU RAM enabled",LEFT_MODE);
-   displayStringAt(Font,win.x+ 24,win.y+win.t+TAB_HEIGHT+10+12+2+25+64,(uint8_t*)"    MOUNT SD 0x76",LEFT_MODE);
-   displayStringAt(Font,win.x+ 24,win.y+win.t+TAB_HEIGHT+10+12+2+25+80,(uint8_t*)"    MOUNT SD ROOT",LEFT_MODE);
+   displayStringAt(Font,win.x+ 24,win.y+win.t+TAB_HEIGHT+10+12+2+25+80,(uint8_t*)"    MOUNT SD 0x76",LEFT_MODE);
+   displayStringAt(Font,win.x+ 24,win.y+win.t+TAB_HEIGHT+10+12+2+25+96,(uint8_t*)"    MOUNT SD ROOT",LEFT_MODE);
 
    paint_checkboxes();
 

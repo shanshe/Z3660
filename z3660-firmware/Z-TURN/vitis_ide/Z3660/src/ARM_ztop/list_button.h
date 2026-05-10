@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include "ztop.h"
 
-#define NUM_BOOT_MODE_LABELS 6
+#define NUM_BOOT_MODE_LABELS 7
 
 typedef struct {
    int x;

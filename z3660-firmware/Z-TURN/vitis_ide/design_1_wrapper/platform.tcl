@@ -589,12 +589,58 @@ platform generate
 platform generate -domains 
 platform generate -domains zynq_fsbl 
 platform generate -domains standalone_domain 
-platform clean
 platform active {design_1_wrapper}
-domain remove freertos10_xilinx_ps7_cortexa9_0
-platform generate -domains 
-platform write
-domain active {zynq_fsbl}
+domain active {standalone_ps7_cortexa9_1}
 bsp reload
-platform clean
-platform generate
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1 
+platform active {design_1_wrapper}
+bsp reload
+domain active {freertos10_xilinx_ps7_cortexa9_0}
+bsp reload
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform active {design_1_wrapper}
+domain active {standalone_domain}
+bsp reload
+bsp write
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform active {design_1_wrapper}
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains zynq_fsbl 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform active {design_1_wrapper}
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 
+platform generate -domains zynq_fsbl 
+platform config -updatehw {C:/Users/shanshe/workspace/Z3660_export/design_1_wrapper.xsa}
+platform generate -domains 
+platform generate -domains freertos10_xilinx_ps7_cortexa9_0,standalone_domain,standalone_ps7_cortexa9_1,zynq_fsbl 

@@ -64,7 +64,9 @@ ma_result ma_read_cb(ma_decoder* pDecoder, void* buf, size_t size, size_t* pByte
 ma_result ma_seek_cb(ma_decoder* pDecoder,  ma_int64 position, ma_seek_origin origin) {
 	(void)pDecoder;
 	if(position>=ma_data.FifoSize)
-		printf("position>=ma_data.FifoSize!!!!\n");
+	{
+		printf("position>=ma_data.FifoSize!!!! %lld >= %ld\n",position,ma_data.FifoSize);
+	}
 	if(origin==ma_seek_origin_start)
 	{
 		ma_data.FifoReadIdx = position % ma_data.FifoSize;

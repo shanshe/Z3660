@@ -1,20 +1,21 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*-
  * Copyright (c) 2007-2008, Juniper Networks, Inc.
  * Copyright (c) 2008, Michael Trimarchi <trimarchimichael@yahoo.it>
  * All rights reserved.
+ *
+ * ZZ9000 modifications:
+ *
+ * Copyright (C) 2026 Dimitris Panokostas <midwan@gmail.com>
  */
 
 #ifndef USB_EHCI_H
 #define USB_EHCI_H
 
 #include <stdbool.h>
-#include <stdio.h>
 #include "usb.h"
 #include "generic-phy.h"
 #include "io.h"
-
-
 
 /* Section 2.2.3 - N_PORTS */
 #define MAX_HC_PORTS		15
@@ -42,12 +43,13 @@ struct ehci_hcor {
 #define CMD_IAAD	(1 << 6)		/* "doorbell" interrupt */
 #define CMD_ASE		(1 << 5)		/* async schedule enable */
 #define CMD_PSE		(1 << 4)		/* periodic schedule enable */
-#define CMD_RESET_HC	(1 << 1)		/* reset HC not bus */
+#define CMD_RESET	(1 << 1)		/* reset HC not bus */
 #define CMD_RUN		(1 << 0)		/* start/stop HC */
 	uint32_t or_usbsts;
 #define STS_ASS		(1 << 15)
 #define	STS_PSS		(1 << 14)
 #define STS_HALT	(1 << 12)
+#define STS_RUNNING	(1 << 4)
 	uint32_t or_usbintr;
 #define INTR_UE         (1 << 0)                /* USB interrupt enable */
 #define INTR_UEE        (1 << 1)                /* USB error interrupt enable */
@@ -123,21 +125,21 @@ struct usb_linux_config_descriptor {
 #define cpu_to_hc32(x)		cpu_to_le32((x))
 #endif
 
-#define EHCI_PS_WKOC_E		(1u << 22)	/* RW wake on over current */
-#define EHCI_PS_WKDSCNNT_E	(1u << 21)	/* RW wake on disconnect */
-#define EHCI_PS_WKCNNT_E	(1u << 20)	/* RW wake on connect */
-#define EHCI_PS_PO		(1u << 13)	/* RW port owner */
-#define EHCI_PS_PP		(1u << 12)	/* RW,RO port power */
-#define EHCI_PS_LS		(3u << 10)	/* RO line status */
-#define EHCI_PS_PR		(1u << 8)	/* RW port reset */
-#define EHCI_PS_SUSP		(1u << 7)	/* RW suspend */
-#define EHCI_PS_FPR		(1u << 6)	/* RW force port resume */
-#define EHCI_PS_OCC		(1u << 5)	/* RWC over current change */
-#define EHCI_PS_OCA		(1u << 4)	/* RO over current active */
-#define EHCI_PS_PEC		(1u << 3)	/* RWC port enable change */
-#define EHCI_PS_PE		(1u << 2)	/* RW port enable */
-#define EHCI_PS_CSC		(1u << 1)	/* RWC connect status change */
-#define EHCI_PS_CS		(1u << 0)	/* RO connect status */
+#define EHCI_PS_WKOC_E		(1 << 22)	/* RW wake on over current */
+#define EHCI_PS_WKDSCNNT_E	(1 << 21)	/* RW wake on disconnect */
+#define EHCI_PS_WKCNNT_E	(1 << 20)	/* RW wake on connect */
+#define EHCI_PS_PO		(1 << 13)	/* RW port owner */
+#define EHCI_PS_PP		(1 << 12)	/* RW,RO port power */
+#define EHCI_PS_LS		(3 << 10)	/* RO line status */
+#define EHCI_PS_PR		(1 << 8)	/* RW port reset */
+#define EHCI_PS_SUSP		(1 << 7)	/* RW suspend */
+#define EHCI_PS_FPR		(1 << 6)	/* RW force port resume */
+#define EHCI_PS_OCC		(1 << 5)	/* RWC over current change */
+#define EHCI_PS_OCA		(1 << 4)	/* RO over current active */
+#define EHCI_PS_PEC		(1 << 3)	/* RWC port enable change */
+#define EHCI_PS_PE		(1 << 2)	/* RW port enable */
+#define EHCI_PS_CSC		(1 << 1)	/* RWC connect status change */
+#define EHCI_PS_CS		(1 << 0)	/* RO connect status */
 #define EHCI_PS_CLEAR		(EHCI_PS_OCC | EHCI_PS_PEC | EHCI_PS_CSC)
 
 #define EHCI_PS_IS_LOWSPEED(x)	(((x) & EHCI_PS_LS) == (1 << 10))
@@ -167,7 +169,6 @@ struct qTD {
 #define QT_TOKEN_CPAGE(x)	(((x) & 0x7) << 12)	/* Current Page */
 #define QT_TOKEN_CERR(x)	(((x) & 0x3) << 10)	/* Error Counter */
 #define QT_TOKEN_PID(x)		(((x) & 0x3) << 8)	/* PID Code */
-#define QT_TOKEN_GET_PID(x)		(((x) >> 8) & 0x3)	/* Get PID Code */
 #define QT_TOKEN_PID_OUT		0x0
 #define QT_TOKEN_PID_IN			0x1
 #define QT_TOKEN_PID_SETUP		0x2
@@ -271,6 +272,14 @@ struct zynq_ehci_priv {
 };
 int ehci_zynq_probe(struct zynq_ehci_priv *priv);
 
+/*
+ * Runtime ULPI XCVR-select switch for the Zynq PS USB ChipIdea
+ * EHCI. Called from the reset handler to drop the PHY into FS4LS
+ * mode when a low-speed device is attached, or switch back to HS
+ * mode for high-speed devices. See ehci-zynq.c for rationale.
+ */
+int ehci_zynq_set_phy_mode(int for_low_speed);
+
 /**
  * ehci_set_controller_info() - Set up private data for the controller
  *
@@ -309,5 +318,8 @@ extern struct dm_usb_ops ehci_usb_ops;
 /* EHCI PHY functions */
 int ehci_setup_phy(struct udevice *dev, struct phy *phy, int index);
 int ehci_shutdown_phy(struct udevice *dev, struct phy *phy);
+
+int ehci_submit_async(struct usb_device *dev, unsigned long pipe,
+		      void *buffer, int length, struct devrequest *req);
 
 #endif /* USB_EHCI_H */

@@ -7,30 +7,23 @@
  * (C) Copyright 2015 Google, Inc
  * Note: Part of this code has been derived from linux
  *
+ * ZZ9000 modifications:
+ *
+ * Copyright (C) 2026 Dimitris Panokostas <midwan@gmail.com>
  */
 #ifndef _USB_H_
 #define _USB_H_
 
-#define ARCH_DMA_MINALIGN 4096
+// cache line = 32 bytes
+#define ARCH_DMA_MINALIGN 32
 
 #include "../platform.h"
 #include <xil_types.h>
 #include <stdbool.h>
-#include <stdio.h>
 //#include <fdtdec.h>
 #include "usb_defs.h"
-
-/* USB Debug macros - for files that don't include ehci.h */
-#ifndef USB_DEBUG
-//#define USB_DEBUG(fmt, ...) do{ printf("[USB] " fmt, ##__VA_ARGS__); }while(0)
-#define USB_DEBUG(fmt, ...) do{ }while(0)
-#define USB_DEBUG_ERROR(fmt, ...) do{ printf("[USB ERROR] " fmt, ##__VA_ARGS__); }while(0)
-#define USB_DEBUG_WARN(fmt, ...) do{ printf("[USB WARN] " fmt, ##__VA_ARGS__); }while(0)
-#define USB_DEBUG_VERBOSE(fmt, ...) do{ printf("[USB VERBOSE] " fmt, ##__VA_ARGS__); }while(0)
-#endif
-#include "asm/ch9.h"
+#include <usb/asm/ch9.h>
 //#include <part.h>
-#include "pt/pt.h"
 
 /*
  * The EHCI spec says that we must align to at least 32 bytes.  However,
@@ -39,7 +32,7 @@
 #if ARCH_DMA_MINALIGN > 32
 #define USB_DMA_MINALIGN	ARCH_DMA_MINALIGN
 #else
-#define USB_DMA_MINALIGN	4096
+#define USB_DMA_MINALIGN	32
 #endif
 
 /* Everything is aribtrary */
@@ -59,9 +52,7 @@
  * This is the timeout to allow for submitting an urb in ms. We allow more
  * time for a BULK device to react - some are slow.
  */
-/* Enhanced timeouts for split transactions and better compatibility */
-#define USB_TIMEOUT_MS(pipe) (usb_pipebulk(pipe) ? 8000 : \
-                              (usb_pipecontrol(pipe) ? 3000 : 2000)) // Increased for split transactions
+#define USB_TIMEOUT_MS(pipe) (usb_pipebulk(pipe) ? 500 : 100) // FIXME quadrupled, shanshe restored original values
 
 /* device request (setup) */
 struct devrequest {
@@ -154,7 +145,7 @@ struct usb_device {
 	 */
 	unsigned long status;
 	unsigned long int_pending;	/* 1 bit per ep, used by int_queue */
-	unsigned int act_len;			/* transferred bytes */
+	int act_len;			/* transferred bytes */
 	int maxchild;			/* Number of ports if hub */
 	int portnr;			/* Port number, 1=first */
 	/* parent hub, or NULL if this is the root hub */
@@ -192,7 +183,7 @@ int submit_bulk_msg(struct usb_device *dev, unsigned long pipe,
 			void *buffer, int transfer_len);
 int submit_control_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
 			int transfer_len, struct devrequest *setup);
-int submit_int_msg(struct pt *pt,struct usb_device *dev, unsigned long pipe, void *buffer,
+int submit_int_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
 			int transfer_len, int interval);
 
 #if defined CONFIG_USB_EHCI_HCD || defined CONFIG_USB_MUSB_HOST
@@ -268,7 +259,7 @@ int usb_control_msg(struct usb_device *dev, unsigned int pipe,
 			void *data, unsigned short size, int timeout);
 int usb_bulk_msg(struct usb_device *dev, unsigned int pipe,
 			void *data, int len, int *actual_length, int timeout);
-int usb_int_msg(struct pt *pt, struct usb_device *dev, unsigned long pipe,
+int usb_int_msg(struct usb_device *dev, unsigned long pipe,
 			void *buffer, int transfer_len, int interval);
 int usb_disable_asynch(int disable);
 int usb_maxpacket(struct usb_device *dev, unsigned long pipe);
@@ -284,17 +275,6 @@ int usb_clear_halt(struct usb_device *dev, int pipe);
 int usb_string(struct usb_device *dev, int index, char *buf, size_t size);
 int usb_set_interface(struct usb_device *dev, int interface, int alternate);
 int usb_get_port_status(struct usb_device *dev, int port, void *data);
-
-/* Poseidon-driven helpers */
-int usb_poseidon_init(void);
-int usb_poseidon_reset(void);
-struct usb_device *usb_poseidon_get_dev(int addr);
-struct usb_device *usb_poseidon_alloc_dev(int addr);
-
-/* Apply a full USB configuration descriptor blob (starting with USB_DT_CONFIG)
- * to the device, updating dev->config and endpoint max packet sizes.
- */
-int usb_poseidon_apply_config(struct usb_device *dev, unsigned char *buffer, int length);
 
 /* big endian -> little endian conversion */
 /* some CPUs are already little endian e.g. the ARM920T */
@@ -613,12 +593,8 @@ bool usb_device_has_child_on_port(struct usb_device *parent, int port);
 
 int usb_hub_probe(struct usb_device *dev, int ifnum);
 void usb_hub_reset(void);
-
-/* Hub port diagnostic and repair functions */
-int usb_hub_diagnose_and_fix_port(struct usb_device *dev, int port);
-int usb_hub_scan_and_fix_ports(struct usb_device *dev);
-int usb_hub_find_and_fix(int hub_devnum);
-int usb_get_port_status(struct usb_device *dev, int port, void *data);
+int usb_hub_port_reset(struct usb_device *dev, int port,
+		       unsigned short *portstat);
 
 /*
  * usb_find_usb2_hub_address_port() - Get hub address and port for TT setting
@@ -774,5 +750,5 @@ void usb_show_tree(void);
 struct usb_platdata {
 	enum usb_init_type init_type;
 };
-int usb_set_configuration(struct usb_device *dev, int configuration);
+
 #endif /*_USB_H_ */

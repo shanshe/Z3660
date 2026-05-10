@@ -64,11 +64,11 @@ void paint_preset_textedit(void)
    {
       strcpy(message,preset_textedit[i]->text);
       sprintf(temp_str,"Preset %d Name",i);
-      displayStringAt(Font,win.x+10+8,win.y+win.t+TAB_HEIGHT+10+(Font->Height+5)*(i),(uint8_t*)temp_str,LEFT_MODE);
+      displayStringAt(Font,win.x+10+8,win.y+win.t+TAB_HEIGHT+10+16+(Font->Height+5)*(i),(uint8_t*)temp_str,LEFT_MODE);
       TEXTFIELD(preset_textedit[i]->x,preset_textedit[i]->y,preset_textedit[i]->w,(Font->Height+1)+3,message,0x00000000);
    }
    sprintf(temp_str,"No Preset (will use z3660cfg.txt file as default)");
-   displayStringAt(Font,win.x+10+8,win.y+win.t+TAB_HEIGHT+10+(Font->Height+5)*(8),(uint8_t*)temp_str,LEFT_MODE);
+   displayStringAt(Font,win.x+10+8,win.y+win.t+TAB_HEIGHT+10+16+(Font->Height+5)*(8),(uint8_t*)temp_str,LEFT_MODE);
 }
 void preset_textedit_action(void)
 {
@@ -156,7 +156,10 @@ uint32_t paint_timings_phase_pclk_textedit(void)
    displayStringAt(Font,win.x+40+270,win.y+40+win.t+TAB_HEIGHT+20,(uint8_t*)temp_str,LEFT_MODE);
    sprintf(temp_str,"Clock Base");
    displayStringAt(Font,win.x+40+270-8,win.y+40+win.t+TAB_HEIGHT-15,(uint8_t*)temp_str,LEFT_MODE);
-   TEXTFIELD(timings_phase_textedit[0]->x,timings_phase_textedit[0]->y,timings_phase_textedit[0]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_phase_textedit[0]->x,timings_phase_textedit[0]->y,timings_phase_textedit[0]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -168,7 +171,10 @@ uint32_t paint_timings_phase_clken_textedit(void)
    uint32_t color=timings_phase_text_color_int(message);
    sprintf(temp_str,"clken");
    displayStringAt(Font,win.x+40+35,win.y+40+win.t+TAB_HEIGHT+53-15+(Font->Height+5)*1,(uint8_t*)temp_str,LEFT_MODE);
-   TEXTFIELD(timings_phase_textedit[1]->x,timings_phase_textedit[1]->y,timings_phase_textedit[1]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_phase_textedit[1]->x,timings_phase_textedit[1]->y,timings_phase_textedit[1]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -180,7 +186,10 @@ uint32_t paint_timings_phase_bclk_textedit(void)
    uint32_t color=timings_phase_text_color_int(message);
    sprintf(temp_str,"bclk");
    displayStringAt(Font,win.x+40+35,win.y+40+win.t+TAB_HEIGHT+53-15+(Font->Height+5)*2,(uint8_t*)temp_str,LEFT_MODE);
-   TEXTFIELD(timings_phase_textedit[2]->x,timings_phase_textedit[2]->y,timings_phase_textedit[2]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_phase_textedit[2]->x,timings_phase_textedit[2]->y,timings_phase_textedit[2]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -192,7 +201,10 @@ uint32_t paint_timings_phase_cpuclk_textedit(void)
    uint32_t color=timings_phase_text_color_int(message);
    sprintf(temp_str,"cpuclk");
    displayStringAt(Font,win.x+40+35,win.y+40+win.t+TAB_HEIGHT+53-15+(Font->Height+5)*3,(uint8_t*)temp_str,LEFT_MODE);
-   TEXTFIELD(timings_phase_textedit[3]->x,timings_phase_textedit[3]->y,timings_phase_textedit[3]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_phase_textedit[3]->x,timings_phase_textedit[3]->y,timings_phase_textedit[3]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -204,7 +216,10 @@ uint32_t paint_timings_phase_clk90_textedit(void)
    uint32_t color=timings_phase_text_color_int(message);
    sprintf(temp_str,"clk90");
    displayStringAt(Font,win.x+40+35,win.y+40+win.t+TAB_HEIGHT+53-15+(Font->Height+5)*4,(uint8_t*)temp_str,LEFT_MODE);
-   TEXTFIELD(timings_phase_textedit[4]->x,timings_phase_textedit[4]->y,timings_phase_textedit[4]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_phase_textedit[4]->x,timings_phase_textedit[4]->y,timings_phase_textedit[4]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -216,7 +231,10 @@ uint32_t paint_timings_emu_extra_phase_textedit(void)
    uint32_t color=timings_phase_text_color_int(message);
    sprintf(temp_str,"emu_extra");
    displayStringAt(Font,win.x+40+35,win.y+40+win.t+TAB_HEIGHT+53-15+(Font->Height+5)*5,(uint8_t*)temp_str,LEFT_MODE);
-   TEXTFIELD(timings_phase_textedit[5]->x,timings_phase_textedit[5]->y,timings_phase_textedit[5]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_phase_textedit[5]->x,timings_phase_textedit[5]->y,timings_phase_textedit[5]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -225,7 +243,10 @@ uint32_t paint_timings_divider_pclk_textedit(void)
 {
    strcpy(message,timings_divider_textedit[0]->text);
    uint32_t color=timings_divider_text_color_int(message);
-   TEXTFIELD(timings_divider_textedit[0]->x,timings_divider_textedit[0]->y,timings_divider_textedit[0]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_divider_textedit[0]->x,timings_divider_textedit[0]->y,timings_divider_textedit[0]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -234,7 +255,10 @@ uint32_t paint_timings_divider_clken_textedit(void)
 {
    strcpy(message,timings_divider_textedit[1]->text);
    uint32_t color=timings_divider_text_color_int(message);
-   TEXTFIELD(timings_divider_textedit[1]->x,timings_divider_textedit[1]->y,timings_divider_textedit[1]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_divider_textedit[1]->x,timings_divider_textedit[1]->y,timings_divider_textedit[1]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -243,7 +267,10 @@ uint32_t paint_timings_divider_bclk_textedit(void)
 {
    strcpy(message,timings_divider_textedit[2]->text);
    uint32_t color=timings_divider_text_color_int(message);
-   TEXTFIELD(timings_divider_textedit[2]->x,timings_divider_textedit[2]->y,timings_divider_textedit[2]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_divider_textedit[2]->x,timings_divider_textedit[2]->y,timings_divider_textedit[2]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -252,7 +279,10 @@ uint32_t paint_timings_divider_cpuclk_textedit(void)
 {
    strcpy(message,timings_divider_textedit[3]->text);
    uint32_t color=timings_divider_text_color_int(message);
-   TEXTFIELD(timings_divider_textedit[3]->x,timings_divider_textedit[3]->y,timings_divider_textedit[3]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_divider_textedit[3]->x,timings_divider_textedit[3]->y,timings_divider_textedit[3]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -261,7 +291,10 @@ uint32_t paint_timings_divider_clk90_textedit(void)
 {
    strcpy(message,timings_divider_textedit[4]->text);
    uint32_t color=timings_divider_text_color_int(message);
-   TEXTFIELD(timings_divider_textedit[4]->x,timings_divider_textedit[4]->y,timings_divider_textedit[4]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_divider_textedit[4]->x,timings_divider_textedit[4]->y,timings_divider_textedit[4]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -270,7 +303,10 @@ uint32_t paint_timings_multiplier_textedit(void)
 {
    strcpy(message,timings_muldiv_textedit[0]->text);
    uint32_t color=timings_muldiv_text_color_int(message);
-   TEXTFIELD(timings_muldiv_textedit[0]->x,timings_muldiv_textedit[0]->y,timings_muldiv_textedit[0]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_muldiv_textedit[0]->x,timings_muldiv_textedit[0]->y,timings_muldiv_textedit[0]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -279,7 +315,10 @@ uint32_t paint_timings_divider_textedit(void)
 {
    strcpy(message,timings_muldiv_textedit[1]->text);
    uint32_t color=timings_muldiv_text_color_int(message);
-   TEXTFIELD(timings_muldiv_textedit[1]->x,timings_muldiv_textedit[1]->y,timings_muldiv_textedit[1]->w,(Font->Height+1)+3,message,color);
+   if(selected_tab==TAB_TIMINGS)
+   {
+      TEXTFIELD(timings_muldiv_textedit[1]->x,timings_muldiv_textedit[1]->y,timings_muldiv_textedit[1]->w,(Font->Height+1)+3,message,color);
+   }
    Font->TextColor=0x00000000; // black
 
    return color;
@@ -459,7 +498,7 @@ void recalculate_coords_textedits(void)
    for(int i=0;i<PRESET_CB_MAX;i++)
    {
       preset_textedit[i]->x=win.x+20+94;
-      preset_textedit[i]->y=win.y+win.t+TAB_HEIGHT+7+(Font->Height+5)*(i);
+      preset_textedit[i]->y=win.y+win.t+TAB_HEIGHT+7+16+(Font->Height+5)*(i);
    }
    for(int i=0;i<TIMINGS_TE_PHASE_MAX+1;i++) // +1 emu_extra
    {

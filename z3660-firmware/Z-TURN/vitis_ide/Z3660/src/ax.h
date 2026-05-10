@@ -44,8 +44,7 @@ int audio_swab(uint16_t audio_buf_samples, uint32_t offset, int byteswap);
 void audio_set_tx_buffer(uint8_t* addr);
 void audio_set_rx_buffer(uint8_t* addr);
 
-void resample_s16(int16_t *input, int16_t *output,
-      int in_sample_rate, int out_sample_rate, int output_samples);
+void resample_s16(int16_t *input, int16_t *output, int in_samples, int out_samples);
 void audio_silence();
 void audio_debug_timer(int zdata);
 

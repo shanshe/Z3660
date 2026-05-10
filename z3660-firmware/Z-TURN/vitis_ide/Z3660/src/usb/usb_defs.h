@@ -61,13 +61,7 @@
 /* USB directions */
 #define USB_DIR_OUT           0
 #define USB_DIR_IN            0x80
-#if 0
-/* USB device speeds */
-#define USB_SPEED_FULL        0x0  /* 12Mbps */
-#define USB_SPEED_LOW         0x1  /* 1.5Mbps */
-#define USB_SPEED_HIGH        0x2  /* 480Mbps */
-#define USB_SPEED_RESERVED    0x3
-#endif
+
 /*
  * bmRequestType: USB Device Requests, table 9.2 USB 2.0 spec.
  * (shifted) direction/type/recipient.

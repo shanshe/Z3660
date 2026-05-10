@@ -613,8 +613,10 @@ int init_xc3sprog(void)
    printf("%s\n",message);
    return 0;
 }
-int main_xc3sprog(void)
+static unsigned int _cpufreq=0;
+int main_xc3sprog(unsigned int cpufreq)
 {
+   _cpufreq=cpufreq;
    char arg[100]="z3660.jed:w:0:JEDEC";
    //   char args[100]="z3660.jed:v:0:JEDEC";
    bool    verbose   = false;
@@ -740,3 +742,7 @@ int programXC95X(Jtag *jtag, IOBase *io, unsigned long id, char *arg,
    return 0;
 }
 
+void xc3_usleep(unsigned int usec)
+{
+   usleep(usec*(float)(_cpufreq)/667.);
+}

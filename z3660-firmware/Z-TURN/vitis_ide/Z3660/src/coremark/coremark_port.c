@@ -125,6 +125,8 @@ ee_s32 get_seed_32(int i) {
 
 /* Portable layer functions */
 void portable_init(core_portable *p, int *argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
     if (p == NULL)
         return;
     p->portable_id = 0;

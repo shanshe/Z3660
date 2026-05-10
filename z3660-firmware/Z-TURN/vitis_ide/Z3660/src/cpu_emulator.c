@@ -155,7 +155,7 @@ int load_rom(void)
       f_write(&fil, buff, 4,&NumBytesWritten);
    }
    f_close(&fil);
-   f_umount(NULL, Path, 0); // NULL unmount, 0 delayed
+   f_umount(Path);
    printf("\nFile written OK\n");
    while(1);
 #endif
@@ -414,7 +414,7 @@ int emulator_reset_thread(struct pt *pt)
 //         printf("[Core0] Reset inactive (UP)...\n");
 //         hard_reboot();
 //         piscsi_refresh_drives();
-         printf("[PISCSI] Refreshed drives\n");
+//         printf("[PISCSI] Refreshed drives\n");
          CPLD_RESET_ARM(0);
          video_reset();
          audio_reset();

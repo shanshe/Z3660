@@ -13,23 +13,23 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 {
    struct GFXData *data = (struct GFXData*)((uint32_t)Z3_SCRATCH_ADDR);
    //    if((zdata!=11)&&(zdata!=2)&&(zdata!=5))
-   //    	printf("OP %d\n",zdata);
+   //       printf("OP %d\n",zdata);
    if(debug_console.debug_rtg)
       printf("blitter_dma_op 0x%X  %s\n",zdata,dma_op_string[zdata]);
 
    switch(zdata) {
       case OP_DRAWLINE:
-         SWAP16(data->x[0]);		SWAP16(data->x[1]);
-         SWAP16(data->y[0]);		SWAP16(data->y[1]);
-         SWAP16(data->user[0]);	SWAP16(data->user[1]);
+         SWAP16(data->x[0]);      SWAP16(data->x[1]);
+         SWAP16(data->y[0]);      SWAP16(data->y[1]);
+         SWAP16(data->user[0]);   SWAP16(data->user[1]);
 
          SWAP16(data->pitch[0]);
          SWAP32(data->offset[0]);
 
-         //        	printf("OP 1 %d %lx\n",data->pitch[0],((uint32_t) frameBuf) + data->offset[0]);
-         //        	printf("     %x %x\n",data->x[0],data->y[0]);
-         //        	printf("     %x %x\n",data->x[1],data->y[1]);
-         //        	printf("     %x %x\n",data->user[0],data->user[1]);
+         //           printf("OP 1 %d %lx\n",data->pitch[0],((uint32_t) frameBuf) + data->offset[0]);
+         //           printf("     %x %x\n",data->x[0],data->y[0]);
+         //           printf("     %x %x\n",data->x[1],data->y[1]);
+         //           printf("     %x %x\n",data->user[0],data->user[1]);
 
          set_fb((uint32_t*) (((uint32_t) vs->framebuffer) + data->offset[0]),
                data->pitch[0]);
@@ -46,8 +46,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
          break;
 
       case OP_FILLRECT:
-         SWAP16(data->x[0]);		SWAP16(data->x[1]);
-         SWAP16(data->y[0]);		SWAP16(data->y[1]);
+         SWAP16(data->x[0]);      SWAP16(data->x[1]);
+         SWAP16(data->y[0]);      SWAP16(data->y[1]);
 
          SWAP16(data->pitch[0]);
          SWAP32(data->offset[0]);
@@ -72,11 +72,11 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
       case OP_COPYRECT:
       case OP_COPYRECT_NOMASK:
-         SWAP16(data->x[0]);		SWAP16(data->x[1]);		SWAP16(data->x[2]);
-         SWAP16(data->y[0]);		SWAP16(data->y[1]);		SWAP16(data->y[2]);
+         SWAP16(data->x[0]);      SWAP16(data->x[1]);      SWAP16(data->x[2]);
+         SWAP16(data->y[0]);      SWAP16(data->y[1]);      SWAP16(data->y[2]);
 
-         SWAP16(data->pitch[0]);		SWAP16(data->pitch[1]);
-         SWAP32(data->offset[0]);	SWAP32(data->offset[1]);
+         SWAP16(data->pitch[0]);      SWAP16(data->pitch[1]);
+         SWAP32(data->offset[0]);   SWAP32(data->offset[1]);
          if(debug_console.debug_rtg)
          {
             printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
@@ -113,11 +113,11 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
 
          case OP_RECT_PATTERN:
          case OP_RECT_TEMPLATE: {
-            SWAP16(data->x[0]);		SWAP16(data->x[1]);		SWAP16(data->x[2]);
-            SWAP16(data->y[0]);		SWAP16(data->y[1]);		SWAP16(data->y[2]);
+            SWAP16(data->x[0]);      SWAP16(data->x[1]);      SWAP16(data->x[2]);
+            SWAP16(data->y[0]);      SWAP16(data->y[1]);      SWAP16(data->y[2]);
 
-            SWAP16(data->pitch[0]);		SWAP16(data->pitch[1]);
-            SWAP32(data->offset[0]);	SWAP32(data->offset[1]);
+            SWAP16(data->pitch[0]);      SWAP16(data->pitch[1]);
+            SWAP32(data->offset[0]);   SWAP32(data->offset[1]);
             if(debug_console.debug_rtg)
             {
                printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
@@ -132,7 +132,6 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             uint8_t* tmpl_data = (uint8_t*) (((uint32_t) vs->framebuffer) + data->offset[1]);
             set_fb((uint32_t*) (((uint32_t) vs->framebuffer) + data->offset[0]),
                   data->pitch[0]);
-
 
             uint8_t bpp = 2 * data->u8_user[GFXDATA_U8_COLORMODE];
             if (bpp == 0)
@@ -177,8 +176,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             SWAP16(data->x[0]);     SWAP16(data->x[1]);     SWAP16(data->x[2]);
                                     SWAP16(data->y[1]);     SWAP16(data->y[2]);
 
-            SWAP16(data->pitch[0]);		SWAP16(data->pitch[1]);
-            SWAP32(data->offset[0]);	SWAP32(data->offset[1]);
+            SWAP16(data->pitch[0]);    SWAP16(data->pitch[1]);
+            SWAP32(data->offset[0]);   SWAP32(data->offset[1]);
 
             SWAP16(data->user[0]);
             SWAP16(data->user[1]);
@@ -193,7 +192,6 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             }
 
             uint8_t* bmp_data = (uint8_t*) (((uint32_t) vs->framebuffer) + data->offset[1]);
-
             set_fb((uint32_t*) (((uint32_t) vs->framebuffer) + data->offset[0]),
                   data->pitch[0]);
 
@@ -211,8 +209,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
          }
 
          case OP_INVERTRECT:
-            SWAP16(data->x[0]);		SWAP16(data->x[1]);
-            SWAP16(data->y[0]);		SWAP16(data->y[1]);
+            SWAP16(data->x[0]);     SWAP16(data->x[1]);
+            SWAP16(data->y[0]);     SWAP16(data->y[1]);
 
             SWAP16(data->pitch[0]);
             SWAP32(data->offset[0]);
@@ -237,8 +235,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
          case OP_SPRITE_CLUT_BITMAP:
          case OP_SPRITE_BITMAP: {
             SWAP16(data->x[2]);     SWAP16(data->y[2]);
-            SWAP16(data->x[0]);		SWAP16(data->x[1]);
-            SWAP16(data->y[0]);		SWAP16(data->y[1]);
+            SWAP16(data->x[0]);     SWAP16(data->x[1]);
+            SWAP16(data->y[0]);     SWAP16(data->y[1]);
 
             SWAP32(data->offset[1]);
 
@@ -256,6 +254,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             vs->sprite_x_offset = (int16_t)data->x[0];
             vs->sprite_y_offset = (int16_t)data->y[0];
             vs->sprite_width  = data->x[1];
+
             if (zdata == OP_SPRITE_CLUT_BITMAP) {
                vs->sprite_x_offset = -(vs->sprite_x_offset);
                vs->sprite_y_offset = -(vs->sprite_y_offset);
@@ -277,6 +276,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             break;
          }
          case OP_SPRITE_COLOR: {
+            if(debug_console.debug_rtg)
+               printf("data->u8offset = %d data->rgb[0] = 0x%08lX\n", data->u8offset, data->rgb[0]);
             vs->sprite_colors[data->u8offset] = data->rgb[0];
             if (data->u8offset != 0 && vs->sprite_colors[data->u8offset] == 0xff00ff)
                vs->sprite_colors[data->u8offset] = 0xfe00fe;
@@ -289,6 +290,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             SWAP16(data->y[0]);
             SWAP16(data->x[1]);
 
+            if(debug_console.debug_rtg)
+               printf("posx %d posy %d pan_width %d offset 0x%08lX\n",(int16_t)data->x[0],(int16_t)data->y[0],data->x[1],data->offset[0]);
             vs->sprite_x_offset = (int16_t)data->x[0];
             vs->sprite_y_offset = (int16_t)data->y[0];
 
@@ -302,6 +305,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
          case OP_SET_SPLIT_POS:
             SWAP16(data->y[0]);
             SWAP32(data->offset[0]);
+            if(debug_console.debug_rtg)
+               printf("pos = %d offset 0x%08lX\n",data->y[0],data->offset[0]);
 
             vs->bgbuf_offset = data->offset[0];
             vs->split_request_pos = data->y[0];

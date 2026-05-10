@@ -32,24 +32,42 @@
 #include <ff.h>
 #include "mpg/pl_mpeg_player.h"
 
-#define VDMA_DEVICE_ID   XPAR_AXIVDMA_0_DEVICE_ID
+#define VDMA_VID_DEVICE_ID   XPAR_AXIVDMA_0_DEVICE_ID
+#define VDMA_OVL_DEVICE_ID   XPAR_AXIVDMA_1_DEVICE_ID
 
 extern const char *bootmode_names[];
 extern int cached_videomode;
-
+extern int cached_colormode;
+extern int cached_scalemode;
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
 
 extern ZZ_VIDEO_STATE vs;
-extern XAxiVdma vdma;
 extern XClk_Wiz clkwiz;
-extern XClk_Wiz_Config conf;
+XClk_Wiz_Config clkwiz_conf;
+
+XAxiVdma vdma;
+XAxiVdma_DmaSetup ReadCfg;
+XAxiVdma_Config *Config=NULL;
+
+XAxiVdma vdma_ovl;
+XAxiVdma_DmaSetup OVL_ReadCfg;
+XAxiVdma_Config *OVL_Config=NULL;
+
 extern uint16_t original_h;
 uint32_t sprite_buf[32 * 48];
 uint8_t sprite_clipped = 0;
 int16_t sprite_clip_x = 0, sprite_clip_y = 0;
 uint8_t color_reset=0;
 uint8_t stride_div = 1;
+
+int enable_overlay_on_next_vsync=0;
+int overlay_is_enabled=0;
+int16_t overlay_x=0;
+int16_t overlay_y=0;
+int16_t overlay_w=320;
+int16_t overlay_h=240;
+
 
 uint16_t sprite_request_update_pos = 0;
 uint16_t sprite_request_update_data = 0;
@@ -126,6 +144,7 @@ ZZ_VIDEO_STATE* video_init() {
    
    // Configure USB interrupts immediately after interrupt system init
 //   printf("[VIDEO_INIT] Configuring USB interrupts early...\n");
+#define isr_usb NULL
    fpga_interrupt_connect(isr_video, isr_audio_tx, isr_usb, INT_IPL_ON_THIS_CORE);
 //   printf("[VIDEO_INIT] USB interrupt configuration completed\n");
 
@@ -153,19 +172,6 @@ void handle_cache_flush(uint32_t address,uint32_t size)
 }
 
 void video_reset(void) {
-   //   if(reset_frame_buffer)
-   //      memset((uint32_t*)vs.framebuffer,0,1920*1080*2);
-   //   Xil_ExceptionDisable();
-   //   video_mode_init(ZZVMODE_1920x1080_60, 0, MNTVA_COLOR_16BIT565);
-   //   Xil_ExceptionEnable();
-   //   set_pixelclock(&preset_video_modes[ZZVMODE_800x600]);
-   //   sii9022_init(&preset_video_modes[ZZVMODE_800x600]);
-   //   init_vdma(800,600, 2, 1, (uint32_t)vs.framebuffer);
-   //   if(reset_frame_buffer)
-   //      memset((uint32_t*)frameBuf,0,800*600*4);
-   //   set_pixelclock(&preset_video_modes[ZZVMODE_1920x1080_60]);
-   //   sii9022_init(&preset_video_modes[ZZVMODE_1920x1080_60]);
-   //   init_vdma(1920,1080, 1, 1, (uint32_t)frameBuf,&preset_video_modes[ZZVMODE_1920x1080_60]);
    rtg_init();
    //   dump_vdma_status(&vdma);
 
@@ -260,11 +266,92 @@ void video_reset(void) {
    //   sii9022_init(&preset_video_modes[vs.video_mode]);
    while(video_formatter_read(0)==1);
    while(video_formatter_read(0)==0);
-   init_vdma(vs.vmode_hsize,vs.vmode_vsize, 2, 1, (uint32_t)vs.framebuffer);
+   init_vdma_vid(vs.vmode_hsize,vs.vmode_vsize, 2, 1, (uint32_t)vs.framebuffer);
+
+#define NO_START_OVERLAY
+#ifdef NO_START_OVERLAY
+   video_formatter_write(0, MNTVF_OP_OVERLAY_ENABLE);
+   video_formatter_write((1 << 16) | 1, MNTVF_OP_OVERLAY_XY);
+   video_formatter_write(0, MNTVF_OP_OVERLAY_WH);
+#else
+   video_formatter_write((overlay_y << 16) | overlay_x, MNTVF_OP_OVERLAY_XY);
+   video_formatter_write((overlay_h << 16) | overlay_w, MNTVF_OP_OVERLAY_WH);
+   video_formatter_write(1, MNTVF_OP_OVERLAY_ENABLE);
+   init_vdma_ovl(overlay_w,overlay_h, 1, 1, RTG_BASE+0x06000000);
+   // test pattern at RTG_BASE+0x06000000
+   uint32_t *test_pattern=(uint32_t *)(RTG_BASE+0x06000000);
+   for(int y=0;y<overlay_h;y++)
+   {
+      for(int x=0;x<overlay_w;x++)      {
+         if((x/16+y/16)%2==0)
+            test_pattern[y*overlay_w+x]=0x00ff00ff; // magenta
+         else
+            test_pattern[y*overlay_w+x]=0x0000ff00; // green
+      }
+   }
+   // a black square in the middle of the test pattern to check transparency
+   for(int y=overlay_h/4;y<overlay_h*3/4;y++)
+   {
+      for(int x=overlay_w/4;x<overlay_w*3/4;x++)      {
+         test_pattern[y*overlay_w+x]=0x00000000; // transparent
+      }
+   }
+#endif
+   if(overlay_is_enabled)
+      stop_vdma_ovl();
+
+      // 640x480 test pattern
+   uint32_t *test_pattern=(uint32_t *)(RTG_BASE+0x06000000);
+/*
+   for(int y=0;y<overlay_h;y++)
+   {
+      for(int x=0;x<overlay_w;x++)      {
+         uint32_t test_color = 0xFF000000 | ((x * 255 / overlay_w) << 16) | ((y * 255 / overlay_h) << 8) | 128;
+         test_pattern[y * overlay_w + x] = test_color;
+      }
+   }
+*/
+/*
+   for(int y=0;y<overlay_h;y+=16)
+   {
+      for(int x=0;x<overlay_w;x++)      {
+         if((x/16+y/16)%2==0)
+            test_pattern[y*vs.vmode_hsize+x]=0x00ff00ff; // magenta
+         else
+            test_pattern[y*vs.vmode_hsize+x]=0x0000ff00; // green
+      }
+   }
+   // a black square in the middle of the test pattern to check transparency
+   for(int y=16;y<overlay_h-16;y++)
+   {
+      for(int x=16;x<overlay_w-16;x++)      {
+         test_pattern[y*vs.vmode_hsize+x]=0x00000000; // transparent
+      }
+   }
+*/
+   // clean up framebuffer to avoid garbage on screen before first VDMA refresh
+   memset(test_pattern,0,vs.vmode_hsize*vs.vmode_vsize*4);
 #else
    memset(vs.framebuffer,0,vs.size);
 #endif
+   void pl_mpeg_arm_close(void);
+   pl_mpeg_arm_close();
    cached_videomode=-1;
+}
+void enable_overlay(void)
+{
+   video_formatter_write((overlay_y << 16) | overlay_x, MNTVF_OP_OVERLAY_XY);
+   video_formatter_write((overlay_h << 16) | overlay_w, MNTVF_OP_OVERLAY_WH);
+   video_formatter_write(1, MNTVF_OP_OVERLAY_ENABLE);
+   enable_overlay_on_next_vsync=1;
+}  
+void disable_overlay(void)
+{
+   enable_overlay_on_next_vsync=0;
+   video_formatter_write(0, MNTVF_OP_OVERLAY_ENABLE);
+   video_formatter_write(0, MNTVF_OP_OVERLAY_XY);
+   video_formatter_write(0, MNTVF_OP_OVERLAY_WH);
+   stop_vdma_ovl();
 }
 uint32_t dump_vdma_status(XAxiVdma *InstancePtr);
 void video_mode_reset(void)
@@ -272,15 +359,23 @@ void video_mode_reset(void)
    printf("vdma status before reset\n");
    dump_vdma_status(&vdma);
    video_mode_init(ZZVMODE_1280x720, NO_SCALE, MNTVA_COLOR_16BIT565);
-   init_vdma(preset_video_modes[ZZVMODE_1280x720].hres,preset_video_modes[ZZVMODE_1280x720].vres, 2, 1, (uint32_t)vs.framebuffer);
-   printf("init_vdma()\n");
+   init_vdma_vid(preset_video_modes[ZZVMODE_1280x720].hres,preset_video_modes[ZZVMODE_1280x720].vres, vs.vmode_hdiv, vs.vmode_vdiv, (uint32_t)vs.framebuffer);
+   printf("init_vdma_vid()\n");
    dump_vdma_status(&vdma);
    cached_videomode=-1;
+   cached_colormode=-1;
+   cached_scalemode=-1;
+   if(overlay_is_enabled)
+      disable_overlay();
 }
 void reset_init(void)
 {
    audio_silence();
    set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + (uint32_t) vs.framebuffer_pan_offset), vs.vmode_hsize/vs.vmode_hdiv);
+   init_vdma_vid(vs.vmode_hsize,vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv, (uint32_t)vs.framebuffer);
+   printf("Video reset from reset_init()\n");
+   printf("vs.vmode_hsize: %ld, vs.vmode_vsize: %ld, vs.vmode_hdiv: %ld, vs.vmode_vdiv: %ld\n", vs.vmode_hsize, vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv);
+   printf("vs.colormode: %d\n", vs.colormode);
    if(vs.colormode==MNTVA_COLOR_8BIT)
    {
       set_palette((0<<24)|0,OP_PALETTE);
@@ -291,6 +386,8 @@ void reset_init(void)
    sprite_request_hide=1;
    vs.split_request_pos=0;
    vs.framebuffer_pan_offset=0;
+   if(overlay_is_enabled)
+      disable_overlay();
 }
 void min_distance(Point o,TriPoint d,Color color)
 {
@@ -334,14 +431,18 @@ void play_init(int bm)
    int chunk_size=1920;
 //   TCHAR *Path = DEFAULT_ROOT;
 //   f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
-   char Filenames[4][200];
+   char Filenames[6][200];
    sprintf(Filenames[0],DEFAULT_ROOT "sound/%s/1_060_CPU_selected.mp3",config.sound_language);
    sprintf(Filenames[1],DEFAULT_ROOT "sound/%s/2_musashi_emulator_selected.mp3",config.sound_language);
    sprintf(Filenames[2],DEFAULT_ROOT "sound/%s/3_UAE_emulator_selected.mp3",config.sound_language);
    sprintf(Filenames[3],DEFAULT_ROOT "sound/%s/4_JIT_emulator_selected.mp3",config.sound_language);
+   sprintf(Filenames[4],DEFAULT_ROOT "sound/%s/3_UAE_emulator_selected.mp3",config.sound_language);
+   sprintf(Filenames[5],DEFAULT_ROOT "sound/%s/4_JIT_emulator_selected.mp3",config.sound_language);
    int ret=f_open(&fil, Filenames[bm], FA_OPEN_EXISTING | FA_READ);
    if(ret!=0)
-      printf("Audio File open failed!!!!\n");
+   {
+      printf("Audio File open failed!!!! boot mode %d\n",bm);
+   }   
    unsigned int NumBytesRead;
    int filesize=f_size(&fil);
    f_rewind(&fil);
@@ -350,7 +451,7 @@ void play_init(int bm)
    Xil_L1DCacheFlush();
    Xil_L2CacheFlush();
    f_close(&fil);
-//   f_umount(NULL, Path, 1); // NULL unmount, 0 delayed
+//   f_umount(Path);
    write_rtg_register(REG_ZZ_AUDIO_PARAM, 0);
    write_rtg_register(REG_ZZ_AUDIO_VAL, (uint32_t)DECODED);
 
@@ -385,7 +486,7 @@ void play_sound(void)
    }
    else if(sound_active==1)
    {
-      write_rtg_register(REG_ZZ_AUDIO_SCALE, 3840/4);
+      write_rtg_register(REG_ZZ_AUDIO_SCALE, AUDIO_BYTES_PER_PERIOD/4);
       write_rtg_register(REG_ZZ_DECODER_PARAM, 2);
       write_rtg_register(REG_ZZ_DECODER_VAL, ((uint32_t)DECODED)+buff_offset);
       write_rtg_register(REG_ZZ_DECODER_PARAM, 0);
@@ -398,8 +499,8 @@ void play_sound(void)
          buff_offset=0;
       else
       {
-         buff_offset+=3840;
-         if(buff_offset >= 3840*8)
+         buff_offset+=AUDIO_BYTES_PER_PERIOD;
+         if(buff_offset >= AUDIO_TX_BUFFER_SIZE)
             buff_offset=0;
       }
       if(!read_rtg_register(REG_ZZ_DECODE))
@@ -430,6 +531,7 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
       if(original_h<256)
          h=original_h;
    }
+//   printf("reset_run w:%d h:%d vs.scalemode:%d original_h:%d\n",w,h,vs.scalemode,original_h);
    /*
    int jmax=80*4-20;
    int imax=80*4;
@@ -676,20 +778,17 @@ void reset_run(int cpu_boot_mode, int counter, int counter_max,int long_reset)
 #endif
 }
 
-extern XAxiVdma_DmaSetup ReadCfg;
-extern XAxiVdma_Config *Config;
-
 // 32bit: hdiv=1, 16bit: hdiv=2, 8bit: hdiv=4, ...
-int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
+int init_vdma_vid(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    int status;
 
    if(Config==NULL)
    {
-      Config = XAxiVdma_LookupConfig(VDMA_DEVICE_ID);
+      Config = XAxiVdma_LookupConfig(VDMA_VID_DEVICE_ID);
 
       if (!Config) {
-         printf("VDMA not found for ID %d\n", VDMA_DEVICE_ID);
+         printf("VDMA not found for ID %d\n", VDMA_VID_DEVICE_ID);
          return(XST_FAILURE);
       }
    }
@@ -749,10 +848,10 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    if(Config==NULL)
    {
-      Config = XAxiVdma_LookupConfig(VDMA_DEVICE_ID);
+      Config = XAxiVdma_LookupConfig(VDMA_VID_DEVICE_ID);
 
       if (!Config) {
-         printf("VDMA not found for ID %d\n", VDMA_DEVICE_ID);
+         printf("VDMA not found for ID %d\n", VDMA_VID_DEVICE_ID);
          return(XST_FAILURE);
       }
    }
@@ -799,6 +898,96 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
       printf("VDMA Failed to start DMA engine (read channel), status: 0x%X\n", status);
       return(status);
    }
+
+   return(XST_SUCCESS);
+}
+
+int init_vdma_ovl(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
+
+   int status;
+   printf("Initializing VDMA for overlay\n");
+   if(OVL_Config==NULL)
+   {
+      printf("Looking up VDMA config for overlay\n");
+      OVL_Config = XAxiVdma_LookupConfig(VDMA_OVL_DEVICE_ID);
+      printf("Done looking up VDMA config for overlay\n");
+      if (!OVL_Config) {
+         printf("VDMA not found for ID %d\n", VDMA_OVL_DEVICE_ID);
+         return(XST_FAILURE);
+      }
+   }
+   printf("Initializing VDMA for overlay with config at 0x%08lX, base address: 0x%08X\n", (uint32_t)OVL_Config, OVL_Config->BaseAddress);
+   
+   // Agregar delay para permitir que el hardware se estabilice
+   usleep(10000); // 10ms delay
+   
+   status = XAxiVdma_CfgInitialize(&vdma_ovl, OVL_Config, OVL_Config->BaseAddress);
+   printf("Done initializing VDMA for overlay, status: %d\n", status);
+   if (status != XST_SUCCESS) {
+      printf("VDMA OVL Configuration Initialization failed, status: %d\n", status);
+      printf("Halted\n");
+      while(1);
+      return(status);
+   }
+   //printf("VDMA MM2S DRE: %d\n", vdma.HasMm2SDRE);
+   //printf("VDMA OVL_Config MM2S DRE: %d\n", OVL_Config->HasMm2SDRE);
+   uint32_t stride = hsize * (OVL_Config->Mm2SStreamWidth >> 3);
+   printf("stride: %ld\n", stride);
+//   if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (uint32_t)(hsize / hdiv)) {
+//      stride = (vs.framebuffer_pan_width * (OVL_Config->Mm2SStreamWidth >> 3)) * stride_div;
+//   }
+
+   // Ensure overlay buffer has same pitch as main framebuffer for consistency
+   // Main framebuffer typically has pitch = width * 4 (for 32-bit pixels)
+   OVL_ReadCfg.Stride = hsize * 4; // Force consistent pitch
+   printf("Overlay stride set to: %d\n", OVL_ReadCfg.Stride);
+   //printf("VDMA HDIV: %d VDIV: %d\n", hdiv, vdiv);
+
+   OVL_ReadCfg.VertSizeInput = vsize / vdiv;
+   OVL_ReadCfg.HoriSizeInput = (hsize * (OVL_Config->Mm2SStreamWidth >> 3)) / hdiv; // note: changing this breaks the output
+   OVL_ReadCfg.FrameDelay = 0; /* This example does not test frame delay */
+   OVL_ReadCfg.EnableCircularBuf = 1; /* Only 1 buffer, continuous loop */
+   OVL_ReadCfg.EnableSync = 0; /* Gen-Lock */
+   OVL_ReadCfg.PointNum = 0;
+   OVL_ReadCfg.EnableFrameCounter = 0; /* Endless transfers */
+   OVL_ReadCfg.FixedFrameStoreAddr = 0; /* We are not doing parking */
+
+   OVL_ReadCfg.FrameStoreStartAddr[0] = bufpos;
+
+   printf("VDMA_OVL Framebuffer at 0x%x\n", OVL_ReadCfg.FrameStoreStartAddr[0]);
+
+   status = XAxiVdma_DmaConfig(&vdma_ovl, XAXIVDMA_READ, &OVL_ReadCfg);
+   if (status != XST_SUCCESS) {
+      printf("VDMA_OVL Read channel config failed, status: %d\n", status);
+      return(status);
+   }
+
+   status = XAxiVdma_DmaSetBufferAddr(&vdma_ovl, XAXIVDMA_READ, OVL_ReadCfg.FrameStoreStartAddr);
+   if (status != XST_SUCCESS) {
+      printf("VDMA Read channel set buffer address failed, status: 0x%X\n", status);
+      return(status);
+   }
+/* now the start_vdma_ovl() function is called in the vsync interrupt handler to avoid starting the overlay DMA in the middle of a frame
+   status = start_vdma_ovl();
+   if (status != XST_SUCCESS) {
+      printf("VDMA_OVL Failed to start DMA engine (read channel), status: 0x%X\n", status);
+      return(status);
+   }
+*/
+   return(XST_SUCCESS);
+}
+
+int start_vdma_ovl(void) {
+   int status = XAxiVdma_DmaStart(&vdma_ovl, XAXIVDMA_READ);
+   if (status != XST_SUCCESS) {
+      printf("VDMA_OVL Failed to start DMA engine (read channel), status: 0x%X\n", status);
+      return(status);
+   }
+   return(XST_SUCCESS);
+}
+int stop_vdma_ovl(void) {
+   XAxiVdma_DmaStop(&vdma_ovl, XAXIVDMA_READ);
+   overlay_is_enabled=0;
    return(XST_SUCCESS);
 }
 
@@ -834,6 +1023,7 @@ void isr_video(void *dummy)
          init_vdma_irq(vs.vmode_hsize, vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv, (uint32_t)vs.framebuffer + vs.bgbuf_offset);
       }
    } else {
+      // vblank interrupt
       static int minitick=0;
       minitick++;
       ticks+=16; // 60Hz tick aprox.
@@ -847,12 +1037,17 @@ void isr_video(void *dummy)
          video_formatter_write(0, MNTVF_OP_PALETTE_SEL);
       }
       init_vdma_irq(vs.vmode_hsize, vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv, ((uint32_t)vs.framebuffer) + vs.framebuffer_pan_offset);
-
+      if(enable_overlay_on_next_vsync)
+      {
+         start_vdma_ovl();
+         enable_overlay_on_next_vsync=0;
+         overlay_is_enabled=1;
+      }
    }
 
    if(vblank)
    {
-      if(config.boot_mode==CPU) {
+      if(config.boot_mode==CPU || config.boot_mode==MOBOCPU) {
          handle_cache_flush(((uint32_t)vs.framebuffer) + vs.framebuffer_pan_offset,vs.framebuffer_size);
       }
       else
@@ -981,7 +1176,7 @@ uint32_t xClk_Wiz_CfgInitialize(XClk_Wiz *InstancePtr, XClk_Wiz_Config *CfgPtr,
 }
  */
 void set_pixelclock(zz_video_mode *mode) {
-   XClk_Wiz_CfgInitialize(&clkwiz, &conf, XPAR_CLK_WIZ_1_BASEADDR);
+   XClk_Wiz_CfgInitialize(&clkwiz, &clkwiz_conf, XPAR_CLK_WIZ_1_BASEADDR);
 
    uint32_t mul = mode->mul;
    uint32_t div = mode->div<<1;
@@ -1019,7 +1214,10 @@ void video_system_init(zz_video_mode *mode, int hdiv, int vdiv) {
 
    set_pixelclock(mode);
    sii9022_init(mode);
-   init_vdma(mode->hres, mode->vres, hdiv, vdiv, (uint32_t)vs.framebuffer + vs.framebuffer_pan_offset);
+   init_vdma_vid(mode->hres, mode->vres, hdiv, vdiv, (uint32_t)vs.framebuffer + vs.framebuffer_pan_offset);
+   init_vdma_ovl(mode->hres, mode->vres, 1, 1, RTG_BASE+0x06000000); // overlay always uses full res and 32-bit pixels, so hdiv=1, vdiv=1
+   if(overlay_is_enabled)
+      enable_overlay_on_next_vsync=1;
 }
 
 void video_mode_init(int mode, int scalemode, int colormode) {
@@ -1072,6 +1270,7 @@ void video_mode_init(int mode, int scalemode, int colormode) {
    vs.vmode_vsize = vmode->vres;
    vs.vmode_vdiv = vdiv;
    vs.vmode_hdiv = hdiv;
+   printf("hdiv: %d vdiv: %d\n", hdiv, vdiv);
    vs.framebuffer_size=vmode->hres*vmode->vres*size;
    vs.split_pos = 1; // force update slpit_pos from split_request_pos and write to videoformatter
 }

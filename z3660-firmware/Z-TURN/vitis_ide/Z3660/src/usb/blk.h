@@ -11,7 +11,7 @@
 typedef uint64_t lbaint_t;
 #define LBAFlength "ll"
 #else
-typedef ulong lbaint_t;
+typedef uint32_t lbaint_t;
 #define LBAFlength "l"
 #endif
 #define LBAF "%" LBAFlength "x"

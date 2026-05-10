@@ -9,6 +9,7 @@
 #define SRC_CONFIG_FILE_H_
 
 enum BOOTMODE{
+   MOBOCPU,
    CPU,
    MUSASHI,
    UAE_030,

@@ -29,12 +29,13 @@ ListButton *b_list_emu;
 void b_list_emu_action(void)
 {
    char boot_mode_labels[NUM_BOOT_MODE_LABELS][25]={
-         "060 real CPU    ",
-         "030 MUSASHI emu ",
-         "030 UAE emu     ",
-         "030 UAE JIT emu ",
-         "040 UAE emu     ",
-         "040 UAE JIT emu ",
+      "Mother Board CPU",
+      "060 real CPU    ",
+      "030 MUSASHI emu ",
+      "030 UAE emu     ",
+      "030 UAE JIT emu ",
+      "040 UAE emu     ",
+      "040 UAE JIT emu ",
    };
    for(int i=0;i<NUM_BOOT_MODE_LABELS;i++)
    {

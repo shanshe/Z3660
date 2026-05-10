@@ -16,6 +16,8 @@ void dump_mmu(void);
 uint32_t read_rtg_register(uint32_t zaddr);
 void write_rtg_register(uint32_t zaddr,uint32_t zdata);
 int write_timings(void);
+void enable_overlay(void);
+void disable_overlay(void);
 
 DEBUG_CONSOLE debug_console;
 extern SHARED *shared;
@@ -50,6 +52,7 @@ typedef enum {
    TRB,     TOGGLE_READ_BURST,
    TWB,     TOGGLE_WRITE_BURST,
    CCP,     CHANGE_CLOCK_PHASE,
+   DCP,     CHANGE_DUTY_CYCLE,
    CCF,     CHANGE_CLOCK_FREQ,
    RCPLD,   RESET_CPLD,
    RFPGA,   RESET_FPGA,
@@ -59,6 +62,7 @@ typedef enum {
    SCT,     SAVE_CURRENT_TIMINGS,
    PHD,     PRINT_HIST_DATAABORT,
    VMR,     VIDEO_MODE_RESET,
+   OVL,     TOGGLE_OVERLAY,
 
    NUM_COMMANDS
 } COMMANDS;
@@ -92,6 +96,7 @@ const char *command_names[NUM_COMMANDS] = {
       "TRB",     "TOGGLE READ BURST",
       "TWB",     "TOGGLE WRITE BURST",
       "CCP",     "CHANGE CLOCK PHASE",
+      "DCP",     "CHANGE DUTY CYCLE",
       "CCF",     "CHANGE CLOCK FREQ",
       "RCPLD",   "RESET CPLD",
       "RFPGA",   "RESET FPGA",
@@ -101,6 +106,7 @@ const char *command_names[NUM_COMMANDS] = {
       "SCT",     "SAVE_CURRENT_TIMINGS",
       "PHD",     "PRINT_HIST_DATAABORT",
       "VMR",     "VIDEO_MODE_RESET",
+      "OVL",     "TOGGLE_OVERLAY",
 };
 extern clock_data cd[];
 extern CONFIG config;
@@ -142,6 +148,7 @@ void debug_console_init(void)
 
    debug_console.reset_cpld=0;
    debug_console.reset_fpga=0;
+   debug_console.overlay_enabled=0;
 }
 uint32_t hextoi(char *str)
 {
@@ -525,6 +532,12 @@ int debug_thread(struct pt *pt)
                      debug_console.subcmd=3;
                      debug_console.cmd=0;
                      break;
+                  case DCP:
+                  case CHANGE_DUTY_CYCLE:
+                     xil_printf("PCLK DUTY CYCLE [%d]: ",debug_console.clocks.PCLK.dutycycle);
+                     debug_console.subcmd=10;
+                     debug_console.cmd=0;
+                     break;
                   case CCF:
                   case CHANGE_CLOCK_FREQ:
                      xil_printf("PCLK FREQ [%d]: ",config.cpufreq);
@@ -600,6 +613,21 @@ int debug_thread(struct pt *pt)
                   case VIDEO_MODE_RESET:
                      printf("Video mode reset...\n");
                      video_mode_reset();
+                     break;
+                  case OVL:
+                  case TOGGLE_OVERLAY:
+                     debug_console.overlay_enabled=!debug_console.overlay_enabled;
+                     if(debug_console.overlay_enabled)
+                     {
+                        enable_overlay();
+                        xil_printf("OVERLAY ENABLED\r\n");
+                     }
+                     else
+                     {
+                        disable_overlay();
+                        xil_printf("OVERLAY DISABLED\r\n");
+                     }
+                     debug_console.subcmd=0;
                      break;
                   default:
                      xil_printf("Not defined command '%s'. Type 'help' or 'h' for help.\r\n",debug_console.cmd_buf);
@@ -757,10 +785,10 @@ int debug_thread(struct pt *pt)
                debug_console.subcmd=0;
                int emu;
                if(   config.boot_mode==MUSASHI
-                     || config.boot_mode==UAE_030
-                     || config.boot_mode==UAEJIT_030
-                     || config.boot_mode==UAE_040
-                     || config.boot_mode==UAEJIT_040)
+                  || config.boot_mode==UAE_030
+                  || config.boot_mode==UAEJIT_030
+                  || config.boot_mode==UAE_040
+                  || config.boot_mode==UAEJIT_040)
                   emu=1;
                else
                   emu=0;
@@ -821,10 +849,10 @@ int debug_thread(struct pt *pt)
                debug_console.subcmd=0;
                int emu;
                if(   config.boot_mode==MUSASHI
-                     || config.boot_mode==UAE_030
-                     || config.boot_mode==UAEJIT_030
-                     || config.boot_mode==UAE_040
-                     || config.boot_mode==UAEJIT_040)
+                  || config.boot_mode==UAE_030
+                  || config.boot_mode==UAEJIT_030
+                  || config.boot_mode==UAE_040
+                  || config.boot_mode==UAEJIT_040)
                   emu=1;
                else
                   emu=0;
@@ -865,10 +893,10 @@ int debug_thread(struct pt *pt)
             debug_console.subcmd=0;
             int emu;
             if(   config.boot_mode==MUSASHI
-                  || config.boot_mode==UAE_030
-                  || config.boot_mode==UAEJIT_030
-                  || config.boot_mode==UAE_040
-                  || config.boot_mode==UAEJIT_040)
+               || config.boot_mode==UAE_030
+               || config.boot_mode==UAEJIT_030
+               || config.boot_mode==UAE_040
+               || config.boot_mode==UAEJIT_040)
                emu=1;
             else
                emu=0;
@@ -885,10 +913,10 @@ int debug_thread(struct pt *pt)
             debug_console.subcmd=0;
             int emu;
             if(   config.boot_mode==MUSASHI
-                  || config.boot_mode==UAE_030
-                  || config.boot_mode==UAEJIT_030
-                  || config.boot_mode==UAE_040
-                  || config.boot_mode==UAEJIT_040)
+               || config.boot_mode==UAE_030
+               || config.boot_mode==UAEJIT_030
+               || config.boot_mode==UAE_040
+               || config.boot_mode==UAEJIT_040)
                emu=1;
             else
                emu=0;
@@ -897,7 +925,125 @@ int debug_thread(struct pt *pt)
             debug_console.cmd_pointer=0;
          }
       }
-
+      else if(debug_console.subcmd>=10 && debug_console.subcmd<=14)
+      {
+         if((c>='0' && c<='9')||
+               (c=='-' && debug_console.cmd_pointer==0)||(c==8))
+         {
+            XUartPs_SendByte(STDOUT_BASEADDRESS, c);
+            if(c==8) // backspace
+            {
+               if(debug_console.cmd_pointer>0)
+               {
+                  XUartPs_SendByte(STDOUT_BASEADDRESS, ' ');
+                  XUartPs_SendByte(STDOUT_BASEADDRESS, 8);
+                  debug_console.cmd_pointer--;
+               }
+               debug_console.cmd_buf[debug_console.cmd_pointer]=0;
+            }
+            else
+            {
+               debug_console.cmd_buf[debug_console.cmd_pointer++]=c;
+               if(debug_console.cmd_pointer>90) debug_console.cmd_pointer=90;
+            }
+         }
+         else if((c=='\r' || c=='\n') && debug_console.cmd_pointer==0)
+         {
+            debug_console.cmd_buf[debug_console.cmd_pointer]=0;
+            switch(debug_console.subcmd-10)
+            {
+            case 0:
+               xil_printf("\r\nCLKEN Duty Cycle [%d]: ",debug_console.clocks.CLKEN.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 1:
+               xil_printf("\r\nBCLK Duty Cycle [%d]: ",debug_console.clocks.BCLK.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 2:
+               xil_printf("\r\nCPUCLK Duty Cycle [%d]: ",debug_console.clocks.CPUCLK.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 3:
+               xil_printf("\r\nCLK90 Duty Cycle [%d]: ",debug_console.clocks.CLK90.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 4: {
+               debug_console.cmd=0;
+               debug_console.subcmd=0;
+               int emu;
+               if(   config.boot_mode==MUSASHI
+                  || config.boot_mode==UAE_030
+                  || config.boot_mode==UAEJIT_030
+                  || config.boot_mode==UAE_040
+                  || config.boot_mode==UAEJIT_040)
+                  emu=1;
+               else
+                  emu=0;
+               configure_clk(config.cpufreq,1,emu);
+               }
+               break;
+            }
+            debug_console.cmd_buf[0]=0;
+            debug_console.cmd_pointer=0;
+         }
+         else if((c=='\r' || c=='\n') && debug_console.cmd_pointer>0)
+         {
+            debug_console.cmd_buf[debug_console.cmd_pointer]=0;
+            switch(debug_console.subcmd-10)
+            {
+            case 0:
+               debug_console.sdata1=atoi(debug_console.cmd_buf);
+               debug_console.clocks.PCLK.dutycycle=debug_console.sdata1;
+               debug_console.clocks.clk_index=get_clock_index(config.cpufreq);
+               cd[debug_console.clocks.clk_index].pclk.dutycycle=debug_console.sdata1;
+               xil_printf("\r\nCLKEN Duty Cycle [%d]: ",debug_console.clocks.CLKEN.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 1:
+               debug_console.sdata1=atoi(debug_console.cmd_buf);
+               debug_console.clocks.CLKEN.dutycycle=debug_console.sdata1;
+               cd[debug_console.clocks.clk_index].clken.dutycycle=debug_console.sdata1;
+               xil_printf("\r\nBCLK Duty Cycle [%d]: ",debug_console.clocks.BCLK.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 2:
+               debug_console.sdata1=atoi(debug_console.cmd_buf);
+               debug_console.clocks.BCLK.dutycycle=debug_console.sdata1;
+               cd[debug_console.clocks.clk_index].bclk.dutycycle=debug_console.sdata1;
+               xil_printf("\r\nCPUCLK Duty Cycle [%d]: ",debug_console.clocks.CPUCLK.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 3:
+               debug_console.sdata1=atoi(debug_console.cmd_buf);
+               debug_console.clocks.CPUCLK.dutycycle=debug_console.sdata1;
+               cd[debug_console.clocks.clk_index].cpuclk.dutycycle=debug_console.sdata1;
+               xil_printf("\r\nCLK90 Duty Cycle [%d]: ",debug_console.clocks.CLK90.dutycycle);
+               debug_console.subcmd++;
+               break;
+            case 4: {
+               debug_console.sdata1=atoi(debug_console.cmd_buf);
+               debug_console.clocks.CLK90.dutycycle=debug_console.sdata1;
+               cd[debug_console.clocks.clk_index].clk90.dutycycle=debug_console.sdata1;
+               debug_console.cmd=0;
+               debug_console.subcmd=0;
+               int emu;
+               if(   config.boot_mode==MUSASHI
+                  || config.boot_mode==UAE_030
+                  || config.boot_mode==UAEJIT_030
+                  || config.boot_mode==UAE_040
+                  || config.boot_mode==UAEJIT_040)
+                  emu=1;
+               else
+                  emu=0;
+               configure_clk(config.cpufreq,1,emu);
+               }
+               break;
+            }
+            debug_console.cmd_buf[0]=0;
+            debug_console.cmd_pointer=0;
+         }
+      }
    }
    PT_END(pt);
 }
@@ -932,6 +1078,7 @@ void debug_console_help(void)
    xil_printf("'TRB'     or 'TOGGLE READ BURST' for toggling Read Burst\r\n");
    xil_printf("'TWB'     or 'TOGGLE WRITE BURST' for toggling Write Burst\r\n");
    xil_printf("'CCP'     or 'CHANGE CLOCK PHASE' for changing clock phases\r\n");
+   xil_printf("'DCP'     or 'CHANGE DUTY CYCLE' for changing clock duty cycles\r\n");
    xil_printf("'CCF'     or 'CHANGE CLOCK FREQ' for changing clock fequency\r\n");
    xil_printf("'RCPLD'   or 'RESET CPLD' for toggling reset CPLD\r\n");
    xil_printf("'RFPGA'   or 'RESET FPGA' for toggling reset FPGA\r\n");
@@ -941,5 +1088,6 @@ void debug_console_help(void)
    xil_printf("'SCT'     or 'SAVE_CURRENT_TIMINGS' for saving current timings on the timings file\r\n");
    xil_printf("'PHD'     or 'PRINT_HIST_DATAABORT' for printing the data abort histogram (EMU only)\r\n");
    xil_printf("'VMR'     or 'VIDEO_MODE_RESET' for reseting vdma\r\n");
+   xil_printf("'OVL'     or 'TOGGLE_OVERLAY' for toggling the debug overlay\r\n");
 }
 #endif

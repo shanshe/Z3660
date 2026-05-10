@@ -355,15 +355,15 @@ void recalculate_coords_checkboxes(void)
    cb_cpuram->y=win.y+74+16+16+16+16;
 
    cb_mount_sd_0x76->x=win.x+70+80;
-   cb_mount_sd_0x76->y=win.y+74+16+16+16+16;
+   cb_mount_sd_0x76->y=win.y+74+16+16+16+16+16;
 
    cb_mount_sd_root->x=win.x+70+80;
-   cb_mount_sd_root->y=win.y+74+16+16+16+16+16;
+   cb_mount_sd_root->y=win.y+74+16+16+16+16+16+16;
 
    for(int i=0;i<PRESET_CB_MAX;i++)
    {
       cb_preset[i]->x=win.x+270+92;
-      cb_preset[i]->y=win.y+37+(Font->Height+5)*i;
+      cb_preset[i]->y=win.y+37+16+(Font->Height+5)*i;
    }
 
    cb_doubled_cursor->x=win.x+84+40;

@@ -1,3 +1,4 @@
+#if 0
 /*
  * pl_mpeg_arm_main.c - Main ARM-side entry point for PL_MPEG decoder on Z3660
  *
@@ -40,7 +41,7 @@ void pl_mpeg_arm_command_handler(uint32_t command) {
                 int result = pl_mpeg_arm_init();
                 if (result == 0) {
                     plmpeg_active = 1;
-                    arm_shared_68k->status = ARM_STATUS_READY;
+                    arm_shared_68k->status = 0;
                 } else {
                     arm_shared_68k->status = ARM_STATUS_ERROR;
                 }
@@ -109,3 +110,4 @@ void pl_mpeg_arm_system_init(void) {
     
     printf("[PL_MPEG ARM] System initialized\n");
 }
+#endif

@@ -570,7 +570,7 @@ static const int PLM_DEMUX_PACKET_PRIVATE = 0xBD;
 static const int PLM_DEMUX_PACKET_AUDIO_1 = 0xC0;
 static const int PLM_DEMUX_PACKET_AUDIO_2 = 0xC1;
 static const int PLM_DEMUX_PACKET_AUDIO_3 = 0xC2;
-static const int PLM_DEMUX_PACKET_AUDIO_4 = 0xC2;
+static const int PLM_DEMUX_PACKET_AUDIO_4 = 0xC3;
 static const int PLM_DEMUX_PACKET_VIDEO_1 = 0xE0;
 
 
@@ -879,8 +879,11 @@ int plm_init_decoders(plm_t *self) {
 	}
 
 	if (!plm_demux_has_headers(self->demux)) {
+		printf("[PL_MPEG DEBUG] plm_init_decoders: No headers found in demux\n");
 		return FALSE;
 	}
+
+	printf("[PL_MPEG DEBUG] plm_init_decoders: Headers found, initializing decoders\n");
 
 	if (plm_demux_get_num_video_streams(self->demux) > 0) {
 		if (self->video_enabled) {
@@ -900,10 +903,12 @@ int plm_init_decoders(plm_t *self) {
 
 	if (self->video_buffer) {
 		self->video_decoder = plm_video_create_with_buffer(self->video_buffer, TRUE);
+		printf("[PL_MPEG DEBUG] plm_init_decoders: Video decoder created\n");
 	}
 
 	if (self->audio_buffer) {
 		self->audio_decoder = plm_audio_create_with_buffer(self->audio_buffer, TRUE);
+		printf("[PL_MPEG DEBUG] plm_init_decoders: Audio decoder created\n");
 	}
 
 	self->has_decoders = TRUE;
@@ -990,8 +995,6 @@ int plm_get_num_video_streams(plm_t *self) {
 }
 
 int plm_get_width(plm_t *self) {
-	printf("plm_init_decoders(self) %d\n",plm_init_decoders(self));
-	printf("self->video_decoder %p\n",self->video_decoder);
 	return (plm_init_decoders(self) && self->video_decoder)
 		? plm_video_get_width(self->video_decoder)
 		: 0;
@@ -1046,6 +1049,7 @@ void plm_rewind(plm_t *self) {
 
 	plm_demux_rewind(self->demux);
 	self->time = 0;
+	self->has_ended = FALSE;
 }
 
 int plm_get_loop(plm_t *self) {
@@ -1330,8 +1334,8 @@ struct plm_buffer_t {
 	int discard_read_bytes;
 	int has_ended;
 	int free_when_done;
-	int close_when_done;
 #if PL_MPEG_USE_FILE
+	int close_when_done;
 	XFILE *fh;
 #endif
 	plm_buffer_load_callback load_callback;
@@ -1354,8 +1358,9 @@ typedef struct {
 void plm_buffer_seek(plm_buffer_t *self, size_t pos);
 size_t plm_buffer_tell(plm_buffer_t *self);
 void plm_buffer_discard_read_bytes(plm_buffer_t *self);
+#if PL_MPEG_USE_FILE
 void plm_buffer_load_file_callback(plm_buffer_t *self, void *user);
-
+#endif
 int plm_buffer_has(plm_buffer_t *self, size_t count);
 int plm_buffer_read(plm_buffer_t *self, int count);
 void plm_buffer_align(plm_buffer_t *self);
@@ -1757,16 +1762,19 @@ int plm_demux_has_headers(plm_demux_t *self) {
 			self->start_code != PLM_START_PACK &&
 			plm_buffer_find_start_code(self->buffer, PLM_START_PACK) == -1
 		) {
+			printf("[PL_MPEG DEBUG] plm_demux_has_headers: No pack start code found\n");
 			return FALSE;
 		}
 
 		self->start_code = PLM_START_PACK;
 		if (!plm_buffer_has(self->buffer, 64)) {
+			printf("[PL_MPEG DEBUG] plm_demux_has_headers: Not enough data for pack header\n");
 			return FALSE;
 		}
 		self->start_code = -1;
 
 		if (plm_buffer_read(self->buffer, 4) != 0x02) {
+			printf("[PL_MPEG DEBUG] plm_demux_has_headers: Not MPEG-2 pack header\n");
 			return FALSE;
 		}
 
@@ -1780,15 +1788,18 @@ int plm_demux_has_headers(plm_demux_t *self) {
 
 	// Decode system header
 	if (!self->has_system_header) {
+		printf("[PL_MPEG DEBUG] plm_demux_has_headers: Searching for system header\n");
 		if (
 			self->start_code != PLM_START_SYSTEM &&
 			plm_buffer_find_start_code(self->buffer, PLM_START_SYSTEM) == -1
 		) {
+			printf("[PL_MPEG DEBUG] plm_demux_has_headers: No system start code found\n");
 			return FALSE;
 		}
 
 		self->start_code = PLM_START_SYSTEM;
 		if (!plm_buffer_has(self->buffer, 56)) {
+			printf("[PL_MPEG DEBUG] plm_demux_has_headers: Not enough data for system header\n");
 			return FALSE;
 		}
 		self->start_code = -1;
@@ -2791,7 +2802,7 @@ plm_frame_t *plm_video_decode(plm_video_t *self) {
 }
 
 int plm_video_has_header(plm_video_t *self) {
-	printf("Checking for sequence header...\n");
+//	printf("Checking for sequence header...\n");
 	if (self->has_sequence_header) {
 		return TRUE;
 	}
@@ -2827,6 +2838,7 @@ int plm_video_decode_sequence_header(plm_video_t *self) {
 	// Skip pixel aspect ratio
 	plm_buffer_skip(self->buffer, 4);
 
+	// Get frame rate
 	self->framerate = PLM_VIDEO_PICTURE_RATE[plm_buffer_read(self->buffer, 4)];
 
 	// Skip bit_rate, marker, buffer_size and constrained bit
@@ -2953,7 +2965,7 @@ void plm_video_decode_picture(plm_video_t *self) {
 	// Decode all slices
 	while (PLM_START_IS_SLICE(self->start_code)) {
 		plm_video_decode_slice(self, self->start_code & 0x000000FF);
-		if (self->macroblock_address >= self->mb_size - 2) {
+		if (self->macroblock_address >= self->mb_size - 1) {
 			break;
 		}
 		self->start_code = plm_buffer_next_start_code(self->buffer);
@@ -3137,7 +3149,7 @@ int plm_video_decode_motion_vector(plm_video_t *self, int r_size, int motion) {
 	if (motion > (fscale << 4) - 1) {
 		motion -= fscale << 5;
 	}
-	else if (motion < ((-fscale) << 4)) {
+	else if (motion < (int)((unsigned)(-fscale) << 4)) {
 		motion += fscale << 5;
 	}
 
@@ -3325,7 +3337,7 @@ void plm_video_decode_block(plm_video_t *self, int block) {
 		n++;
 
 		// Dequantize, oddify, clip
-		level <<= 1;
+		level = (unsigned)level << 1;
 		if (!self->macroblock_intra) {
 			level += (level < 0 ? -1 : 1);
 		}

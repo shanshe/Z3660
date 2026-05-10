@@ -17,8 +17,8 @@ endif
 all: 
 	@echo Making seq_libs archive par_libs
 	@$(MAKE) --no-print-directory seq_libs
-	@$(MAKE) --no-print-directory archive
 	@$(MAKE) --no-print-directory par_libs
+	@$(MAKE) --no-print-directory archive
 	@echo 'Finished building libraries'
 
 include: $(addsuffix /make.include,$(SUBDIRS))
@@ -34,6 +34,7 @@ archive:
 	@arm-none-eabi-ar -r  $(LIBRARIES) $(sort $(wildcard $(PROCESSOR)/lib/*.o))
 
 clean: $(addsuffix /make.clean,$(SUBDIRS))
+	@echo "Cleaning libraries"
 	rm -f ${PROCESSOR}/lib/libxil.a
 
 $(PROCESSOR)/lib/libxil.a: $(PROCESSOR)/lib/libxil_init.a
@@ -48,4 +49,5 @@ $(PROCESSOR)/lib/libxil.a: $(PROCESSOR)/lib/libxil_init.a
 	@$(MAKE) -C $(subst /make.libs,,$@) -s libs  "SHELL=$(SHELL)" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 
 %/make.clean: 
-	$(MAKE) -C $(subst /make.clean,,$@) -s clean 
+	@echo "Running Make clean in $(subst /make.clean,,$@)"
+	@$(MAKE) -C $(subst /make.clean,,$@) -s clean 

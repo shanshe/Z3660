@@ -10,9 +10,6 @@
 
 #include "inttypes_arm.h"
 
-/* Maximum input buffer size for MPEG data chunks */
-#define ARM_INPUT_BUFFER_SIZE (256 * 1024)
-
 /* Commands sent from 68k to ARM */
 #define ARM_CMD_NONE            0
 #define ARM_CMD_INIT            1
@@ -23,12 +20,11 @@
 #define ARM_CMD_DISPLAY_FRAME   6
 
 /* Status responses from ARM to 68k */
-#define ARM_STATUS_READY         0
-#define ARM_STATUS_BUSY          1
-#define ARM_STATUS_ERROR         2
-#define ARM_STATUS_SETUP_NEEDED  3
-#define ARM_STATUS_VIDEO_REFRESH 4
-#define ARM_STATUS_VIDEO_INIT    5
+#define ARM_STATUS_ERROR         0x02
+#define ARM_STATUS_SETUP_NEEDED  0x04
+#define ARM_STATUS_VIDEO_REFRESH 0x08
+#define ARM_STATUS_VIDEO_INIT    0x10
+#define ARM_STATUS_FINISHED      0x20
 
 /*
  * Shared memory structure for ARM-68k communication
@@ -46,24 +42,8 @@ typedef struct {
     volatile int32_t gray_mode;                  /* Gray mode flag (for init) */
     double sync_time;                   /* Synchronization time */
     
-    /* Video information - set by ARM when available */
-//    decoder_video_info_arm_t video_info;
-    
-    /* Statistics - updated by ARM */
-//    decoder_stats_arm_t stats;
-        
-    /* Frame output buffers - decoded frames from ARM to 68k */
-    /* Note: These will be ARM memory addresses that 68k can access */
-//    uint32_t frame_y_addr;              /* Y plane address in ARM memory */
-//    uint32_t frame_u_addr;              /* U plane address in ARM memory */
-//    uint32_t frame_v_addr;              /* V plane address in ARM memory */
     uint32_t frame_width;               /* Frame width in pixels */
     uint32_t frame_height;              /* Frame height in pixels */
-//    uint32_t frame_stride;              /* Stride for Y plane */
-    
-    /* Synchronization - for signaling between processors */
-//    volatile uint32_t arm_signal;       /* Signal from 68k to ARM */
-//    volatile uint32_t m68k_signal;      /* Signal from ARM to 68k */
 
     float framerate;
     uint32_t frame_coded_width;
@@ -71,6 +51,8 @@ typedef struct {
     /* Statistics - updated by ARM */
     uint32_t skipped_frames;
     uint32_t decode_time_us;            /* Time taken to decode last frame */
+    uint32_t megabytes_remaining;       /* Total megabytes remaining ARM decoder */
+    uint32_t bytes_remaining;
 
     /* Display frame data - for vo_draw communication */
     struct {
@@ -80,14 +62,12 @@ typedef struct {
         int16_t padding1;
         int16_t padding2;
         int16_t padding3;
-//        uint32_t frame_base_amiga[3];     /* Y, U, V plane pointers */
-//        uint32_t padding4;
+        uint32_t framebuffer_addr;  /* Framebuffer address in Amiga memory */
+        uint32_t framebuffer_pitch;  /* Pitch/stride of framebuffer */
+//        uint32_t frame_base_amiga[3];   /* Y, U, V plane pointers */
+//        uint32_t frame_rgb;             /* ARGB frame pointer */
 //        uint8_t *frame_base_arm[3];     /* Y, U, V plane pointers */
     } display_frame;
-
-    /* Input data buffer - MPEG stream data from 68k */
-    uint8_t input_buffer[ARM_INPUT_BUFFER_SIZE];
-
 } arm_decoder_shared_arm_t __attribute__((aligned(32)));
 
 #endif // MPEG2DEC_ARM_COMM_ARM_H

@@ -1,21 +1,33 @@
 #!/usr/bin/env python
 
 __author__   = 'shanshe'
-__version___ = '1.0.1'
+__version___ = '1.0.2'
 __date___    = '06.05.24'
 
 import sys
 import os
 import shutil
 import struct
+import platform
 
-DST_PATH = "Z:/z3660/"
-SRC_PATH = "Beta/sd_card/"
-BOOT_NAME = "BOOT.BIN"
-SCSI_NAME = "z3660_scsi.rom"
-JED_NAME  =  "z3660.jed"
+# File names
+BOOT_NAME       = "BOOT.BIN"
+SCSI_NAME       = "z3660_scsi.rom"
+JED_SOURCE_NAME = "z3660_beta.jed"
+JED_NAME        = "z3660.jed"
 
-SOURCE = "C:/Users/shanshe/workspace/Z3660/src/version.h"
+def set_paths():
+    global DST_PATH, SRC_PATH, SOURCE
+    if platform.system() == "Windows":
+        # Compile on Windows
+        DST_PATH = "Z:/z3660/"
+        SRC_PATH = "sd_card/"
+        SOURCE = "../Z3660/src/version.h"
+    else:
+        # Compile on macos
+        DST_PATH = "/Volumes/web/z3660/"
+        SRC_PATH = "Z3660_system/sd_card/"
+        SOURCE = "Z3660/src/version.h"
 
 def buscarDefine(clave, archivo):
     claveCompleta = "#define " + clave
@@ -54,10 +66,15 @@ def crc32(name):
             yield swap32(data_int)
 
 def main():
+    # Ensure destination path exists before copying files
+    set_paths()
+    if not os.path.exists(DST_PATH):
+        print("Making DST_PATH ...")
+        os.makedirs(DST_PATH, exist_ok=True)
     
-    shutil.copy2(SRC_PATH + BOOT_NAME,DST_PATH)
-    shutil.copy2(SRC_PATH + "../../z3660_scsi.rom",DST_PATH)
-    shutil.copy2(SRC_PATH + "../../z3660.jed",DST_PATH)
+    shutil.copy2(SRC_PATH + BOOT_NAME, DST_PATH)
+    shutil.copy2(SRC_PATH + "../z3660_scsi.rom", DST_PATH)
+    shutil.copy2(SRC_PATH + "../" + JED_SOURCE_NAME, DST_PATH + JED_NAME)
 
     file = open(SOURCE, 'r', encoding='utf-8')
     V_MAJOR        = getValor("REVISION_MAJOR", file)

@@ -1,7 +1,7 @@
 /*
  * MNT ZZ9000 Amiga Graphics and Coprocessor Card Operating System (ZZ9000OS)
  *
- * Copyright (C) 2019, Lukas F. Hartmann <lukas@mntre.com>
+ * Copyright (C) 2019-2026, Lucie L. Hartmann <lucie@mntre.com>
  *                     MNT Research GmbH, Berlin
  *                     https://mntre.com
  *
@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifdef __ARM_NEON__
+#include <arm_neon.h>
+#endif
 #include "gfx.h"
 #include "../main.h"
 
@@ -34,28 +37,28 @@ uint32_t fb_pitch=0;
 /*
 static void *(memcpy_rom1)(void * s1, const void * s2, u32 n)
 {
-	char *dst = (char *)s1;
-	const char *src = (char *)s2;
+   char *dst = (char *)s1;
+   const char *src = (char *)s2;
 
-	// Loop and copy
-	while (n-- != 0)
+   // Loop and copy
+   while (n-- != 0)
  *dst++ = *src++;
-	return s1;
+   return s1;
 }
  */
 static void *(memmove_rom1)(void * s1, const void * s2, u32 n)
-      {
+{
    /*
-	if(s1 < s2)
-	{
-		char *dst = (char *)s1;
-		const char *src = (char *)s2;
+   if(s1 < s2)
+   {
+      char *dst = (char *)s1;
+      const char *src = (char *)s2;
 
-		// Loop and copy
-		while (n-- != 0)
+      // Loop and copy
+      while (n-- != 0)
     *dst++ = *src++;
-	}
-	else
+   }
+   else
     */
    {
       char *dst = (char *)s1+n-1;
@@ -66,7 +69,39 @@ static void *(memmove_rom1)(void * s1, const void * s2, u32 n)
          *dst-- = *src--;
    }
    return s1;
-      }
+}
+
+static inline void memset16(uint16_t *dst, uint16_t val, uint32_t count) {
+#ifdef __ARM_NEON__
+   uint16x8_t v = vdupq_n_u16(val);
+   while (count >= 8) {
+      vst1q_u16(dst, v);
+      dst += 8; count -= 8;
+   }
+#else
+   while (count >= 4) {
+      dst[0] = val; dst[1] = val; dst[2] = val; dst[3] = val;
+      dst += 4; count -= 4;
+   }
+#endif
+   while (count--) *dst++ = val;
+}
+
+static inline void memset32(uint32_t *dst, uint32_t val, uint32_t count) {
+#ifdef __ARM_NEON__
+   uint32x4_t v = vdupq_n_u32(val);
+   while (count >= 4) {
+      vst1q_u32(dst, v);
+      dst += 4; count -= 4;
+   }
+#else
+   while (count >= 4) {
+      dst[0] = val; dst[1] = val; dst[2] = val; dst[3] = val;
+      dst += 4; count -= 4;
+   }
+#endif
+   while (count--) *dst++ = val;
+}
 
 void set_fb(uint32_t* fb_, uint32_t pitch) {
    fb=fb_;
@@ -105,12 +140,16 @@ void fill_rect(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint3
             x++;
          }
          break;
-      case MNTVA_COLOR_32BIT:
       case MNTVA_COLOR_16BIT565:
       case MNTVA_COLOR_15BIT:
          while(x < rect_x2) {
-            // The mask isn't used at all for 16/32-bit
-            SET_FG_PIXEL;
+            ((uint16_t *)dp)[x] = fg_color;
+            x++;
+         }
+         break;
+      case MNTVA_COLOR_32BIT:
+         while(x < rect_x2) {
+            dp[x] = fg_color;
             x++;
          }
          break;
@@ -126,10 +165,9 @@ void fill_rect(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint3
 void fill_rect_solid(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint32_t rect_rgb, uint32_t color_format)
 {
    uint32_t* p = fb + (rect_y1 * fb_pitch);
-   uint16_t* p16;
-   uint16_t rect_y2 = rect_y1 + h, rect_x2 = rect_x1 + w;
-   uint16_t x;
-
+   uint16_t rect_y2 = rect_y1 + h;
+   if(w==0 || h==0)
+      return;
    for (uint16_t cur_y = rect_y1; cur_y < rect_y2; cur_y++) {
       switch(color_format) {
       case MNTVA_COLOR_8BIT:
@@ -137,17 +175,10 @@ void fill_rect_solid(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h,
          break;
       case MNTVA_COLOR_16BIT565:
       case MNTVA_COLOR_15BIT:
-         x = rect_x1;
-         p16 = (uint16_t *)p;
-         while(x < rect_x2) {
-            p16[x++] = rect_rgb;
-         }
+         memset16((uint16_t *)p + rect_x1, rect_rgb, w);
          break;
       case MNTVA_COLOR_32BIT:
-         x = rect_x1;
-         while(x < rect_x2) {
-            p[x++] = rect_rgb;
-         }
+         memset32(p + rect_x1, rect_rgb, w);
          break;
       default:
          // Unknown/unhandled color format.
@@ -416,16 +447,16 @@ void draw_line(int16_t rect_x1, int16_t rect_y1, int16_t rect_x2, int16_t rect_y
 
    // This can't be used for now, as Flags from the current RastPort struct is not exposed by [ P96 2.4.2 ]
    /*if ((pattern_offset >> 8) & 0x01) { // Is FRST_DOT set?
-		cur_bit = 0x8000;
-		fg_color = 0xFFFF0000;
-	}
-	else {
-		fg_color = 0xFF00FF00;
-		cur_bit >>= ((pattern_offset & 0xFF) % 16);
-	}
+      cur_bit = 0x8000;
+      fg_color = 0xFFFF0000;
+   }
+   else {
+      fg_color = 0xFF00FF00;
+      cur_bit >>= ((pattern_offset & 0xFF) % 16);
+   }
 
-	if (cur_bit == 0)
-		cur_bit = 0x8000;*/
+   if (cur_bit == 0)
+      cur_bit = 0x8000;*/
 
 
    DRAW_LINE_PIXEL;
@@ -719,59 +750,59 @@ void p2d_rect(int16_t sx, int16_t sy, int16_t dx, int16_t dy, int16_t w, int16_t
 }
 /*
 void orig_p2d_rect(int16_t sx, int16_t sy, int16_t dx, int16_t dy, int16_t w, int16_t h, uint8_t draw_mode, uint8_t planes, uint8_t mask, uint8_t layer_mask, uint32_t color_mask, uint16_t src_line_pitch, uint8_t *bmp_data_src, uint32_t color_format) {
-	uint32_t *dp = fb + (dy * fb_pitch);
+   uint32_t *dp = fb + (dy * fb_pitch);
 
-	uint8_t cur_bit, base_bit, base_byte;
-	uint16_t cur_byte = 0, cur_pixel = 0;
-	uint32_t fg_color = 0;
+   uint8_t cur_bit, base_bit, base_byte;
+   uint16_t cur_byte = 0, cur_pixel = 0;
+   uint32_t fg_color = 0;
 
-	uint32_t plane_size = src_line_pitch * h;
-	uint32_t *bmp_pal = (uint32_t *)bmp_data_src;
-	uint8_t *bmp_data = bmp_data_src + (256 * 4);
+   uint32_t plane_size = src_line_pitch * h;
+   uint32_t *bmp_pal = (uint32_t *)bmp_data_src;
+   uint8_t *bmp_data = bmp_data_src + (256 * 4);
 
-	cur_bit = base_bit = (0x80 >> (sx % 8));
-	cur_byte = base_byte = ((sx / 8) % src_line_pitch);
+   cur_bit = base_bit = (0x80 >> (sx % 8));
+   cur_byte = base_byte = ((sx / 8) % src_line_pitch);
 
-	for (int16_t line_y = 0; line_y < h; line_y++) {
-		for (int16_t x = dx; x < dx + w; x++) {
-			cur_pixel = 0;
-			if (draw_mode & 0x01)
-				DECODE_INVERTED_PLANAR_PIXEL(cur_pixel)
-			else
-				DECODE_PLANAR_PIXEL(cur_pixel)
-			fg_color = bmp_pal[cur_pixel];
+   for (int16_t line_y = 0; line_y < h; line_y++) {
+      for (int16_t x = dx; x < dx + w; x++) {
+         cur_pixel = 0;
+         if (draw_mode & 0x01)
+            DECODE_INVERTED_PLANAR_PIXEL(cur_pixel)
+         else
+            DECODE_PLANAR_PIXEL(cur_pixel)
+         fg_color = bmp_pal[cur_pixel];
 
-			if (mask == 0xFF && (draw_mode == 0x0C || draw_mode == 0x03)) {
-				switch (color_format) {
-					case MNTVA_COLOR_16BIT565:
-					case MNTVA_COLOR_15BIT:
-						((uint16_t *)dp)[x] = fg_color;
-						break;
-					case MNTVA_COLOR_32BIT:
-						dp[x] = fg_color;
-						break;
-				}
-				goto skip;
-			}
+         if (mask == 0xFF && (draw_mode == 0x0C || draw_mode == 0x03)) {
+            switch (color_format) {
+               case MNTVA_COLOR_16BIT565:
+               case MNTVA_COLOR_15BIT:
+                  ((uint16_t *)dp)[x] = fg_color;
+                  break;
+               case MNTVA_COLOR_32BIT:
+                  dp[x] = fg_color;
+                  break;
+            }
+            goto skip;
+         }
 
-			HANDLE_MINTERM_PIXEL_16_32(fg_color, dp);
+         HANDLE_MINTERM_PIXEL_16_32(fg_color, dp);
 
-			skip:;
-			if ((cur_bit >>= 1) == 0) {
-				cur_bit = 0x80;
-				cur_byte++;
-				cur_byte %= src_line_pitch;
-			}
+         skip:;
+         if ((cur_bit >>= 1) == 0) {
+            cur_bit = 0x80;
+            cur_byte++;
+            cur_byte %= src_line_pitch;
+         }
 
-		}
-		dp += fb_pitch;
-		if ((line_y + sy + 1) % h)
-			bmp_data += src_line_pitch;
-		else
-			bmp_data = bmp_data_src;
-		cur_bit = base_bit;
-		cur_byte = base_byte;
-	}
+      }
+      dp += fb_pitch;
+      if ((line_y + sy + 1) % h)
+         bmp_data += src_line_pitch;
+      else
+         bmp_data = bmp_data_src;
+      cur_bit = base_bit;
+      cur_byte = base_byte;
+   }
 }
  */
 #define PATTERN_FILLRECT_LOOPX \
@@ -1182,7 +1213,7 @@ void acc_blit_rect_16to8(uint32_t src, uint32_t dest, uint16_t x, uint16_t y, ui
    for (int y = 0; y < h; y++) {
       for (int x = 0; x < w; x++) {
          dp[x] = color_map_16_to_8[SWAP16(sp[x])];
-         //			dp[x] = color_map_16_to_8[sp[x]];
+         //         dp[x] = color_map_16_to_8[sp[x]];
       }
       dp += dest_pitch;
       sp += src_pitch;
@@ -1291,14 +1322,14 @@ void acc_fill_rect(uint32_t dest, uint16_t pitch, int16_t x, int16_t y, int16_t 
 #define CHKBLOT(a, b) \
       if (a >= 0 && b >= 0 && a < w && b < h)
 
-//	DrawPixel(surface, x + x1, y + y1, colour);
-//	DrawPixel(surface, x - x1, y + y1, colour);
-//	DrawPixel(surface, x + x1, y - y1, colour);
-//	DrawPixel(surface, x - x1, y - y1, colour);
-//	DrawPixel(surface, x + y1, y + x1, colour);
-//	DrawPixel(surface, x - y1, y + x1, colour);
-//	DrawPixel(surface, x + y1, y - x1, colour);
-//	DrawPixel(surface, x - y1, y - x1, colour);
+//   DrawPixel(surface, x + x1, y + y1, colour);
+//   DrawPixel(surface, x - x1, y + y1, colour);
+//   DrawPixel(surface, x + x1, y - y1, colour);
+//   DrawPixel(surface, x - x1, y - y1, colour);
+//   DrawPixel(surface, x + y1, y + x1, colour);
+//   DrawPixel(surface, x - y1, y + x1, colour);
+//   DrawPixel(surface, x + y1, y - x1, colour);
+//   DrawPixel(surface, x - y1, y - x1, colour);
 
 #define BLOTCIRCLE(a, b) \
       CHKBLOT((x + x1),(y + y1)) a[(x + x1) + ((y + y1) * pitch)] = b; \
@@ -1436,13 +1467,13 @@ void TriTexLine(int32_t x1, int32_t x2, int32_t y, int32_t tx1, int32_t tx2, int
       return;
 
    /*If the line is clipped at the left screen border (where we start), the left out
-	gouraud and texture steps have to be calculated; x is set to 0 */
+   gouraud and texture steps have to be calculated; x is set to 0 */
    if (x1 < 0) {
       //int xm=-x1;
       x1 = 0;
    }
    /* x is simply clipped at the right border. That's where the loop is going to end
-	then */
+   then */
    if (x2 > (w - 1))
       x2= (w - 1);
    //End of clipping and calculation of screen start address
@@ -1545,26 +1576,26 @@ void acc_fill_flat_tri(uint32_t dest, TriangleDef *d, uint16_t w, uint16_t h, ui
    }
 
    /*
-	 Variable meanings:
+    Variable meanings:
 
-	 xs? xstep=delta x
-	 txs? delta tx
-	 tys? delta ty
-	 xd? xdelta
-	 yd? dunno
-	 txd?  "
-	 tyd?  "
-	 xw? current x-value used in loop
-	 txw? for tx
-	 tyw? for ty
+    xs? xstep=delta x
+    txs? delta tx
+    tys? delta ty
+    xd? xdelta
+    yd? dunno
+    txd?  "
+    tyd?  "
+    xw? current x-value used in loop
+    txw? for tx
+    tyw? for ty
     */
    /*
-	 Start values for the first part (up to y of point 2)
-	 xw1 and xw2 are x-values for the current line. The triangle is drawn from
-	 top to bottom line after line...
-	 txw, tyw and gw are values for texture and brightness
-	 always for start- and ending-point of the current line
-	 A line is also called "Span".
+    Start values for the first part (up to y of point 2)
+    xw1 and xw2 are x-values for the current line. The triangle is drawn from
+    top to bottom line after line...
+    txw, tyw and gw are values for texture and brightness
+    always for start- and ending-point of the current line
+    A line is also called "Span".
     */
 
    int32_t xw1 = dataa[0]; //pax
@@ -1603,7 +1634,7 @@ void acc_fill_flat_tri(uint32_t dest, TriangleDef *d, uint16_t w, uint16_t h, ui
    }
 
    /*
-	 New start values for the second part of the triangle
+    New start values for the second part of the triangle
     */
    xw1 = datab[0] + xs3;
    txw1 = datab[2] + txs3;

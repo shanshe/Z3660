@@ -22,7 +22,7 @@ BSP_INC := $(ROOT)/../design_1_wrapper/ps7_cortexa9_0/standalone_domain/bsp/ps7_
 # BSP library path for standalone domain (core 0)
 BSP_LIB := $(ROOT)/../design_1_wrapper/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/lib
 
-INCLUDES:= -I$(SRCDIR) -I$(SRCDIR) -I$(BSP_INC) -I$(LWIP_INC) -I$(BSP_INC) -I$(SRCDIR)/mbedtls/include -I$(ROOT)/../design_1_wrapper/zynq_fsbl -I$(ROOT)/include
+INCLUDES:= -I$(SRCDIR) -I$(SRCDIR) -I$(BSP_INC) -I$(LWIP_INC) -I$(SRCDIR)/mbedtls/include -I$(ROOT)/../design_1_wrapper/zynq_fsbl
 
 CFLAGS  := -mcpu=cortex-a9 -marm -mfpu=neon -mfloat-abi=hard -O3 -std=gnu99 -ftree-vectorize -mvectorize-with-neon-quad -ffast-math \
            -ffunction-sections -fdata-sections -Wall -Wextra \

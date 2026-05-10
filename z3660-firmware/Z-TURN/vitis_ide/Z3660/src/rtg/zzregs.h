@@ -1,9 +1,15 @@
 /*
- * MNT ZZ9000 Amiga Graphics and Coprocessor Card Operating System (ZZ9000OS)
+ * Z3660 Graphics Card Driver based on MNT ZZ9000 rev 1.13
  *
- * Copyright (C) 2020, Lukas F. Hartmann <lukas@mntre.com>
- *                     MNT Research GmbH, Berlin
- *                     https://mntre.com
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * GNU General Public License v3.0 or later
+ */
+
+/*
+ * MNT ZZ9000 Amiga Graphics Card Driver (ZZ9000.card)
+ * Copyright (C) 2016-2020, Lukas F. Hartmann <lukas@mntre.com>
+ *                          MNT Research GmbH, Berlin
+ *                          https://mntre.com
  *
  * More Info: https://mntre.com/zz9000
  *
@@ -166,14 +172,15 @@ enum zz_reg_offsets {
    REG_ZZ_MPEG_PARAM1    = 0x2CC,  // MPEG parameter 1 (height/data_len)
    REG_ZZ_MPEG_PARAM2    = 0x2D0,  // MPEG parameter 2 (framerate_num/sync_time)
    REG_ZZ_MPEG_PARAM3    = 0x2D4,  // MPEG parameter 3 (framerate_den/reserved)
-   REG_ZZ_MPEG_COUNT     = 0x2D8,  // MPEG data length/frame count
-   REG_ZZ_MPEG_INFO      = 0x2DC,  // MPEG decoder information
-   REG_ZZ_MPEG_FIFOTX    = 0x2E0,  // MPEG FIFO write index (68k -> ARM)
-   REG_ZZ_MPEG_FIFORX    = 0x2E4,  // MPEG FIFO read index (ARM -> 68k)
-   REG_ZZ_MPEG_FIFO_SIZE = 0x2E8,  // MPEG FIFO size in bytes
-   REG_ZZ_MPEG_FIFO_ADDR = 0x2EC,  // MPEG FIFO buffer base address
+   REG_ZZ_MPEG_PARAM4    = 0x2D8,  // MPEG parameter 3 (framerate_den/reserved)
+//   REG_ZZ_MPEG_COUNT     = 0x2DC,  // MPEG data length/frame count
+//   REG_ZZ_MPEG_INFO      = 0x2E0,  // MPEG decoder information
+   REG_ZZ_MPEG_FIFOTX    = 0x2E4,  // MPEG FIFO write index (68k -> ARM)
+//   REG_ZZ_MPEG_FIFORX    = 0x2E8,  // MPEG FIFO read index (ARM -> 68k)
+//   REG_ZZ_MPEG_FIFO_SIZE = 0x2EC,  // MPEG FIFO size in bytes
+//   REG_ZZ_MPEG_FIFO_ADDR = 0x2F0,  // MPEG FIFO buffer base address
 
-   //NOT USED 0x2E0 - 0x2FC
+   //NOT USED 0x2F4 - 0x2FC
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
@@ -184,7 +191,23 @@ enum zz_reg_offsets {
    REG_ZZ_MOUNT_SD_ROOT  = 0x314,
    REG_ZZ_MONITOR_SWITCH = 0x318,
 
-   //NOT USED 0x31C - 0x4FC
+   REG_ZZ_NOT_USED_0x31C   = 0x31C,
+   REG_ZZ_OVERLAY_ENABLE   = 0x320,
+   REG_ZZ_OVERLAY_ADDRESS  = 0x324,
+   REG_ZZ_OVERLAY_ROWPITCH = 0x328,
+   REG_ZZ_OVERLAY_YSTART   = 0x32C,
+   REG_ZZ_OVERLAY_XSTART   = 0x330,
+   REG_ZZ_OVERLAY_WIDTH    = 0x334,
+   REG_ZZ_OVERLAY_HEIGHT   = 0x338,
+   REG_ZZ_OVERLAY_SOURCE_WIDTH  = 0x33C,
+   REG_ZZ_OVERLAY_SOURCE_HEIGHT = 0x340,
+   REG_ZZ_OVERLAY_FORMAT   = 0x344,
+   REG_ZZ_OVERLAY_COLORKEY = 0x348,
+   REG_ZZ_OVERLAY_BASE     = 0x34C,
+
+   REG_ZZ_USB_PROXY_CMD    = 0x350,
+
+   //NOT USED 0x354 - 0x4FC
 
    REG_ZZ_SEL_KS_TXT     = 0x500,
    REG_ZZ_SEL_SCSI_TXT   = 0x600,

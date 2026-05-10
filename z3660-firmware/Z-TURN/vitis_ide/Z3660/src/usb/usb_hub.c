@@ -14,6 +14,10 @@
  *
  * Adapted for U-Boot:
  * (C) Copyright 2001 Denis Peter, MPL AG Switzerland
+ *
+ * ZZ9000 modifications:
+ *
+ * Copyright (C) 2026 Dimitris Panokostas <midwan@gmail.com>
  */
 
 /****************************************************************************
@@ -24,18 +28,17 @@
 //#include <common.h>
 //#include <command.h>
 #include <errno.h>
-#include "memalign.h"
+#include "usb/memalign.h"
 //#include <asm/processor.h>
 //#include <asm/unaligned.h>
 //#include <linux/ctype.h>
 #include "list.h"
-#include "asm/byteorder.h"
+#include <usb/asm/byteorder.h>
 //#include <asm/unaligned.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "usb.h"
-
 
 unsigned long get_timer(unsigned long i);
 void mdelay(int ms);
@@ -78,63 +81,13 @@ static inline bool usb_hub_is_superspeed(struct usb_device *hdev)
 static int usb_get_hub_descriptor(struct usb_device *dev, void *data, int size)
 {
 	unsigned short dtype = USB_DT_HUB;
-	int ret;
 
 	if (usb_hub_is_superspeed(dev))
 		dtype = USB_DT_SS_HUB;
 
-	USB_DEBUG("[HUB DEBUG] GET_HUB_DESCRIPTOR: dev=%d size=%d dtype=0x%04x\n", dev->devnum, size, dtype);
-
-	ret = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
+	return usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
 		USB_REQ_GET_DESCRIPTOR, USB_DIR_IN | USB_RT_HUB,
 		dtype << 8, 0, data, size, USB_CNTL_TIMEOUT);
-
-	if (ret >= 0) {
-		struct usb_hub_descriptor *desc = (struct usb_hub_descriptor *)data;
-		USB_DEBUG("[HUB DEBUG] GET_HUB_DESCRIPTOR result: ret=%d\n", ret);
-		if (ret >= 9) { /* Minimum hub descriptor size */
-			USB_DEBUG("[HUB DEBUG] HUB DESCRIPTOR: length=%d type=%d ports=%d\n", 
-				desc->bLength, desc->bDescriptorType, desc->bNbrPorts);
-				USB_DEBUG("[HUB DEBUG] HUB CHARACTERISTICS: 0x%04x PowerOn2Good=%dms\n", 
-				le16_to_cpu(desc->wHubCharacteristics), desc->bPwrOn2PwrGood * 2);
-		}
-	} else {
-		printf("[HUB DEBUG] GET_HUB_DESCRIPTOR FAILED: ret=%d\n", ret);
-	}
-
-	return ret;
-}
-
-/**
- * usb_hub_find_and_fix() - Find a hub device by devnum and fix its ports
- *
- * This is a utility function that can be called from external code (like
- * z3660_usb_handler.c) to find a hub device by its device number and
- * attempt to fix any disabled ports.
- *
- * @hub_devnum: Device number of the hub to find and fix
- * @return: Number of ports fixed, negative on error
- */
-int usb_hub_find_and_fix(int hub_devnum)
-{
-	struct usb_device *hub_dev = NULL;
-
-	/* Find the hub device by devnum */
-	extern struct usb_device *usb_poseidon_get_dev(int addr);
-	hub_dev = usb_poseidon_get_dev(hub_devnum);
-	
-	if (!hub_dev) {
-		printf("[HUB FIND&FIX] Hub devnum=%d not found\n", hub_devnum);
-		return -ENODEV;
-	}
-
-	if (hub_dev->maxchild == 0) {
-		printf("[HUB FIND&FIX] Device %d is not a hub (maxchild=0)\n", hub_devnum);
-		return -EINVAL;
-	}
-
-	USB_DEBUG("[HUB FIND&FIX] Found hub devnum=%d with %d ports, scanning...\n", hub_devnum, hub_dev->maxchild);
-	return usb_hub_scan_and_fix_ports(hub_dev);
 }
 
 static int usb_clear_port_feature(struct usb_device *dev, int port, int feature)
@@ -161,27 +114,10 @@ static int usb_get_hub_status(struct usb_device *dev, void *data)
 int usb_get_port_status(struct usb_device *dev, int port, void *data)
 {
 	int ret;
-	struct usb_port_status *status = (struct usb_port_status *)data;
-
-	USB_DEBUG("[HUB DEBUG] GET_PORT_STATUS: dev=%d port=%d\n", dev->devnum, port);
 
 	ret = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
 			USB_REQ_GET_STATUS, USB_DIR_IN | USB_RT_PORT, 0, port,
 			data, sizeof(struct usb_port_status), USB_CNTL_TIMEOUT);
-
-	if (ret >= 0 && data) {
-		unsigned short port_status = le16_to_cpu(status->wPortStatus);
-		unsigned short port_change = le16_to_cpu(status->wPortChange);
-		USB_DEBUG("[HUB DEBUG] GET_PORT_STATUS result: ret=%d\n", ret);
-		USB_DEBUG("[HUB DEBUG] PORT %d STATUS: 0x%04x CHANGE: 0x%04x\n", port, port_status, port_change);
-		USB_DEBUG("[HUB DEBUG] PORT %d: CONNECTION=%s ENABLE=%s POWER=%s\n", 
-			port,
-			(port_status & USB_PORT_STAT_CONNECTION) ? "YES" : "NO",
-			(port_status & USB_PORT_STAT_ENABLE) ? "YES" : "NO",
-			(port_status & USB_PORT_STAT_POWER) ? "YES" : "NO");
-	} else {
-		USB_DEBUG("[HUB DEBUG] GET_PORT_STATUS FAILED: ret=%d\n", ret);
-	}
 
 	return ret;
 }
@@ -194,11 +130,10 @@ static void usb_hub_power_on(struct usb_hub_device *hub)
 
 	dev = hub->pusb_dev;
 
-	USB_DEBUG("[HUB POWER] Starting power-on for hub devnum=%d with %d ports\n", dev->devnum, dev->maxchild);
+	//printf("[usb-hub] enabling power on all ports\n");
 	for (i = 0; i < dev->maxchild; i++) {
-		USB_DEBUG("[HUB POWER] Powering on hub devnum=%d port %d...\n", dev->devnum, i + 1);
-		int ret = usb_set_port_feature(dev, i + 1, USB_PORT_FEAT_POWER);
-		USB_DEBUG("[HUB POWER] Hub devnum=%d port %d power-on result: %d (dev->status=%lX)\n", dev->devnum, i + 1, ret, dev->status);
+		usb_set_port_feature(dev, i + 1, USB_PORT_FEAT_POWER);
+		//printf("port %d returns %lX\n", i + 1, dev->status);
 	}
 
 	/*
@@ -284,15 +219,15 @@ static inline char *portspeed(int portstatus)
  * @port:	Port number to reset (note ports are numbered from 0 here)
  * @portstat:	Returns port status
  */
-static int usb_hub_port_reset(struct usb_device *dev, int port,
-			      unsigned short *portstat)
+int usb_hub_port_reset(struct usb_device *dev, int port,
+		      unsigned short *portstat)
 {
 	int err, tries;
 	ALLOC_CACHE_ALIGN_BUFFER(struct usb_port_status, portsts, 1);
 	unsigned short portstatus, portchange;
 	int delay = HUB_SHORT_RESET_TIME; /* start with short reset delay */
 
-	USB_DEBUG("[usb-hub] %s: resetting port %d...\n", __func__, port + 1);
+	printf("[usb-hub] %s: resetting port %d...\n", __func__, port + 1);
 
 	for (tries = 0; tries < MAX_TRIES; tries++) {
 		err = usb_set_port_feature(dev, port + 1, USB_PORT_FEAT_RESET);
@@ -474,7 +409,7 @@ static int usb_scan_port(struct usb_device_scan *usb_scan)
 
 	portstatus = le16_to_cpu(portsts->wPortStatus);
 	portchange = le16_to_cpu(portsts->wPortChange);
-	// printf("[usb_scan_port] Port %d Status 0x%x Change 0x%x\n", port + 1, portstatus, portchange);
+//	printf("[usb-hub] Port %d Status %X Change %X\n", i + 1, portstatus, portchange);
 
 	/*
 	 * No connection change happened, wait a bit more.
@@ -632,7 +567,6 @@ static int usb_hub_configure(struct usb_device *dev)
 //	struct usb_hub_status *hubsts;
 	int ret;
 
-	// printf("[usb_hub_configure] Configuring hub...\n");
 	hub = usb_get_hub_device(dev);
 	if (hub == NULL)
 		return -ENOMEM;
@@ -677,7 +611,7 @@ static int usb_hub_configure(struct usb_device *dev)
 			descriptor->u.hs.PortPowerCtrlMask[i];
 
 	dev->maxchild = descriptor->bNbrPorts;
-	// printf("[usb_hub_configure] Hub has %d ports\n", dev->maxchild);
+	//printf("[usb-hub] %d ports detected\n", dev->maxchild);
 
 	hubCharacteristics = get_unaligned(&hub->desc.wHubCharacteristics);
 	switch (hubCharacteristics & HUB_CHAR_LPSM) {
@@ -860,7 +794,7 @@ static int usb_hub_check(struct usb_device *dev, int ifnum)
 	if ((ep->bmAttributes & 3) != 3)
 		goto err;
 	/* We found a hub */
-	USB_DEBUG("[usb-hub] USB hub found\n");
+	printf("[usb-hub] USB hub found\n");
 	return 0;
 
 err:
@@ -875,164 +809,13 @@ err:
 	return -ENOENT;
 }
 
-/**
- * usb_hub_diagnose_and_fix_port() - Diagnose and attempt to fix a disabled hub port
- *
- * This function checks the status of a specific hub port and attempts to
- * reactivate it if it's disabled but has power and connection.
- *
- * @dev: Hub device
- * @port: Port number (1-based)
- * @return: 0 on success, negative on error
- */
-int usb_hub_diagnose_and_fix_port(struct usb_device *dev, int port)
-{
-	ALLOC_CACHE_ALIGN_BUFFER(struct usb_port_status, portsts, 1);
-	unsigned short portstatus, portchange;
-	int ret;
-
-	USB_DEBUG("[HUB DIAG] Diagnosing hub devnum=%d port %d...\n", dev->devnum, port);
-
-	/* Get current port status */
-	ret = usb_get_port_status(dev, port, portsts);
-	if (ret < 0) {
-		printf("[HUB DIAG] Failed to get port status: ret=%d\n", ret);
-		return ret;
-	}
-
-	portstatus = le16_to_cpu(portsts->wPortStatus);
-	portchange = le16_to_cpu(portsts->wPortChange);
-
-	USB_DEBUG("[HUB DIAG] Port %d status: 0x%04x change: 0x%04x\n", port, portstatus, portchange);
-	USB_DEBUG("[HUB DIAG] Port %d: CONN=%s ENABLE=%s POWER=%s RESET=%s\n", port,
-		(portstatus & USB_PORT_STAT_CONNECTION) ? "YES" : "NO",
-		(portstatus & USB_PORT_STAT_ENABLE) ? "YES" : "NO",
-		(portstatus & USB_PORT_STAT_POWER) ? "YES" : "NO",
-		(portstatus & USB_PORT_STAT_RESET) ? "YES" : "NO");
-
-	/* If port is already enabled, nothing to do */
-	if (portstatus & USB_PORT_STAT_ENABLE) {
-		USB_DEBUG("[HUB DIAG] Port %d is already enabled\n", port);
-		return 0;
-	}
-
-	/* Check if we need to power on the port */
-	if (!(portstatus & USB_PORT_STAT_POWER)) {
-		USB_DEBUG("[HUB DIAG] Port %d has no power, attempting to power on...\n", port);
-		ret = usb_set_port_feature(dev, port, USB_PORT_FEAT_POWER);
-		if (ret < 0) {
-			printf("[HUB DIAG] Failed to power on port %d: ret=%d\n", port, ret);
-			return ret;
-		}
-		/* Wait for power stabilization */
-		mdelay(100);
-		USB_DEBUG("[HUB DIAG] Port %d powered on, waiting for stabilization...\n", port);
-	}
-
-	/* Check if there's a device connected */
-	if (!(portstatus & USB_PORT_STAT_CONNECTION)) {
-		printf("[HUB DIAG] Port %d has no device connected\n", port);
-		return -ENOTCONN;
-	}
-
-	/* Port has power and connection but is disabled - try to reset and enable it */
-	USB_DEBUG("[HUB DIAG] Port %d has power and connection but is disabled, attempting reset...\n", port);
-	
-	/* Clear any existing change flags */
-	if (portchange & USB_PORT_STAT_C_CONNECTION) {
-		USB_DEBUG("[HUB DIAG] Clearing connection change flag on port %d\n", port);
-		usb_clear_port_feature(dev, port, USB_PORT_FEAT_C_CONNECTION);
-	}
-	if (portchange & USB_PORT_STAT_C_ENABLE) {
-		USB_DEBUG("[HUB DIAG] Clearing enable change flag on port %d\n", port);
-		usb_clear_port_feature(dev, port, USB_PORT_FEAT_C_ENABLE);
-	}
-	if (portchange & USB_PORT_STAT_C_RESET) {
-		USB_DEBUG("[HUB DIAG] Clearing reset change flag on port %d\n", port);
-		usb_clear_port_feature(dev, port, USB_PORT_FEAT_C_RESET);
-	}
-
-	/* Attempt port reset to re-enable it */
-	unsigned short final_status;
-	ret = usb_hub_port_reset(dev, port - 1, &final_status); // port-1 because usb_hub_port_reset expects 0-based
-	if (ret < 0) {
-		printf("[HUB DIAG] Port %d reset failed: ret=%d\n", port, ret);
-		return ret;
-	}
-
-	USB_DEBUG("[HUB DIAG] Port %d reset completed, final status: 0x%04x\n", port, final_status);
-
-	/* Verify the port is now enabled */
-	if (final_status & USB_PORT_STAT_ENABLE) {
-		USB_DEBUG("[HUB DIAG] SUCCESS: Port %d is now enabled!\n", port);
-		return 0;
-	} else {
-		printf("[HUB DIAG] FAILED: Port %d is still disabled after reset\n", port);
-		return -EIO;
-	}
-}
-
-/**
- * usb_hub_scan_and_fix_ports() - Scan all ports of a hub and fix disabled ones
- *
- * This function scans all ports of a given hub device and attempts to
- * reactivate any disabled ports that have devices connected.
- *
- * @dev: Hub device to scan
- * @return: Number of ports fixed, negative on error
- */
-int usb_hub_scan_and_fix_ports(struct usb_device *dev)
-{
-	int i, fixed_count = 0;
-
-	if (!dev || dev->maxchild == 0) {
-		USB_DEBUG("[HUB SCAN] Invalid hub device or no ports\n");
-		return -EINVAL;
-	}
-
-	printf("[HUB SCAN] Scanning hub devnum=%d with %d ports...\n", dev->devnum, dev->maxchild);
-
-	for (i = 1; i <= dev->maxchild; i++) {
-		int ret = usb_hub_diagnose_and_fix_port(dev, i);
-		if (ret == 0) {
-			fixed_count++;
-			USB_DEBUG("[HUB SCAN] Port %d fixed successfully\n", i);
-		} else if (ret == -ENOTCONN) {
-			USB_DEBUG("[HUB SCAN] Port %d has no device - skipping\n", i);
-		} else {
-			USB_DEBUG("[HUB SCAN] Port %d fix failed: ret=%d\n", i, ret);
-		}
-	}
-
-	USB_DEBUG("[HUB SCAN] Hub scan completed: %d ports fixed\n", fixed_count);
-	return fixed_count;
-}
-
 int usb_hub_probe(struct usb_device *dev, int ifnum)
 {
 	int ret;
 
-	USB_DEBUG("[HUB PROBE] START: Probing device %d (speed=%s parent=%p) for hub interface %d\n", 
-	       dev->devnum,
-	       (dev->speed == USB_SPEED_HIGH) ? "HIGH" :
-	       (dev->speed == USB_SPEED_FULL) ? "FULL" :
-	       (dev->speed == USB_SPEED_LOW) ? "LOW" : "UNKNOWN",
-	       dev->parent, ifnum);
-
 	ret = usb_hub_check(dev, ifnum);
-	if (ret) {
-		USB_DEBUG("[HUB PROBE] Device %d is NOT a hub (ret=%d)\n", dev->devnum, ret);
+	if (ret)
 		return 0;
-	}
-	USB_DEBUG("[HUB PROBE] Device %d IS a HUB - starting configuration\n", dev->devnum);
 	ret = usb_hub_configure(dev);
-	USB_DEBUG("[HUB PROBE] Hub configuration completed with result %d\n", ret);
-
-	/* After hub configuration, scan and fix any disabled ports */
-	if (ret >= 0) {
-		USB_DEBUG("[HUB PROBE] Scanning hub for disabled ports...\n");
-		usb_hub_scan_and_fix_ports(dev);
-	}
-
 	return ret;
 }

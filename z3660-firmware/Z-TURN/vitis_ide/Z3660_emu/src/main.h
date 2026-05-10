@@ -106,6 +106,7 @@ typedef struct {
 } SHARED;
 
 enum BOOTMODE{
+   MOBOCPU,
    CPU,
    MUSASHI,
    UAE_030,

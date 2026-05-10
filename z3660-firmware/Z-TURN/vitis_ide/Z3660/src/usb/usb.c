@@ -14,6 +14,10 @@
  *
  * Adapted for U-Boot:
  * (C) Copyright 2001 Denis Peter, MPL AG Switzerland
+ *
+ * ZZ9000 modifications:
+ *
+ * Copyright (C) 2026 Dimitris Panokostas <midwan@gmail.com>
  */
 
 /*
@@ -25,16 +29,13 @@
  *
  * For each transfer (except "Interrupt") we wait for completion.
  */
-#include "memalign.h"
+#include "usb/memalign.h"
 #include <ctype.h>
-#include "asm/byteorder.h"
+#include <usb/asm/byteorder.h>
 #include <errno.h>
 #include "usb.h"
-#include "ehci.h"
 #include <stdio.h>
 #include <string.h>
-#include <sleep.h>
-#include "pt/pt.h"
 
 void mdelay(int ms);
 
@@ -50,7 +51,6 @@ char usb_started; /* flag for the started/stopped USB status */
 
 static struct usb_device usb_dev[USB_MAX_DEVICE];
 static int dev_index;
-static void *poseidon_ctrl = NULL;
 
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 1
 
@@ -195,10 +195,10 @@ int usb_disable_asynch(int disable)
 /*
  * submits an Interrupt Message
  */
-int usb_int_msg(struct pt *pt, struct usb_device *dev, unsigned long pipe,
+int usb_int_msg(struct usb_device *dev, unsigned long pipe,
 			void *buffer, int transfer_len, int interval)
 {
-	return submit_int_msg(pt, dev, pipe, buffer, transfer_len, interval);
+	return submit_int_msg(dev, pipe, buffer, transfer_len, interval);
 }
 
 /*
@@ -217,118 +217,46 @@ int usb_control_msg(struct usb_device *dev, unsigned int pipe,
 {
 	ALLOC_CACHE_ALIGN_BUFFER(struct devrequest, setup_packet, 1);
 	int err;
-	int retries = 0;
-	const int max_retries = 3;
-	const int retry_delay = 20; /* ms */
-	const int settle_delay = 5; /* ms */
 
 	if ((timeout == 0) && (!asynch_allowed)) {
 		/* request for a asynch control pipe is not allowed */
 		return -EINVAL;
 	}
 
-	/* Ensure any previous transfer is fully completed */
-	if (dev->status & USB_ST_NOT_PROC) {
-		printf("[USB] Warning: Previous transfer not complete (status=0x%lx)\n",
-		       dev->status);
-		mdelay(settle_delay);
-		dev->status &= ~USB_ST_NOT_PROC;
-	}
+	/* set setup command */
+	setup_packet->requesttype = requesttype;
+	setup_packet->request = request;
+	setup_packet->value = cpu_to_le16(value);
+	setup_packet->index = cpu_to_le16(index);
+	setup_packet->length = cpu_to_le16(size);
+	// FIXME debug option
+	//printf("[usb] usb_control_msg: request: 0x%X, requesttype: 0x%X, "
+	//     "value 0x%X index 0x%X length 0x%X\n",
+	//      request, requesttype, value, index, size);
+	dev->status = USB_ST_NOT_PROC; /*not yet processed */
 
-	do {
-		/* Clear status before transfer */
-		dev->status = USB_ST_NOT_PROC;
+	err = submit_control_msg(dev, pipe, data, size, setup_packet);
+	if (err < 0)
+		return err;
+	if (timeout == 0)
+		return (int)size;
 
-
-		/* set setup command */
-		setup_packet->requesttype = requesttype;
-		setup_packet->request = request;
-		setup_packet->value = cpu_to_le16(value);
-		setup_packet->index = cpu_to_le16(index);
-		setup_packet->length = cpu_to_le16(size);
-
-		/* Submit the control message */
-		err = submit_control_msg(dev, pipe, data, size, setup_packet);
-
-		/* Check submission result */
-		if (err < 0) {
-			printf("[USB] Control transfer submission failed on try %d/%d (err=%d)\n",
-			       retries + 1, max_retries, err);
-			if (retries < max_retries - 1) {
-				mdelay(retry_delay);
-				retries++;
-				continue;
-			}
-			return err;
-		}
-
-		/* Wait for completion with timeout */
-		int wait = timeout;
-		while (wait > 0 && (dev->status & USB_ST_NOT_PROC)) {
-			mdelay(1);
-			wait--;
-		}
-
-		/* Check completion status */
-		if (!(dev->status & USB_ST_NOT_PROC)) {
-			/* Transfer completed successfully */
+	/*
+	 * Wait for status to update until timeout expires, USB driver
+	 * interrupt handler may set the status when the USB operation has
+	 * been completed.
+	 */
+	while (timeout--) {
+		if (!((volatile unsigned long)dev->status & USB_ST_NOT_PROC)) {
 			break;
 		}
-
-		/* Timeout occurred - retry if possible */
-		if (retries < max_retries - 1) {
-			
-			printf("[USB] Control transfer timeout on try %d/%d\n",
-			       retries + 1, max_retries);
-			mdelay(retry_delay);
-			retries++;
-			continue;
-		}
-
-		/* All retries exhausted */
-		printf("[USB] Control transfer failed after %d attempts\n", max_retries);
-		return -ETIMEDOUT;
-
-	} while (retries < max_retries);
-
-	/* Allow hardware to settle after transfer */
-	mdelay(settle_delay);
-
-
-	/* DEBUG: Show VID/PID for GET_DESCRIPTOR(DEVICE) requests */
-	if ((requesttype & 0x80) && request == 0x06 && (value >> 8) == 0x01 && data && size >= 18) {
-		unsigned char *raw_data = (unsigned char *)data;
-		
-		/* Show raw bytes to diagnose endianness issues */
-		printf("[ARM USB DEBUG] Raw descriptor bytes 8-11: %02X %02X %02X %02X\n",
-		       raw_data[8], raw_data[9], raw_data[10], raw_data[11]);
-		       
-		/* Try both endianness interpretations */
-		unsigned short raw_vid_le = (unsigned short)(raw_data[8] | (raw_data[9] << 8));
-		unsigned short raw_pid_le = (unsigned short)(raw_data[10] | (raw_data[11] << 8));
-		unsigned short raw_vid_be = (unsigned short)(raw_data[9] | (raw_data[8] << 8));
-		unsigned short raw_pid_be = (unsigned short)(raw_data[11] | (raw_data[10] << 8));
-		
-		printf("[ARM USB] GET_DESCRIPTOR(DEVICE) dev=%d: LE=VID:0x%04X PID:0x%04X BE=VID:0x%04X PID:0x%04X\n", 
-		       dev->devnum, raw_vid_le, raw_pid_le, raw_vid_be, raw_pid_be);
+		mdelay(1);
 	}
-
-	/* Enhanced SET_ADDRESS processing with timing */
-	if (request == USB_REQ_SET_ADDRESS && requesttype == 0x00) {
-		uint8_t new_address = (uint8_t)value;
-		printf("[USB] SET_ADDRESS processing: %d->%d\n", dev->devnum, new_address);
-		
-		/* Update device address */
-		dev->devnum = new_address;
-		
-		/* Reset endpoint toggles for new address */
-		dev->toggle[0] = 0;
-		dev->toggle[1] = 0;
-		
-		/* Allow device time to complete address transition */
-		printf("[USB] SET_ADDRESS completed, allowing settling time...\n");
-		mdelay(10); /* Final settling time */
+	if (timeout==0) {
+		printf("[usb] usb_control_msg timeout!\n");
 	}
+	if (dev->status)
+		return -1;
 
 	return dev->act_len;
 }
@@ -476,7 +404,6 @@ static int usb_parse_config(struct usb_device *dev,
 	 * now process the others */
 	head = (struct usb_descriptor_header *) &buffer[index];
 	while (index + 1 < dev->config.desc.wTotalLength && head->bLength) {
-		// printf("[usb_parse_config] DescriptorType: 0x%x, Length: %d\n", head->bDescriptorType, head->bLength);
 		switch (head->bDescriptorType) {
 		case USB_DT_INTERFACE:
 			if (head->bLength != USB_DT_INTERFACE_SIZE) {
@@ -506,9 +433,6 @@ static int usb_parse_config(struct usb_device *dev,
 				if_desc->num_altsetting = 1;
 				curr_if_num =
 				     if_desc->desc.bInterfaceNumber;
-				// printf("[usb_parse_config] New interface: %d, Class: %d, SubClass: %d, Protocol: %d\n",
-				//        if_desc->desc.bInterfaceNumber, if_desc->desc.bInterfaceClass,
-				//        if_desc->desc.bInterfaceSubClass, if_desc->desc.bInterfaceProtocol);
 			} else {
 				/* found alternate setting for the interface */
 				if (ifno >= 0) {
@@ -571,29 +495,15 @@ static int usb_parse_config(struct usb_device *dev,
 				break;
 			}
 			if_desc = &dev->config.if_desc[ifno];
-		memcpy(&if_desc->ss_ep_comp_desc[epno], head,
-			USB_DT_SS_EP_COMP_SIZE);
-		break;
-	case 0x21: /* HID Class Descriptor */
-		if (head->bLength < 6) {
-			printf("ERROR: Invalid HID descriptor length (%d)\n",
-				head->bLength);
+			memcpy(&if_desc->ss_ep_comp_desc[epno], head,
+				USB_DT_SS_EP_COMP_SIZE);
 			break;
-		}
-		if (index + head->bLength >
-		    dev->config.desc.wTotalLength) {
-			puts("HID descriptor overflowed buffer!\n");
-			break;
-		}
-		/* HID Class Descriptor - just skip it as we don't need to store it */
-		/* This descriptor contains HID version, country code, and report descriptor info */
-		break;
-	default:
-		if (head->bLength == 0)
-			return -EINVAL;
+		default:
+			if (head->bLength == 0)
+				return -EINVAL;
 
-		printf("unknown Description Type : %x\n",
-		      head->bDescriptorType);
+			printf("unknown Description Type : %x\n",
+			      head->bDescriptorType);
 
 #ifdef DEBUG
 			{
@@ -665,8 +575,6 @@ int usb_get_configuration_len(struct usb_device *dev, int cfgno)
 	ALLOC_CACHE_ALIGN_BUFFER(unsigned char, buffer, 9);
 	struct usb_config_descriptor *config;
 
-	/* Clear buffer to avoid residual data from previous transfers */
-	memset(buffer, 0, 9);
 	config = (struct usb_config_descriptor *)&buffer[0];
 	result = usb_get_descriptor(dev, USB_DT_CONFIG, cfgno, buffer, 9);
 	if (result < 9) {
@@ -690,8 +598,6 @@ int usb_get_configuration_no(struct usb_device *dev, int cfgno,
 	int result;
 	struct usb_config_descriptor *config;
 
-	/* Clear destination buffer to avoid stale bytes on short/partial reads */
-	memset(buffer, 0, length);
 	config = (struct usb_config_descriptor *)&buffer[0];
 	result = usb_get_descriptor(dev, USB_DT_CONFIG, cfgno, buffer, length);
 	//printf("get_conf_no %d Result %d, wLength %d\n", cfgno, result,
@@ -754,7 +660,7 @@ int usb_set_interface(struct usb_device *dev, int interface, int alternate)
 /********************************************************************
  * set configuration number to configuration
  */
-int usb_set_configuration(struct usb_device *dev, int configuration)
+static int usb_set_configuration(struct usb_device *dev, int configuration)
 {
 	int res;
 	printf("[usb] set configuration %d\n", configuration);
@@ -968,7 +874,7 @@ int usb_alloc_new_device(void *controller, struct usb_device **devp)
 		printf("ERROR, too many USB Devices, max=%d\n", USB_MAX_DEVICE);
 		return -ENOSPC;
 	}
-	/* Reserve address 127 for root hub (matches Amiga scheme), real device addresses start from 1 */
+	/* default Address is 0, real addresses start with 1 */
 	usb_dev[dev_index].devnum = dev_index + 1;
 	usb_dev[dev_index].maxchild = 0;
 	for (i = 0; i < USB_MAXCHILDREN; i++)
@@ -1007,7 +913,7 @@ int usb_alloc_device(struct usb_device *udev)
 	return 0;
 }
 
-static int usb_hub_port_reset(struct usb_device *dev, struct usb_device *hub)
+static int usb_new_dev_port_reset(struct usb_device *dev, struct usb_device *hub)
 {
 	(void)dev;
 	if (!hub)
@@ -1025,8 +931,6 @@ static int get_descriptor_len(struct usb_device *dev, int len, int expect_len)
 
 	desc = (struct usb_device_descriptor *)tmpbuf;
 
-	/* Clear temp buffer to avoid reading stale data on hardware retries */
-	memset(tmpbuf, 0, USB_BUFSIZ);
 	err = usb_get_descriptor(dev, USB_DT_DEVICE, 0, desc, len);
 	if (err < expect_len) {
 		if (err < 0) {
@@ -1065,14 +969,20 @@ static int usb_setup_descriptor(struct usb_device *dev, bool do_read)
 	if (dev->speed == USB_SPEED_LOW) {
 		dev->descriptor.bMaxPacketSize0 = 8;
 		dev->maxpacketsize = PACKET_SIZE_8;
+		printf("[usb] Low Speed device detected, using 8-byte packets\n");
+	} else if(dev->speed == USB_SPEED_FULL) {
+		dev->descriptor.bMaxPacketSize0 = 64;
+		dev->maxpacketsize = PACKET_SIZE_64;
+		printf("[usb] Full Speed device detected, using 64-byte packets\n");
 	} else {
 		dev->descriptor.bMaxPacketSize0 = 64;
 		dev->maxpacketsize = PACKET_SIZE_64;
+        printf("[usb] High Speed device detected, using 64-byte packets\n");
 	}
 	dev->epmaxpacketin[0] = dev->descriptor.bMaxPacketSize0;
 	dev->epmaxpacketout[0] = dev->descriptor.bMaxPacketSize0;
 
-	if (do_read && dev->speed == USB_SPEED_FULL) {
+	if (do_read && (dev->speed == USB_SPEED_FULL || dev->speed == USB_SPEED_HIGH)) {
 		int err;
 
 		/*
@@ -1138,7 +1048,7 @@ static int usb_prepare_device(struct usb_device *dev, int addr, bool do_read,
 	err = usb_setup_descriptor(dev, do_read);
 	if (err)
 		return err;
-	err = usb_hub_port_reset(dev, parent);
+	err = usb_new_dev_port_reset(dev, parent);
 	if (err)
 		return err;
 
@@ -1197,15 +1107,8 @@ int usb_select_config(struct usb_device *dev)
 		tmpbuf = (unsigned char *)malloc_cache_aligned(err);
 		if (!tmpbuf)
 			err = -ENOMEM;
-		else {
-			/* CRITICAL FIX: Reset EP0 state between CONFIG transfers */
-			/* Clear toggles to ensure clean state for full CONFIG read */
-			dev->toggle[0] = 0;
-			dev->toggle[1] = 0;
-			/* Small delay to let EP0 settle after the 9-byte CONFIG read */
-			mdelay(2);
+		else
 			err = usb_get_configuration_no(dev, 0, tmpbuf, err);
-		}
 	}
 	if (err < 0) {
 		printf("usb_new_device: Cannot read configuration, " \
@@ -1255,12 +1158,6 @@ int usb_select_config(struct usb_device *dev)
 	printf("[usb] Product      %s\n", dev->prod);
 	printf("[usb] SerialNumber %s\n", dev->serial);
 
-	// Call ARM device detection logging with RAW descriptor data
-	extern void log_device_detected_arm(unsigned char dev, const void *data_ptr, int data_len,
-	                                   unsigned short vendor_id, unsigned short product_id);
-	log_device_detected_arm(dev->devnum, &dev->descriptor, sizeof(dev->descriptor),
-	                       dev->descriptor.idVendor, dev->descriptor.idProduct);
-
 	return 0;
 }
 
@@ -1294,22 +1191,15 @@ int usb_new_device(struct usb_device *dev)
 	bool do_read = true;
 	int err;
 
-	printf("[usb_new_device] Probing new device...\n");
 	err = usb_setup_device(dev, do_read, dev->parent);
-	if (err) {
-		printf("[usb_new_device] usb_setup_device failed with error %d\n", err);
+	if (err)
 		return err;
-	}
 
 	/* Now probe if the device is a hub */
-	printf("[usb_new_device] Probing for hub...\n");
 	err = usb_hub_probe(dev, 0);
-	if (err < 0) {
-		printf("[usb_new_device] usb_hub_probe failed with error %d\n", err);
+	if (err < 0)
 		return err;
-	}
 
-	printf("[usb_new_device] Device setup complete.\n");
 	return 0;
 }
 
@@ -1329,510 +1219,33 @@ int board_usb_cleanup(int index, enum usb_init_type init)
 
 bool usb_device_has_child_on_port(struct usb_device *parent, int port)
 {
+	(void)parent;
+	(void)port;
 	return parent->children[port] != NULL;
 }
 
 void usb_find_usb2_hub_address_port(struct usb_device *udev,
 			       uint8_t *hub_address, uint8_t *hub_port)
 {
-	/* Default to no TT context */
-	if (hub_address)
+	if (udev->parent && udev->parent->parent == NULL) {
 		*hub_address = 0;
-	if (hub_port)
-		*hub_port = 0;
-
-	/* Safety check for null pointers */
-	if (!udev || !hub_address || !hub_port)
-		return;
-
-	/* Check cache first - avoid recalculation for same device */
-	static struct tt_cache {
-		int devnum;
-		int hub_address;
-		int hub_port;
-		int valid;
-	} cache = {0};
-	
-	if (cache.valid && cache.devnum == udev->devnum) {
-		*hub_address = cache.hub_address;
-		*hub_port = cache.hub_port;
-		#ifdef USB_DEBUG_VERBOSE
-		USB_DEBUG("[USB TT] Using cached TT info for device %d: hub_addr=%d hub_port=%d\n", 
-		       udev->devnum, *hub_address, *hub_port);
-		#endif
+		*hub_port = udev->portnr;
 		return;
 	}
 
-	#ifdef USB_DEBUG_VERBOSE
-	printf("[USB TT] Analyzing device %d (speed=%s parent=%p)\n", udev->devnum,
-	       (udev->speed == USB_SPEED_HIGH) ? "HIGH" :
-	       (udev->speed == USB_SPEED_FULL) ? "FULL" :
-	       (udev->speed == USB_SPEED_LOW) ? "LOW" : "UNKNOWN",
-	       udev->parent);
-	#endif
-
-	/* High-Speed devices never need split transactions */
-	if (udev->speed == USB_SPEED_HIGH) {
-		#ifdef USB_DEBUG_VERBOSE
-		printf("[USB TT] Device %d is HIGH-speed - NO split transaction needed\n", udev->devnum);
-		#endif
-		return;
-	}
-	
-	/* For Full/Low-Speed devices, we need to find the nearest High-Speed hub */
-	struct usb_device *ttdev = udev;  /* The device that will use the TT */
-	struct usb_device *p = udev->parent;
-	int guard = 0;
-	
-	while (p && guard++ < 16) {
-		#ifdef USB_DEBUG_VERBOSE
-		printf("[USB TT] Checking parent: devnum=%d speed=%s parent=%p\n",
-		       p->devnum,
-		       (p->speed == USB_SPEED_HIGH) ? "HIGH" :
-		       (p->speed == USB_SPEED_FULL) ? "FULL" :
-		       (p->speed == USB_SPEED_LOW) ? "LOW" : "UNKNOWN",
-		       p->parent);
-		#endif
-		
-		/* Found a High-Speed hub */
-		if (p->speed == USB_SPEED_HIGH) {
-			*hub_address = p->devnum;
-			*hub_port = ttdev->portnr;
-			
-			/* Cache the result */
-			cache.devnum = udev->devnum;
-			cache.hub_address = *hub_address;
-			cache.hub_port = *hub_port;
-			cache.valid = 1;
-			
-			#ifdef USB_DEBUG_VERBOSE
-			printf("[USB TT] Split transaction required: hub_addr=%d hub_port=%d (CACHED)\n", *hub_address, *hub_port);
-			#endif
+	/* Find out the nearest parent which is high speed */
+	while (udev->parent->parent != NULL)
+		if (udev->parent->speed != USB_SPEED_HIGH) {
+			udev = udev->parent;
+		} else {
+			*hub_address = udev->parent->devnum;
+			*hub_port = udev->portnr;
 			return;
 		}
-		
-		/* Move up the chain */
-		ttdev = p;
-		p = p->parent;
-	}
-	
-	#ifdef USB_DEBUG_VERBOSE
-	printf("[USB TT] No High-Speed hub found - direct communication (hub_addr=%d hub_port=%d)\n", *hub_address, *hub_port);
-	#endif
-	/* If we didn't find a HS hub ancestor, leave hub_address/port = 0 */
-}
 
-/* Poseidon-driven minimal init: initialize controller without bus scan */
-int usb_poseidon_init(void)
-{
-    void *ctrl;
-    int ret;
-
-    dev_index = 0;
-    asynch_allowed = 1;
-    usb_hub_reset();
-
-    /* Clear device table */
-    for (int i = 0; i < USB_MAX_DEVICE; i++) {
-        memset(&usb_dev[i], 0, sizeof(struct usb_device));
-        usb_dev[i].devnum = -1;
-    }
-
-    /* Init low-level USB host controller only */
-    printf("[usb_poseidon] lowlevel init...\n");
-    ret = usb_lowlevel_init(0, USB_INIT_HOST, &ctrl);
-    if (ret) {
-        printf("[usb_poseidon] lowlevel init failed: %d\n", ret);
-        return ret;
-    }
-    poseidon_ctrl = ctrl;
-    usb_started = 1;
-
-    /* CRITICAL FIX: Do NOT pre-allocate DEV=0!
-     * ADDR=0 should be temporary and created on-demand during enumeration.
-     * According to USB spec:
-     * - ADDR=0 is used only during device enumeration
-     * - After SET_ADDRESS, ADDR=0 should be freed for next enumeration
-     * - Multiple ADDR=0 should not coexist (violates USB standard)
-     * 
-     * The old approach was creating a persistent ADDR=0 which caused:
-     * - "Device addr=0 already exists" messages
-     * - Memory waste
-     * - Violation of USB enumeration standard
-     */
-
-    /* CRITICAL FIX: Power on root hub ports!
-     * In standalone mode, usb_hub_probe() -> usb_hub_configure() -> usb_hub_power_on() 
-     * powers on all root hub ports. Without this, external hubs get no power.
-     * We need to do the same minimal power-on sequence here without full enumeration. */
-    printf("[usb_poseidon] Powering on root hub ports...\n");
-    
-    /* Get root hub descriptor to find number of ports */
-    extern struct ehci_ctrl ehcic[];
-    struct ehci_ctrl *ehci_ctrl = &ehcic[0];
-    if (ehci_ctrl && ehci_ctrl->hccr) {
-        uint32_t reg = ehci_readl(&ehci_ctrl->hccr->cr_hcsparams);
-        int num_ports = reg & 0xf; /* HCS_N_PORTS(reg) */
-        printf("[usb_poseidon] Root hub has %d ports\n", num_ports);
-        
-        /* Power on each port using EHCI root hub emulation */
-        for (int port = 0; port < num_ports; port++) {
-            uint32_t *portsc = &ehci_ctrl->hcor->or_portsc[port];
-            uint32_t status = ehci_readl(portsc);
-            printf("[usb_poseidon] Port %d before: 0x%08lx\n", port, (unsigned long)status);
-            
-            /* Set Port Power (PP) bit - this is what usb_hub_power_on() effectively does */
-            status |= (1 << 12); /* EHCI_PS_PP - Port Power */
-            ehci_writel(portsc, status);
-            
-            status = ehci_readl(portsc);
-            printf("[usb_poseidon] Port %d after power-on: 0x%08lx\n", port, (unsigned long)status);
-        }
-        
-        /* Give ports time to power up - same delay as usb_hub_power_on() */
-        printf("[usb_poseidon] Waiting for ports to power up...\n");
-        mdelay(100); /* Minimum 100ms power stabilization delay */
-        
-        printf("[usb_poseidon] Port power-on completed\n");
-    } else {
-        printf("[usb_poseidon] WARNING: Could not access EHCI controller for port power-on\n");
-    }
-    
-    printf("[usb_poseidon] ready, default dev at address 0\n");
-    return 0;
-}
-
-int usb_poseidon_reset(void)
-{
-    int ret;
-    /* Stop controller if started */
-    if (usb_started) {
-        usb_stop();
-        usb_started = 0;
-    }
-    /* Re-init low-level only */
-    ret = usb_poseidon_init();
-    if (ret == 0)
-        return 0;
-    return ret;
-}
-
-struct usb_device *usb_poseidon_get_dev(int addr)
-{
-    for (int i = 0; i < USB_MAX_DEVICE; i++) {
-        if (usb_dev[i].devnum == addr)
-            return &usb_dev[i];
-    }
-    return NULL;
-}
-
-
-struct usb_device *usb_poseidon_alloc_dev(int addr)
-{
-    struct usb_device *dev=NULL;
-    int i;
-
-    if (!poseidon_ctrl) {
-        printf("[usb_poseidon] controller not initialized\n");
-        return NULL;
-    }
-
-    /* Handle address 0 specially - always create new instance */
-    if (addr == 0) {
-        /* Never reuse address 0 devices - each enumeration needs fresh state */
-        if (dev_index >= USB_MAX_DEVICE) {
-            printf("[USB] ERROR: No free device slots\n");
-            return NULL;
-        }
-        
-        /* Initialize new device at address 0 */
-        dev = &usb_dev[dev_index++];
-        memset(dev, 0, sizeof(struct usb_device));
-        dev->devnum = 0;
-        dev->controller = poseidon_ctrl;
-        
-        /* CRITICAL HIGH SPEED FIX: Force port reset for HS negotiation FIRST */
-        printf("[USB HS] Forcing port reset for High Speed negotiation...\n");
-        extern struct ehci_ctrl ehcic[];
-        struct ehci_ctrl *ehci_ctrl = &ehcic[0];
-        
-        /* CRITICAL: Validate ALL pointers before register access to avoid crash */
-        if (!ehci_ctrl) {
-            printf("[USB HS] ERROR: ehci_ctrl is NULL - skipping HS reset\n");
-        } else if (!ehci_ctrl->hcor) {
-            printf("[USB HS] ERROR: ehci_ctrl->hcor is NULL - skipping HS reset\n");
-        } else {
-            printf("[USB HS] EHCI pointers valid: ehci_ctrl=%p hcor=%p\n", ehci_ctrl, ehci_ctrl->hcor);
-            printf("[USB HS] PORTSC register address: %p\n", &ehci_ctrl->hcor->or_portsc[0]);
-            
-            /* Safely read current PORTSC */
-            uint32_t portsc = ehci_readl(&ehci_ctrl->hcor->or_portsc[0]);
-            printf("[USB HS] Before HS reset: PORTSC=0x%08lx PSPD=%ld\n", 
-                   (unsigned long)portsc, (portsc >> 26) & 0x3);
-            
-            /* Force port reset for HS negotiation - FIXED parameter order */
-            printf("[USB HS] Performing port reset with CORRECT parameter order...\n");
-            portsc |= 0x100;  /* Set PR bit */
-            ehci_writel(&ehci_ctrl->hcor->or_portsc[0], portsc);  /* CORRECT: (addr, value) */
-            printf("[USB HS] Reset bit set, waiting 50ms...\n");
-            usleep(50 * 1000);  /* 50ms reset pulse */
-            
-            /* Clear reset and wait for negotiation */
-            portsc &= ~0x100;  /* Clear PR bit */
-            ehci_writel(&ehci_ctrl->hcor->or_portsc[0], portsc);  /* CORRECT: (addr, value) */
-            printf("[USB HS] Reset bit cleared, waiting 100ms for HS negotiation...\n");
-            usleep(100 * 1000);  /* 100ms for HS negotiation */
-            
-            /* Read final status */
-            portsc = ehci_readl(&ehci_ctrl->hcor->or_portsc[0]);
-            printf("[USB HS] After HS reset: PORTSC=0x%08lx PSPD=%ld (%s)\n", 
-                   (unsigned long)portsc, (portsc >> 26) & 0x3,
-                   ((portsc >> 26) & 0x3) == 2 ? "HIGH_SPEED" : 
-                   ((portsc >> 26) & 0x3) == 1 ? "LOW_SPEED" : "FULL_SPEED");
-        }
-        
-        /* CRITICAL FIX: Detect device speed for address 0 devices too!
-         * Previously we used safe defaults, but this caused "speed=UNKNOWN" 
-         * which led to timeouts in EHCI transfers. We need to detect the actual
-         * device speed from PORTSC to configure proper transfer parameters. */
-        
-        /* Get current port status to determine device speed */
-        extern struct ehci_ctrl ehcic[];
-        uint32_t portsc_status = 0;
-        int is_low_speed = 0;
-        int device_speed = 0;
-        const char *speed_name = "UNKNOWN";
-        
-        if (ehci_ctrl && ehci_ctrl->hcor) {
-            portsc_status = ehci_readl(&ehci_ctrl->hcor->or_portsc[0]);
-            
-            /* Extract PORTSC_PSPD field (bits 27-26) - the correct speed field */
-            device_speed = (portsc_status >> 26) & 0x3;
-            
-            switch (device_speed) {
-                case 0: /* PORTSC_PSPD_FS */
-                    is_low_speed = 0;
-                    speed_name = "FULL_SPEED";
-                    break;
-                case 1: /* PORTSC_PSPD_LS */
-                    is_low_speed = 1;
-                    speed_name = "LOW_SPEED";
-                    break;
-                case 2: /* PORTSC_PSPD_HS */
-                    is_low_speed = 0;
-                    speed_name = "HIGH_SPEED";
-                    break;
-                default:
-                    is_low_speed = 0;
-                    speed_name = "UNKNOWN";
-                    break;
-            }
-            
-            printf("[USB SPEED] Device addr=0 PORTSC=0x%08lx PSPD=%d (%s)\n", 
-                   (unsigned long)portsc_status, device_speed, speed_name);
-        }
-        
-        /* Configure EP0 packet size AND device speed based on detected speed */
-        if (is_low_speed) {
-            /* Low Speed devices: Must use 8 bytes EP0 packet size */
-            dev->epmaxpacketin[0] = 8;
-            dev->epmaxpacketout[0] = 8;
-            dev->maxpacketsize = PACKET_SIZE_8;
-            dev->speed = USB_SPEED_LOW;
-            printf("[USB SPEED] Device addr=0 configured for LOW SPEED (8 bytes EP0)\n");
-        } else {
-            /* Full/High Speed devices: Start with 64 bytes for proper enumeration */
-            dev->epmaxpacketin[0] = 64;
-            dev->epmaxpacketout[0] = 64;
-            dev->maxpacketsize = PACKET_SIZE_64;
-            
-            /* Set correct speed based on PORTSC detection */
-            if (device_speed == 2) {
-                dev->speed = USB_SPEED_HIGH;
-                printf("[USB SPEED] Device addr=0 configured for HIGH SPEED (64 bytes EP0)\n");
-            } else {
-                dev->speed = USB_SPEED_FULL;
-                printf("[USB SPEED] Device addr=0 configured for FULL SPEED (64 bytes EP0)\n");
-            }
-        }
-        
-        printf("[USB] Created new device at address 0 for enumeration\n");
-        return dev;
-    }
-    
-    /* For non-zero addresses, check if it already exists */
-    dev = usb_poseidon_get_dev(addr);
-    if (dev) {
-        /* CRITICAL FIX: This should be rare for non-zero addresses
-         * Log it as debug info, not a persistent problem */
-//        printf("[USB ALLOC] Device addr=%d already exists, returning existing (normal for multiple operations)\n", addr);
-        return dev;
-    }
-
-    /* CRITICAL FIX: Allocate device manually instead of using usb_alloc_new_device()
-     * because usb_alloc_new_device() assigns devnum = dev_index + 1, which creates
-     * confusion when Poseidon requests specific device addresses.
-     * 
-     * We need direct control over device allocation to ensure:
-     * - dev->devnum exactly matches the requested addr
-     * - Array position maps correctly to device address
-     * - No confusion between internal dev_index and USB device addresses
-     */
-    
-    if (dev_index >= USB_MAX_DEVICE) {
-        printf("[usb_poseidon] ERROR: too many USB devices, max=%d\n", USB_MAX_DEVICE);
-        return NULL;
-    }
-    
-    /* Use next available slot in device array */
-    dev = &usb_dev[dev_index];
-    
-    /* Initialize device structure with correct address */
-    memset(dev, 0, sizeof(struct usb_device));
-    dev->devnum = addr;  /* Use exactly the address Poseidon requested */
-    dev->maxchild = 0;
-    for (i = 0; i < USB_MAXCHILDREN; i++)
-        dev->children[i] = NULL;
-    dev->parent = NULL;
-    dev->controller = poseidon_ctrl;
-    
-    /* CRITICAL FIX: Configure EP0 based on device speed detection from PORTSC
-     * EHCI PORTSC LS field (bits 11-10):
-     * - 00: Full/High Speed device (use 64 bytes for initial probe)
-     * - 01: Low Speed device (use 8 bytes)
-     * - 10: Full Speed device (use 64 bytes for initial probe) 
-     * - 11: Reserved
-     * 
-     * For Poseidon compatibility, we start with reasonable defaults and let
-     * the GET_DESCRIPTOR response update the actual packet size.
-     */
-    
-    
-    /* Get current port status to determine device speed
-     * CRITICAL FIX: Use correct PORTSC_PSPD field (bits 27-26) not LS field (bits 11-10)
-     * Based on U-Boot ehci-hcd.c implementation:
-     * - PORTSC_PSPD_FS = 0x0 (Full Speed)
-     * - PORTSC_PSPD_LS = 0x1 (Low Speed) 
-     * - PORTSC_PSPD_HS = 0x2 (High Speed)
-     */
-    extern struct ehci_ctrl ehcic[];
-    struct ehci_ctrl *ehci_ctrl = &ehcic[0];
-    uint32_t portsc_status = 0;
-    int is_low_speed = 0;
-    int device_speed = 0;
-    const char *speed_name = "UNKNOWN";
-    
-    if (ehci_ctrl && ehci_ctrl->hcor) {
-        portsc_status = ehci_readl(&ehci_ctrl->hcor->or_portsc[0]);
-        
-        /* Extract PORTSC_PSPD field (bits 27-26) - the correct speed field */
-        device_speed = (portsc_status >> 26) & 0x3;
-        
-        switch (device_speed) {
-            case 0: /* PORTSC_PSPD_FS */
-                is_low_speed = 0;
-                speed_name = "FULL_SPEED";
-                break;
-            case 1: /* PORTSC_PSPD_LS */
-                is_low_speed = 1;
-                speed_name = "LOW_SPEED";
-                break;
-            case 2: /* PORTSC_PSPD_HS */
-                is_low_speed = 0;
-                speed_name = "HIGH_SPEED";
-                break;
-            default:
-                is_low_speed = 0;
-                speed_name = "UNKNOWN";
-                break;
-        }
-        
-        printf("[USB SPEED] Device addr=%d PORTSC=0x%08lx PSPD=%d (%s)\n", 
-               addr, (unsigned long)portsc_status, device_speed, speed_name);
-        
-        /* Additional debug: show LS field (bits 11-10) for comparison */
-        int line_status = (portsc_status >> 10) & 0x3;
-        printf("[USB SPEED] Line Status (bits 11-10): %d (was incorrectly using this before)\n", line_status);
-    }
-    
-    /* Configure EP0 packet size AND device speed based on detected speed */
-    if (is_low_speed) {
-        /* Low Speed devices: Must use 8 bytes EP0 packet size */
-        dev->epmaxpacketin[0] = 8;
-        dev->epmaxpacketout[0] = 8;
-        dev->maxpacketsize = PACKET_SIZE_8;
-        dev->speed = USB_SPEED_LOW;  /* CRITICAL FIX: Set speed field */
-        printf("[USB SPEED] Device addr=%d configured for LOW SPEED (8 bytes EP0)\n", addr);
-    } else {
-        /* CRITICAL FIX: Use conservative EP0 sizing for better compatibility
-         * Many FS devices (especially mice) use 8-byte EP0 even though spec allows 8,16,32,64
-         * Start conservative, let EP0 probing determine actual size */
-        
-        if (device_speed == 2) {
-            /* High Speed devices can reliably use 64 bytes */
-            dev->epmaxpacketin[0] = 64;
-            dev->epmaxpacketout[0] = 64;
-            dev->maxpacketsize = PACKET_SIZE_64;
-            dev->speed = USB_SPEED_HIGH;
-            printf("[USB SPEED] Device addr=%d configured for HIGH SPEED (64 bytes EP0)\n", addr);
-        } else {
-            /* Full Speed: Start conservative with 8 bytes to avoid transfer failures
-             * EP0 probing will increase this if the device actually supports larger packets */
-            dev->epmaxpacketin[0] = 8;
-            dev->epmaxpacketout[0] = 8;
-            dev->maxpacketsize = PACKET_SIZE_8;
-            dev->speed = USB_SPEED_FULL;
-            printf("[USB SPEED] Device addr=%d configured for FULL SPEED (8 bytes EP0 - conservative)\n", addr);
-            printf("[USB SPEED] EP0 probing will determine if larger packets are supported\n");
-        }
-    }
-    
-    /* Advance device index for next allocation */
-    dev_index++;
-    
-    printf("[USB ALLOC] Allocated device addr=%d at array index %d\n", addr, dev_index - 1);
-
-    /* DO NOT pre-assign topology or speeds for Poseidon devices!
-     * Poseidon will discover the actual topology through GET_DESCRIPTOR.
-     * Let the natural USB enumeration process determine:
-     * - Device speeds via descriptor analysis
-     * - Device relationships via hub enumeration
-     * - Split transaction requirements via usb_find_usb2_hub_address_port()
-     * 
-     * The previous logic was incorrectly assuming:
-     * - addr=1 is always a HIGH SPEED hub (WRONG - could be FULL SPEED external hub)
-     * - addr>1 devices are always children of addr=1 (WRONG - topology discovered via GET_DESCRIPTOR)
-     */
-    
-    printf("[USB ALLOC] Allocated device addr=%d - speeds and topology will be discovered via enumeration\n", addr);
-
-    return dev;
-}
-
-/* Poseidon helper: apply full configuration descriptor to device state
- * Parses the provided config buffer (must contain an entire configuration
- * descriptor blob starting with USB_DT_CONFIG) and updates dev->config and
- * endpoint max packet sizes, matching standalone behavior.
- */
-int usb_poseidon_apply_config(struct usb_device *dev, unsigned char *buffer, int length)
-{
-	int ret;
-	if (!dev || !buffer || length < 9)
-		return -1;
-
-	/* Basic sanity: first header must be CONFIG and not overflow */
-	struct usb_config_descriptor *cfg = (struct usb_config_descriptor *)buffer;
-	if (cfg->bLength != USB_DT_CONFIG_SIZE || cfg->bDescriptorType != USB_DT_CONFIG)
-		return -1;
-	if (le16_to_cpu(cfg->wTotalLength) > length)
-		return -1;
-
-	/* Reuse internal parser and endpoint sizing helpers */
-	ret = usb_parse_config(dev, buffer, 0);
-	if (ret)
-		return ret;
-	ret = usb_set_maxpacket(dev);
-	return ret;
+	printf("Error: Cannot find high speed parent of usb-1 device\n");
+	*hub_address = 0;
+	*hub_port = 0;
 }
 
 /* EOF */

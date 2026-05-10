@@ -1,0 +1,8 @@
+/* Zynq BOOT image for Z3660: FSBL + Bitstream + A9_0 + A9_1 */
+the_ROM_image:
+{
+ [bootloader] /Users/shanshe/git/z3660_dev/design_1_wrapper/zynq_fsbl/fsbl.elf
+ /Users/shanshe/git/z3660_dev/design_1_wrapper/hw/design_1_wrapper.bit
+ /Users/shanshe/git/z3660_dev/Z3660/build/Z3660.elf
+ /Users/shanshe/git/z3660_dev/Z3660_emu/build/Z3660_emu.elf
+}

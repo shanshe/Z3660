@@ -22,20 +22,18 @@ INCLUDEPATH := -Izynq_fsbl_bsp/ps7_cortexa9_0/include -I.
 LIBPATH := -Lzynq_fsbl_bsp/ps7_cortexa9_0/lib -L./
 
 # DDR frequency targets (without clean to preserve BSP libraries)
-ddr533: 
-	$(MAKE) clean
-	$(MAKE) CFLAGS="$(CFLAGS) -DDDR_533MHZ" all
+ddr533: $(EXEC)
+	@echo "Building FSBL (DDR 533MHz)"
+	@$(MAKE) CFLAGS="$(CFLAGS) -DDDR_533MHZ" all
 	cp $(EXEC) fsbl_ddr533.elf
 	@echo "FSBL DDR 533MHz created: fsbl_ddr533.elf"
 	
-ddr667:
-	$(MAKE) clean
+ddr667: $(EXEC)
 	$(MAKE) CFLAGS="$(CFLAGS) -DDDR_667MHZ" all
 	cp $(EXEC) fsbl_ddr667.elf
 	@echo "FSBL DDR 667MHz created: fsbl_ddr667.elf"
 
-ddr800:
-	$(MAKE) clean
+ddr800: $(EXEC)
 	$(MAKE) CFLAGS="$(CFLAGS) -DDDR_800MHZ" all
 	cp $(EXEC) fsbl_ddr800.elf
 	@echo "FSBL DDR 800MHz created: fsbl_ddr800.elf"
@@ -47,23 +45,23 @@ $(EXEC): $(LIBS) $(OBJS) $(INCLUDES)
 	@$(CC) -o $@ $(sort $(OBJS)) $(CC_FLAGS) $(CFLAGS) $(LN_FLAGS) $(LIBPATH) $(LSCRIPT)
 
 $(LIBS):
-	$(MAKE) -C zynq_fsbl_bsp
+	@echo "Building BSP libraries..."
+	@$(MAKE) -C zynq_fsbl_bsp
 
 %.o:%.c
-	@echo Compiling $@
+	@echo Compiling $<
 	@$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
 
 %.o:%.S
-	@echo Assembling $@
+	@echo Assembling $<
 	@$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
 
 %.o:%.s
-	@echo Assembling $@
+	@echo Assembling $<
 	@$(CC) $(CFLAGS) $(BSP_FLAGS) $(CC_FLAGS) -c $< -o $@ $(INCLUDEPATH)
 
 clean:
 	@echo Cleaning *.o *.d
 	@rm -rf $(OBJS) $(EXEC) *.o *.d
-	@rm -f $(LIBS)
 
 -include $(DEPFILES)

@@ -17,7 +17,6 @@
 #include "io.h"
 #include "ulpi.h"
 #include <stdio.h>
-#include <sleep.h>
 #include <xenv_standalone.h>
 
 /* ULPI viewport control bits */
@@ -43,7 +42,7 @@ static int ulpi_wait(struct ulpi_viewport *ulpi_vp, u32 mask)
 		if ((readl(ulpi_vp->viewport_addr) & mask) == 0)
 			return 0;
 
-		usleep(1);
+		udelay(1);
 	}
 
 	return ULPI_ERROR;

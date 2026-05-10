@@ -274,40 +274,40 @@ void recalculate_coords_buttons(void)
    b_refresh->y=win.y+153;
 
    b_apply_screen_res->x=win.x+23;
-   b_apply_screen_res->y=win.y+164+16+16+16;
+   b_apply_screen_res->y=win.y+164+16+16+16+16;
 
    b_apply_boot_mode->x=win.x+23;
-   b_apply_boot_mode->y=win.y+164+16+16+16;
+   b_apply_boot_mode->y=win.y+164+16+16+16+16;
 
    b_apply_scsi->x=win.x+23;
-   b_apply_scsi->y=win.y+164+16+16+16;
+   b_apply_scsi->y=win.y+164+16+16+16+16;
 
    b_apply_misc->x=win.x+23;
-   b_apply_misc->y=win.y+164+16+16+16;
+   b_apply_misc->y=win.y+164+16+16+16+16;
 
    b_apply_preset->x=win.x+23;
-   b_apply_preset->y=win.y+164+16+16+16;
+   b_apply_preset->y=win.y+164+16+16+16+16;
 
    b_delete_preset->x=win.x+23+150;
-   b_delete_preset->y=win.y+164+16+16+16;
+   b_delete_preset->y=win.y+164+16+16+16+16;
 
    b_apply_timings->x=win.x+23;
-   b_apply_timings->y=win.y+164+16+16+16;
+   b_apply_timings->y=win.y+164+16+16+16+16;
 
    b_apply_all_boot->x=win.x+win.w-80-23;
-   b_apply_all_boot->y=win.y+164+16+16+16;
+   b_apply_all_boot->y=win.y+164+16+16+16+16;
 
    b_apply_all_scsi->x=win.x+win.w-80-23;
-   b_apply_all_scsi->y=win.y+164+16+16+16;
+   b_apply_all_scsi->y=win.y+164+16+16+16+16;
 
    b_apply_all_misc->x=win.x+win.w-80-23;
-   b_apply_all_misc->y=win.y+164+16+16+16;
+   b_apply_all_misc->y=win.y+164+16+16+16+16;
 
    b_apply_all_preset->x=win.x+win.w-80-23;
-   b_apply_all_preset->y=win.y+164+16+16+16;
+   b_apply_all_preset->y=win.y+164+16+16+16+16;
 
    b_apply_all_timings->x=win.x+win.w-80-23;
-   b_apply_all_timings->y=win.y+164+16+16+16;
+   b_apply_all_timings->y=win.y+164+16+16+16+16;
 }
 void init_buttons(void)
 {

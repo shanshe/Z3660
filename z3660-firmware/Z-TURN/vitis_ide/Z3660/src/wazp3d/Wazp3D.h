@@ -361,7 +361,7 @@ struct vertex3D{
 };
 /*==================================================================================*/
 __attribute__((aligned(16)))
-struct point3D{
+struct point3D {
     union {
         float f;
         uint32_t i;

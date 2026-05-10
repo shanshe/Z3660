@@ -8,6 +8,7 @@
 XClk_Wiz clkwiz0;
 XClk_Wiz_Config conf0;
 int timing_selected=0;
+void print_hdmi_ln(int xpos, char *message, int line_inc);
 
 clock_data cd[]={
       {// 50 MHz
@@ -355,7 +356,15 @@ int write_timings(void)
    f_clk_mount(&fatfs, Path, 1); // 1 mount immediately
    int ret;
    ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
-   if(ret==FR_OK)
+   if(ret!=FR_OK)
+   {
+      // hummmm we have to recreate tthe timings settings from scratch
+      f_mkdir(DEFAULT_ROOT "timings");
+      ret=f_open(&fil,Filename, FA_CREATE_ALWAYS | FA_WRITE);
+      f_printf(&fil,"default_timings.txt\n");
+      f_close(&fil);
+      ret=f_open(&fil,Filename, FA_OPEN_EXISTING | FA_READ);
+   }
    {
       printf("Reading %s file \n",Filename);
       char temp[40];
@@ -368,7 +377,10 @@ int write_timings(void)
       ret=f_open(&fil,timings_filename, FA_CREATE_ALWAYS | FA_WRITE);
       if(ret==FR_OK)
       {
-         printf("Writing %s file \n",timings_filename);
+         char message[100];
+         sprintf(message,"Writing %s file",timings_filename);
+         print_hdmi_ln(0,message,1);
+         printf("%s\n",message);
          f_printf(&fil,"# %s\n",timings_filename);
          if(REVISION_BETA > 0)
          {
@@ -522,4 +534,206 @@ void configure_clk(int clk, int verbose, int emu)
       print_clkinfo("CPUCLK",XPAR_CLK_WIZ_0_BASEADDR,0x244);
       print_clkinfo(" CLK90",XPAR_CLK_WIZ_0_BASEADDR,0x238);
    }
+}
+
+void set_default_timings(void)
+{
+#define SET_DEFAULT_CD(A,_CLK,_M,_D,  \
+                           _AD,_AP,   \
+                           _PD,_PP,   \
+                           _CED,_CEP, \
+                           _BD,_BP,   \
+                           _CD,_CP,   \
+                           _C9D,_C9P, \
+                           _EE)       \
+   do{                                \
+      cd[A].clk              = _CLK;  \
+      cd[A].M                =   _M;  \
+      cd[A].D                =   _D;  \
+      cd[A].axi.divider      =  _AD;  \
+      cd[A].axi.phase        =  _AP;  \
+      cd[A].axi.dutycycle    =   50;  \
+      cd[A].pclk.divider     =  _PD;  \
+      cd[A].pclk.phase       =  _PP;  \
+      cd[A].pclk.dutycycle   =   50;  \
+      cd[A].clken.divider    = _CED;  \
+      cd[A].clken.phase      = _CEP;  \
+      cd[A].clken.dutycycle  =   50;  \
+      cd[A].bclk.divider     =  _BD;  \
+      cd[A].bclk.phase       =  _BP;  \
+      cd[A].bclk.dutycycle   =   50;  \
+      cd[A].cpuclk.divider   =  _CD;  \
+      cd[A].cpuclk.phase     =  _CP;  \
+      cd[A].cpuclk.dutycycle =  50;   \
+      cd[A].clk90.divider    = _C9D;  \
+      cd[A].clk90.phase      = _C9P;  \
+      cd[A].clk90.dutycycle  =   50;  \
+      cd[A].emu_extra_phase  =  _EE;  \
+   }while(0)
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   0,   50,  4, 1,
+                  // Div  Phase
+                      8,     0, // axi
+                     16,   -50, // pclk
+                     32,    50, // clken
+                     64,   -40, // bclk
+                     64,   190, // cpuclk
+                     64,   280, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   1,   55, 22, 5,
+                  // Div  Phase
+                      8,     0, // axi
+                     16,   -50, // pclk
+                     32,    50, // clken
+                     64,   -20, // bclk
+                     64,   220, // cpuclk
+                     64,   310, // clk90
+                     20         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   2,   60, 24, 5,
+                  // Div  Phase
+                      8,     0, // axi
+                     16,   -50, // pclk
+                     32,    50, // clken
+                     64,   -20, // bclk
+                     64,   180, // cpuclk
+                     64,   270, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   3,  65, 26, 5,
+                  // Div  Phase
+                      8,     0, // axi
+                     16,   -45, // pclk
+                     32,    45, // clken
+                     64,   -50, // bclk
+                     64,   180, // cpuclk
+                     64,   270, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   4,   70, 56, 10,
+                  // Div  Phase
+                      8,     0, // axi
+                     16,   -45, // pclk
+                     32,    45, // clken
+                     64,   -40, // bclk
+                     64,   180, // cpuclk
+                     64,   270, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   5,   75, 30, 5,
+                  // Div  Phase
+                      8,     0, // axi
+                     16,   -40, // pclk
+                     32,    40, // clken
+                     64,    50, // bclk
+                     64,   180, // cpuclk
+                     64,   270, // clk90
+                     40         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   6,   80, 28, 5,
+                  // Div  Phase
+                      7,     0, // axi
+                     14,   -40, // pclk
+                     28,    40, // clken
+                     56,    50, // bclk
+                     56,   180, // cpuclk
+                     56,   270, // clk90
+                     40         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   7,   85, 21, 5,
+                  // Div  Phase
+                      5,     0, // axi
+                     10,   -45, // pclk
+                     20,    45, // clken
+                     40,    70, // bclk
+                     40,   180, // cpuclk
+                     40,   270, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   8,   90, 27, 5,
+                  // Div  Phase
+                      6,     0, // axi
+                     12,   -45, // pclk
+                     24,    45, // clken
+                     48,    80, // bclk
+                     48,   180, // cpuclk
+                     48,   270, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(   9,   95, 19, 4,
+                  // Div  Phase
+                      5,     0, // axi
+                     10,   -45, // pclk
+                     20,    45, // clken
+                     40,    90, // bclk
+                     40,   180, // cpuclk
+                     40,   270, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(  10,  100, 25, 5,
+                  // Div  Phase
+                      5,     0, // axi
+                     10,   -45, // pclk
+                     20,    45, // clken
+                     40,    60, // bclk
+                     40,   190, // cpuclk
+                     40,   280, // clk90
+                     60         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(  11,  105, 21, 5,
+                  // Div  Phase
+                      4,     0, // axi
+                      8,   -20, // pclk
+                     16,    40, // clken
+                     32,    60, // bclk
+                     32,   200, // cpuclk
+                     32,   290, // clk90
+                     30         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(  12,  110, 22, 5,
+                  // Div  Phase
+                      4,     0, // axi
+                      8,   -10, // pclk
+                     16,    50, // clken
+                     32,    60, // bclk
+                     32,   240, // cpuclk
+                     32,   330, // clk90
+                      0         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(  13,  115, 23, 5,
+                  // Div  Phase
+                      4,     0, // axi
+                      8,   -10, // pclk
+                     16,    50, // clken
+                     32,    60, // bclk
+                     32,   250, // cpuclk
+                     32,   340, // clk90
+                      0         // emu_extra_phase
+                  );
+//                Index FREQ  M   D 
+   SET_DEFAULT_CD(  14,  120, 30, 5,
+                  // Div  Phase
+                      5,     0, // axi
+                     10,   -40, // pclk
+                     20,    40, // clken
+                     40,    60, // bclk
+                     40,   180, // cpuclk
+                     40,   270, // clk90
+                     40         // emu_extra_phase
+                  );
+   write_timings();
 }

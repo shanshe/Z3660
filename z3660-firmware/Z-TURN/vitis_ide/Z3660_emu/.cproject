@@ -345,7 +345,7 @@
                                 								
                                 <option id="xilinx.gnu.linker.inferred.swplatform.flags.1432468298" name="Software Platform Inferred Flags" superClass="xilinx.gnu.linker.inferred.swplatform.flags" useByScannerDiscovery="false" valueType="libs">
                                     									
-                                    <listOptionValue builtIn="false" value="-Wl,--start-group,-lxil,-lgcc,-lstdc++,-lc,--end-group"/>
+                                    <listOptionValue builtIn="false" value="-Wl,--start-group,-lxil,-lgcc,-lc,-lstdc++,--end-group"/>
                                     								
                                 </option>
                                 								
@@ -541,7 +541,7 @@
                                 								
                                 <option id="xilinx.gnu.linker.inferred.swplatform.flags.1319895121" name="Software Platform Inferred Flags" superClass="xilinx.gnu.linker.inferred.swplatform.flags" useByScannerDiscovery="false" valueType="libs">
                                     									
-                                    <listOptionValue builtIn="false" value="-Wl,--start-group,-lxil,-lgcc,-lstdc++,-lc,--end-group"/>
+                                    <listOptionValue builtIn="false" value="-Wl,--start-group,-lxil,-lgcc,-lc,-lstdc++,--end-group"/>
                                     								
                                 </option>
                                 								

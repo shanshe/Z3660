@@ -21,14 +21,18 @@
 #define Z3_SCRATCH_ADDR             (RTG_BASE+0x03200000) // FIXME @ _Bnu
 #define ADDR_ADJ                    0x001F0000 // FIXME @ _Bnu
 
+#define Z3_SOFT3D_ADDR_DATA3D       (RTG_BASE+0x04200000)
+#define Z3_SOFT3D_ADDR_BUFFERS      (Z3_SOFT3D_ADDR_DATA3D+0x100000)
+
+
 #define AUDIO_TX_BUFFER_ADDRESS     0x07CE0000 // default, changed by driver
 #define AUDIO_RX_BUFFER_ADDRESS     0x07D00000 // default, changed by driver
 #define TX_BD_LIST_START_ADDRESS    0x07E00000 //---------------------------------
-#define RX_BD_LIST_START_ADDRESS    0x07E80000 //                                 | <- 1 MB STRONG_ORDERED
-#define RX_BACKLOG_ADDRESS          0x07EF0000 // 32 * 2048 space (64 kB) --------
-#define TX_FRAME_ADDRESS            0x07F00000
-#define RX_FRAME_ADDRESS            0x07F10000
-#define USB_BLOCK_STORAGE_ADDRESS   0x3FE10000 // FIXME move all of these to a memory table header file
+#define RX_BD_LIST_START_ADDRESS    0x07E60000 //                                 | <- 1 MB STRONG_ORDERED
+#define RX_BACKLOG_ADDRESS          0x07ED0000 // 32 * 2048 space (64 kB) --------
+#define TX_FRAME_ADDRESS            0x07EE0000
+#define RX_FRAME_ADDRESS            0x07EF0000
+#define USB_DATA_ADDRESS            (RTG_BASE+0x07F00000)
 #define SCSI_NO_DMA_ADDRESS         (RTG_BASE+0x80000)
 #define BOOT_ROM_ADDRESS            (RTG_BASE+0x6000)
 #define BOOT_ROM_SIZE               0x20000

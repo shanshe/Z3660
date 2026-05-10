@@ -5,7 +5,10 @@
 
 #ifndef ARCH_HAS_PREFETCH
 #define ARCH_HAS_PREFETCH
-static inline void prefetch(const void *x) {(void)x;}
+static inline void prefetch(const void *x)
+{
+	(void)x;
+}
 #endif
 
 /*

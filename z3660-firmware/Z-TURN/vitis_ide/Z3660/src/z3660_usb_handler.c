@@ -1,3 +1,4 @@
+#if 0 // Not used
 /*
  * Z3660 USB Device Handler for ARM side
  * 
@@ -316,7 +317,7 @@ static void dump_parsed_descriptors_arm(unsigned char dev,
     unsigned short wValue = req->value;
     unsigned char dtype = (unsigned char)(wValue >> 8); /* descriptor type */
 
-    /* Sólo trazar IN GET_DESCRIPTOR */
+    /* Only trace IN GET_DESCRIPTOR */
     if ((bmReq & 0x80) && bReq == 0x06) {
         const unsigned char *db = (const unsigned char *)data_ptr;
         if (dtype == 0x01) { /* DEVICE */
@@ -1807,12 +1808,12 @@ void z3660_usb_process_command(uint32_t command)
             printf("[USB Handler] DEV=0: Device enumeration in progress (this could be on any hub port)\n");
             #endif
 
-            /* DEBUG: Inicializar memoria con patrón conocido antes del transfer */
+            /* DEBUG: Initialize memory with a known pattern before transfer */
             if (data_ptr && transfer_len > 0) {
                 unsigned char *debug_ptr = (unsigned char *)data_ptr;
                 printf("[USB DEBUG] BEFORE TRANSFER: Initializing buffer with pattern 0xAA\n");
                 for (int i = 0; i < transfer_len; i++) {
-                    debug_ptr[i] = 0xAA;  /* Patrón conocido */
+                    debug_ptr[i] = 0xAA;  /* Known patttern */
                 }
                 printf("[USB DEBUG] Buffer initialized: ");
                 for (int i = 0; i < (transfer_len > 18 ? 18 : transfer_len); i++) {
@@ -2819,3 +2820,4 @@ void z3660_usb_process_async_requests(struct pt *pt)
 #endif
     /* Request is still pending - will be checked again next time */
 }
+#endif

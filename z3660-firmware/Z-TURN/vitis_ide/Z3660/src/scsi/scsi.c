@@ -263,7 +263,7 @@ void piscsi_shutdown() {
       filesystems[i].FS_ID = 0;
       filesystems[i].handler = 0;
    }
-   f_umount(DEFAULT_ROOT);
+//   f_umount(DEFAULT_ROOT);
    printf("...Done\n");
    Xil_ExceptionEnable();
 }
@@ -725,15 +725,15 @@ void piscsi_unmap_drive(uint8_t index) {
 
 char *io_cmd_name(int index) {
    switch (index) {
-   case CMD_INVALID: return "INVALID";
-   case CMD_RESET: return "RESET";
-   case CMD_READ: return "READ";
-   case CMD_WRITE: return "WRITE";
-   case CMD_UPDATE: return "UPDATE";
-   case CMD_CLEAR: return "CLEAR";
-   case CMD_STOP: return "STOP";
-   case CMD_START: return "START";
-   case CMD_FLUSH: return "FLUSH";
+   case SCSI_CMD_INVALID: return "INVALID";
+   case SCSI_CMD_RESET: return "RESET";
+   case SCSI_CMD_READ: return "READ";
+   case SCSI_CMD_WRITE: return "WRITE";
+   case SCSI_CMD_UPDATE: return "UPDATE";
+   case SCSI_CMD_CLEAR: return "CLEAR";
+   case SCSI_CMD_STOP: return "STOP";
+   case SCSI_CMD_START: return "START";
+   case SCSI_CMD_FLUSH: return "FLUSH";
    case TD_MOTOR: return "TD_MOTOR";
    case TD_SEEK: return "SEEK";
    case TD_FORMAT: return "FORMAT";
@@ -1307,10 +1307,12 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          //            if (r != -1) {
          MEMCPY((uint8_t *)addr, filesystems[rom_cur_fs].binary_data, filesystems[rom_cur_fs].h_info.byte_size);
          filesystems[rom_cur_fs].h_info.base_offset = addr;
+         printf("[PISCSI] Relocating file system %ld with base offset %.8lX\n", rom_cur_fs + 1, filesystems[rom_cur_fs].h_info.base_offset);
          reloc_hunks(filesystems[rom_cur_fs].relocs, (uint8_t*) addr, &filesystems[rom_cur_fs].h_info);
          filesystems[rom_cur_fs].handler = addr;
+         printf("[PISCSI] Flushing caches after copying file system %ld.\n", rom_cur_fs + 1);
          Xil_L1DCacheFlush();
-         Xil_L2CacheFlush();
+//         Xil_L2CacheFlush();
          //            }
       }
       else

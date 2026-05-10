@@ -3920,6 +3920,16 @@ unsigned long ps7_post_config_3_0[] = {
     EMIT_MASKWRITE(0XF8009014, 0x00000001U ,0x00000001U),
     // .. .. FINISH: AFI1 REGISTERS
     // .. .. START: AFI2 REGISTERS
+    // .. .. n32BitEn = 1
+    // .. .. ==> 0XF800A000[0:0] = 0x00000001U
+    // .. ..     ==> MASK : 0x00000001U    VAL : 0x00000001U
+    // .. .. 
+    EMIT_MASKWRITE(0XF800A000, 0x00000001U ,0x00000001U),
+    // .. .. n32BitEn = 1
+    // .. .. ==> 0XF800A014[0:0] = 0x00000001U
+    // .. ..     ==> MASK : 0x00000001U    VAL : 0x00000001U
+    // .. .. 
+    EMIT_MASKWRITE(0XF800A014, 0x00000001U ,0x00000001U),
     // .. .. FINISH: AFI2 REGISTERS
     // .. .. START: AFI3 REGISTERS
     // .. .. FINISH: AFI3 REGISTERS
@@ -8020,6 +8030,16 @@ unsigned long ps7_post_config_2_0[] = {
     EMIT_MASKWRITE(0XF8009014, 0x00000001U ,0x00000001U),
     // .. .. FINISH: AFI1 REGISTERS
     // .. .. START: AFI2 REGISTERS
+    // .. .. n32BitEn = 1
+    // .. .. ==> 0XF800A000[0:0] = 0x00000001U
+    // .. ..     ==> MASK : 0x00000001U    VAL : 0x00000001U
+    // .. .. 
+    EMIT_MASKWRITE(0XF800A000, 0x00000001U ,0x00000001U),
+    // .. .. n32BitEn = 1
+    // .. .. ==> 0XF800A014[0:0] = 0x00000001U
+    // .. ..     ==> MASK : 0x00000001U    VAL : 0x00000001U
+    // .. .. 
+    EMIT_MASKWRITE(0XF800A014, 0x00000001U ,0x00000001U),
     // .. .. FINISH: AFI2 REGISTERS
     // .. .. START: AFI3 REGISTERS
     // .. .. FINISH: AFI3 REGISTERS
@@ -12051,6 +12071,16 @@ unsigned long ps7_post_config_1_0[] = {
     EMIT_MASKWRITE(0XF8009014, 0x00000001U ,0x00000001U),
     // .. .. FINISH: AFI1 REGISTERS
     // .. .. START: AFI2 REGISTERS
+    // .. .. n32BitEn = 1
+    // .. .. ==> 0XF800A000[0:0] = 0x00000001U
+    // .. ..     ==> MASK : 0x00000001U    VAL : 0x00000001U
+    // .. .. 
+    EMIT_MASKWRITE(0XF800A000, 0x00000001U ,0x00000001U),
+    // .. .. n32BitEn = 1
+    // .. .. ==> 0XF800A014[0:0] = 0x00000001U
+    // .. ..     ==> MASK : 0x00000001U    VAL : 0x00000001U
+    // .. .. 
+    EMIT_MASKWRITE(0XF800A014, 0x00000001U ,0x00000001U),
     // .. .. FINISH: AFI2 REGISTERS
     // .. .. START: AFI3 REGISTERS
     // .. .. FINISH: AFI3 REGISTERS

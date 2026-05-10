@@ -21,11 +21,11 @@
 #define __ASM_ARM_IO_H
 
 
-#include "asm/types.h"
-#include "asm/byteorder.h"
+#include <usb/asm/types.h>
+#include <usb/asm/byteorder.h>
 #include <xpseudo_asm.h>
 
-#include "memalign.h"
+#include "usb/memalign.h"
 
 static inline void sync(void)
 {

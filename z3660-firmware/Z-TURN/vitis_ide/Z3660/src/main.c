@@ -56,6 +56,19 @@ extern ENV_FILE_VARS env_file_vars_temp[9]; // really size 8
 #include "pt/pt.h"
 #include "ethernet.h"
 #include <xtime_l.h>
+
+#include "usb_proxy.h"
+
+// usb state
+// Protocol: 0 = idle/error, 0xFFFF = busy (transfer in progress), other = success (blocks transferred)
+#define USB_STATUS_BUSY 0xFFFF
+uint16_t usb_status = 0;
+uint16_t usb_proxy_status = 0;
+uint32_t usb_read_write_num_blocks = 1;
+volatile int usb_read_pending = 0;
+volatile int usb_write_pending = 0;
+volatile int usb_proxy_pending = 0;
+
 extern uint32_t revision_alfa;
 int rtg_thread(struct pt *pt);
 int ethernet_thread(struct pt *pt);
@@ -305,11 +318,7 @@ void PrepareHdf(void)
 }
  */
 ZZ_VIDEO_STATE vs;
-XAxiVdma vdma;
 XClk_Wiz clkwiz;
-XClk_Wiz_Config conf;
-XAxiVdma_DmaSetup ReadCfg;
-XAxiVdma_Config *Config=NULL;
 
 void configure_gpio(void)
 {
@@ -583,7 +592,7 @@ void dump_mmu(void)
       }
       printf("\n");
    }
-   if(config.boot_mode==CPU) // if core 0 is the only active core
+   if(config.boot_mode==CPU || config.boot_mode==MOBOCPU) // if core 0 is the only active core
       return;               // then return
    printf("\n");
    printf("Core 1 MMUTable 0x%08lX\n",(uint32_t)((uint32_t *)shared->mmu_core1_add));
@@ -622,36 +631,43 @@ void finish_MMU_OP(void)
    isb(); /* synchronize context on this processor */
 }
 
-void rtg_cache_policy_core0(int ini,uint32_t fb_policy,uint32_t soft3d_policy)
+void rtg_cache_policy_core0(uint32_t ini, uint32_t fb_policy, uint32_t soft3d_policy)
 {
-   /*
+/*
    for(int i=ini,j=0;j<2;i++,j++) // RTG registers
    {
       uint32_t address=(RTG_BASE+j*0x100000UL);
       setMMU(address,address|NORM_NONCACHE);
       setMMU(i*0x100000UL,address|NORM_NONCACHE);
    }
-    */
+*/
    // +2 -> don't use RTG registers with MMU (write to RTG registers is emulated)
-   for(int i=ini+2,j=2;j<0x042;i++,j++) // RTG
+   for(unsigned int i=ini+2,j=2;j<0x042;i++,j++) // RTG
    {
       uint32_t address=(RTG_BASE+j*0x100000UL);
       setMMU(address,address|fb_policy);
       setMMU(i*0x100000UL,address|fb_policy);
    }
    // SOFT3D registers
-   for(int i=ini+0x042,j=0x042;j<0x043;i++,j++)
+   for(unsigned int i=ini+0x042,j=0x042;j<0x043;i++,j++)
    {
       uint32_t address=(RTG_BASE+j*0x100000UL);
       setMMU(address,address|NORM_NONCACHE);
       setMMU(i*0x100000UL,address|NORM_NONCACHE);
    }
    // SOFT3D RAM
-   for(int i=ini+0x043,j=0x043;j<0x070;i++,j++)
+   for(unsigned int i=ini+0x043,j=0x043;j<0x060;i++,j++)
    {
       uint32_t address=(RTG_BASE+j*0x100000UL);
       setMMU(address,address|soft3d_policy);
       setMMU(i*0x100000UL,address|soft3d_policy);
+   }
+   // Overlay
+   for(unsigned int i=ini+0x060,j=0x060;j<0x070;i++,j++)
+   {
+      uint32_t address=(RTG_BASE+j*0x100000UL);
+      setMMU(address,address|AUDIO_CACHE_POLICY);
+      setMMU(i*0x100000UL,address|AUDIO_CACHE_POLICY);
    }
    // Audio
    for(unsigned int i=ini+0x070,j=0x070;j<0x07E;i++,j++)
@@ -664,8 +680,8 @@ void rtg_cache_policy_core0(int ini,uint32_t fb_policy,uint32_t soft3d_policy)
    for(unsigned int i=ini+0x07A,j=0x07A;j<0x07B;i++,j++)
    {
       uint32_t address=(RTG_BASE+j*0x100000UL);
-      setMMU(address,address|MPEG_CACHE_POLICY);
-      setMMU(i*0x100000UL,address|MPEG_CACHE_POLICY);
+      setMMU(address,address|ETHERNET_CACHE_POLICY);
+      setMMU(i*0x100000UL,address|ETHERNET_CACHE_POLICY);
    }
    // Ethernet
    for(unsigned int i=ini+0x07E,j=0x07E;j<0x080;i++,j++)
@@ -917,6 +933,7 @@ const char boot_bin_version[]="$VER:" STRINGIZER(REVISION_MAJOR) ".0" STRINGIZER
 
 void show_bootscreen()
 {
+   printf("Internal boot bin string %s\n",boot_bin_version);
    video_state=video_init();
    video_reset();
    {
@@ -1000,11 +1017,41 @@ uint32_t main_speed_test();
 uint32_t get_current_cpu_frequency();
 uint32_t counts_per_second=COUNTS_PER_SECOND;
 
+/* Enable VFP/NEON coprocessor on ARM Cortex-A9 */
+static void enable_vfp_neon(void)
+{
+    uint32_t cpacr;
+    
+    /* Read CPACR (Coprocessor Access Control Register) */
+    __asm__ volatile ("mrc p15, 0, %0, c1, c0, 2" : "=r" (cpacr));
+    
+    /* Enable CP10 (VFP) and CP11 (NEON) for full access */
+    cpacr |= (0xF << 20);  /* Bits 20-23: CP10 and CP11 = 11 (full access) */
+    
+    /* Write back CPACR */
+    __asm__ volatile ("mcr p15, 0, %0, c1, c0, 2" : : "r" (cpacr));
+    
+    /* Ensure the change takes effect */
+    __asm__ volatile ("dsb" ::: "memory");
+    __asm__ volatile ("isb" ::: "memory");
+    
+    /* Enable VFP/NENR in FPEXC (Floating-Point Exception Register) */
+    __asm__ volatile (
+        "vmrs %0, fpexc\n\t"
+        "orr %0, %0, #0x40000000\n\t"  /* Set bit 30 (EN) to enable VFP/NEON */
+        "vmsr fpexc, %0\n\t"
+        : "=r" (cpacr)
+    );
+}
+
 int main()
 {
 #ifndef USE_RTOS
    init_platform();
 #endif
+   /* Enable VFP/NEON before using any NEON instructions */
+   enable_vfp_neon();
+   
    printf("[Core0] Starting...\n");
    Xil_ICacheEnable();
 #ifdef L1_CACHE_ENABLED
@@ -1034,6 +1081,8 @@ int main()
       Xil_SetTlbAttributes(i*0x100000UL,ETHERNET_CACHE_POLICY);//NORM_NONCACHE);// NORM_WB_CACHE);//0x14de2);
    for(int i=0x400;i<0x780;i++)
       Xil_SetTlbAttributes(i*0x100000UL,RESERVED);
+   for(int i=0x780;i<0x800;i++) //
+      Xil_SetTlbAttributes(i*0x100000UL,STRONG_ORDERED);
    for(int i=0xE00;i<0xE03;i++) //
       Xil_SetTlbAttributes(i*0x100000UL,STRONG_ORDERED);//NORM_NONCACHE);
 
@@ -1413,7 +1462,10 @@ int main()
       DiscreteClear(REG0, FPGA_RESET);
       //      int ini=config.autoconfig_ram?0x500:0x400;
       int ini=0x100;
+      if(config.autoconfig_rtg==1)
+         ini=config.autoconfig_ram?0x500:0x400;
       rtg_cache_policy_core0(ini,RTG_FB_CACHE_POLICY_FOR_EMU,RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
+      rtg_cache_policy_core0((RTG_BASE>>20)&0xFFF, RTG_FB_CACHE_POLICY_FOR_EMU, RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
    }
    else
    {
@@ -1432,6 +1484,7 @@ int main()
             DISABLE_SCSI_AUTOCONFIG;
       }
       rtg_cache_policy_core0(ini,RTG_FB_CACHE_POLICY_FOR_060,RTG_SOFT3D_CACHE_POLICY_FOR_060);
+      rtg_cache_policy_core0((RTG_BASE>>20)&0xFFF, RTG_FB_CACHE_POLICY_FOR_060, RTG_SOFT3D_CACHE_POLICY_FOR_060);
    }
    //   DISABLE_BURST_READ_FPGA;  // read bursts doesn't work with CLKEN=0
    //   DISABLE_BURST_WRITE_FPGA; // write bursts work with CLKEN=0 and 50 MHz but doesn't work at >50MHz
@@ -1501,7 +1554,69 @@ int main()
    usleep(2500);
    monitor_switch(1); // 1=RTG
    DiscreteClear(REG0, FPGA_RESET);
+
+   usleep(1000);
+   CPLD_RESET_ARM(0); // CPLD RESET
+   usleep(100);
+   // PS_MIO_15 as output
+   XGpioPs_WritePin(&GpioPs, PS_MIO_15, 0);
+   XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_15, 1);
+   XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_15, 1);
+   usleep(100);
+
+   if(config.boot_mode==MOBOCPU)
+   {
+      printf("\e[31m\e[103mBoot mode is MOBOCPU... setting nBOSS...\e[0m\n");
+      // INT6 is nBOSS when a reset is active
+      XGpioPs_WritePin(&GpioPs, PS_MIO_15, 1);
+   }
+   else
+   {
+      printf("\e[31m\e[103mBoot mode is NOT MOBOCPU... clearing nBOSS...\e[0m\n");
+      // INT6 is nBOSS when a reset is active
+      XGpioPs_WritePin(&GpioPs, PS_MIO_15, 0);
+   }
+   // Move as a clock NBR
+   NBR_ARM(0);
+   usleep(100);
+   NBR_ARM(1);
+   usleep(100);
+   NBR_ARM(0);
+   usleep(100);
+   NBR_ARM(1);
+   usleep(100);
+   NBR_ARM(0);
+   usleep(100);
+
+   // PS_MIO_15 as input
+   XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_15, 0);
+   XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_15, 0);
+   usleep(100);
+
    CPLD_RESET_ARM(1); // CPLD RUN
+   usleep(100000);
+   read_reset=0;
+   usleep(10000);
+   if(!sw1_is_down)
+   {
+      if(read_reset)
+      {
+         Xil_ExceptionDisable();
+         read_reset=0;
+         char message[200];
+         sprintf(message,"CPLD reset is still active after 100 ms!!! Check your board!!!");
+         void print_hdmi_ln(int xpos, char *message, int line_inc);
+         print_hdmi_ln(0,message,1);
+         printf("\e[31m\e[103m%s\e[0m\n",message);
+         mobotest(2); // try to program the CPLD
+      }
+      else
+      {
+         printf("CPLD reset released, ARM should be running now\n");
+      }
+   }
+   DiscreteClear(REG0,FPGA_INT6); // set int6 to 0 (active high)
+
    for(int i=0;i<200;i++)
    {
       sw1_is_down|=!XGpioPs_ReadPin(&GpioPs, USER_SW1);
@@ -1516,7 +1631,7 @@ int main()
    update_sd();
    Xil_DCacheEnable();
    // Restore RTG CACHE Policy modified in mobotest
-   if(config.boot_mode==CPU)
+   if(config.boot_mode==CPU || config.boot_mode==MOBOCPU)
    {
       int ini;
       if(config.autoconfig_rtg==1)
@@ -1524,11 +1639,13 @@ int main()
       else
          ini=0x100;
       rtg_cache_policy_core0(ini,RTG_FB_CACHE_POLICY_FOR_060,RTG_SOFT3D_CACHE_POLICY_FOR_060);
+      rtg_cache_policy_core0((RTG_BASE>>20)&0xFFF, RTG_FB_CACHE_POLICY_FOR_060, RTG_SOFT3D_CACHE_POLICY_FOR_060);
    }
    else
    {
       int ini=0x100;
       rtg_cache_policy_core0(ini,RTG_FB_CACHE_POLICY_FOR_EMU,RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
+      rtg_cache_policy_core0((RTG_BASE>>20)&0xFFF, RTG_FB_CACHE_POLICY_FOR_EMU, RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
    }
 
    ACTIVITY_LED_ON; // ON
@@ -1611,8 +1728,11 @@ int main()
 
    if(data3d==NULL)
    {
-      //      uint32_t offset=config.autoconfig_ram==0?0x40000000:0x50000000;
       uint32_t offset=0x10000000;
+      if(config.autoconfig_rtg==1)
+      {
+         offset=config.autoconfig_ram?0x50000000:0x40000000;
+      }
       data3d = (volatile struct Soft3DData*)((uint32_t)Z3_SOFT3D_ADDR_DATA3D-RTG_BASE+offset);
    }
 
@@ -1624,13 +1744,20 @@ int main()
    ACTIVITY_LED_OFF; // OFF
    DiscreteClear(REG0, FPGA_RESET);
    printf("[MAIN] About to call fpga_interrupt_connect with ipl=%d\n", INT_IPL_ON_THIS_CORE);
+   #define isr_usb NULL
    fpga_interrupt_connect(isr_video, isr_audio_tx, isr_usb, INT_IPL_ON_THIS_CORE);
    printf("[MAIN] fpga_interrupt_connect completed\n");
    
    // Check USB interrupt status immediately after setup
-   check_usb_interrupt_status("After fpga_interrupt_connect");
+//   check_usb_interrupt_status("After fpga_interrupt_connect");
 
    Enable_Abort_Interrutps();
+
+   zz_usb_host_init();
+   usb_status = 0;
+   usb_read_write_num_blocks = 1;
+   usb_read_pending = 0;
+   usb_write_pending = 0;
 
    if(emu)
    {
@@ -1649,7 +1776,7 @@ int main()
 
       //      usleep(10000);
       NBR_ARM(0);        // bus request
-      eth_backlog_nag_counter_max = ETH_BACKLOG_NAG_COUNTER_MAX/3;
+      eth_backlog_nag_counter_max = ETH_BACKLOG_NAG_COUNTER_MAX_EMU;
       usleep(1000);
       CPLD_RESET_ARM(1); // CPLD RUN
       while(READ_NBG_ARM()!=0); // make sure that we have the bus control
@@ -1710,20 +1837,19 @@ int main()
    flash_colors();
 
    usleep(10000);
-   NBR_ARM(1);        // relinquish bus
-
-   usleep(1000);
    read_reset=0;
    
    // Check USB interrupt status BEFORE starting 060
-   check_usb_interrupt_status("Before 060 startup");
+//   check_usb_interrupt_status("Before 060 startup");
    
    CPLD_RESET_ARM(1); // CPLD RUN -> 060 RUN
+   NBR_ARM(1);        // relinquish bus
+   usleep(1000);
    printf("060 starting now...\n");
    
    // Wait a bit and check USB interrupt status AFTER starting 060
    usleep(10000); // Give 060 time to start
-   check_usb_interrupt_status("After 060 startup");
+//   check_usb_interrupt_status("After 060 startup");
    while(1)
    {
       switch(state68k)

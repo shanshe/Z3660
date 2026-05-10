@@ -34,9 +34,14 @@
 #include "../pt/pt.h"
 #include "../mpg/z3660_mpeg_handler.h"
 #include "../mpg/libmpeg_arm/mpeg2dec_arm_comm_arm.h"
+#include "xtime_l.h"
+#include "usb_proxy.h"
 
 extern arm_decoder_shared_arm_t *bridge_state_arm;
-extern uint32_t mpeg_param_registers[4];
+extern uint32_t fifo_read_index;
+extern uint32_t fifo_write_index;
+
+extern uint32_t mpeg_param_registers[5];
 
 typedef enum {
    MA_DECODE_INIT,
@@ -62,6 +67,15 @@ int delete_selected_preset(void);
 int cached_videomode=-1;
 int cached_colormode=-1;
 int cached_scalemode=-1;
+
+extern int overlay_is_enabled;
+extern int16_t overlay_x;
+extern int16_t overlay_y;
+extern int16_t overlay_w;
+extern int16_t overlay_h;
+void enable_overlay(void);
+void disable_overlay(void);
+
 extern DEBUG_CONSOLE debug_console;
 void DEBUG_AUDIO(const char *format, ...)
 {
@@ -113,6 +127,7 @@ static int audio_buffer_collision = 0;
 static uint32_t audio_scale = 48000/50;
 static uint32_t audio_offset = 0;
 int interrupt_enabled_audio = 0;
+int interrupt_enabled_audio_fake = 0;
 // audio parameters (buffer locations)
 
 uint32_t audio_params[ZZ_NUM_AUDIO_PARAMS];
@@ -226,11 +241,11 @@ void rtg_init(void)
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_PRESET_TXT)=0;
    
    // Initialize USB handler system
-   printf("Initializing Z3660 USB handler...\n");
-   z3660_usb_handler_init();
+//   printf("Initializing Z3660 USB handler...\n");
+//   z3660_usb_handler_init();
    
    // Initialize MPEG handler system
-   printf("Initializing Z3660 MPEG handler...\n");
+//   printf("Initializing Z3660 MPEG handler...\n");
    z3660_mpeg_handler_init();
 /*
    // Initialize USB OTG system
@@ -242,13 +257,10 @@ void rtg_init(void)
    }
 */
 }
-uint32_t *address;
-uint32_t zdata;
 uint32_t op_data=0;
-uint32_t zaddr;
 
 
-uint32_t eth_backlog_nag_counter_max=ETH_BACKLOG_NAG_COUNTER_MAX;
+uint32_t eth_backlog_nag_counter_max=ETH_BACKLOG_NAG_COUNTER_MAX_060;
 #ifdef CPU_EMULATOR
 #define IDLE_TASK_COUNT_MAX 300000
 #else
@@ -336,21 +348,51 @@ int ethernet_thread(struct pt *pt)
    PT_END(pt);
 
 }
+extern int usb_read_pending;
+extern int usb_write_pending;
+extern int usb_proxy_pending;
+extern int usb_proxy_status;
+extern uint16_t usb_status;
+extern uint32_t usb_read_write_num_blocks;
+
 int usb_thread(struct pt *pt)
 {
-   static int usb_task_counter=0;
    PT_BEGIN(pt);
    while(1)
    {
-      PT_WAIT_UNTIL(pt,++usb_task_counter>200);  // Reduced USB async processing frequency
-      usb_task_counter=0;
-      z3660_usb_process_async_requests(pt);
+      PT_WAIT_UNTIL(pt,usb_proxy_pending);
+//      z3660_usb_process_async_requests(pt);
+
+      if (usb_proxy_pending) {
+         volatile struct ZZUSBCommand *proxy_cmd =
+            (volatile struct ZZUSBCommand *)USB_DATA_ADDRESS;
+         uint8_t *proxy_data = (uint8_t *)USB_DATA_ADDRESS + ZZUSB_DATA_OFFSET;
+         u32 proxy_buf_size = 24576;
+         usb_proxy_pending = 0;
+         Xil_DCacheInvalidateRange((u32)proxy_cmd, proxy_buf_size);
+         __asm__ __volatile__("dsb" ::: "memory");
+
+         uint16_t result = usb_proxy_handle_command(proxy_cmd, proxy_data);
+
+         Xil_DCacheFlushRange((u32)proxy_data, proxy_buf_size - ZZUSB_DATA_OFFSET);
+         __asm__ __volatile__("dsb" ::: "memory");
+         Xil_DCacheFlushRange((u32)proxy_cmd + 16, 8);
+         __asm__ __volatile__("dsb" ::: "memory");
+
+         put_be16(proxy_cmd->status, result);
+         Xil_DCacheFlushRange((u32)proxy_cmd, 32);
+         __asm__ __volatile__("dsb" ::: "memory");
+
+         usb_proxy_status = 0;
+      }
+
    }
    PT_END(pt);
       // CRITICAL: Process pending ASYNC USB interrupt requests
    // This checks for ASYNC requests waiting for data and completes them when ready
 
 }
+
 void other_tasks(void)
 {
    static int idle_task_count=0;
@@ -393,6 +435,17 @@ void other_tasks(void)
       }
    }
 #endif
+
+   // Temporary: Process MPEG progressive decoding to diagnose interrupt system
+//   static int debug_call_count = 0;
+//   debug_call_count++;
+//   if (debug_call_count % 2 == 0)
+   {
+//      printf("[RTG DEBUG] Calling pl_mpeg_arm_decode_progressive #%d\n", debug_call_count);
+      int pl_mpeg_arm_decode_progressive(void);
+      pl_mpeg_arm_decode_progressive();
+   }
+
    if(idle_task_count++> idle_task_count_max)
    {
       idle_task_count=0;
@@ -505,15 +558,20 @@ int rtg_thread(struct pt *pt)
          if((gpio&0xF80000)==0xF80000)
          {
             //write to ROM!!!!
-            address=(uint32_t *)(gpio&0xFFFFFC);
+            uint32_t *address=(uint32_t *)(gpio&0xFFFFFC);
             printf("Write ROM 0x%08lX gpio 0x%08lX\n",(uint32_t)address,gpio);
          }
          else
          {
-            address=(uint32_t *)((gpio&0x1FFFFF) + RTG_BASE);
-            zaddr=gpio&0x1FFFFF;
-
-            if(zaddr<0x2000)
+            uint32_t *address=(uint32_t *)((gpio&0x1FFFFF) + RTG_BASE);
+            uint32_t zaddr=gpio&0x1FFFFF;
+            uint32_t zdata=0;
+            if(zaddr>=0x1000 && zaddr<0x2000) // Test area
+            {
+               zdata=swap32(*address);
+               printf("gpio 0x%08lX write to test area 0x%08lX 0x%08lX\n",gpio,zaddr,zdata);
+            }
+            else if(zaddr<0x2000)
             {
                zdata=swap32(*address);
                int add_bits=gpio&0x3;
@@ -569,14 +627,43 @@ int rtg_thread(struct pt *pt)
       {
          if((gpio&0xF80000)==0xF80000)
          {
-            address=(uint32_t *)(gpio&0xFFFFFC);
-            zdata=swap32(*address);
+            uint32_t *address=(uint32_t *)(gpio&0xFFFFFC);
+            uint32_t zdata=swap32(*address);
             write_reg_s01(REG5,zdata);
          }
          else
          {
-            zaddr=gpio&0x1FFFFF;
-            if(zaddr<0x2000)
+            uint32_t zaddr=gpio&0x1FFFFF;
+            uint32_t zdata=0;
+            if((zaddr>=0x1000 && zaddr<0x2000)) // Test area
+            {
+//               return(zdata);
+               if((gpio&0x30000000)==0) // long read
+               {
+                  zdata=swap32(*(uint32_t *)(RTG_BASE+(zaddr&0xFFFC)));
+                  write_reg_s01(REG5,zdata);
+                  printf("gpio 0x%08lX read from test area 0x%08lX 0x%08lX 0x%08lX\n",gpio,zaddr,zdata,read_reg_s01(REG5));
+               }
+               else if((gpio&0x30000000)==0x20000000) // word read
+               {
+                  zdata=swap16(*(uint16_t *)(RTG_BASE+zaddr));
+                  write_reg_s01(REG5,((zdata&0xFFFF)<<16)|(zdata&0xFFFF));
+                  printf("gpio 0x%08lX read from test area 0x%08lX 0x%08lX\n",gpio,zaddr,zdata);
+               }
+               else if((gpio&0x30000000)==0x10000000) // byte read
+               {
+                  zdata=*(uint8_t *)(RTG_BASE+zaddr);
+                  write_reg_s01(REG5,((zdata&0xFF)<<24)|((zdata&0xFF)<<16)|((zdata&0xFF)<<8)|(zdata&0xFF));
+                  printf("gpio 0x%08lX read from test area 0x%08lX 0x%08lX\n",gpio,zaddr,zdata);
+               }
+               else
+               {
+                  zdata=swap32(*(uint32_t *)(RTG_BASE+zaddr));
+                  write_reg_s01(REG5,zdata);
+                  printf("gpio 0x%08lX read from test area 0x%08lX 0x%08lX\n",gpio,zaddr,zdata);
+               }
+            }
+            else if(zaddr<0x2000)
             {
                zdata=read_rtg_register(zaddr);
 //               zdata=swap32(*address);
@@ -602,8 +689,8 @@ int rtg_thread(struct pt *pt)
                }
                else
                {
-//                  int size_bits=(gpio>>28)&0x3;
 /*
+                  int size_bits=(gpio>>28)&0x3;
                   int add_bits=gpio&0x3;
                   if(add_bits)
                      printf("read add 0x%08lX\n",zaddr);
@@ -613,20 +700,59 @@ int rtg_thread(struct pt *pt)
                }
             }
          }
+         dsb();
          ack_request=1;
       }
 
       if(ack_request==1)
       {
-         DiscreteSet(REG0,READ_WRITE_ACK);
-
+//#define PROFILE_ACK_REQUEST // suggested by A4000Rebirth
+#ifdef PROFILE_ACK_REQUEST
+   XTime start, end, t1, t2;
+   uint32_t cnt = 0;
+   XTime_GetTime(&start);
+#endif
+//         DiscreteSet(REG0,READ_WRITE_ACK);
+         int32_t rw_no_ack_cached=read_reg_s01(REG0);
+         int32_t rw_ack_cached=rw_no_ack_cached|READ_WRITE_ACK;
+         dsb();
+         write_reg_s01(REG0,rw_ack_cached);
+         dsb();
+#ifdef PROFILE_ACK_REQUEST
+   XTime_GetTime(&t1);
+#endif
          while(read_reg_s01(REG1)!=0)
          {
-            DiscreteClear(REG0,READ_WRITE_ACK);
-            DiscreteSet(REG0,READ_WRITE_ACK);
+//            DiscreteClear(REG0,READ_WRITE_ACK);
+//            DiscreteSet(REG0,READ_WRITE_ACK);
+            dsb();
+            write_reg_s01(REG0,rw_no_ack_cached);
+            dsb();
+            write_reg_s01(REG0,rw_ack_cached);
+            dsb();
+#ifdef PROFILE_ACK_REQUEST
+            cnt++;
+#endif
          }
-         DiscreteClear(REG0,READ_WRITE_ACK);
+#ifdef PROFILE_ACK_REQUEST
+         XTime_GetTime(&t2);
+#endif
+//         DiscreteClear(REG0,READ_WRITE_ACK);
+         write_reg_s01(REG0,rw_no_ack_cached);
+         dsb();
          ack_request=0;
+#ifdef PROFILE_ACK_REQUEST
+         XTime_GetTime(&end);
+         XTime d = (end - start) / (1100/2); // 1100 ARM at 1100 MHz
+         if (d > 100) // > 100 us
+         {
+            XTime d1, d2, d3;
+            d1 = (t1-start) / (1100/2);
+            d2 = (t2-t1) / (1100/2);
+            d3 = (end-t2) / (1100/2);
+            printf("Ack tooo long: %llus, cnt=%lu us - Set Ack: %llu us; ReadReg: %llu us; ClearAck: %llu us\n", d, cnt, d1, d2, d3);
+         }
+#endif
       }
    }
    PT_END(pt);
@@ -634,16 +760,18 @@ int rtg_thread(struct pt *pt)
 uint32_t read_rtg_register(uint32_t zaddr)
 {
    uint32_t data=0;
-   /*
+/*
    if(zaddr&3)
       printf("read unaligned to 0x%08X\n",zaddr);
-    */
+*/   
+   uint32_t address=(zaddr&0x1FFFFC);
+
    // Debug all register reads to detect if Amiga is communicating
    if(debug_console.debug_rtg)
    {
-      printf("READ RTG reg 0x%lX %s\n",zaddr,zz_reg_offsets_string[zaddr]);
+      printf("READ RTG reg 0x%lX %s\n",address,zz_reg_offsets_string[address]);
    }
-   int address=(zaddr&0x1FFFFC);
+//   int address=(zaddr&0x1FFFFC);
    if((address>=REG_ZZ_SEL_KS_TXT     && address<REG_ZZ_SEL_KS_TXT+   150) ||
       (address>=REG_ZZ_SEL_SCSI_TXT   && address<REG_ZZ_SEL_SCSI_TXT+ 150) ||
       (address>=REG_ZZ_SEL_PRESET_TXT && address<REG_ZZ_SEL_PRESET_TXT+150))
@@ -802,7 +930,7 @@ uint32_t read_rtg_register(uint32_t zaddr)
          break;
 
       case REG_ZZ_USB_PORTSC1: {
-         data = usb_handle_register_read(REG_ZZ_USB_PORTSC1);
+//         data = usb_handle_register_read(REG_ZZ_USB_PORTSC1);
          if(debug_console.debug_usb)
             printf("[USB] Command PORTSC1: 0x%lx\n", data);
          break;
@@ -810,7 +938,8 @@ uint32_t read_rtg_register(uint32_t zaddr)
 
       case REG_ZZ_USB_STATUS: {
          // Return USB system status and operation results
-         data = usb_handle_register_read(REG_ZZ_USB_STATUS);
+//         data = usb_handle_register_read(REG_ZZ_USB_STATUS);
+         data = usb_status;
          if(debug_console.debug_usb)
             printf("[USB] Status read: 0x%lx\n", data);
          break;
@@ -827,7 +956,7 @@ uint32_t read_rtg_register(uint32_t zaddr)
       // USB register reads - provide status and data from ARM to Amiga
       case REG_ZZ_USB_READ0: {
          // Return number of connected USB devices
-         data = usb_handle_register_read(REG_ZZ_USB_READ0);
+//         data = usb_handle_register_read(REG_ZZ_USB_READ0);
          if(debug_console.debug_usb)
             printf("[USB] Device count read: %ld\n", data);
          break;
@@ -835,56 +964,56 @@ uint32_t read_rtg_register(uint32_t zaddr)
 
       // USB Parameter registers - dedicated for USB operations
       case REG_ZZ_USB_PARAM0: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM0);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM0);
          if(debug_console.debug_usb)
             printf("[USB] Param0 read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_USB_PARAM1: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM1);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM1);
          if(debug_console.debug_usb)
             printf("[USB] Param1 read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_USB_PARAM2: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM2);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM2);
          if(debug_console.debug_usb)
             printf("[USB] Param2 read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_USB_PARAM3: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM3);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM3);
          if(debug_console.debug_usb)
             printf("[USB] Param3 read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_USB_PARAM4: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM4);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM4);
          if(debug_console.debug_usb)
             printf("[USB] Param4 read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_USB_PARAM5: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM5);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM5);
          if(debug_console.debug_usb)
             printf("[USB] Param5 read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_USB_PARAM6: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM6);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM6);
          if(debug_console.debug_usb)
             printf("[USB] Param6 read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_USB_PARAM7: {
-         data = usb_handle_register_read(REG_ZZ_USB_PARAM7);
+//         data = usb_handle_register_read(REG_ZZ_USB_PARAM7);
          if(debug_console.debug_usb)
             printf("[USB] Param7 read: 0x%lx\n", data);
          break;
@@ -893,62 +1022,69 @@ uint32_t read_rtg_register(uint32_t zaddr)
       // MPEG acceleration register reads
       case REG_ZZ_MPEG_STATUS: {
          // Get status from ARM MPEG handler
-         printf("[MPEG] Status read: 0x%lx\n", data);
+         data = swap32(bridge_state_arm->status);
+//         printf("[RTG MPEG] Status read: 0x%lx\n", data);
          break;
       }
       
       case REG_ZZ_MPEG_PARAM0:
       case REG_ZZ_MPEG_PARAM1:
       case REG_ZZ_MPEG_PARAM2:
-      case REG_ZZ_MPEG_PARAM3: {
+      case REG_ZZ_MPEG_PARAM3:
+      case REG_ZZ_MPEG_PARAM4: {
          // Read MPEG parameters from ARM
          int param_idx = (address - REG_ZZ_MPEG_PARAM0) / 4;
          data = mpeg_param_registers[param_idx];
          if(debug_console.debug_rtg)
-            printf("[MPEG] Param%d read: 0x%lx\n", param_idx, data);
+            printf("[RTG MPEG] Param%d read: 0x%lx\n", param_idx, data);
          break;
       }
-      
+/*
       case REG_ZZ_MPEG_COUNT: {
          // Get frame count or data length
          data=swap32(bridge_state_arm->frames_decoded);
-//         printf("[MPEG] Count read: %lu\n", data);
+//         printf("[RTG MPEG] Count read: %lu\n", data);
          break;
       }
       
       case REG_ZZ_MPEG_INFO: {
          // Get decoder information
-         printf("[MPEG] Info read: 0x%lx\n", data);
+         data = 0;
+         printf("[RTG MPEG] Info read: 0x%lx\n", data);
          break;
       }
-      
+*/
       case REG_ZZ_MPEG_FIFOTX: {
          // Get FIFO write index (68k -> ARM)
-         printf("[MPEG] FIFO TX read: %lu\n", data);
+         data = fifo_write_index;
+//         printf("[RTG MPEG] FIFO TX read: %lu\n", data);
          break;
       }
-      
+/*
       case REG_ZZ_MPEG_FIFORX: {
          // Get FIFO read index (ARM -> 68k)
-         printf("[MPEG] FIFO RX read: %lu\n", data);
+         data = fifo_read_index;
+//         printf("[RTG MPEG] FIFO RX read: %lu\n", data);
          break;
       }
       
       case REG_ZZ_MPEG_FIFO_SIZE: {
          // Get FIFO buffer size
-         printf("[MPEG] FIFO SIZE read: %lu\n", data);
+         data = mpeg_param_registers[2];
+//         printf("[RTG MPEG] FIFO SIZE read: %lu\n", data);
          break;
       }
       
       case REG_ZZ_MPEG_FIFO_ADDR: {
          // Get FIFO buffer address
-         printf("[MPEG] FIFO ADDR read: 0x%lx\n", data);
+         data = mpeg_param_registers[3];
+         printf("[RTG MPEG] FIFO ADDR read: 0x%lx\n", data);
          break;
       }
-      
+*/
       default:
          if(debug_console.debug_rtg)
-            printf("Read from unknown 0x%X RTG register\n",address);
+            printf("Read from unknown 0x%lX RTG register\n",address);
          data=0xFFFFFFFF; // swap32(*((uint32_t *)(RTG_BASE+address)));
    }
    return(data);
@@ -965,9 +1101,10 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
    if(zaddr&3)
       printf("write unaligned to 0x%08lX\n",zaddr);
 
+   uint32_t address=zaddr&0x1FFFFC;
    if(debug_console.debug_rtg)
    {
-      printf("WRITE RTG reg 0x%lX = %ld (0x%lX) %s\n",zaddr,zdata,zdata,zz_reg_offsets_string[zaddr]);
+      printf("WRITE RTG reg 0x%lX = %ld (0x%lX) %s\n",address,zdata,zdata,zz_reg_offsets_string[address]);
       if(debug_console.step)
       {
          while(!XUartPs_IsReceiveData(STDIN_BASEADDRESS)){}
@@ -976,7 +1113,6 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
             debug_console.step=0;
       }
    }
-   uint32_t address=zaddr&0x1FFFFC;
    switch (address) {
       case REG_ZZ_PAN:
          video_state->framebuffer_pan_offset = zdata;
@@ -1690,7 +1826,7 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
                      if(decoder_bytes_decoded>0)
                      {
                         resample_s16((int16_t*)temp_buffer, (int16_t*)output_buffer,
-                              ma_freq, 48000, AUDIO_BYTES_PER_PERIOD / 4);
+                              ma_freq/50, 48000/50);
                      }
                   } else {
                      decoder_bytes_decoded = decode_ma_samples(output_buffer, max_samples);
@@ -1707,7 +1843,7 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
       case REG_ZZ_USB_CMD_OP: {
          if(debug_console.debug_usb)
             printf("[USB] Command operation: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_CMD_OP, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_CMD_OP, zdata);
          break;
       }
 #if 0
@@ -1721,24 +1857,7 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
 #endif
       // USB Status register - controls USB state and operations
       case REG_ZZ_USB_STATUS: {
-         if (zdata == 0) {
-            // Reset USB system
-//            if(debug_console.debug_usb)
-//               printf("[USB] Resetting USB system\n");
-//            usb_otg_shutdown();
-            if (zz_usb_init() == 1) {
-               if(debug_console.debug_usb)
-                  printf("[USB] USB system initialized successfully\n");
-            } else {
-               if(debug_console.debug_usb)
-                  printf("[USB] USB system initialization failed\n");
-            }
-         } else {
-            // Pass status/control data to USB handler
-            if(debug_console.debug_usb)
-               printf("[USB] Status write %0lx\n", zdata);
-            usb_handle_register_write(REG_ZZ_USB_STATUS, zdata);
-         }
+            usb_status =0;
          break;
       }
 #if 0      
@@ -1752,66 +1871,71 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
       case REG_ZZ_USB_READ0: {
          if(debug_console.debug_usb)
             printf("[USB] Command Read0: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_READ0, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_READ0, zdata);
          break;
       }
       // USB Parameter registers - dedicated for USB operations
       case REG_ZZ_USB_PARAM0: {
          if(debug_console.debug_usb)
             printf("[USB] Param0 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM0, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM0, zdata);
          break;
       }
       
       case REG_ZZ_USB_PARAM1: {
          if(debug_console.debug_usb)
             printf("[USB] Param1 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM1, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM1, zdata);
          break;
       }
       
       case REG_ZZ_USB_PARAM2: {
          if(debug_console.debug_usb)
             printf("[USB] Param2 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM2, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM2, zdata);
          break;
       }
       
       case REG_ZZ_USB_PARAM3: {
          if(debug_console.debug_usb)
             printf("[USB] Param3 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM3, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM3, zdata);
          break;
       }
       
       case REG_ZZ_USB_PARAM4: {
          if(debug_console.debug_usb)
             printf("[USB] Param4 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM4, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM4, zdata);
          break;
       }
       
       case REG_ZZ_USB_PARAM5: {
          if(debug_console.debug_usb)
             printf("[USB] Param5 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM5, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM5, zdata);
          break;
       }
       
       case REG_ZZ_USB_PARAM6: {
          if(debug_console.debug_usb)
             printf("[USB] Param6 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM6, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM6, zdata);
          break;
       }
       
       case REG_ZZ_USB_PARAM7: {
          if(debug_console.debug_usb)
             printf("[USB] Param7 write: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_PARAM7, zdata);
+//         usb_handle_register_write(REG_ZZ_USB_PARAM7, zdata);
          break;
       }
-      
+      case REG_ZZ_USB_PROXY_CMD: {
+         usb_proxy_status = 1;
+         usb_proxy_pending = 1;
+         break;
+      }
+
       case REG_ZZ_DEBUG: {
          debug_lowlevel = zdata;
          // Process debug message through ARM debug system
@@ -1915,10 +2039,10 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
 
       case REG_ZZ_OP_DATA: // idx + RGB data
          op_data=zdata;
-         //        printf("1000 <= 0x%08X\n",zdata);
+//         printf("REG_ZZ_OP_DATA <= 0x%08X\n",zdata);
          break;
       case REG_ZZ_OP:
-         //        printf("1004 <= %d\n",zdata);
+//         printf("REG_ZZ_OP <= %d\n",zdata);
          if(zdata==OP_PALETTE)
          {
             set_palette(op_data,OP_PALETTE);
@@ -2304,64 +2428,102 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
          
       // MPEG acceleration register writes
       case REG_ZZ_MPEG_CMD_OP: {
-         printf("[MPEG RTG] MPEG command 0x%lx received\n", zdata);
+//         printf("[MPEG RTG] MPEG command 0x%lx received\n", (unsigned long)zdata);
          // Forward MPEG commands to dedicated handler
-         mpeg_param_registers[0]=z3660_mpeg_process_command(zdata);
+         mpeg_param_registers[4] = z3660_mpeg_process_command(zdata);
          break;
       }
       
       case REG_ZZ_MPEG_PARAM0:
       case REG_ZZ_MPEG_PARAM1:
       case REG_ZZ_MPEG_PARAM2:
-      case REG_ZZ_MPEG_PARAM3: {
+      case REG_ZZ_MPEG_PARAM3:
+      case REG_ZZ_MPEG_PARAM4: {
          // Store MPEG parameters for ARM
-         extern uint32_t mpeg_param_registers[4];
          int param_idx = (address - REG_ZZ_MPEG_PARAM0) / 4;
          mpeg_param_registers[param_idx] = zdata;
          if(debug_console.debug_rtg)
-            printf("[MPEG] Param%d write: 0x%lx\n", param_idx, zdata);
+            printf("[RTG MPEG] Param%d write: 0x%lx\n", param_idx, (unsigned long)zdata);
          break;
       }
-      
+/*
       case REG_ZZ_MPEG_COUNT: {
          // Store data length or frame count
-         printf("[MPEG] Count write: %lu\n", zdata);
+         printf("[RTG MPEG] Count write: %lu\n", (unsigned long)zdata);
          break;
       }
       
       case REG_ZZ_MPEG_INFO: {
          // Store decoder information/control
-         printf("[MPEG] Info write: 0x%lx\n", zdata);
+         printf("[RTG MPEG] Info write: 0x%lx\n", (unsigned long)zdata);
          break;
       }
-      
+*/
       // Implement MPEG FIFO registers
       case REG_ZZ_MPEG_FIFOTX: {
          // Set FIFO write index (68k -> ARM)
-         printf("[MPEG] FIFO TX write index set: %lu\n", zdata);
+         fifo_write_index = zdata;
+         extern uint32_t fifo_size;
+         extern uint8_t *fifo_buffer;
+         Xil_L1DCacheFlushRange((uintptr_t)fifo_buffer, fifo_size);
+//         printf("[RTG MPEG] FIFO TX write index set: %lu\n", (unsigned long)zdata);
          break;
       }
+/*
       case REG_ZZ_MPEG_FIFORX: {
          // Set FIFO read index (ARM -> 68k)
-         printf("[MPEG] FIFO RX read index set: %lu\n", zdata);
+         fifo_read_index = zdata;
+//         printf("[RTG MPEG] FIFO RX read index set: %lu\n", (unsigned long)zdata);
          break;
       }
       case REG_ZZ_MPEG_FIFO_SIZE: {
          // Set FIFO buffer size
-         printf("[MPEG] FIFO size set: %lu bytes\n", zdata);
+         mpeg_param_registers[2] = zdata; // Store size in param2
+//         printf("[RTG MPEG] FIFO size set: %lu bytes\n", (unsigned long)zdata);
          break;
       }
       case REG_ZZ_MPEG_FIFO_ADDR: {
          // Set FIFO buffer address
-         printf("[MPEG] FIFO address set: 0x%lx\n", zdata);
+         mpeg_param_registers[3] = zdata; // Store address in param3
+//         printf("[RTG MPEG] FIFO address set: 0x%lx\n", (unsigned long)zdata);
+         // Synchronize FIFO registers
+         z3660_mpeg_sync_fifo_registers();
          break;
       }
-
+*/
+      case REG_ZZ_OVERLAY_XSTART: {
+         overlay_x=zdata;
+         if(debug_console.debug_rtg)
+            printf("[RTG OVERLAY] XSTART write: 0x%x\n", overlay_x);
+         break;
+      }
+      case REG_ZZ_OVERLAY_YSTART: {
+         overlay_y=zdata;
+         if(debug_console.debug_rtg)
+            printf("[RTG OVERLAY] YSTART write: 0x%x\n", overlay_y);
+         break;
+      }
+      case REG_ZZ_OVERLAY_WIDTH: {
+         overlay_w=zdata;
+         if(debug_console.debug_rtg)
+            printf("[RTG OVERLAY] WIDTH write: 0x%x\n", overlay_w);
+         break;
+      }
+      case REG_ZZ_OVERLAY_HEIGHT: {
+         overlay_h=zdata;
+         if(overlay_is_enabled)
+         {
+            enable_overlay(); // refresh overlay config if already enabled
+         }
+         if(debug_console.debug_rtg)
+            printf("[RTG OVERLAY] HEIGHT write: 0x%x\n", overlay_h);
+         break;
+      }
       default:
          if(debug_console.debug_rtg)
-            printf("Write to unknown %08lx RTG register\n",address); // write to an unknown RTG register
+            printf("Write to unknown %08x RTG register\n", (unsigned int)address);
          break;
-   }
+    }
 }
 
 void audio_reset(void)

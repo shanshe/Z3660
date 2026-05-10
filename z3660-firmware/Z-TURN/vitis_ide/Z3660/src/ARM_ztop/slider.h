@@ -32,39 +32,39 @@ extern Slider *slider_cpufreq;
 extern Slider *slider_bpton;
 extern Slider *slider_bptoff;
 
-#define SLIDER(t) do {\
-   int steps=t->w/(((t->max-t->min)/(t->step*2)));\
-   FILLRECT(   t->x,   t->y,   t->w,   t->h, 0x00A8A8A8);     \
-   for(int i=0;i<((t->max-t->min)/(t->step*2)+1);i++) {      \
-      FILLRECT( t->x+i*steps  , t->y, 1, t->h, 0x00000000); \
-      FILLRECT( t->x+i*steps+1, t->y, 1, t->h, 0x00FFFFFF); \
-   }\
-   for(int i=0;i<((t->max-t->min)/(t->step*2));i++) {                    \
+#define SLIDER(t) do {                                                  \
+   int steps=t->w/(((t->max-t->min)/(t->step*2)));                      \
+   FILLRECT(   t->x,   t->y,   t->w,   t->h, 0x00A8A8A8);               \
+   for(int i=0;i<((t->max-t->min)/(t->step*2)+1);i++) {                 \
+      FILLRECT( t->x+i*steps  , t->y, 1, t->h, 0x00000000);             \
+      FILLRECT( t->x+i*steps+1, t->y, 1, t->h, 0x00FFFFFF);             \
+   }                                                                    \
+   for(int i=0;i<((t->max-t->min)/(t->step*2));i++) {                   \
       FILLRECT( t->x+i*steps+steps/2  , t->y+2, 1, t->h-4, 0x00000000); \
       FILLRECT( t->x+i*steps+steps/2+1, t->y+2, 1, t->h-4, 0x00FFFFFF); \
-   }\
-   int y1=t->y+t->h/2-3;\
-   FILLRECT(    t->x+1,y1+1, t->w-2, 4-1, 0x00A8A8A8); \
-   FILLRECT(      t->x,   y1,  t->w,   1, 0x00000000); \
-   FILLRECT(      t->x, y1+1,     1, 4-1, 0x00000000); \
-   FILLRECT( t->x+t->w,   y1,     1,   4, 0x00FFFFFF); \
-   FILLRECT(    t->x+1, y1+4,  t->w,   1, 0x00FFFFFF); \
-   Font->BackColor=0x00A8A8A8; \
-   Font->TextColor=0x00000000; \
-   t->strpos(message);\
-   if(t->text_pos==0)\
+   }                                                                    \
+   int y1=t->y+t->h/2-3;                                                \
+   FILLRECT(    t->x+1,y1+1, t->w-2, 4-1, 0x00A8A8A8);                  \
+   FILLRECT(      t->x,   y1,  t->w,   1, 0x00000000);                  \
+   FILLRECT(      t->x, y1+1,     1, 4-1, 0x00000000);                  \
+   FILLRECT( t->x+t->w,   y1,     1,   4, 0x00FFFFFF);                  \
+   FILLRECT(    t->x+1, y1+4,  t->w,   1, 0x00FFFFFF);                  \
+   Font->BackColor=0x00A8A8A8;                                          \
+   Font->TextColor=0x00000000;                                          \
+   t->strpos(message);                                                  \
+   if(t->text_pos==0)                                                   \
       displayStringAt(Font,t->x+(t->w-Font->Width*7)/2,t->y-15,(uint8_t*)message,LEFT_MODE); \
-   else\
+   else                                                                      \
       displayStringAt(Font,t->x+t->w+10,t->y+1,(uint8_t*)message,LEFT_MODE); \
-   int x1=((t->pos-t->min)*(t->w-5)/(t->max-t->min));                      \
-   FILLRECT(    t->x+1,   t->y+5, x1-2, 4-1, 0x006088BE);                                 \
-   x1=t->x+((t->pos-t->min)*(t->w-5))/(t->max-t->min); int w1=5;           \
-   FILLRECT(    x1+1,      t->y+1, w1-2, t->h-1, 0x00A8A8A8); \
-   FILLRECT(      x1,        t->y,   w1,      1, 0x00FFFFFF); \
-   FILLRECT(      x1,      t->y+1,    1, t->h-2, 0x00FFFFFF); \
-   FILLRECT(    x1+1,      t->y+1,    1, t->h-3, 0x00FFFFFF); \
-   FILLRECT(   x1+w1,        t->y,    1, t->h-1, 0x00000000); \
-   FILLRECT( x1+w1-1,      t->y+1,    1, t->h-2, 0x00000000); \
+   int x1=((t->pos-t->min)*(t->w-5)/(t->max-t->min));                        \
+   FILLRECT(    t->x+1,   t->y+5, x1-2, 4-1, 0x006088BE);                    \
+   x1=t->x+((t->pos-t->min)*(t->w-5))/(t->max-t->min); int w1=5;             \
+   FILLRECT(    x1+1,      t->y+1, w1-2, t->h-1, 0x00A8A8A8);                \
+   FILLRECT(      x1,        t->y,   w1,      1, 0x00FFFFFF);                \
+   FILLRECT(      x1,      t->y+1,    1, t->h-2, 0x00FFFFFF);                \
+   FILLRECT(    x1+1,      t->y+1,    1, t->h-3, 0x00FFFFFF);                \
+   FILLRECT(   x1+w1,        t->y,    1, t->h-1, 0x00000000);                \
+   FILLRECT( x1+w1-1,      t->y+1,    1, t->h-2, 0x00000000);                \
    FILLRECT(    x1+1, t->y+t->h-1,   w1,      1, 0x00000000);}while(0)
 
 void sliders_run(void);

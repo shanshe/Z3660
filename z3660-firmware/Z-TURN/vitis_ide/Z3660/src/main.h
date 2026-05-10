@@ -50,7 +50,8 @@
 #include "xpseudo_asm.h"
 #include <xparameters.h>
 
-#define ETH_BACKLOG_NAG_COUNTER_MAX 300
+#define ETH_BACKLOG_NAG_COUNTER_MAX_060 1500
+#define ETH_BACKLOG_NAG_COUNTER_MAX_EMU 1500
 
 // comment out if you don't want to compile CPU emulators (Musashi and UAE)
 #define CPU_EMULATOR
@@ -126,8 +127,14 @@ extern SHARED *shared;
 
 //#define NBR_ARM(X)        *(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR)=~((BIT15)<<16) & (0xFFFF0000U | ((X)*(BIT15)));
 //#define CPLD_RESET_ARM(X) *(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR)=~((BIT13)<<16) & (0xFFFF0000U | ((X)*(BIT13)));
-#define NBR_ARM(X)        XGpioPs_WritePin(&GpioPs, PS_MIO_8, X);
-#define CPLD_RESET_ARM(X) do{ XGpioPs_WritePin(&GpioPs, PS_MIO_13, X);} while(0)
+#define NBR_ARM(X)        do{                                                  \
+                              /*printf("--------------->NBR_ARM: %d\n", X); */ \
+                              XGpioPs_WritePin(&GpioPs, PS_MIO_8, X);          \
+                            } while(0)
+#define CPLD_RESET_ARM(X) do{                                                        \
+                              /*printf("--------------->CPLD_RESET_ARM: %d\n", X);*/ \
+                              XGpioPs_WritePin(&GpioPs, PS_MIO_13, X);}              \
+                              while(0)
 unsigned int READ_NBG_ARM(void);
 
 #define JP1_PIN      PS_MIO_4  // MIO 4  (ZTURN JP1)
@@ -223,7 +230,10 @@ void rtg_init(void);
 void hard_reboot(void);
 
 void video_mode_init(int mode, int scalemode, int colormode);
-int init_vdma(int hsize, int vsize, int hdiv, int vdiv, uint32_t buspos);
+int init_vdma_vid(int hsize, int vsize, int hdiv, int vdiv, uint32_t buspos);
+int init_vdma_ovl(int hsize, int vsize, int hdiv, int vdiv, uint32_t buspos);
+int stop_vdma_ovl(void);
+int start_vdma_ovl(void);
 uint32_t arm_read_amiga(uint32_t address, uint32_t size);
 void arm_write_amiga(uint32_t address, uint32_t data, uint32_t size);
 void arm_write_nowait(uint32_t address, uint32_t data);

@@ -1,4 +1,3 @@
-#if 0
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Most of this source has been derived from the Linux USB
@@ -33,8 +32,8 @@
  */
 
 #include <errno.h>
-#include "memalign.h"
-#include "asm/byteorder.h"
+#include "usb/memalign.h"
+#include <usb/asm/byteorder.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -103,9 +102,8 @@ static struct us_data usb_stor[USB_MAX_STOR_DEV];
 
 int usb_stor_get_info(struct usb_device *dev, struct us_data *us,
 		      struct blk_desc *dev_desc);
-int usb_storage_probe(struct usb_device *dev, unsigned int devnum, unsigned int ifnum,
+int usb_storage_probe(struct usb_device *dev, unsigned int ifnum,
 		      struct us_data *ss);
-int usb_select_config(struct usb_device *dev);
 
 static unsigned long usb_stor_read(struct blk_desc *block_dev, lbaint_t blknr,
 				   lbaint_t blkcnt, void *buffer);
@@ -130,7 +128,6 @@ int usb_stor_info(void)
 	if (usb_max_devs > 0) {
 		for (i = 0; i < usb_max_devs; i++) {
 			printf("  Device %d: ", i);
-
 			dev_print((block_dev_desc_t *)&usb_dev_desc[i]);
 		}
 		return 0;
@@ -158,7 +155,7 @@ static unsigned int usb_get_max_lun(struct us_data *us)
 	return (len > 0) ? *result : 0;
 }
 
-static int usb_stor_probe_device(struct usb_device *udev, unsigned int devnum, unsigned int ifnum)
+static int usb_stor_probe_device(struct usb_device *udev)
 {
 	int lun, max_lun;
 
@@ -175,7 +172,7 @@ static int usb_stor_probe_device(struct usb_device *udev, unsigned int devnum, u
 		return -ENOSPC;
 	}
 
-	if (!usb_storage_probe(udev, devnum, ifnum, &usb_stor[usb_max_devs]))
+	if (!usb_storage_probe(udev, 0, &usb_stor[usb_max_devs]))
 		return 0;
 
 	/*
@@ -236,21 +233,11 @@ int usb_stor_scan(int mode)
 	usb_stor_reset();
 	for (i = 0; i < USB_MAX_DEVICE; i++) {
 		struct usb_device *dev;
-		int j;
 
 		dev = usb_get_dev_index(i); /* get device */
-		if (dev == NULL)
-			continue;
-		
-		printf("[usb-storage-debug] Checking device %d with %d interfaces (&dev 0x%08lX)\n", i, dev->config.desc.bNumInterfaces,(unsigned long)dev);
-		
-		/* Check all interfaces of this device */
-		for (j = 0; j < dev->config.desc.bNumInterfaces; j++) {
-			if (usb_stor_probe_device(dev, i, j)) {
-				/* If there's an error, stop scanning this device */
-				break;
-			}
-		}
+		//printf("i=%d\n", i);
+		if (usb_stor_probe_device(dev))
+			break;
 	} /* for */
 
 	usb_disable_asynch(0); /* asynch transfer allowed */
@@ -325,7 +312,7 @@ static int us_one_transfer(struct us_data *us, int pipe, char *buf, int length)
 		do {
 			/* transfer the data */
 			printf("Bulk xfer 0x%lx(%d) try #%d\n",
-			      (ulong)(buf), this_xfer,
+			      (uint32_t)(buf), this_xfer,
 			      11 - maxtry);
 			result = usb_bulk_msg(us->pusb_dev, pipe, buf,
 					      this_xfer, &partial,
@@ -751,7 +738,7 @@ again:
 		printf("=PHASE\n");
 		usb_stor_BBB_reset(us);
 		return USB_STOR_TRANSPORT_FAILED;
-	} else if (data_actlen > srb->datalen) {
+	} else if ((unsigned int)data_actlen > srb->datalen) {
 		printf("transferred %dB instead of %ldB\n",
 		      data_actlen, srb->datalen);
 		return USB_STOR_TRANSPORT_FAILED;
@@ -895,6 +882,7 @@ static void usb_stor_set_max_xfer_blk(struct usb_device *udev,
 	 * and Apple Mac OS X 10.11 limiting transfers to 256 sectors for USB2
 	 * and 2048 for USB3 devices.
 	 */
+	(void)udev;
 	unsigned short blk = 240;
 
 	us->max_xfer_blk = blk;
@@ -1204,7 +1192,7 @@ unsigned long usb_stor_get_capacity(int dev_index) {
 }
 
 /* Probe to see if a new device is actually a Storage device */
-int usb_storage_probe(struct usb_device *dev, unsigned int devnum, unsigned int ifnum,
+int usb_storage_probe(struct usb_device *dev, unsigned int ifnum,
 		      struct us_data *ss)
 {
 	struct usb_interface *iface;
@@ -1215,41 +1203,11 @@ int usb_storage_probe(struct usb_device *dev, unsigned int devnum, unsigned int 
 	/* let's examine the device now */
 	iface = &dev->config.if_desc[ifnum];
 
-	printf("[usb-storage-debug] Probing device %d (interface %d): DeviceClass=0x%x, InterfaceClass=0x%x, SubClass=0x%x, Protocol=0x%x\n",
-	       devnum, ifnum, dev->descriptor.bDeviceClass,
-	       iface->desc.bInterfaceClass,
-	       iface->desc.bInterfaceSubClass,
-	       iface->desc.bInterfaceProtocol);
-
-	/*
-	 * If we get zero values for interface descriptors, this might indicate
-	 * corrupt data from split transactions through a hub. Try to re-read
-	 * the configuration descriptor using usb_select_config.
-	 */
-	if (iface->desc.bInterfaceClass == 0 && iface->desc.bInterfaceSubClass == 0 && 
-	    iface->desc.bInterfaceProtocol == 0) {
-		printf("[usb-storage-debug] Detected zero interface descriptors - attempting re-read\n");
-		if (usb_select_config(dev) < 0) {
-			printf("[usb-storage] Failed to re-read configuration\n");
-			return 0;
-		}
-		/* Update iface pointer after re-reading */
-		iface = &dev->config.if_desc[ifnum];
-		printf("[usb-storage-debug] After re-read: InterfaceClass=0x%x, SubClass=0x%x, Protocol=0x%x\n",
-		       iface->desc.bInterfaceClass,
-		       iface->desc.bInterfaceSubClass,
-		       iface->desc.bInterfaceProtocol);
-	}
-
-	/*
-	 * The main check should be on the interface class for mass storage devices.
-	 * The device class is often 0, but some hubs or devices might report a
-	 * different class at the device level, causing a false negative.
-	 */
-	if (iface->desc.bInterfaceClass != USB_CLASS_MASS_STORAGE ||
-		iface->desc.bInterfaceSubClass < US_SC_MIN ||
-		iface->desc.bInterfaceSubClass > US_SC_MAX) {
-		printf("[usb-storage] device %d is not a valid mass storage device\n", ifnum);
+	if (dev->descriptor.bDeviceClass != 0 ||
+			iface->desc.bInterfaceClass != USB_CLASS_MASS_STORAGE ||
+			iface->desc.bInterfaceSubClass < US_SC_MIN ||
+			iface->desc.bInterfaceSubClass > US_SC_MAX) {
+		printf("[usb-storage] device %d is not mass storage\n", ifnum);
 		/* if it's not a mass storage, we go no further */
 		return 0;
 	}
@@ -1442,4 +1400,3 @@ int usb_stor_get_info(struct usb_device *dev, struct us_data *ss,
 	return 1;
 }
 
-#endif

@@ -264,4 +264,10 @@ BEGIN DRIVER
  PARAMETER HW_INSTANCE = z3660_0
 END
 
+BEGIN DRIVER
+ PARAMETER DRIVER_NAME = axivdma
+ PARAMETER DRIVER_VER = 6.14
+ PARAMETER HW_INSTANCE = processing_av_system_audio_video_engine_video_axi_vdma_1
+END
+
 

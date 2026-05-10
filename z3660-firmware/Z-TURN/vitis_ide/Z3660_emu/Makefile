@@ -51,10 +51,10 @@ CXX_SRCS := $(shell find $(SRCDIR) -type f \( -name "*.cc" -o -name "*.cpp" -o -
 # Exclude specific files
 C_SRCS   := $(filter-out $(SRCDIR)/musashi/m68kfpu.c,$(C_SRCS))
 CXX_SRCS := $(filter-out \
-	$(SRCDIR)/uae/fpp_native.cc \
-	$(SRCDIR)/uae/jit/codegen_arm.cc \
-	$(SRCDIR)/uae/jit/compemu_midfunc_arm.cc \
-	$(SRCDIR)/uae/jit/compemu_midfunc_arm2.cc,$(CXX_SRCS))
+	$(SRCDIR)/uae/fpp_native.cpp \
+	$(SRCDIR)/uae/jit/codegen_arm.cpp \
+	$(SRCDIR)/uae/jit/compemu_midfunc_arm.cpp \
+	$(SRCDIR)/uae/jit/compemu_midfunc_arm2.cpp,$(CXX_SRCS))
 S_SRCS := $(shell find $(SRCDIR) -type f -name "*.S")
 SRCS   := $(C_SRCS) $(CXX_SRCS) $(S_SRCS)
 OBJS := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(C_SRCS))
@@ -63,13 +63,13 @@ OBJS += $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(filter %.cpp,$(CXX_SRCS)))
 OBJS += $(patsubst $(SRCDIR)/%.cxx,$(BUILDDIR)/%.o,$(filter %.cxx,$(CXX_SRCS)))
 OBJS += $(patsubst $(SRCDIR)/%.S,$(BUILDDIR)/%.o,$(S_SRCS))
 
-ELF := $(BUILDDIR)/ps7_cortexa9_1.elf
-BIN := $(BUILDDIR)/ps7_cortexa9_1.bin
+ELF := $(BUILDDIR)/Z3660_emu.elf
+BIN := $(BUILDDIR)/Z3660_emu.bin
 
 .PHONY: all clean size bin elf
 
 all: $(ELF) $(BIN)
-	@echo "Generados: $(ELF) y $(BIN)"
+	@echo "Generated: $(ELF) and $(BIN)"
 
 elf: $(ELF)
 

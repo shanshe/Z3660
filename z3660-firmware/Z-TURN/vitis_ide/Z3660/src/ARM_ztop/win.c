@@ -192,7 +192,7 @@ void clear_screen(void)
 void init_win(void)
 {
    win.w=426;
-   win.h=200+8+16+16;
+   win.h=200+8+16+16+16;
    win.x=(vs.vmode_hsize-win.w)/2;
    win.y=(vs.vmode_vsize-win.h)/2;
    win.t=14; // window title height

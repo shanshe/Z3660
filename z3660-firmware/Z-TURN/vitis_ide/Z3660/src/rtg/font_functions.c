@@ -11,12 +11,13 @@ void lcd_DrawPixel(uint16_t Xpos, uint16_t Ypos, uint32_t RGB_Code)
 {
    if(RGB_Code==CL_TRANSPARENT)
       return;
+   uint32_t y=((uint32_t)Ypos)*hsize + Xpos;
    if(vs.colormode==MNTVA_COLOR_8BIT)
-      *(volatile uint8_t*)(((uint32_t)vs.framebuffer+(uint32_t)vs.framebuffer_pan_offset) + (1*(Ypos*hsize + Xpos))) = (uint8_t)RGB_Code;
+      *(volatile uint8_t*)(((uint32_t)vs.framebuffer+(uint32_t)vs.framebuffer_pan_offset) + (1*y)) = (uint8_t)RGB_Code;
    else if(vs.colormode==MNTVA_COLOR_16BIT565 || vs.colormode==MNTVA_COLOR_15BIT)
-      *(volatile uint16_t*)(((uint32_t)vs.framebuffer+(uint32_t)vs.framebuffer_pan_offset) + (2*(Ypos*hsize + Xpos))) = argb888_to_rgb565(RGB_Code);
+      *(volatile uint16_t*)(((uint32_t)vs.framebuffer+(uint32_t)vs.framebuffer_pan_offset) + (2*y)) = argb888_to_rgb565(RGB_Code);
    else if(vs.colormode==MNTVA_COLOR_32BIT)
-      *(volatile uint32_t*)(((uint32_t)vs.framebuffer+(uint32_t)vs.framebuffer_pan_offset) + (4*(Ypos*hsize + Xpos))) = RGB_Code;
+      *(volatile uint32_t*)(((uint32_t)vs.framebuffer+(uint32_t)vs.framebuffer_pan_offset) + (4*y)) = RGB_Code;
 }
 
 static void drawChar(sFONT *Font, uint16_t Xpos, uint16_t Ypos, const uint8_t *c)

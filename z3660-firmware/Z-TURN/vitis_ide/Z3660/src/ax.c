@@ -34,7 +34,7 @@ float vl=1.0,vr=1.0;
 XI2s_Tx i2s;
 XAudioFormatter audio_formatter;
 
-static uint8_t* audio_tx_buffer = (uint8_t*)(RTG_BASE+AUDIO_TX_BUFFER_ADDRESS);
+uint8_t* audio_tx_buffer = (uint8_t*)(RTG_BASE+AUDIO_TX_BUFFER_ADDRESS);
 //static uint8_t* audio_rx_buffer = (uint8_t*)(RTG_BASE+AUDIO_RX_BUFFER_ADDRESS);
 
 static __inline__ __attribute__((always_inline)) int32_t ssat16(int32_t a)
@@ -70,6 +70,7 @@ void audio_init_i2s() {
 
    XAudioFormatterHwParams af_params;
    af_params.buf_addr = (uint32_t)audio_tx_buffer;
+   DEBUG_AUDIO("audio_tx_buffer %p\n",audio_tx_buffer);
    af_params.bits_per_sample = BIT_DEPTH_16;
    af_params.periods = AUDIO_NUM_PERIODS; // 1 second = 192000 bytes
    af_params.active_ch = 2;
@@ -101,6 +102,7 @@ int audio_adau_init(int program_dsp) {
 }
 
 extern int interrupt_enabled_audio;
+extern int interrupt_enabled_audio_fake;
 
 XTime debug_time_start = 0;
 
@@ -117,14 +119,13 @@ void audio_debug_timer(int zdata) {
 }
 
 //int isra_count = 0;
-
+volatile int audio_local_interrput=0;
 // audio formatter interrupt, triggered whenever a period is completed
 void isr_audio_tx(void *dummy) {
    (void)dummy;
    uint32_t val = XAudioFormatter_ReadReg(XPAR_XAUDIOFORMATTER_0_BASEADDR, XAUD_FORMATTER_STS + XAUD_FORMATTER_MM2S_OFFSET);
    val |= (1<<31); // clear irq
-   XAudioFormatter_WriteReg(XPAR_XAUDIOFORMATTER_0_BASEADDR,
-      XAUD_FORMATTER_STS + XAUD_FORMATTER_MM2S_OFFSET, val);
+   XAudioFormatter_WriteReg(XPAR_XAUDIOFORMATTER_0_BASEADDR, XAUD_FORMATTER_STS + XAUD_FORMATTER_MM2S_OFFSET, val);
 /*
    if (isra_count++>100) {
       DEBUG_AUDIO("[isra]\n");
@@ -133,6 +134,23 @@ void isr_audio_tx(void *dummy) {
 */
    if (interrupt_enabled_audio) {
       amiga_interrupt_set(AMIGA_INTERRUPT_AUDIO);
+   }
+   if (interrupt_enabled_audio_fake) {
+      audio_local_interrput=1;
+      void fill_audio_buffer(void);
+      fill_audio_buffer();
+/*
+      // print the time between interrupts for debugging
+      static int count = 0;
+      static XTime last_time;
+      XTime current_time;
+      XTime_GetTime(&current_time);
+      if (count++ > 0) {
+         uint64_t time_diff = current_time - last_time;
+         DEBUG_AUDIO("[audio] interrupt time since last: %lu us\n", (unsigned long)(time_diff / (COUNTS_PER_SECOND/1000000)));
+      }
+      last_time = current_time;
+*/
    }
 }
 
@@ -175,14 +193,12 @@ int audio_swab(uint16_t audio_buf_samples, uint32_t offset, int byteswap) {
       }
    }
    // FIXME missing filter, wonky address calculation
-   // resample if other freq
 
+   // resample if other freq
    if (audio_freq != 48000) {
       resample_s16((int16_t*)(audio_tx_buffer + offset),
             (int16_t*)((uint8_t*)audio_tx_buffer+AUDIO_TX_BUFFER_SIZE*2),
-            audio_freq,
-            48000,
-            AUDIO_BYTES_PER_PERIOD/4);
+            audio_freq/50, 48000/50);
       equalizer((int16_t*)((uint8_t*)audio_tx_buffer+AUDIO_TX_BUFFER_SIZE*2),AUDIO_BYTES_PER_PERIOD/4);
       lowpass_filter((int16_t*)((uint8_t*)audio_tx_buffer+AUDIO_TX_BUFFER_SIZE*2),AUDIO_BYTES_PER_PERIOD/4);
       memcpy(audio_tx_buffer + offset, (uint8_t*)audio_tx_buffer+AUDIO_TX_BUFFER_SIZE*2, AUDIO_BYTES_PER_PERIOD);
@@ -206,9 +222,9 @@ int audio_swab(uint16_t audio_buf_samples, uint32_t offset, int byteswap) {
 
    if (audio_buffer_collision) {
       DEBUG_AUDIO("[ax]:audio_buffer_collision\n");
-//      DEBUG_AUDIO("[aswap] d-a: %ld\n",txcount-offset);
-//      DEBUG_AUDIO("offset: %ld\n",offset);
-//      DEBUG_AUDIO("txcount: %ld\n",txcount);
+      DEBUG_AUDIO("[aswap] d-a: %ld\n",txcount-offset);
+      DEBUG_AUDIO("offset: %ld\n",offset);
+      DEBUG_AUDIO("txcount: %ld\n",txcount);
    }
 
    return(audio_buffer_collision);
@@ -218,24 +234,24 @@ double resample_cur = 0;
 double resample_psampl = 0;
 double resample_psampr = 0;
 
-void resample_s16(int16_t *input, int16_t *output, int in_sample_rate,
-      int out_sample_rate, int output_samples) {
-   double step_dist = ((double) in_sample_rate / (double) out_sample_rate);
+void resample_s16(int16_t *input, int16_t *output, int input_samples,
+      int output_samples) {
+   double step_dist = ((double) input_samples / (double) output_samples);
    double cur = resample_cur;
    int in_pos1 = 0, in_pos2 = 0;
    double sample1l = 0, sample2l = 0, sample1r = 0, sample2r = 0;
 
-   int inmax = (int) (step_dist * 960.0) - 1;
 
    for (int i = 0; i < output_samples; i++) {
       cur=i*step_dist+resample_cur;
-      in_pos1 = ((int) cur) - 1;
       in_pos2 = ((int) cur);
+      in_pos1 = in_pos2 - 1;
 
       // FIXME hack
-      if (in_pos2 > inmax) {
-         in_pos2 = inmax;
-         in_pos1 = inmax - 1;
+      if (in_pos2 > input_samples) {
+         printf("in_pos2>input_samples %d\n",input_samples);
+         in_pos2 = input_samples;
+         in_pos1 = input_samples - 1;
       }
 
       double frac2 = cur - (1 + in_pos1);
