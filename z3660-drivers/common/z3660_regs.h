@@ -17,8 +17,11 @@
  * GNU General Public License v3.0 or later
  *
  * https://spdx.org/licenses/GPL-3.0-or-later.html
+ * 
  */
+#ifndef ZZREGS_H
 
+#define ZZREGS_H
 #define uint8_t  unsigned char
 #define uint16_t unsigned short
 #define uint32_t unsigned long
@@ -31,6 +34,8 @@
 #define MNTVA_COLOR_32BIT    2
 #define MNTVA_COLOR_15BIT    3
 #define MNTVA_COLOR_NO_USE   255
+
+// Registers offsets relative to the register base, although the offset on the ARM side is always 0.
 
 enum zz_reg_offsets {
    REG_ZZ_MODE           = 0x100,
@@ -173,7 +178,22 @@ enum zz_reg_offsets {
    REG_ZZ_USB_PARAM6     = 0x2B8,  // Reserved for future use
    REG_ZZ_USB_PARAM7     = 0x2BC,  // Reserved for future use
 
-   //NOT USED 0x2C0 - 0x2FC
+   // MPEG acceleration registers
+   REG_ZZ_MPEG_CMD_OP    = 0x2C0,  // MPEG operation command
+   REG_ZZ_MPEG_STATUS    = 0x2C4,  // MPEG operation status
+   REG_ZZ_MPEG_PARAM0    = 0x2C8,  // MPEG parameter 0 (width/data_ptr)
+   REG_ZZ_MPEG_PARAM1    = 0x2CC,  // MPEG parameter 1 (height/data_len)
+   REG_ZZ_MPEG_PARAM2    = 0x2D0,  // MPEG parameter 2 (framerate_num/sync_time)
+   REG_ZZ_MPEG_PARAM3    = 0x2D4,  // MPEG parameter 3 (framerate_den/reserved)
+   REG_ZZ_MPEG_PARAM4    = 0x2D8,  // MPEG parameter 3 (framerate_den/reserved)
+//   REG_ZZ_MPEG_COUNT     = 0x2DC,  // MPEG data length/frame count
+//   REG_ZZ_MPEG_INFO      = 0x2E0,  // MPEG decoder information
+   REG_ZZ_MPEG_FIFOTX    = 0x2E4,  // MPEG FIFO write index (68k -> ARM)
+//   REG_ZZ_MPEG_FIFORX    = 0x2E8,  // MPEG FIFO read index (ARM -> 68k)
+//   REG_ZZ_MPEG_FIFO_SIZE = 0x2EC,  // MPEG FIFO size in bytes
+//   REG_ZZ_MPEG_FIFO_ADDR = 0x2F0,  // MPEG FIFO buffer base address
+
+   //NOT USED 0x2F4 - 0x2FC
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
@@ -184,7 +204,23 @@ enum zz_reg_offsets {
    REG_ZZ_MOUNT_SD_ROOT  = 0x314,
    REG_ZZ_MONITOR_SWITCH = 0x318,
 
-   //NOT USED 0x31C - 0x4FC
+   REG_ZZ_NOT_USED_0x31C   = 0x31C,
+   REG_ZZ_OVERLAY_ENABLE   = 0x320,
+   REG_ZZ_OVERLAY_ADDRESS  = 0x324,
+   REG_ZZ_OVERLAY_ROWPITCH = 0x328,
+   REG_ZZ_OVERLAY_YSTART   = 0x32C,
+   REG_ZZ_OVERLAY_XSTART   = 0x330,
+   REG_ZZ_OVERLAY_WIDTH    = 0x334,
+   REG_ZZ_OVERLAY_HEIGHT   = 0x338,
+   REG_ZZ_OVERLAY_SOURCE_WIDTH  = 0x33C,
+   REG_ZZ_OVERLAY_SOURCE_HEIGHT = 0x340,
+   REG_ZZ_OVERLAY_FORMAT   = 0x344,
+   REG_ZZ_OVERLAY_COLORKEY = 0x348,
+   REG_ZZ_OVERLAY_BASE     = 0x34C,
+
+   REG_ZZ_USB_PROXY_CMD    = 0x350,
+
+   //NOT USED 0x354 - 0x4FC
 
    REG_ZZ_SEL_KS_TXT     = 0x500,
    REG_ZZ_SEL_SCSI_TXT   = 0x600,
@@ -223,9 +259,23 @@ enum zz_reg_offsets {
 */
 };
 
-#define AUDIO_TX_FRAME_ADDRESS 0x07DE0000
-#define AUDIO_RX_FRAME_ADDRESS 0x07E00000
-#define TX_FRAME_ADDRESS 0x07F00000
+// Commands for REG_ZZ_OP and REG_ZZ_SOFT3D_OP
+#define ARM_CMD_NONE            0
+#define ARM_CMD_INIT            1
+#define ARM_CMD_PROCESS         2
+#define ARM_CMD_RESET           3
+#define ARM_CMD_CLOSE           5
+#define ARM_CMD_DISPLAY_FRAME   6
+
+// Status flags
+#define ARM_STATUS_ERROR         0x02
+#define ARM_STATUS_SETUP_NEEDED  0x04
+#define ARM_STATUS_VIDEO_REFRESH 0x08
+#define ARM_STATUS_VIDEO_INIT    0x10
+#define ARM_STATUS_FINISHED      0x20
+
+#define AUDIO_TX_BUFFER_ADDRESS 0x07CE0000
+#define TX_FRAME_ADDRESS        0x07EE0000
 
 enum custom_vmode_params {
 	VMODE_PARAM_HRES,
@@ -247,13 +297,35 @@ enum custom_vmode_params {
 	VMODE_PARAM_NUM,
 };
 
-enum zz9k_card_features {
+enum z3660_card_features {
     CARD_FEATURE_NONE,
     CARD_FEATURE_SECONDARY_PALETTE,
     CARD_FEATURE_NONSTANDARD_VSYNC,
     CARD_FEATURE_NUM,
 };
 
+enum gfx_soft3d_op {
+  OP_SETBITMAP,
+  OP_SETCLIPPING,
+  OP_SETDRAWSTATE,
+  OP_DRAWPRIMITIVE,
+  OP_DOUPDATE,
+  OP_FLUSH,
+  OP_END,
+  OP_CREATETEXTURE,
+  OP_FREETEXTURE,
+  OP_UPDATETEXTURE,
+  OP_START,
+  OP_ALLOCZBUFFER,
+  OP_ALLOCIMAGEBUFFER,
+  OP_CLEARZBUFFER,
+  OP_READZSPAN,
+  OP_WRITEZSPAN,
+  OP_DEBUG,
+  OP_SOFT3D_NUM,
+};
+
+// Commands for REG_ZZ_ACC_OP
 enum gfx_dma_op {
     OP_NONE,
     OP_DRAWLINE,
@@ -321,3 +393,38 @@ struct Soft3dData {
     volatile uint32_t format[2];
     volatile uint16_t x[2], y[2];
 };
+
+// Structure for ARM-68k MPEG communication (must match mpeg2dec_arm_comm_arm.h)
+typedef struct {
+    volatile uint32_t status;
+    volatile uint32_t status2;
+    volatile uint32_t  frames_decoded;
+    volatile uint32_t error_code;
+    
+    volatile uint32_t input_length;
+    volatile uint32_t gray_mode;
+    double sync_time;
+    
+    uint32_t frame_width;
+    uint32_t frame_height;
+    
+    float framerate;
+    uint32_t frame_coded_width;
+    
+    uint32_t skipped_frames;
+    uint32_t decode_time_us;
+    uint32_t megabytes_remaining;           /* Total bytes processed by ARM decoder */
+    uint32_t bytes_remaining;
+    
+    struct {
+        double sync_time;
+        double video_time;
+        uint16_t drop_flag;
+        uint16_t padding1;
+        uint16_t padding2;
+        uint16_t padding3;
+        uint32_t framebuffer_addr;  /* Framebuffer address in Amiga memory */
+        uint32_t framebuffer_pitch;  /* Pitch/stride of framebuffer */
+    } display_frame;    
+} arm_decoder_shared_arm_t;
+#endif

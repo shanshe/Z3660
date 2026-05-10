@@ -22,11 +22,11 @@ BSP_INC := $(ROOT)/../design_1_wrapper/ps7_cortexa9_0/standalone_domain/bsp/ps7_
 # BSP library path for standalone domain (core 0)
 BSP_LIB := $(ROOT)/../design_1_wrapper/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/lib
 
-INCLUDES:= -I$(SRCDIR) -I$(SRCDIR) -I$(BSP_INC) -I$(LWIP_INC) -I$(BSP_INC) -I$(SRCDIR)/mbedtls/include -I$(ROOT)/../design_1_wrapper/zynq_fsbl
+INCLUDES:= -I$(SRCDIR) -I$(SRCDIR) -I$(BSP_INC) -I$(LWIP_INC) -I$(BSP_INC) -I$(SRCDIR)/mbedtls/include -I$(ROOT)/../design_1_wrapper/zynq_fsbl -I$(ROOT)/include
 
 CFLAGS  := -mcpu=cortex-a9 -marm -mfpu=neon -mfloat-abi=hard -O3 -std=gnu99 -ftree-vectorize -mvectorize-with-neon-quad -ffast-math \
            -ffunction-sections -fdata-sections -Wall -Wextra \
-           -MMD -MP # Automatic dependency generation
+           -MMD -MP -D__ARM_NEON__ # Automatic dependency generation
 #           -fno-builtin \
 
 ASFLAGS := $(CFLAGS)
@@ -56,13 +56,13 @@ DEPS   := $(OBJS:.o=.d)
 # Special handling for alfa.txt dependency
 ALFA_TXT := $(SRCDIR)/alfa.txt
 
-ELF := $(BUILDDIR)/ps7_cortexa9_0.elf
-BIN := $(BUILDDIR)/ps7_cortexa9_0.bin
+ELF := $(BUILDDIR)/Z3660.elf
+BIN := $(BUILDDIR)/Z3660.bin
 
 .PHONY: all clean size bin elf
 
 all: $(ELF) $(BIN)
-	@echo "Generados: $(ELF) y $(BIN)"
+	@echo "Generated: $(ELF) and $(BIN)"
 
 elf: $(ELF)
 

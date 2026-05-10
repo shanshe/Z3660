@@ -10,7 +10,7 @@
 #endif
 
 #ifndef  EXEC_LIBRARIES_H
-#include <exec/libraries.h>
+#include        <exec/libraries.h>
 #endif
 
 #ifndef  EXEC_SEMAPHORES_H
@@ -26,7 +26,7 @@
 #endif
 
 #ifndef DEVICES_TIMER_H
-#include <devices/timer.h>
+#include        <devices/timer.h>
 #endif
 
 #ifndef settings_H
@@ -86,6 +86,7 @@
 
 #define DI_P96_INVALID  0x1000
 #define DI_P96_MONITOOL 0x2000
+#define DI_P96_COERCED  0x4000  /* not available because it is a mode created through coercion */
 
 /************************************************************************/
 /* Types for BoardType Identification
@@ -117,8 +118,20 @@ typedef enum {
         BT_Prototype7,
         BT_Reserved,
         BT_Reserved2,
-	BT_MNT_VA2000,
-	BT_MNT_ZZ9000,
+        BT_MNT_VA2000,
+        BT_MNT_ZZ9000,
+        BT_RetinaZ2,
+        BT_Visiona,
+        BT_GVP110,
+        BT_GBAPII,
+        BT_RainbowII,
+        BT_Voodoo,
+        BT_Matrox,
+        BT_S3Virge,
+        BT_IndiECS,
+        BT_RageXL,
+        BT_Radeon,
+        BT_PiStorm,
         BT_MaxBoardTypes
 } BTYPE;
 
@@ -127,25 +140,35 @@ typedef enum {
  */
 typedef enum {
         PCT_Unknown,
-        PCT_S11483,                             // Sierra S11483: HiColor 15 bit, oMniBus, Domino
-        PCT_S15025,                             // Sierra S15025: TrueColor 32 bit, oMniBus
+        PCT_S11483,                     // Sierra S11483: HiColor 15 bit, oMniBus, Domino
+        PCT_S15025,                     // Sierra S15025: TrueColor 32 bit, oMniBus
         PCT_CirrusGD542x,               // Cirrus GD542x internal: TrueColor 24 bit
-        PCT_Domino,                             // is in fact a Sierra S11483
-        PCT_BT482,                              // BrookTree BT482: TrueColor 32 bit, Merlin
-        PCT_Music,                              // Music MU9C4910: TrueColor 24 bit, oMniBus
+        PCT_Domino,                     // is in fact a Sierra S11483
+        PCT_BT482,                      // BrookTree BT482: TrueColor 32 bit, Merlin
+        PCT_Music,                      // Music MU9C4910: TrueColor 24 bit, oMniBus
         PCT_ICS5300,                    // ICS 5300: ...., Retina BLT Z3
         PCT_CirrusGD5446,               // Cirrus GD5446 internal: TrueColor 24 bit
         PCT_CirrusGD5434,               // Cirrus GD5434 internal: TrueColor 32 bit
         PCT_S3Trio64,                   // S3 Trio64 internal: TrueColor 32 bit
         PCT_A2410_xxx,                  // A2410 DAC, *type unknown*
         PCT_S3ViRGE,                    // S3 ViRGE internal: TrueColor 32 bit
-        PCT_3dfxVoodoo,         // 3dfx Voodoo internal
+        PCT_3dfxVoodoo,                 // 3dfx Voodoo internal
         PCT_TIPermedia2,                // TexasInstruments TVP4020 Permedia2 internal
         PCT_ATIRV100,                   // ATI Technologies Radeon/Radeon 7000 internal
-	PCT_reserved,
-	PCT_reserved2,
-	PCT_MNT_VA2000,
-	PCT_MNT_ZZ9000,
+        PCT_reserved,
+        PCT_reserved2,
+        PCT_MNT_VA2000,
+        PCT_MNT_ZZ9000,
+        PCT_ATT_20C492,
+        PCT_IMSG300,
+        PCT_IMSG364,
+        PCT_BT458,
+        PCT_ADV7120,
+        PCT_Matrox,
+        PCT_IndiECS,
+        PCT_RageXL,
+        PCT_Radeon,
+        PCT_PiStorm,
         PCT_MaxPaletteChipTypes
 } PCTYPE;
 
@@ -168,8 +191,16 @@ typedef enum {
         GCT_ATIRV100,
         GCT_reserved,
         GCT_reserved2,
-	GCT_MNT_VA2000,
-	GCT_MNT_ZZ9000,
+        GCT_MNT_VA2000,
+        GCT_MNT_ZZ9000,
+        GCT_NCR77C22E,
+        GCT_IMSG300,
+        GCT_IMSG364,
+        GCT_Matrox,
+        GCT_IndiECS,
+        GCT_RageXL,
+        GCT_Radeon,
+        GCT_PiStorm,
         GCT_MaxGraphicsControllerTypes
 } GCTYPE;
 
@@ -251,6 +282,30 @@ struct Line {
 
 /************************************************************************/
 
+/*
+** The BitMapExtra structure associates a bitmap with
+** video RAM on the board. P96 creates one as soon as
+** a bitmap is moved to the board.
+**
+** BitMapExtras are associated to BitMap structures
+** through a hash-mechanism in the rtg.library base.
+**
+** The BitMap pointer points back to the bitmap
+** that is being displayed, and the
+** RenderInfo structure describes the layout of the
+** bitmap on the board.
+**
+** The RenderInfo points to the memory in the aperture
+** region, as visible by the CPU. That is, if the
+** graphics board supports multiple apertures, the
+** pointer in the render info points to the apperture
+** that is correct for the RGBType of the render info.
+**
+** This pointer may be different from the pointer to
+** the memory allocated from the board, due to the
+** aperture.
+*/
+
 struct BitMapExtra {
         struct MinNode                  BoardNode;
         struct BitMapExtra             *HashChain;
@@ -261,18 +316,16 @@ struct BitMapExtra {
         struct RenderInfo               RenderInfo;
         UWORD                           Width, Height;
         UWORD                           Flags;
-        // NEW !!!
-        WORD                            BaseLevel, CurrentLevel;
-        struct BitMapExtra             *CompanionMaster;
 };
 
 /* BitMapExtra flags */
 #define BMEF_ONBOARD                    0x0001
 #define BMEF_SPECIAL                    0x0002
-#define BMEF_VISIBLE                    0x0800
+#define BMEF_LOCKED                     0x0004 /* do not remove from board */
+#define BMEF_VISIBLE                    0x0800 /* in video RAM */
 #define BMEF_DISPLAYABLE                0x1000
 #define BMEF_SPRITESAVED                0x2000
-#define BMEF_CHECKSPRITE                0x4000
+#define BMEF_CHECKSPRITE                0x4000 /* has a softsprite */
 #define BMEF_INUSE                      0x8000
 
 /************************************************************************/
@@ -327,6 +380,8 @@ enum  {
 #define FA_ClipWidth                                    (TAG_USER+35)
 #define FA_ClipHeight                                   (TAG_USER+36)
 #define FA_ConstantByteSwapping                         (TAG_USER+37)
+#define FA_BitmapWidth                                  (TAG_USER+64)
+#define FA_BitmapHeight                                 (TAG_USER+65)
 
 /************************************************************************/
 
@@ -357,6 +412,7 @@ enum  {
 #define ABMA_Locked                                     (TAG_USER+21)
 /* the following are new */
 #define ABMA_System                                     (TAG_USER+22)
+#define ABMA_ColorMap                                   (TAG_USER+23)
 /*
  * THOR: New for V45 Gfx/Intuiton
  * "by accident", this is identically to SA_DisplayID of intuition
@@ -418,91 +474,91 @@ struct BoardInfo{
 
         ULONG                                            PixelClockCount[MAXMODES];
 
-        APTR ASM                                        (*AllocCardMem)(__REGA0(struct BoardInfo *bi), __REGD0(ULONG size), __REGD1(BOOL force), __REGD2(BOOL system));
-        BOOL ASM                                        (*FreeCardMem)(__REGA0(struct BoardInfo *bi), __REGA1(APTR membase));
+        APTR ASM                                         (*AllocCardMem)(__REGA0(struct BoardInfo *bi), __REGD0(ULONG size), __REGD1(BOOL force), __REGD2(BOOL system), __REGD3(ULONG bytesperrow),__REGA1(struct ModeInfo *mi),__REGD7(RGBFTYPE));
+        BOOL ASM                                         (*FreeCardMem)(__REGA0(struct BoardInfo *bi), __REGA1(APTR membase));
 
-        BOOL ASM                                        (*SetSwitch)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
+        BOOL ASM                                         (*SetSwitch)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
 
-        void ASM                                        (*SetColorArray)(__REGA0(struct BoardInfo *), __REGD0(UWORD), __REGD1(UWORD));
+        void ASM                                         (*SetColorArray)(__REGA0(struct BoardInfo *), __REGD0(UWORD), __REGD1(UWORD));
 
-        void ASM                                        (*SetDAC)(__REGA0(struct BoardInfo *), __REGD7(RGBFTYPE));
-        void ASM                                        (*SetGC)(__REGA0(struct BoardInfo *), __REGA1(struct ModeInfo *), __REGD0(BOOL));
-        void ASM                                        (*SetPanning)(__REGA0(struct BoardInfo *), __REGA1(UBYTE *), __REGD0(UWORD), __REGD1(WORD), __REGD2(WORD), __REGD7(RGBFTYPE));
-        UWORD ASM                                       (*CalculateBytesPerRow)(__REGA0(struct BoardInfo *), __REGD0(UWORD), __REGD7(RGBFTYPE));
-        APTR ASM                                        (*CalculateMemory)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD7(RGBFTYPE));
-        ULONG ASM                                       (*GetCompatibleFormats)(__REGA0(struct BoardInfo *), __REGD7(RGBFTYPE));
-        BOOL ASM                                        (*SetDisplay)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
+        void ASM                                         (*SetDAC)(__REGA0(struct BoardInfo *), __REGD0(UWORD), __REGD7(RGBFTYPE));
+        void ASM                                         (*SetGC)(__REGA0(struct BoardInfo *), __REGA1(struct ModeInfo *), __REGD0(BOOL));
+        void ASM                                         (*SetPanning)(__REGA0(struct BoardInfo *), __REGA1(UBYTE *), __REGD0(UWORD), __REGD3(UWORD), __REGD1(WORD), __REGD2(WORD), __REGD7(RGBFTYPE));
+        UWORD ASM                                        (*CalculateBytesPerRow)(__REGA0(struct BoardInfo *), __REGD0(UWORD), __REGD1(UWORD), __REGA1(struct ModeInfo *mi), __REGD7(RGBFTYPE));
+        APTR ASM                                         (*CalculateMemory)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(struct RenderInfo *), __REGD7(RGBFTYPE));
+        ULONG ASM                                        (*GetCompatibleFormats)(__REGA0(struct BoardInfo *), __REGD7(RGBFTYPE));
+        BOOL ASM                                         (*SetDisplay)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
 
-        LONG ASM                                        (*ResolvePixelClock)(__REGA0(struct BoardInfo *), __REGA1(struct ModeInfo *), __REGD0(ULONG), __REGD7(RGBFTYPE));
-        ULONG ASM                                       (*GetPixelClock)(__REGA0(struct BoardInfo *bi), __REGA1(struct ModeInfo *), __REGD0(ULONG), __REGD7(RGBFTYPE));
-        void ASM                                        (*SetClock)(__REGA0(struct BoardInfo *));
+        LONG ASM                                         (*ResolvePixelClock)(__REGA0(struct BoardInfo *), __REGA1(struct ModeInfo *), __REGD0(ULONG), __REGD7(RGBFTYPE));
+        ULONG   ASM                                      (*GetPixelClock)(__REGA0(struct BoardInfo *bi), __REGA1(struct ModeInfo *), __REGD0(ULONG), __REGD7(RGBFTYPE));
+        void ASM                                         (*SetClock)(__REGA0(struct BoardInfo *));
 
-        void ASM                                        (*SetMemoryMode)(__REGA0(struct BoardInfo *), __REGD7(RGBFTYPE));
-        void ASM                                        (*SetWriteMask)(__REGA0(struct BoardInfo *), __REGD0(UBYTE));
-        void ASM                                        (*SetClearMask)(__REGA0(struct BoardInfo *), __REGD0(UBYTE));
-        void ASM                                        (*SetReadPlane)(__REGA0(struct BoardInfo *), __REGD0(UBYTE));
+        void ASM                                         (*SetMemoryMode)(__REGA0(struct BoardInfo *), __REGD7(RGBFTYPE));
+        void ASM                                         (*SetWriteMask)(__REGA0(struct BoardInfo *), __REGD0(UBYTE));
+        void ASM                                         (*SetClearMask)(__REGA0(struct BoardInfo *), __REGD0(UBYTE));
+        void ASM                                         (*SetReadPlane)(__REGA0(struct BoardInfo *), __REGD0(UBYTE));
 
-        void ASM                                        (*WaitVerticalSync)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
-        BOOL ASM                                        (*SetInterrupt)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
+        void ASM                                         (*WaitVerticalSync)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
+        BOOL ASM                                         (*SetInterrupt)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
 
-        void ASM                                        (*WaitBlitter)(__REGA0(struct BoardInfo *));
+        void ASM                                         (*WaitBlitter)(__REGA0(struct BoardInfo *));
 
-        void ASM                                        (*ScrollPlanar)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(UWORD), __REGD1(UWORD), __REGD2(UWORD), __REGD3(UWORD), __REGD4(UWORD), __REGD5(UWORD), __REGD6(UBYTE));
-        void ASM                                        (*ScrollPlanarDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(UWORD), __REGD1(UWORD), __REGD2(UWORD), __REGD3(UWORD), __REGD4(UWORD), __REGD5(UWORD), __REGD6(UBYTE));
-        void ASM                                        (*UpdatePlanar)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(UBYTE));
-        void ASM                                        (*UpdatePlanarDefault)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(UBYTE));
-        void ASM                                        (*BlitPlanar2Chunky)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
-        void ASM                                        (*BlitPlanar2ChunkyDefault)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
+        void ASM                                         (*ScrollPlanar)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(UWORD), __REGD1(UWORD), __REGD2(UWORD), __REGD3(UWORD), __REGD4(UWORD), __REGD5(UWORD), __REGD6(UBYTE));
+        void ASM                                         (*ScrollPlanarDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(UWORD), __REGD1(UWORD), __REGD2(UWORD), __REGD3(UWORD), __REGD4(UWORD), __REGD5(UWORD), __REGD6(UBYTE));
+        void ASM                                         (*UpdatePlanar)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(UBYTE));
+        void ASM                                         (*UpdatePlanarDefault)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(UBYTE));
+        void ASM                                         (*BlitPlanar2Chunky)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
+        void ASM                                         (*BlitPlanar2ChunkyDefault)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
 
-        void ASM                                        (*FillRect)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(ULONG), __REGD5(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*FillRectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(ULONG), __REGD5(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*InvertRect)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*InvertRectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitRect)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitRectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitTemplate)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Template *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitTemplateDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Template *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitPattern)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Pattern *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitPatternDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Pattern *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*DrawLine)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Line *), __REGD0(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*DrawLineDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Line *), __REGD0(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitRectNoMaskComplete)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitRectNoMaskCompleteDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
-        void ASM                                        (*BlitPlanar2Direct)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGA3(struct ColorIndexMapping *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
-        void ASM                                        (*BlitPlanar2DirectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGA3(struct ColorIndexMapping *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
-        BOOL ASM                                        (*EnableSoftSprite)(__REGA0(struct BoardInfo *),__REGD0(ULONG formatflags),__REGA1(struct ModeInfo *));
-        BOOL ASM                                        (*EnableSoftSpriteDefault)(__REGA0(struct BoardInfo *),__REGD0(ULONG formatflags),__REGA1(struct ModeInfo *));
-        APTR ASM                                        (*AllocCardMemAbs)(__REGA0(struct BoardInfo *),__REGD0(ULONG size), __REGA1(char *target));
-        void ASM                                        (*SetSplitPosition)(__REGA0(struct BoardInfo *),__REGD0(SHORT));
-        void ASM                                        (*ReInitMemory)(__REGA0(struct BoardInfo *),__REGD0(RGBFTYPE));
-        void ASM                                        (*Reserved2Default)(__REGA0(struct BoardInfo *));
-        void ASM                                        (*Reserved3)(__REGA0(struct BoardInfo *));
-        void ASM                                        (*Reserved3Default)(__REGA0(struct BoardInfo *));
+        void ASM                                         (*FillRect)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(ULONG), __REGD5(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*FillRectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(ULONG), __REGD5(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*InvertRect)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*InvertRectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitRect)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitRectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitTemplate)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Template *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitTemplateDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Template *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitPattern)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Pattern *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitPatternDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Pattern *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*DrawLine)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Line *), __REGD0(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*DrawLineDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct Line *), __REGD0(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitRectNoMaskComplete)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitRectNoMaskCompleteDefault)(__REGA0(struct BoardInfo *), __REGA1(struct RenderInfo *), __REGA2(struct RenderInfo *), __REGD0(WORD), __REGD1(WORD), __REGD2(WORD), __REGD3(WORD), __REGD4(WORD), __REGD5(WORD), __REGD6(UBYTE), __REGD7(RGBFTYPE));
+        void ASM                                         (*BlitPlanar2Direct)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGA3(struct ColorIndexMapping *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
+        void ASM                                         (*BlitPlanar2DirectDefault)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct RenderInfo *), __REGA3(struct ColorIndexMapping *), __REGD0(SHORT), __REGD1(SHORT), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGD6(UBYTE), __REGD7(UBYTE));
+        BOOL ASM                                         (*EnableSoftSprite)(__REGA0(struct BoardInfo *),__REGD0(ULONG formatflags),__REGA1(struct ModeInfo *));
+        BOOL ASM                                         (*EnableSoftSpriteDefault)(__REGA0(struct BoardInfo *),__REGD0(ULONG formatflags),__REGA1(struct ModeInfo *));
+        APTR ASM                                         (*AllocCardMemAbs)(__REGA0(struct BoardInfo *),__REGD0(ULONG size), __REGA1(char *target));
+        void ASM                                         (*SetSplitPosition)(__REGA0(struct BoardInfo *),__REGD0(SHORT));
+        void ASM                                         (*ReInitMemory)(__REGA0(struct BoardInfo *),__REGD0(RGBFTYPE));
+        ULONG ASM                                        (*GetCompatibleDACFormats)(__REGA0(struct BoardInfo *), __REGA1(struct ModeInfo *),__REGD7(RGBFTYPE));
+        UWORD ASM                                        (*CoerceMode)(__REGA0(struct BoardInfo *),__REGA1(struct ModeInfo *),__REGA2(const struct ModeInfo *),__REGD0(RGBFTYPE),__REGD1(RGBFTYPE),__REGD2(UWORD),__REGD3(UWORD));
+        void ASM                                         (*Reserved3Default)(__REGA0(struct BoardInfo *));
 
-        int ASM                                         (*WriteYUVRect)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(SHORT), __REGD1(SHORT), __REGA2(struct RenderInfo *), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGA3(struct TagItem *));
-        int ASM                                         (*WriteYUVRectDefault)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(SHORT), __REGD1(SHORT), __REGA2(struct RenderInfo *), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGA3(struct TagItem *));
+        int ASM                                           (*WriteYUVRect)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(SHORT), __REGD1(SHORT), __REGA2(struct RenderInfo *), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGA3(struct TagItem *));
+        int ASM                                           (*WriteYUVRectDefault)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(SHORT), __REGD1(SHORT), __REGA2(struct RenderInfo *), __REGD2(SHORT), __REGD3(SHORT), __REGD4(SHORT), __REGD5(SHORT), __REGA3(struct TagItem *));
 
-        BOOL ASM                                         (*GetVSyncState)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
-        ULONG ASM                                        (*GetVBeamPos)(__REGA0(struct BoardInfo *));
-        void ASM                                         (*SetDPMSLevel)(__REGA0(struct BoardInfo *), __REGD0(ULONG));
-        void ASM                                         (*ResetChip)(__REGA0(struct BoardInfo *));
-        ULONG ASM                                        (*GetFeatureAttrs)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(ULONG), __REGA2(struct TagItem *));
+        BOOL ASM                                          (*GetVSyncState)(__REGA0(struct BoardInfo *), __REGD0(BOOL));
+        ULONG ASM                                         (*GetVBeamPos)(__REGA0(struct BoardInfo *));
+        void ASM                                          (*SetDPMSLevel)(__REGA0(struct BoardInfo *), __REGD0(ULONG));
+        void ASM                                          (*ResetChip)(__REGA0(struct BoardInfo *));
+        ULONG ASM                                         (*GetFeatureAttrs)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(ULONG), __REGA2(struct TagItem *));
 
-        struct BitMap * ASM                              (*AllocBitMap)(__REGA0(struct BoardInfo *), __REGD0(ULONG), __REGD1(ULONG), __REGA1(struct TagItem *));
-        BOOL ASM                                         (*FreeBitMap)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct TagItem *));
-        ULONG ASM                                        (*GetBitMapAttr)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGD0(ULONG));
+        struct BitMap * ASM                               (*AllocBitMap)(__REGA0(struct BoardInfo *), __REGD0(ULONG), __REGD1(ULONG), __REGA1(struct TagItem *));
+        BOOL ASM                                          (*FreeBitMap)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGA2(struct TagItem *));
+        ULONG ASM                                         (*GetBitMapAttr)(__REGA0(struct BoardInfo *), __REGA1(struct BitMap *), __REGD0(ULONG));
 
-        BOOL ASM                                         (*SetSprite)(__REGA0(struct BoardInfo *), __REGD0(BOOL), __REGD7(RGBFTYPE));
-        void ASM                                         (*SetSpritePosition)(__REGA0(struct BoardInfo *), __REGD0(WORD), __REGD1(WORD), __REGD7(RGBFTYPE));
-        void ASM                                         (*SetSpriteImage)(__REGA0(struct BoardInfo *), __REGD7(RGBFTYPE));
-        void ASM                                         (*SetSpriteColor)(__REGA0(struct BoardInfo *), __REGD0(UBYTE), __REGD1(UBYTE), __REGD2(UBYTE), __REGD3(UBYTE), __REGD7(RGBFTYPE));
+        BOOL ASM                                          (*SetSprite)(__REGA0(struct BoardInfo *), __REGD0(BOOL), __REGD7(RGBFTYPE));
+        void ASM                                          (*SetSpritePosition)(__REGA0(struct BoardInfo *), __REGD0(WORD), __REGD1(WORD), __REGD7(RGBFTYPE));
+        void ASM                                          (*SetSpriteImage)(__REGA0(struct BoardInfo *), __REGD7(RGBFTYPE));
+        void ASM                                          (*SetSpriteColor)(__REGA0(struct BoardInfo *), __REGD0(UBYTE), __REGD1(UBYTE), __REGD2(UBYTE), __REGD3(UBYTE), __REGD7(RGBFTYPE));
 
-        APTR ASM                                         (*CreateFeature)(__REGA0(struct BoardInfo *), __REGD0(ULONG), __REGA1(struct TagItem *));
-        ULONG ASM                                        (*SetFeatureAttrs)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(ULONG), __REGA2(struct TagItem *));
-        BOOL ASM                                         (*DeleteFeature)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(ULONG));
-        struct MinList                                     SpecialFeatures;
+        APTR ASM                                          (*CreateFeature)(__REGA0(struct BoardInfo *), __REGD0(ULONG), __REGA1(struct TagItem *));
+        ULONG ASM                                         (*SetFeatureAttrs)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(ULONG), __REGA2(struct TagItem *));
+        BOOL ASM                                          (*DeleteFeature)(__REGA0(struct BoardInfo *), __REGA1(APTR), __REGD0(ULONG));
+        struct MinList                                      SpecialFeatures;
 
-        struct ModeInfo                                    *ModeInfo;                               /* Chip Settings Stuff */
+        struct ModeInfo                                    *ModeInfo;                                                              /* Chip Settings Stuff */
         RGBFTYPE                                            RGBFormat;
         WORD                                                XOffset;
         WORD                                                YOffset;
@@ -512,14 +568,14 @@ struct BoardInfo{
         ULONG                                               Mask;
         struct CLUTEntry                                    CLUT[256];
 
-        struct ViewPort                                    *ViewPort;                               /* ViewPort Stuff */
+        struct ViewPort                                    *ViewPort;                                                              /* ViewPort Stuff */
         struct BitMap                                      *VisibleBitMap;
         struct BitMapExtra                                 *BitMapExtra;
         struct MinList                                      BitMapList;
         struct MinList                                      MemList;
 
         WORD                                                MouseX;
-        WORD                                                MouseY;                                 /* Sprite Stuff */
+        WORD                                                MouseY;                                         /* Sprite Stuff */
         UBYTE                                               MouseWidth;
         UBYTE                                               MouseHeight;
         UBYTE                                               MouseXOffset;
@@ -531,39 +587,46 @@ struct BoardInfo{
         UWORD                                              *MouseRendered;
         UBYTE                                              *MouseSaveBuffer;
 
-        ULONG                                               ChipData[16];                           /* for chip driver needs */
-        ULONG                                               CardData[16];                           /* for card driver needs */
+        ULONG                                               ChipData[16];                                                   /* for chip driver needs */
+        ULONG                                               CardData[16];                                                   /* for card driver needs */
 
-        APTR                                                MemorySpaceBase;                        /* the base address of the board memory address space */
-        ULONG                                               MemorySpaceSize;                        /* size of that area */
-        APTR                                                DoubleBufferList;                       /* chain of dbinfos being notified on vblanks */
+        APTR                                                MemorySpaceBase;                                                /* the base address of the board memory address space */
+        ULONG                                               MemorySpaceSize;                                                /* size of that area */
+        APTR                                                DoubleBufferList;                                               /* chain of dbinfos being notified on vblanks */
 
-        struct timeval                                      SyncTime;                               /* system time when screen was set up, used for pseudo vblanks */
-        ULONG                                               SyncPeriod;                             /* length of one frame in micros */
-        struct MsgPort                                      SoftVBlankPort;                         /* MsgPort for software emulation of board interrupt */
+        struct timeval                                      SyncTime;                                                               /* system time when screen was set up, used for pseudo vblanks */
+        ULONG                                               SyncPeriod;                                                             /* length of one frame in micros */
+        struct MsgPort                                      SoftVBlankPort;                                         /* MsgPort for software emulation of board interrupt */
 
-        struct MinList                                      WaitQ;                                  /* for WaitTOF and WaitBOVP, all elements will be signaled on VBlank */
+        struct MinList                                      WaitQ;                                                                  /* for WaitTOF and WaitBOVP, all elements will be signaled on VBlank */
         
-        LONG                                                EssentialFormats;                       /* these RGBFormats will be used when user does not choose "all"
-                                                                                                       will be filled by InitBoard() */
-        UBYTE                                              *MouseImageBuffer;                       /* rendered to the destination color format */
+        LONG                                                EssentialFormats;                                               /* these RGBFormats will be used when user does not choose "all"
+                                                                                                                                                                                        will be filled by InitBoard() */
+        UBYTE                                              *MouseImageBuffer;                                      /* rendered to the destination color format */
   /* Additional viewport stuff */
-        struct ViewPort                                    *backViewPort;       /* The view port visible on the screen behind */
-        struct BitMap                                      *backBitMap;         /* Its bitmap */
-        struct BitMapExtra                                 *backExtra;          /* its bitmapExtra */
+        struct ViewPort                                    *backViewPort;     /* The view port visible on the screen behind */
+        struct BitMap                                      *backBitMap;       /* Its bitmap */
+        struct BitMapExtra                                 *backExtra;        /* its bitmapExtra */
         WORD                                                YSplit;
-        ULONG                                               MaxPlanarMemory;    /* Size of a bitplane if planar. If left blank, MemorySize>>2 */
-        ULONG                                               MaxBMWidth;         /* Maximum width of a bitmap */
-        ULONG                                               MaxBMHeight;        /* Maximum height of a bitmap */
+        ULONG                                               MaxPlanarMemory;  /* Size of a bitplane if planar. If left blank, MemorySize>>2 */
+        ULONG                                               MaxBMWidth;       /* Maximum width of a bitmap */
+        ULONG                                               MaxBMHeight;      /* Maximum height of a bitmap */
         struct CLUTEntry                                    SecondaryCLUT[256]; /* Switched to for lower/front screen */
+        RGBFTYPE                                            RGBFormatBack;      /* If DAC-switching is supported */
+        RGBFTYPE                                            RGBFormatSprite;    /* If DAC-switching is supported */
+        struct BitMapExtra                                 *spriteExtra;        /* where the sprite is located   */
+        UBYTE                                              *HostMouseImage;     /* where originally located by P96 */
+        UWORD                                               MonitorWidth;       /* In mm */
+        UWORD                                               MonitorHeight;      /* In mm */
+        ULONG                                               DisplayMemory;      /* largest non-continous non-DMA block */
 };
 
 /* BoardInfo flags */
 /*  0-15: hardware flags */
 /* 16-31: user flags */
 #define BIB_HARDWARESPRITE                       0              /* board has hardware sprite */
-#define BIB_NOMEMORYMODEMIX                      1              /* board does not support modifying planar bitmaps while displaying chunky and vice versa */
-#define BIB_NEEDSALIGNMENT                       2              /* bitmaps have to be aligned (not yet supported!) */
+#define BIB_NOMEMORYMODEMIX                      1              /* board does not support modifying planar bitmaps while displaying chunky and vice versa: obsolete, not used by the rtg.library */
+#define BIB_NEEDSALIGNMENT                       2              /* bitmaps have to be aligned (not yet supported!): obsolete, not supported. Overload allocator */
 #define BIB_CACHEMODECHANGE                      3              /* board memory may be set to Imprecise (060) or Nonserialised (040) */
 #define BIB_VBLANKINTERRUPT                      4              /* board can cause a hardware interrupt on a vertical retrace */
 #define BIB_HASSPRITEBUFFER                      5              /* board has allocated memory for software sprite image and save buffer */
@@ -572,11 +635,11 @@ struct BoardInfo{
 #define BIB_DBLCLOCKHALFSPRITEX                  7              /* horizontal sprite position halfed for double clock modes */
 #define BIB_DBLSCANDBLSPRITEY                    8              /* hardware sprite y position is doubled on doublescan display modes */
 #define BIB_ILACEHALFSPRITEY                     9              /* hardware sprite y position is halved on interlace display modes */
-#define BIB_ILACEDBLROWOFFSET                   10              /* doubled row offset in interlaced display modes needs additional horizontal bit */
+#define BIB_ILACEDBLROWOFFSET                   10              /* doubled row offset in interlaced display modes needs additional horizontal bit (obsolete) */
 #define BIB_INTERNALMODESONLY                   11              /* board creates its resolutions and modes automatically and does not support user setting files (UAE) */
 #define BIB_FLICKERFIXER                        12              /* board can flicker fix Amiga RGB signal */
-#define BIB_VIDEOCAPTURE                        13              /* board can capture video data to a memory area */
-#define BIB_VIDEOWINDOW                         14              /* board can display a second mem area as a pip */
+#define BIB_VIDEOCAPTURE                        13              /* board can capture video data to a memory area (not used by rtg core) */
+#define BIB_VIDEOWINDOW                         14              /* board can display a second mem area as a pip (not used by rtg core) */
 #define BIB_BLITTER                             15              /* board has blitter */
 
 #define BIB_HIRESSPRITE                         16              /* mouse sprite has double resolution */
@@ -584,13 +647,15 @@ struct BoardInfo{
 #define BIB_BORDEROVERRIDE                      18              /* user wants to override system overscan border prefs */
 #define BIB_BORDERBLANK                         19              /* user wants border blanking */
 #define BIB_INDISPLAYCHAIN                      20              /* board switches Amiga signal */
-#define BIB_QUIET                               21              /* not yet implemented */
+#define BIB_QUIET                               21              /* not yet implemented, not in core */
 #define BIB_NOMASKBLITS                         22              /* perform blits without taking care of mask */
 #define BIB_NOP2CBLITS                          23              /* use CPU for planar to chunky conversions */
 #define BIB_NOBLITTER                           24              /* disable all blitter functions */
 #define BIB_SYSTEM2SCREENBLITS                  25              /* allow data to be written to screen memory for cpu as blitter source */
 #define BIB_GRANTDIRECTACCESS                   26              /* all data on the board can be accessed at any time without bi->SetMemoryMode() */
 #define BIB_PALETTESWITCH                       27              /* board provides secondary palette for screen panning */
+#define BIB_DACSWITCH                           28              /* board provides means to switch the DAC for screen panning */
+#define BIB_NOMASKEDBLITS                       29              /* masked blits broken... */
 #define BIB_OVERCLOCK                           31              /* enable overclocking for some boards */
 
 #define BIB_IGNOREMASK  BIB_NOMASKBLITS
@@ -623,6 +688,8 @@ struct BoardInfo{
 #define BIF_SYSTEM2SCREENBLITS          (1<<BIB_SYSTEM2SCREENBLITS)
 #define BIF_GRANTDIRECTACCESS           (1<<BIB_GRANTDIRECTACCESS)
 #define BIF_PALETTESWITCH               (1<<BIB_PALETTESWITCH)
+#define BIF_DACSWITCH                   (1<<BIB_DACSWITCH)
+#define BIF_NOMASKEDBLITS               (1<<BIB_NOMASKEDBLITS)
 #define BIF_OVERCLOCK                   (1<<BIB_OVERCLOCK)
 
 #define BIF_IGNOREMASK  BIF_NOMASKBLITS
@@ -634,32 +701,32 @@ struct BoardInfo{
 /************************************************************************/
 
 struct CardBase {
-        struct Library          LibBase;
-        UBYTE                                   Flags;
-        UBYTE                                   pad;
+        struct Library           LibBase;
+        UBYTE                    Flags;
+        UBYTE                    pad;
 
-        struct ExecBase *ExecBase;
+        struct ExecBase         *ExecBase;
         struct Library          *ExpansionBase;
 
-        APTR                                    SegList;
-        char                                    *Name;
+        APTR                     SegList;
+        char                    *Name;
 };
 
 struct ChipBase {
-        struct Library          LibBase;
-        UBYTE                                   Flags;
-        UBYTE                                   pad;
+        struct Library           LibBase;
+        UBYTE                    Flags;
+        UBYTE                    pad;
 
-        struct ExecBase *ExecBase;
+        struct ExecBase         *ExecBase;
 
-        APTR                                    SegList;
+        APTR                     SegList;
 };
 
 /************************************************************************/
 /* private Tags */
-#define P96BD_BoardType                                 (P96BD_Dummy+0x101)
-#define P96BD_ChipType                                  (P96BD_Dummy+0x102)
-#define P96BD_DACType                                   (P96BD_Dummy+0x103)
+#define P96BD_BoardType                 (P96BD_Dummy+0x101)
+#define P96BD_ChipType                  (P96BD_Dummy+0x102)
+#define P96BD_DACType                   (P96BD_Dummy+0x103)
 #define P96BD_CurrentScreenBitMap       (P96BD_Dummy+0x104)
 
 /************************************************************************/

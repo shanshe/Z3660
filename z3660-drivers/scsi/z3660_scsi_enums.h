@@ -271,11 +271,6 @@ enum scsi_commands {
     SCSICMD_VOLUME_SET_OUT = 0xBF,
 };
 
-#define TD_READ64           24
-#define TD_WRITE64          25
-#define TD_SEEK64           26
-#define TD_FORMAT64         27
-
 #define NSCMD_TD_READ64     0xC000
 #define NSCMD_TD_WRITE64    0xC001
 #define NSCMD_TD_SEEK64     0xC002

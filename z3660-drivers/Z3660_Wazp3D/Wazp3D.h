@@ -1,7 +1,7 @@
 /* Wazp3D Beta 56 : Alain THELLIER - Paris - FRANCE - (November 2006 to 2014)     */
 /* Code clean-up and library enhancements from Gunther Nikl                 */
 /* Adaptation to AROS from Matthias Rustler                            */
-/* Adaptation to Morphos from Szil�rd 'BSzili' Bir�                         */
+/* Adaptation to Morphos from Szilrd 'BSzili' Bir???                         */
 /* LICENSE: GNU General Public License (GNU GPL) for this file                */
 
 /* This file contain the Warp3D & sof3d common definitions                    */
@@ -339,6 +339,7 @@ struct vertex3D{
     float x,y,z;
 };
 /*==================================================================================*/
+__attribute__((__aligned__(16)))
 struct point3D{
     float x,y,z;
     float u,v;
@@ -346,7 +347,7 @@ struct point3D{
     union {
         ULONG L[1];
         uint8_t b[4];
-    } RGBA;
+    } RGBA, padding; // padding for NEON/SIMD alignment
 };
 /*==================================================================================*/
 struct face3D{

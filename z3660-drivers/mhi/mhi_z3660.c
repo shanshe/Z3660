@@ -34,7 +34,7 @@
 #include "mhi_z3660.h"
 #include "ax.h"
 
-#include "z3660_regs.h"
+#include "../common/z3660_regs.h"
 
 #define OPTIMIZED_TRANSFER
 

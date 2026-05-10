@@ -1,7 +1,7 @@
 /* Wazp3D Beta 56 : Alain THELLIER - Paris - FRANCE - (November 2006 to 2014)     */
 /* Code clean-up and library enhancements from Gunther Nikl                 */
 /* Adaptation to AROS from Matthias Rustler                            */
-/* Adaptation to Morphos from Szil�rd 'BSzili' Bir�                         */
+/* Adaptation to Morphos from Szilrd 'BSzili' Bir                         */
 /* LICENSE: GNU General Public License (GNU GPL) for this file                */
 
 /* This file contain the Warp3D & sof3d common definitions                    */
@@ -14,6 +14,10 @@
 #ifdef  __AROS__
 #define AMIGA 1
 #define PROVIDE_VARARG_FUNCTIONS defined(__AROS__)
+#endif
+
+#ifdef __ARM_NEON__
+#include <arm_neon.h>
 #endif
 
 /*==================================================================================*/
@@ -59,6 +63,8 @@
 /* define this one if you build a Wazp3D that use hardware TinyGL.library */
 #define USEOPENGL 1 
 #endif
+
+//#define USEOPENGL 1 
 
 /*======================================================================================*/
 /* fields names that changed from Warp3D V4 to V5 */
@@ -354,6 +360,7 @@ struct vertex3D{
     float x,y,z;
 };
 /*==================================================================================*/
+__attribute__((aligned(16)))
 struct point3D{
     union {
         float f;
@@ -362,7 +369,7 @@ struct point3D{
     union {
         ULONG L[1];
         uint8_t b[4];
-    } RGBA;
+    } RGBA, padding; // padding for NEON/SIMD alignment (16 bytes total)
 };
 /*==================================================================================*/
 struct face3D{
@@ -392,7 +399,7 @@ struct rgba3DB{
 #define MAXFUNCTIONS 88                /* 88 functions in V4  */
 #endif
 /*==================================================================================*/
-BOOL LibDebug;                /* Enable Library Debugger (global)    */
+static BOOL LibDebug;                /* Enable Library Debugger (global)    */
 /*==================================================================================*/
 struct WAZP3D_parameters{
 struct button3D HardwareLie;        /* pretend to be a perfect hardware driver */
@@ -581,9 +588,133 @@ ULONG ASLminX,ASLmaxX,ASLminY,ASLmaxY;
 
 #endif
 /*==================================================================================*/
+union pixel3D {
+struct pixel3DL{
+    ZBUFF z;
+    float w;
+    LONG u;
+    LONG v;
+    LONG R;
+    LONG G;
+    LONG B;
+    LONG A;
+    LONG x;
+    LONG y;
+    LONG F;
+    LONG large;
+    UBYTE *Image8Y;
+    UWORD bpp;
+    ZBUFF *ZbufferY;
+    ZBUFF dz;
+    float dw;
+    LONG du;
+    LONG dv;
+    LONG ddu;
+    LONG ddv;
+    LONG dR;
+    LONG dG;
+    LONG dB;
+    LONG dA;
+    LONG dx;
+    LONG dF;
+    }  L;
+
+#ifdef MOTOROLAORDER
+struct pixel3DW{
+    ZBUFF z;
+    float w;
+    UBYTE u1,u,u3,u4;
+    UBYTE v1,v,v3,v4;
+    UBYTE R1,R,R3,R4;
+    UBYTE G1,G,G3,G4;
+    UBYTE B1,B,B3,B4;
+    UBYTE A1,A,A3,A4;
+    WORD  x,xlow;
+    WORD  y,ylow;
+    WORD  F,Flow;
+    WORD large,largelow;
+    UBYTE *Image8Y;
+    UWORD bpp;
+    ZBUFF *ZbufferY;
+    ZBUFF dz;
+    float dw;
+    LONG du;
+    LONG dv;
+    LONG ddu;
+    LONG ddv;
+    LONG dR;
+    LONG dG;
+    LONG dB;
+    LONG dA;
+    LONG dx;
+    LONG dF;
+    }  W;
+#else
+struct pixel3DW{
+    ZBUFF z;
+    float w;
+    UBYTE u4,u3,u,u1;
+    UBYTE v4,v3,v,v1;
+    UBYTE R4,R3,R,R1;
+    UBYTE G4,G3,G,G1;
+    UBYTE B4,B3,B,B1;
+    UBYTE A4,A3,A,A1;
+    WORD  xlow,x;
+    WORD  ylow,y;
+    WORD  Flow,F;
+    WORD largelow,large;
+    UBYTE *Image8Y;
+    UWORD bpp;
+    ZBUFF *ZbufferY;
+    ZBUFF dz;
+    float dw;
+    LONG du;
+    LONG dv;
+    LONG ddu;
+    LONG ddv;
+    LONG dR;
+    LONG dG;
+    LONG dB;
+    LONG dA;
+    LONG dx;
+    LONG dF;
+    }  W;
+#endif
+};
+#ifdef __ARM_NEON__
+/* NEON optimized COPYPIX: copy 11 fields (44 bytes) using SIMD */
+static __inline__ void COPYPIX_NEON(union pixel3D *a, union pixel3D *b) {
+    /* Load 16 bytes (z, w, u, v) */
+    uint8x16_t v0 = vld1q_u8((const uint8_t*)&b->L.z);
+    /* Load 16 bytes (R, G, B, A) */
+    uint8x16_t v1 = vld1q_u8((const uint8_t*)&b->L.R);
+    /* Load 12 bytes (x, y, F) + padding */
+    uint8x16_t v2 = vld1q_u8((const uint8_t*)&b->L.x);
+    /* Store to destination */
+    vst1q_u8((uint8_t*)&a->L.z, v0);
+    vst1q_u8((uint8_t*)&a->L.R, v1);
+    vst1q_u8((uint8_t*)&a->L.x, v2);
+}
+#define COPYPIX(a,b) COPYPIX_NEON(a, b)
+#else
 #define COPYPIX(a,b) { (a)->L.x=(b)->L.x; (a)->L.y=(b)->L.y; (a)->L.z=(b)->L.z; (a)->L.w=(b)->L.w; (a)->L.u=(b)->L.u; (a)->L.v=(b)->L.v; (a)->L.R=(b)->L.R; (a)->L.G=(b)->L.G; (a)->L.B=(b)->L.B; (a)->L.A=(b)->L.A; (a)->L.F=(b)->L.F; }
+#endif
 /*==================================================================================*/
+#ifdef __ARM_NEON__
+/* NEON optimized COPYP: copy 32 bytes (struct point3D) using SIMD */
+static __inline__ void COPYP_NEON(struct point3D *a, struct point3D *b) {
+    /* Load 16 bytes (x, y, z, u) */
+    uint8x16_t v0 = vld1q_u8((const uint8_t*)&b->x);
+    /* Load 16 bytes (v, w, RGBA, padding) */
+    uint8x16_t v1 = vld1q_u8((const uint8_t*)&b->v);
+    /* Store to destination */
+    vst1q_u8((uint8_t*)&a->x, v0);
+    vst1q_u8((uint8_t*)&a->v, v1);
+}
+#define COPYP(a,b) COPYP_NEON((a), (b))
+#else
 #define COPYP(a,b)   { (a)->x=(b)->x; (a)->y=(b)->y; (a)->z=(b)->z; (a)->w=(b)->w; (a)->u=(b)->u; (a)->v=(b)->v; COPYRGBA((a)->RGBA.L,(b)->RGBA.L); }
+#endif
 /*==================================================================================*/
 /* OS dependant usefull functions */
 /*==================================================================================*/
@@ -898,6 +1029,7 @@ void CloseAmigaLibraries()
 //#define Libsprintf(...)
 #endif
 /*==================================================================================*/
+#if 0
 void DumpMem(UBYTE *pt,LONG nb)
 {
 #ifdef WAZP3DDEBUG
@@ -912,6 +1044,7 @@ NLOOP(nb/4)
     (void)nb;
 #endif
 }
+#endif
 /*==================================================================================*/
 /* memory/debug usefull functions */
 void  *MMmalloc(ULONG size,char *name);

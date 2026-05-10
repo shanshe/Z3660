@@ -38,7 +38,7 @@
 #include "version.h"
 #endif
 
-#include "z3660_regs.h"
+#include "../common/z3660_regs.h"
 
 /* NSD support is optional */
 #ifdef NEWSTYLE

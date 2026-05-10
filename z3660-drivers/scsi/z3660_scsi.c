@@ -21,6 +21,9 @@
 #include <proto/exec.h>
 #include <proto/disk.h>
 #include <proto/expansion.h>
+#include <proto/dos.h>
+
+void WaitTOF(void);
 
 #include "newstyle.h"
 
@@ -53,19 +56,19 @@ struct piscsi_base {
 struct ExecBase *SysBase;
 
 //#define WRITESHORT(cmd, val) *(unsigned short *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + cmd)) = val;
-#define WRITELONG(cmd, val) *(volatile unsigned long *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + (cmd))) = (val);
+#define WRITELONG(cmd, val) *(volatile uint32_t *)((uint32_t)(Z3660_REGS + PISCSI_OFFSET + (cmd))) = (val);
 //#define WRITEBYTE(cmd, val) *(unsigned char *)((unsigned long)(Z3660_REGS + PISCSI_OFFSET + cmd)) = val;
 
 #define WRITE_CMD(COMMAND,UNIT,DATA,LEN)  do{               \
-            uint32_t len2=LEN;                              \
+            ULONG len2=LEN;                                 \
 /*            CacheClearE((APTR)DATA,len,CACRF_ClearD); */  \
             CachePreDMA((APTR)(DATA),&len2,0);              \
             WRITELONG(COMMAND, UNIT);                       \
-            CachePostDMA((APTR)DATA,&len2,0);               \
+            CachePostDMA((APTR)(DATA),&len2,0);             \
             }while(0)
 
 //#define READSHORT(cmd, var) var = *(volatile unsigned short *)(Z3660_REGS + PISCSI_OFFSET + cmd);
-#define READLONG(cmd, var) var = *(volatile unsigned long *)(Z3660_REGS + PISCSI_OFFSET + cmd);
+#define READLONG(cmd, var) var = *(volatile uint32_t *)(Z3660_REGS + PISCSI_OFFSET + cmd);
 
 asm("romtag:                                \n"
     "       dc.w    "XSTR(RTC_MATCHWORD)"   \n"
@@ -594,7 +597,7 @@ scsireadwrite:;
                 err = IOERR_BADADDRESS;
                 break;
             }
-            uint32_t len=blocks << 9;
+            uint32_t len = blocks * block_size;
 /*            if (scsi->scsi_Length < len) {
                 err = IOERR_BADLENGTH;
                 break;

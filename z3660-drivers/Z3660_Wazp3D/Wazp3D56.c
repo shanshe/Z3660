@@ -1,7 +1,7 @@
 /* Wazp3D Beta 56 : Alain THELLIER - Paris - FRANCE - (November 2006 to 2014)     */
 /* Code clean-up and library enhancements from Gunther Nikl                 */
 /* Adaptation to AROS from Matthias Rustler                            */
-/* Adaptation to Morphos from Szil�rd 'BSzili' Bir�                         */
+/* Adaptation to Morphos from Szil???rd 'BSzili' Bir???                         */
 /* LICENSE: GNU General Public License (GNU GPL) for this file                */
 
 /* This file contain the Warp3D -> Wazp3D wrapper                            */
@@ -3054,7 +3054,7 @@ ULONG W3D_RequestMode(struct TagItem *taglist)
 */
 
 #else
-    filter.h_Entry =(HOOKFUNC)ScreenModeFilterASM;
+    filter.h_Entry = (ULONG (*)())ScreenModeFilterASM;
 #endif
 
     WAZP3DFUNCTION(19);

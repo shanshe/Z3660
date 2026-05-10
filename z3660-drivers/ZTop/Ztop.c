@@ -10,7 +10,7 @@ quit
 //#define CPU_FREQ_THRESHOLD 25
 
 #define Z3660_ZTOP_VERSION_MAJOR "Z3660 ZTop 1.03"
-#define Z3660_ZTOP_VERSION_MINOR 19 // BETA number (0 = full version, no beta)
+#define Z3660_ZTOP_VERSION_MINOR 20 // BETA number (0 = full version, no beta)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,7 +77,7 @@ quit
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "z3660_regs.h"
+#include "../common/z3660_regs.h"
 #include <string.h>
 
 void refresh_zz_info(struct Window *win);
@@ -247,6 +247,7 @@ enum
 };
 
 enum {
+   MOBOCPU,
    CPU,
    MUSASHI,
    UAE_030,
@@ -256,13 +257,14 @@ enum {
    NUM_BOOTMODES
 };
 char bootmode_names[NUM_BOOTMODES][25]={
-//   "XXXXXXXXXXXXXXXXXXX",
-   "060 real CPU   ",
-   "030 MUSASHI emu",
-   "030 UAE emu    ",
-   "030 UAE JIT emu",
-   "040 UAE emu    ",
-   "040 UAE JIT emu",
+// "XXXXXXXXXXXXXXXXXXX",
+   "Mother Board CPU",
+   "060 real CPU    ",
+   "030 MUSASHI emu ",
+   "030 UAE emu     ",
+   "030 UAE JIT emu ",
+   "040 UAE emu     ",
+   "040 UAE JIT emu ",
 };
 
 #define KS_CHARS "012345678901234567890123456789"
@@ -550,7 +552,7 @@ void zz_get_mac(char *mac)
    uint32_t data_lo=zz_get_reg(REG_ZZ_ETH_MAC_LO);
    sprintf(mac,"%02X:%02X:%02X:%02X:%02X:%02X",(data_hi>>8)&0xFF,(data_hi)&0xFF,(data_lo>>24)&0xFF,(data_lo>>16)&0xFF,(data_lo>>8)&0xFF,(data_lo)&0xFF);
 }
-
+/*
 uint32_t zz_get_usb_status(void)
 {
    return zz_get_reg(REG_ZZ_USB_STATUS);
@@ -560,7 +562,7 @@ uint32_t zz_get_usb_capacity(void)
 {
    return zz_get_reg(REG_ZZ_USB_COUNT);
 }
-
+*/
 void zz_set_jit_enabled(uint16_t enable)
 {
    zz_set_reg(REG_ZZ_JIT_ENABLE, !!enable);
@@ -1405,13 +1407,12 @@ void refresh_zz_info(struct Window *win)
    }
 }
 
-ULONG zz_perform_memtest(uint32_t offset)
+ULONG zz_perform_memtest(uint32_t offset, int rep)
 {
    uint32_t errors=0;
    volatile uint32_t* bufferl = (volatile uint32_t*)((uint32_t)zz_cd->cd_BoardAddr+offset);
    volatile uint16_t* bufferw = (volatile uint16_t*)bufferl;
    uint32_t i;
-   uint32_t rep=1024*256;
 
    printf("zz_perform_memtest...\n");
 
@@ -1421,7 +1422,7 @@ ULONG zz_perform_memtest(uint32_t offset)
       uint16_t v4;
       uint16_t v3 = (i%2)?0xffff:0x0000;
 
-      if ((i % (32*1024)) == 0) {
+      if ((i % 128) == 0) {
          printf("`-- Test %lx %6ld/%ld...\n", (uint32_t)zz_cd->cd_BoardAddr+offset, i, rep);
       }
 
@@ -1429,7 +1430,7 @@ ULONG zz_perform_memtest(uint32_t offset)
       v2 = bufferl[i];
 
       if (v!=v2) {
-         printf("32-bit mismatch at %lx: 0x%lx should be 0x%lx\n",(uint32_t)&bufferl[i],v2,v);
+         if (errors<100) printf("32-bit mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)&bufferl[i],v2,v);
          errors++;
       }
 
@@ -1437,11 +1438,11 @@ ULONG zz_perform_memtest(uint32_t offset)
       v4 = bufferw[i];
 
       if (v3!=v4) {
-         printf("16-bit mismatch at %lx: 0x%x should be 0x%x\n",(uint32_t)&bufferw[i],v4,v3);
+         if (errors<100) printf("16-bit mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)&bufferw[i],v4,v3);
          errors++;
       }
    }
-   printf("Done. %ld errors.\n", errors);
+   printf("Done zz_perform_memtest. %ld errors.\n", errors);
    return errors;
 }
 
@@ -1467,273 +1468,400 @@ ULONG zz_perform_memtest_rand(uint32_t offset, int rep)
       }
       // step 1: fill buffer with random data
       for (i=0; i<sz; i++) {
-         tbuf[sz] = rand();
+         tbuf[i] = rand();
       }
 
-      buffer[0] = tbuf[0];
-      buffer[1] = tbuf[1];
-      buffer[2] = tbuf[2];
-      buffer[3] = tbuf[3];
-      buffer[4] = tbuf[4];
-      buffer[5] = tbuf[5];
-      buffer[6] = tbuf[6];
-      buffer[7] = tbuf[7];
-      buffer[8] = tbuf[8];
-      buffer[9] = tbuf[9];
-      buffer[10] = tbuf[10];
-      buffer[11] = tbuf[11];
-      buffer[12] = tbuf[12];
-      buffer[13] = tbuf[13];
-      buffer[14] = tbuf[14];
-      buffer[15] = tbuf[15];
+      for (i=0; i<sz; i++) {
+         buffer[i] = tbuf[i];
+      }
 
       for (i=0; i<sz; i++) {
          uint16_t v = buffer[i];
          if (v != tbuf[i]) {
-            if (errors<100) printf("Mismatch at %lx: 0x%x should be 0x%x\n",(uint32_t)&buffer[i],v,tbuf[i]);
+            if (errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)&buffer[i],v,tbuf[i]);
             errors++;
+         }
+         else {
+            if(k==0) printf("Match at %lx: 0x%04x\n",(uint32_t)&buffer[i],v);
          }
       }
    }
 
    free(tbuf);
 
-   printf("Done. %ld errors.\n", errors);
+   printf("Done zz_perform_memtest_rand. %ld errors.\n", errors);
    return errors;
 }
 
-ULONG zz_perform_memtest_cross(uint32_t offset, int rep)
+#define TEST_32_32 0x001
+#define TEST_32_16 0x002
+#define TEST_32_8  0x004
+#define TEST_16_32 0x008
+#define TEST_16_16 0x010
+#define TEST_16_8  0x020
+#define TEST_8_32  0x040
+#define TEST_8_16  0x080
+#define TEST_8_8   0x100
+
+ULONG zz_perform_memtest_cross(uint32_t offset, int size, int rounds, int aligned, int tests_actived)
 {
-   uint32_t errors=0;
+   uint32_t errors=0,test_errors=0;
    int i,k;
-   const int sz = 16;
+   int step=1;
    volatile uint32_t * buffer32 = (volatile uint32_t *)(offset);
    volatile uint16_t * buffer16 = (volatile uint16_t *)(offset);
    volatile uint8_t  * buffer8  = (volatile uint8_t  *)(offset);
 
-   printf("zz_perform_memtest... address 0x%lx write32 read32\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_32_32)
+   {
+      printf("zz_perform_memtest... address 0x%lx write32 read32\n",offset);
+      if(aligned)
+      {
+         step=4;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer32)+i;
+            uint32_t value = rand();
+            uint32_t v;
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer32)+i;
-         uint32_t value = rand();
-         uint32_t v;
-         // write32
-         *((uint32_t *)dir)=value;
-         //read32
-         v = *((uint32_t *)dir);
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
-            errors++;
+            if(i%4==0 && aligned==0)
+               continue;
+            // write32
+            *((volatile uint32_t *)dir)=value;
+            //read32
+            v = *((volatile uint32_t *)dir);
+            if (v != value) {
+               printf("XX %lx: %08lx %08lx diff %08lx %08lx %08lx \n",(uint32_t)dir,value,v,v^value,value&(v^value),(~value)&(v^value));
+               test_errors++;
+            }
+            else
+            {
+               printf("OK %lx: %08lx\n",(uint32_t)dir,value);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("zz_perform_memtest... address 0x%lx write32 read16\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_32_16)
+   {
+      printf("zz_perform_memtest... address 0x%lx write32 read16\n",offset);
+      if(aligned)
+      {
+         step=4;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer32)+i;
-         uint32_t value = rand();
-         uint16_t vlow;
-         uint16_t vhigh;
-         uint32_t v;
-         // write32
-         *((uint32_t *)dir)=value;
-         //read16
-         vlow  = *((uint16_t *)dir+1);
-         vhigh = *((uint16_t *)dir);
-         v=(vhigh<<16)|vlow;
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer32)+i;
+            uint32_t value = rand();
+            uint16_t vlow;
+            uint16_t vhigh;
+            uint32_t v;
+            if(i%4==0 && aligned==0)
+               continue;
+            // write32
+            *((volatile uint32_t *)dir)=value;
+            //read16
+            vhigh = *((volatile uint16_t *)(dir  ));
+            vlow  = *((volatile uint16_t *)(dir+2));
+            v=(vhigh<<16)|vlow;
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               printf("Match at %lx: 0x%08lx\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("zz_perform_memtest... address 0x%lx write32 read8\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_32_8)
+   {
+      printf("zz_perform_memtest... address 0x%lx write32 read8\n",offset);
+      if(aligned)
+      {
+         step=4;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer32)+i;
-         uint32_t value = rand();
-         uint32_t vhh,vlh,vhl,vll,v;
-         // write32
-         *((uint32_t *)dir)=value;
-         //read8
-         vhh = *((uint8_t *)dir);
-         vlh = *((uint8_t *)dir+2);
-         vhl = *((uint8_t *)dir+1);
-         vll = *((uint8_t *)dir+3);
-         v=(vhh<<24)|(vhl<<16)|(vlh<<8)|vll;
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer32)+i;
+            uint32_t value = rand();
+            uint32_t vhh,vhl,vlh,vll,v;
+            if(i%4==0 && aligned==0)
+               continue;
+            // write32
+            *((volatile uint32_t *)dir)=value;
+            //read8
+            vhh = *((volatile uint8_t *)(dir));
+            vhl = *((volatile uint8_t *)(dir+1));
+            vlh = *((volatile uint8_t *)(dir+2));
+            vll = *((volatile uint8_t *)(dir+3));
+            v=(vhh<<24)|(vhl<<16)|(vlh<<8)|vll;
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               if(k==0) printf("Match at %lx: 0x%08lx\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("zz_perform_memtest... address 0x%lx write16 read32\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_16_32)
+   {
+      printf("zz_perform_memtest... address 0x%lx write16 read32\n",offset);
+      if(aligned)
+      {
+         step=4;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer16)+i;
-         uint16_t value1 = rand();
-         uint16_t value2 = rand();
-         uint32_t value=(value1<<16)|value2;
-         uint32_t v;
-         // write16
-         *((uint16_t *)dir+1)=value2;
-         *((uint16_t *)dir)=value1;
-         //read32
-         v = *((uint32_t *)dir);
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer16)+i;
+            uint16_t value1 = rand();
+            uint16_t value2 = rand();
+            uint32_t value=(value1<<16)|value2;
+            uint32_t v;
+            if(i%4==0 && aligned==0)
+               continue;
+            // write16
+            *((volatile uint16_t *)(dir  ))=value1;
+            *((volatile uint16_t *)(dir+2))=value2;
+            //read32
+            v = *((volatile uint32_t *)dir);
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               printf("Match at %lx: 0x%08lx\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("zz_perform_memtest... address 0x%lx write16 read16\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_16_16)
+   {
+      printf("zz_perform_memtest... address 0x%lx write16 read16\n",offset);
+      if(aligned)
+      {
+         step=2;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer16)+i;
-         uint16_t value = rand();
-         uint16_t v;
-         // write16
-         *((uint16_t *)dir)=value;
-         //read16
-         v = *((uint16_t *)dir);
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer16)+i;
+            uint16_t value = rand();
+            uint16_t v;
+            if(i%2==0 && aligned==0)
+               continue;
+            // write16
+            *((volatile uint16_t *)dir)=value;
+            //read16
+            v = *((volatile uint16_t *)dir);
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               printf("Match at %lx: 0x%04x\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("zz_perform_memtest... address 0x%lx write16 read8\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_16_8)
+   {
+      printf("zz_perform_memtest... address 0x%lx write16 read8\n",offset);
+      if(aligned)
+      {
+         step=2;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer16)+i;
-         uint16_t value = rand();
-         uint8_t vl,vh;
-         uint16_t v;
-         // write16
-         *((uint16_t *)dir)=value;
-         //read8
-         vl = *((uint8_t *)dir+1);
-         vh = *((uint8_t *)dir);
-         v=(vh<<8)|vl;
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer16)+i;
+            uint16_t value = rand();
+            uint8_t vl,vh;
+            uint16_t v;
+            if(i%2==0 && aligned==0)
+               continue;
+            // write16
+            *((volatile uint16_t *)dir)=value;
+            //read8
+            vh = *((volatile uint8_t *)(dir  ));
+            vl = *((volatile uint8_t *)(dir+1));
+            v=(vh<<8)|vl;
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               printf("Match at %lx: 0x%04x\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("zz_perform_memtest... address 0x%lx write8 read32\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_8_32)
+   {
+      printf("zz_perform_memtest... address 0x%lx write8 read32\n",offset);
+      if(aligned)
+      {
+         step=4;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer8)+i;
-         uint8_t value1 = rand();
-         uint8_t value2 = rand();
-         uint8_t value3 = rand();
-         uint8_t value4 = rand();
-         uint32_t value=(value1<<24)|(value2<<16)|(value3<<8)|value4;
-         uint32_t v;
-         // write8
-         *((uint8_t *)dir)=value1;
-         *((uint8_t *)dir+2)=value3;
-         *((uint8_t *)dir+1)=value2;
-         *((uint8_t *)dir+3)=value4;
-         //read32
-         v = *((uint32_t *)dir);
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer8)+i;
+            uint8_t value1 = rand();
+            uint8_t value2 = rand();
+            uint8_t value3 = rand();
+            uint8_t value4 = rand();
+            uint32_t value=(value1<<24)|(value2<<16)|(value3<<8)|value4;
+            uint32_t v;
+            if(i%4==0 && aligned==0)
+               continue;
+            // write8
+            *((volatile uint8_t *)(dir  ))=value1;
+            *((volatile uint8_t *)(dir+2))=value3;
+            *((volatile uint8_t *)(dir+1))=value2;
+            *((volatile uint8_t *)(dir+3))=value4;
+            //read32
+            v = *((volatile uint32_t *)dir);
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%08lx should be 0x%08lx\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               printf("Match at %lx: 0x%08lx\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("zz_perform_memtest... address 0x%lx write8 read16\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
+   if(tests_actived & TEST_8_16)
+   {
+      printf("zz_perform_memtest... address 0x%lx write8 read16\n",offset);
+      if(aligned)
+      {
+         step=2;
+         printf("Aligned accesses\n");
       }
+      else
+         printf("Unaligned accesses\n");
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer8)+i;
-         uint8_t value1 = rand();
-         uint8_t value2 = rand();
-         uint16_t value=(value1<<8)|value2;
-         uint16_t v;
-         // write8
-         *((uint8_t *)dir+1)=value2;
-         *((uint8_t *)dir)=value1;
-         //read16
-         v = *((uint16_t *)dir);
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i+=step) {
+            uint32_t dir=(uint32_t)(buffer8)+i;
+            uint8_t value1 = rand();
+            uint8_t value2 = rand();
+            uint16_t value=(value1<<8)|value2;
+            uint16_t v;
+            if(i%2==0 && aligned==0)
+               continue;
+            // write8
+            *((volatile uint8_t *)(dir+1))=value2;
+            *((volatile uint8_t *)(dir  ))=value1;
+            //read16
+            v = *((volatile uint16_t *)dir);
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%04x should be 0x%04x\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               printf("Match at %lx: 0x%04x\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
+   if(tests_actived & TEST_8_8)
+   {
+      printf("zz_perform_memtest... address 0x%lx write8 read8\n",offset);
+      for (k = 0; k < rounds; k++) {
+         if ((k % 128) == 0) {
+            printf("`-- Test 0x%lx %3d/%d...\n", offset, k+1, rounds);
+         }
 
-   printf("zz_perform_memtest... address 0x%lx write8 read8\n",offset);
-
-   for (k = 0; k < rep; k++) {
-      if ((k % 128) == 0) {
-         printf("`-- Test 0x%lx %3d/%d...\n", offset, k, rep);
-      }
-
-      for (i=0; i<sz; i++) {
-         uint32_t dir=(uint32_t)(buffer8)+i;
-         uint8_t value = rand();
-         uint8_t v;
-         // write8
-         *((uint8_t *)dir)=value;
-         //read16
-         v = *((uint8_t *)dir);
-         if (v != value) {
-            if (errors<100) printf("Mismatch at %lx: 0x%02x should be 0x%02x\n",(uint32_t)dir,v,value);
-            errors++;
+         for (i=0; i<size; i++) {
+            uint32_t dir=(uint32_t)(buffer8)+i;
+            uint8_t value = rand();
+            uint8_t v;
+            // write8
+            *((volatile uint8_t *)dir)=value;
+            //read16
+            v = *((volatile uint8_t *)dir);
+            if (v != value) {
+               if (test_errors<100) printf("Mismatch at %lx: 0x%02x should be 0x%02x\n",(uint32_t)dir,v,value);
+               test_errors++;
+            }
+            else {
+               if(k==0) printf("Match at %lx: 0x%02x\n",(uint32_t)dir,v);
+            }
          }
       }
+      errors+=test_errors;
+      test_errors=0;
    }
-
-   printf("Done. %ld errors.\n", errors);
+   printf("Done zz_perform_memtest_cross. %ld errors.\n", errors);
    return errors;
 }
 
@@ -1750,21 +1878,83 @@ ULONG zz_perform_memtest_fpgareg(void) {
       *d1 = i;
    }
 
-   printf("Done. Result: %x\n", *dr);
+   printf("Done zz_perform_memtest_fpgareg. Result: %x\n", *dr);
 
    return 0;
 }
 
+#define ALIGNED 1
+#define UNALIGNED 0
+#define SIZE 64
+#define ROUNDS 1
+
 ULONG zz_perform_memtest_multi(void) {
-   uint32_t offset = 0x07100000;
+//   uint32_t offset = 0x07001000;
+   uint32_t offset = 0x00001000;
    uint32_t errors=0;
-   errors+=zz_perform_memtest(offset);
-   errors+=zz_perform_memtest_rand(offset, 1024);
    printf("Testing CPU access to Z3660 Memory...\n");
-   errors+=zz_perform_memtest_cross((uint32_t)zz_cd->cd_BoardAddr+offset, 1024);
+//   errors+=zz_perform_memtest(offset, 1024);
+//   errors+=zz_perform_memtest_rand(offset, 1024);
+   errors+=zz_perform_memtest_cross((uint32_t)zz_cd->cd_BoardAddr+offset, SIZE, ROUNDS, ALIGNED,
+      TEST_32_32|
+      TEST_32_16|
+      TEST_32_8 |
+      TEST_16_32|
+      TEST_16_16|
+      TEST_16_8 |
+      TEST_8_32 |
+      TEST_8_16 |
+      TEST_8_8  |
+      0
+   );
+
+   offset = 0x07000000;
+   printf("Testing CPU access to Z3660 Memory...\n");
+//   errors+=zz_perform_memtest(offset, 1024);
+//   errors+=zz_perform_memtest_rand(offset, 1024);
+   errors+=zz_perform_memtest_cross((uint32_t)zz_cd->cd_BoardAddr+offset, SIZE, ROUNDS, ALIGNED,
+      TEST_32_32|
+      TEST_32_16|
+      TEST_32_8 |
+      TEST_16_32|
+      TEST_16_16|
+      TEST_16_8 |
+      TEST_8_32 |
+      TEST_8_16 |
+      TEST_8_8  |
+      0
+   );
+
+/*
+   errors+=zz_perform_memtest_cross((uint32_t)zz_cd->cd_BoardAddr+offset, SIZE, ROUNDS, UNALIGNED,
+      TEST_32_32|
+      TEST_32_16|
+//      TEST_32_8 |
+//      TEST_16_32|
+//      TEST_16_16|
+//      TEST_16_8 |
+//      TEST_8_32 |
+//      TEST_8_16 |
+//      TEST_8_8  | // this case is always aligned, so no need to test it in unaligned mode
+      0
+   );
+*/
+/*
    offset = 0x00100000;
    printf("Testing CPU access to CHIP...\n");
-   errors+=zz_perform_memtest_cross(offset, 1024);
+   errors+=zz_perform_memtest_cross(offset, 1024, ROUNDS, 1,
+      TEST_32_32|
+      TEST_32_16|
+      TEST_32_8 |
+      TEST_16_32|
+      TEST_16_16|
+      TEST_16_8 |
+      TEST_8_32 |
+      TEST_8_16 |
+      TEST_8_8  |
+      0
+   );
+*/
    //zz_perform_memtest_fpgareg();
    printf("Bus Test finished with %ld total errors\n",errors);
 
@@ -2019,14 +2209,58 @@ int main(void)
 
    zz_cd = (struct ConfigDev*)FindConfigDev(zz_cd,0x144B,0x1);
    if (!zz_cd) {
-      CloseLibrary(ExpansionBase);
+//      CloseLibrary(ExpansionBase);
 #ifndef UAETEST
-      errorMessage("Z3660 not found.\n");
-      return 0;
+      {
+         struct ConfigDev *last_CD = NULL;
+         struct ConfigDev *new_zz_cd = NULL;
+//         errorMessage("Z3660 not found. Looking at $10000000 if it is there...\n");
+         new_zz_cd = (struct ConfigDev*)malloc(sizeof(struct ConfigDev));
+         memset(new_zz_cd, 0, sizeof(struct ConfigDev));
+         while(last_CD=FindConfigDev(last_CD,-1L,-1L)) /* search for all ConfigDevs */
+         {
+            if(last_CD->cd_Node.ln_Succ==NULL)
+            {
+               break;
+            }
+         }
+         new_zz_cd->cd_Node.ln_Type = NT_DEVICE;
+         new_zz_cd->cd_Node.ln_Name = "Z3660";
+         new_zz_cd->cd_Node.ln_Pri = 0;
+         new_zz_cd->cd_Node.ln_Succ = NULL;
+         new_zz_cd->cd_Node.ln_Pred = &last_CD->cd_Node;
+         new_zz_cd->cd_Flags = 0;
+         new_zz_cd->cd_BoardAddr=(APTR)0x10000000; /* where in memory the board was placed */
+         new_zz_cd->cd_BoardSize=0x8000000;	/* 128MB size of board in bytes */
+         new_zz_cd->cd_Rom.er_Type = ERT_ZORROIII | 2; // ZorroIII and 128 MB
+         new_zz_cd->cd_Rom.er_Manufacturer = 0x144B;
+         new_zz_cd->cd_Rom.er_Product = 0x1;
+         new_zz_cd->cd_Rom.er_Flags = 0;
+         new_zz_cd->cd_Rom.er_InitDiagVec = 0;
+         //UWORD		cd_SlotAddr;	/* which slot number (PRIVATE) */
+         //UWORD		cd_SlotSize;	/* number of slots (PRIVATE) */
+         //APTR		cd_Driver;	/* pointer to node of driver */
+         //struct ConfigDev *	cd_NextCD;	/* linked list of drivers to config */
+         //ULONG		cd_Unused[4];	/* for whatever the driver wants */
+         AddConfigDev(new_zz_cd);
+         zz_cd = new_zz_cd;
+      }
 #endif
    }
 
    zz_regs = (UBYTE*)zz_cd->cd_BoardAddr;
+
+   {
+      uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
+
+      int fwrev_major = fwrev>>8;
+      if(fwrev_major!=1)
+      {
+         errorMessage("Z3660 not found.\n");
+         CloseLibrary(ExpansionBase);
+         exit(0);
+      }
+   } 
    CloseLibrary(ExpansionBase);
    my_screen = ((struct IntuitionBase *)IntuitionBase)->FirstScreen;
    drinfo = GetScreenDrawInfo(my_screen);
@@ -2047,7 +2281,7 @@ int main(void)
          SA_OffScreenDragging, TRUE,
          TAG_END);
       if (new_screen != NULL)
-       {
+      {
          /* screen successfully opened */
       }
    }
@@ -2055,9 +2289,9 @@ int main(void)
 
    NewList(&dlist);
 
-   kickstarts_list = ChooserLabelsA(kickstarts);
-   ext_kickstarts_list = ChooserLabelsA(ext_kickstarts);
-   scsis_list = ChooserLabelsA(scsis);
+   kickstarts_list = ChooserLabelsA((STRPTR *)kickstarts);
+   ext_kickstarts_list = ChooserLabelsA((STRPTR *)ext_kickstarts);
+   scsis_list = ChooserLabelsA((STRPTR *)scsis);
 
    if ( !ButtonBase      ||
        !CheckBoxBase    ||
@@ -2893,7 +3127,7 @@ int main(void)
                ULONG result;
                UWORD code;
 
-refresh_zz_info(windows[WID_MAIN]);
+               refresh_zz_info(windows[WID_MAIN]);
                 /* Obtain the window wait signal mask.
                 */
                GetAttr(WINDOW_SigMask, objects[OID_MAIN], &signal);

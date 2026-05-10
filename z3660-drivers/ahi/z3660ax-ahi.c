@@ -43,7 +43,7 @@
 #include <stdint.h>
 
 #include "z3660ax-ahi.h"
-#include "z3660_regs.h"
+#include "../common/z3660_regs.h"
 
 #define STR(s) #s
 #define XSTR(s) STR(s)
@@ -62,7 +62,7 @@
 #define WORKER_PRIORITY 127 // TW: High priority because this is time-critical for high-level access.
 
 struct ExecBase     *SysBase;
-struct UtilityBase  *UtilityBase;
+struct Library      *UtilityBase;
 struct Library      *AHIsubBase  = NULL;
 struct DosLibrary   *DOSBase     = NULL;
 struct z9ax_base    *Z9AXBase;
@@ -135,7 +135,7 @@ static uint32_t __attribute__((used)) init(BPTR seg_list asm("a0"), struct Libra
   if (!(DOSBase = (struct DosLibrary *)OpenLibrary((STRPTR)"dos.library",0)))
     return 0;
 
-  if (!(UtilityBase = (struct UtilityBase *)OpenLibrary((STRPTR)"utility.library",0)))
+  if (!(UtilityBase = (struct Library *)OpenLibrary((STRPTR)"utility.library",0)))
     return 0;
 
   if (!(ExpansionBase = (struct ExpansionBase *)OpenLibrary((STRPTR)"expansion.library",0)))
@@ -260,6 +260,7 @@ void WorkerProcess() {
       write_reg(ahi_data->hw_addr, REG_ZZ_AUDIO_SCALE, AudioCtrl->ahiac_BuffSamples);
 
       // def. the faster way
+      
       CopyMem((void*)ahi_data->audio_buf_addr, (void*)ahi_data->audio_hw_buf_addr + buf_offset, bytes);
       // byteswap, resample and play buffer
       write_reg(ahi_data->hw_addr, REG_ZZ_AUDIO_SWAB, (0<<15) | (buf_offset>>8)); // byteswap, offset/256
@@ -405,7 +406,7 @@ static uint32_t __attribute__((used)) intAHIsub_AllocAudio(struct TagItem *tagLi
   //kprintf((CONST_STRPTR)"hw_size: %lx\n", Z9AXBase->hw_size);
   //kprintf((CONST_STRPTR)"offset_tx: %lx\n", offset_tx);
   //kprintf((CONST_STRPTR)"offset_rx: %lx\n", offset_rx);
-#define offset_tx AUDIO_TX_FRAME_ADDRESS
+#define offset_tx AUDIO_TX_BUFFER_ADDRESS
   ahi_data->audio_hw_buf_addr = hw_addr + offset_tx; // here <-----------------
   //memset((void*)ahi_data->audio_hw_buf_addr, 0, AUDIO_BUFSZ);
 

@@ -1,3 +1,4 @@
+#if 0
 /*
  * MNT ZZ9000AX Amiga MHI driver (Hardware Accelerated)
  *
@@ -715,3 +716,4 @@ void i_MHISetParam(REGA3(APTR mhi_handle), REGD0(UWORD mhi_param), REGD1(ULONG m
 	}
 }
 
+#endif

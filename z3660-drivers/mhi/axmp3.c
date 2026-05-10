@@ -49,7 +49,7 @@ typedef enum
 	DECODE_INIT_FIFO,
 } DECODE_COMMAND;
 
-#include "z3660_regs.h"
+#include "../common/z3660_regs.h"
 
 struct z9ax
 {
