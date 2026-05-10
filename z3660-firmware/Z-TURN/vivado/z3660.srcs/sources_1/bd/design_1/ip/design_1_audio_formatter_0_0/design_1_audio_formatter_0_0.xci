@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "design_1_audio_formatter_0_0",
-    "cell_name": "audio_formatter_0",
+    "cell_name": "processing_av_system/audio_video_engine/audio_formatter_0",
     "component_reference": "xilinx.com:ip:audio_formatter:1.0",
     "ip_revision": "11",
     "gen_directory": "../../../../../../z3660.gen/sources_1/bd/design_1/ip/design_1_audio_formatter_0_0",

@@ -1,5 +1,5 @@
 // (c) Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
-// (c) Copyright 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// (c) Copyright 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of AMD and is protected under U.S. and international copyright
@@ -87,7 +87,7 @@ design_1_processing_system7_0_0_sc::design_1_processing_system7_0_0_sc(const sc_
     model_param_props.addLong("C_S_AXI_HP1_ID_WIDTH", "6");
     model_param_props.addLong("C_S_AXI_HP1_DATA_WIDTH", "32");
     model_param_props.addLong("C_S_AXI_HP2_ID_WIDTH", "6");
-    model_param_props.addLong("C_S_AXI_HP2_DATA_WIDTH", "64");
+    model_param_props.addLong("C_S_AXI_HP2_DATA_WIDTH", "32");
     model_param_props.addLong("C_S_AXI_HP3_ID_WIDTH", "6");
     model_param_props.addLong("C_S_AXI_HP3_DATA_WIDTH", "64");
     model_param_props.addLong("C_M_AXI_GP0_THREAD_ID_WIDTH", "12");
@@ -105,7 +105,7 @@ design_1_processing_system7_0_0_sc::design_1_processing_system7_0_0_sc(const sc_
     model_param_props.addLong("C_USE_S_AXI_GP1", "0");
     model_param_props.addLong("C_USE_S_AXI_HP0", "1");
     model_param_props.addLong("C_USE_S_AXI_HP1", "1");
-    model_param_props.addLong("C_USE_S_AXI_HP2", "0");
+    model_param_props.addLong("C_USE_S_AXI_HP2", "1");
     model_param_props.addLong("C_USE_S_AXI_HP3", "0");
     model_param_props.addLong("C_USE_S_AXI_ACP", "1");
     model_param_props.addLong("C_GP0_EN_MODIFIABLE_TXN", "1");
@@ -132,6 +132,8 @@ design_1_processing_system7_0_0_sc::design_1_processing_system7_0_0_sc(const sc_
   S_AXI_HP0_wr_socket = mp_impl->S_AXI_HP0_wr_socket;
   S_AXI_HP1_rd_socket = mp_impl->S_AXI_HP1_rd_socket;
   S_AXI_HP1_wr_socket = mp_impl->S_AXI_HP1_wr_socket;
+  S_AXI_HP2_rd_socket = mp_impl->S_AXI_HP2_rd_socket;
+  S_AXI_HP2_wr_socket = mp_impl->S_AXI_HP2_wr_socket;
 }
 
 design_1_processing_system7_0_0_sc::~design_1_processing_system7_0_0_sc()

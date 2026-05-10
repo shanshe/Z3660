@@ -22,9 +22,6 @@ set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_rs
 # IP: bd/design_1/ip/design_1_axi_vdma_0_1/design_1_axi_vdma_0_1.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axi_vdma_0_1 || ORIG_REF_NAME==design_1_axi_vdma_0_1} -quiet] -quiet
 
-# IP: bd/design_1/ip/design_1_axis_data_fifo_0_0/design_1_axis_data_fifo_0_0.xci
-set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axis_data_fifo_0_0 || ORIG_REF_NAME==design_1_axis_data_fifo_0_0} -quiet] -quiet
-
 # IP: bd/design_1/ip/design_1_util_vector_logic_0_1/design_1_util_vector_logic_0_1.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_util_vector_logic_0_1 || ORIG_REF_NAME==design_1_util_vector_logic_0_1} -quiet] -quiet
 
@@ -39,6 +36,18 @@ set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_vi
 
 # IP: bd/design_1/ip/design_1_axi_interconnect_1_0_1/design_1_axi_interconnect_1_0.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axi_interconnect_1_0 || ORIG_REF_NAME==design_1_axi_interconnect_1_0} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axi_vdma_0_2 || ORIG_REF_NAME==design_1_axi_vdma_0_2} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_axis_data_fifo_0_0/design_1_axis_data_fifo_0_0.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axis_data_fifo_0_0 || ORIG_REF_NAME==design_1_axis_data_fifo_0_0} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_axis_data_fifo_0_1/design_1_axis_data_fifo_0_1.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axis_data_fifo_0_1 || ORIG_REF_NAME==design_1_axis_data_fifo_0_1} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_axi_interconnect_0_4/design_1_axi_interconnect_0_4.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axi_interconnect_0_4 || ORIG_REF_NAME==design_1_axi_interconnect_0_4} -quiet] -quiet
 
 # IP: bd/design_1/ip/design_1_rst_ps7_0_200M_1_2/design_1_rst_ps7_0_200M_1_2.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_rst_ps7_0_200M_1_2 || ORIG_REF_NAME==design_1_rst_ps7_0_200M_1_2} -quiet] -quiet
@@ -58,6 +67,9 @@ set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_i2
 # IP: bd/design_1/ip/design_1_axi_interconnect_0_3/design_1_axi_interconnect_0_3.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axi_interconnect_0_3 || ORIG_REF_NAME==design_1_axi_interconnect_0_3} -quiet] -quiet
 
+# IP: bd/design_1/ip/design_1_axi_register_slice_0_2/design_1_axi_register_slice_0_2.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axi_register_slice_0_2 || ORIG_REF_NAME==design_1_axi_register_slice_0_2} -quiet] -quiet
+
 # IP: bd/design_1/ip/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_clk_wiz_0_0 || ORIG_REF_NAME==design_1_clk_wiz_0_0} -quiet] -quiet
 
@@ -72,6 +84,9 @@ set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_cp
 
 # IP: bd/design_1/ip/design_1_rst_ps7_0_200M_0/design_1_rst_ps7_0_200M_0.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_rst_ps7_0_200M_0 || ORIG_REF_NAME==design_1_rst_ps7_0_200M_0} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_xbar_0_1/design_1_xbar_0.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_xbar_0 || ORIG_REF_NAME==design_1_xbar_0} -quiet] -quiet
 
 # IP: bd/design_1/ip/design_1_axi_interconnect_0_0_1/design_1_axi_interconnect_0_0.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_axi_interconnect_0_0 || ORIG_REF_NAME==design_1_axi_interconnect_0_0} -quiet] -quiet
@@ -100,29 +115,32 @@ set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_xl
 # IP: bd/design_1/ip/design_1_z3660_0_0/design_1_z3660_0_0.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_z3660_0_0 || ORIG_REF_NAME==design_1_z3660_0_0} -quiet] -quiet
 
-# IP: bd/design_1/ip/design_1_xbar_0_1/design_1_xbar_0.xci
-set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_xbar_0 || ORIG_REF_NAME==design_1_xbar_0} -quiet] -quiet
-
-# IP: bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118.xci
-set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_118 || ORIG_REF_NAME==design_1_s00_regslice_118} -quiet] -quiet
+# IP: bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_193 || ORIG_REF_NAME==design_1_s00_regslice_193} -quiet] -quiet
 
 # IP: bd/design_1/ip/design_1_auto_pc_0_1/design_1_auto_pc_0.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_auto_pc_0 || ORIG_REF_NAME==design_1_auto_pc_0} -quiet] -quiet
 
-# IP: bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117.xci
-set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_117 || ORIG_REF_NAME==design_1_s00_regslice_117} -quiet] -quiet
-
-# IP: bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0.xci
-set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_auto_cc_0 || ORIG_REF_NAME==design_1_auto_cc_0} -quiet] -quiet
+# IP: bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_194 || ORIG_REF_NAME==design_1_s00_regslice_194} -quiet] -quiet
 
 # IP: bd/design_1/ip/design_1_auto_pc_1_1/design_1_auto_pc_1.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_auto_pc_1 || ORIG_REF_NAME==design_1_auto_pc_1} -quiet] -quiet
 
-# IP: bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119.xci
-set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_119 || ORIG_REF_NAME==design_1_s00_regslice_119} -quiet] -quiet
+# IP: bd/design_1/ip/design_1_s00_regslice_192/design_1_s00_regslice_192.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_192 || ORIG_REF_NAME==design_1_s00_regslice_192} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_auto_cc_0 || ORIG_REF_NAME==design_1_auto_cc_0} -quiet] -quiet
 
 # IP: bd/design_1/ip/design_1_auto_pc_2_1/design_1_auto_pc_2.xci
 set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_auto_pc_2 || ORIG_REF_NAME==design_1_auto_pc_2} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_s00_regslice_195/design_1_s00_regslice_195.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_195 || ORIG_REF_NAME==design_1_s00_regslice_195} -quiet] -quiet
+
+# IP: bd/design_1/ip/design_1_auto_pc_3/design_1_auto_pc_3.xci
+set_property KEEP_HIERARCHY SOFT [get_cells -hier -filter {REF_NAME==design_1_auto_pc_3 || ORIG_REF_NAME==design_1_auto_pc_3} -quiet] -quiet
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_processing_system7_0_0/design_1_processing_system7_0_0.xdc
 set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_processing_system7_0_0 || ORIG_REF_NAME==design_1_processing_system7_0_0} -quiet] {/inst } ]/inst ] -quiet] -quiet
@@ -151,7 +169,13 @@ set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filte
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_1/design_1_axi_vdma_0_1_ooc.xdc
 
-# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axis_data_fifo_0_0/design_1_axis_data_fifo_0_0_ooc.xdc
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc
+set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_axi_vdma_0_2 || ORIG_REF_NAME==design_1_axi_vdma_0_2} -quiet] {/U0 } ]/U0 ] -quiet] -quiet
+
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2_clocks.xdc
+#dup# set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_axi_vdma_0_2 || ORIG_REF_NAME==design_1_axi_vdma_0_2} -quiet] {/U0 } ]/U0 ] -quiet] -quiet
+
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2_ooc.xdc
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_rst_ps7_0_200M_1_2/design_1_rst_ps7_0_200M_1_2_board.xdc
 set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_rst_ps7_0_200M_1_2 || ORIG_REF_NAME==design_1_rst_ps7_0_200M_1_2} -quiet] {/U0 } ]/U0 ] -quiet] -quiet
@@ -180,6 +204,9 @@ set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filte
 set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_i2s_transmitter_0_0 || ORIG_REF_NAME==design_1_i2s_transmitter_0_0} -quiet] {/inst } ]/inst ] -quiet] -quiet
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_i2s_transmitter_0_0/design_1_i2s_transmitter_0_0_ooc.xdc
+
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_2/design_1_axi_register_slice_0_2_clocks.xdc
+set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_axi_register_slice_0_2 || ORIG_REF_NAME==design_1_axi_register_slice_0_2} -quiet] {/inst } ]/inst ] -quiet] -quiet
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0_board.xdc
 set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_clk_wiz_0_0 || ORIG_REF_NAME==design_1_clk_wiz_0_0} -quiet] {/inst } ]/inst ] -quiet] -quiet
@@ -242,24 +269,29 @@ set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filte
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_1_0/design_1_axi_register_slice_1_0_clocks.xdc
 set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_axi_register_slice_1_0 || ORIG_REF_NAME==design_1_axi_register_slice_1_0} -quiet] {/inst } ]/inst ] -quiet] -quiet
 
-# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc
-set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_118 || ORIG_REF_NAME==design_1_s00_regslice_118} -quiet] {/inst } ]/inst ] -quiet] -quiet
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc
+set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_193 || ORIG_REF_NAME==design_1_s00_regslice_193} -quiet] {/inst } ]/inst ] -quiet] -quiet
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_pc_0/design_1_auto_pc_0_ooc.xdc
 
-# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc
-set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_117 || ORIG_REF_NAME==design_1_s00_regslice_117} -quiet] {/inst } ]/inst ] -quiet] -quiet
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc
+set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_194 || ORIG_REF_NAME==design_1_s00_regslice_194} -quiet] {/inst } ]/inst ] -quiet] -quiet
+
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_pc_1/design_1_auto_pc_1_ooc.xdc
+
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_192/design_1_s00_regslice_192_clocks.xdc
+set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_192 || ORIG_REF_NAME==design_1_s00_regslice_192} -quiet] {/inst } ]/inst ] -quiet] -quiet
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc
 set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_auto_cc_0 || ORIG_REF_NAME==design_1_auto_cc_0} -quiet] {/inst } ]/inst ] -quiet] -quiet
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_ooc.xdc
 
-# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_pc_1/design_1_auto_pc_1_ooc.xdc
-
-# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc
-set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_119 || ORIG_REF_NAME==design_1_s00_regslice_119} -quiet] {/inst } ]/inst ] -quiet] -quiet
-
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_pc_2/design_1_auto_pc_2_ooc.xdc
+
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_195/design_1_s00_regslice_195_clocks.xdc
+set_property KEEP_HIERARCHY SOFT [get_cells [split [join [get_cells -hier -filter {REF_NAME==design_1_s00_regslice_195 || ORIG_REF_NAME==design_1_s00_regslice_195} -quiet] {/inst } ]/inst ] -quiet] -quiet
+
+# XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_pc_3/design_1_auto_pc_3_ooc.xdc
 
 # XDC: c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/design_1_ooc.xdc

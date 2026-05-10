@@ -99,8 +99,8 @@ preplace netloc z3660_0_m00_axi 1 1 1 90 580n
 levelinfo -pg 1 0 40 260 700 740
 pagesize -pg 1 -db -bbox -sgen -150 0 910 1230
 ",
-   "No Loops_ScaleFactor":"0.411765",
-   "No Loops_TopLeft":"-1115,2",
+   "No Loops_ScaleFactor":"0.405229",
+   "No Loops_TopLeft":"-1128,2",
    "Reduced Jogs_Layers":"/processing_av_system/audio_video_engine/audio_irq_1:true|/z3660_0_interrupt:true|/processing_av_system/processing_system7_0_FCLK_CLK1:true|/processing_av_system/processing_system7_0_FCLK_CLK2:true|/processing_av_system/clock_generation/clk_wiz_0_AXI_clk:true|/processing_av_system/proc_sys_reset_0_peripheral_reset:true|/processing_av_system/clock_generation/clk_wiz_0_PCLK_clk:true|/processing_av_system/interconnect_matrix/ARESETN_1:true|/processing_av_system/interconnect_matrix/rst_ps7_0_200M_peripheral_aresetn:true|/processing_av_system/audio_video_engine/M00_ARESETN_1:true|/processing_av_system/audio_video_engine/aud_mrst_1:true|/processing_av_system/processing_system7_0_FCLK_CLK0:true|/processing_av_system/clock_generation/clk_wiz_1_BCLK_clk:true|/processing_av_system/clock_generation/clk_wiz_0_nCLKEN_clk:true|/processing_av_system/clock_generation/clk_wiz_1_CPUCLK_clk:true|/Net2:true|/processing_av_system/clock_generation/clk_wiz_3_clk_out1:true|/processing_av_system/proc_sys_reset_0_peripheral_aresetn:true|/processing_av_system/clock_generation/clk_wiz_2_clk_out1:true|/processing_av_system/processing_system7_0_FCLK_RESET0_N:true|/processing_av_system/audio_video_engine/video/rst_ps7_0_200M_1_peripheral_aresetn:true|/processing_av_system/audio_video_engine/video/s_axis_aresetn_1:true|/processing_av_system/audio_video_engine/video/axi_vdma_0_mm2s_introut:true|/processing_av_system/clock_generation/clk_wiz_1_CLK90_clk:true|/Net1:true|",
    "Reduced Jogs_ScaleFactor":"0.452137",
    "Reduced Jogs_TopLeft":"-599,0",
@@ -182,6 +182,6 @@ pagesize -pg 1 -db -bbox -sgen -150 0 730 1100
 {
    "da_axi4_cnt":"10",
    "da_board_cnt":"13",
-   "da_clkrst_cnt":"57",
+   "da_clkrst_cnt":"59",
    "da_ps7_cnt":"1"
 }

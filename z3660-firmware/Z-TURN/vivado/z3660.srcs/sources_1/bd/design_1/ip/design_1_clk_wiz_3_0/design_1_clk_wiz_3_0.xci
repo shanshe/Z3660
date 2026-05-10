@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "design_1_clk_wiz_3_0",
-    "cell_name": "clk_wiz_3",
+    "cell_name": "processing_av_system/clock_generation/clk_wiz_3",
     "component_reference": "xilinx.com:ip:clk_wiz:6.0",
     "ip_revision": "13",
     "gen_directory": "../../../../../../z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_3_0",

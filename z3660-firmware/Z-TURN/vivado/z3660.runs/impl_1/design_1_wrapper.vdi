@@ -3,8 +3,8 @@
 # SW Build 4029153 on Fri Oct 13 20:14:34 MDT 2023
 # IP Build 4028589 on Sat Oct 14 00:45:43 MDT 2023
 # SharedData Build 4025554 on Tue Oct 10 17:18:54 MDT 2023
-# Start of session at: Sat Nov 22 21:32:06 2025
-# Process ID: 12688
+# Start of session at: Wed May  6 09:26:15 2026
+# Process ID: 1084
 # Current directory: C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1
 # Command line: vivado.exe -log design_1_wrapper.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source design_1_wrapper.tcl -notrace
 # Log file: C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1/design_1_wrapper.vdi
@@ -12,17 +12,18 @@
 # Running On: CoreBox-X, OS: Windows, CPU Frequency: 2208 MHz, CPU Physical cores: 2, Host memory: 17054 MB
 #-----------------------------------------------------------
 source design_1_wrapper.tcl -notrace
-create_project: Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 445.371 ; gain = 182.898
+create_project: Time (s): cpu = 00:00:15 ; elapsed = 00:00:17 . Memory (MB): peak = 446.988 ; gain = 186.531
 INFO: [IP_Flow 19-234] Refreshing IP repositories
 INFO: [IP_Flow 19-1704] No user IP repositories specified
 INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'C:/Xilinx/Vivado/2023.2/data/ip'.
+add_files: Time (s): cpu = 00:00:07 ; elapsed = 00:00:09 . Memory (MB): peak = 488.793 ; gain = 41.805
 Command: link_design -top design_1_wrapper -part xc7z020clg400-3
 Design is defaulting to srcset: sources_1
 Design is defaulting to constrset: constrs_1
 INFO: [Device 21-403] Loading part xc7z020clg400-3
-Netlist sorting complete. Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.545 . Memory (MB): peak = 975.094 ; gain = 0.000
-INFO: [Netlist 29-17] Analyzing 3627 Unisim elements for replacement
-INFO: [Netlist 29-28] Unisim Transformation completed in 1 CPU seconds
+Netlist sorting complete. Time (s): cpu = 00:00:01 ; elapsed = 00:00:01 . Memory (MB): peak = 987.684 ; gain = 0.000
+INFO: [Netlist 29-17] Analyzing 3702 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-479] Netlist was created with Vivado 2023.2
 INFO: [Project 1-570] Preparing netlist for logic optimization
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_processing_system7_0_0/design_1_processing_system7_0_0.xdc] for cell 'design_1_i/processing_av_system/processing_system7_0/inst'
@@ -71,6 +72,40 @@ WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/
 WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_1/design_1_axi_vdma_0_1.xdc:216]
 WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_1/design_1_axi_vdma_0_1.xdc:220]
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_1/design_1_axi_vdma_0_1.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_0/U0'
+Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_1/U0'
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:60]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:64]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:88]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:92]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:96]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:100]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:104]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:108]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:116]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:120]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:124]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:136]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:140]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:144]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:148]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:152]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:156]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:160]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:164]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:168]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:172]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:176]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-4' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:180]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:184]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:192]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:196]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:200]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:204]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:208]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:212]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:216]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-6' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc:220]
+Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_1/U0'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_rst_ps7_0_200M_1_2/design_1_rst_ps7_0_200M_1_2_board.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/rst_ps7_0_200M_1/U0'
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_rst_ps7_0_200M_1_2/design_1_rst_ps7_0_200M_1_2_board.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/rst_ps7_0_200M_1/U0'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_rst_ps7_0_200M_1_2/design_1_rst_ps7_0_200M_1_2.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/rst_ps7_0_200M_1/U0'
@@ -89,7 +124,7 @@ Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_2_0/design_1_clk_wiz_2_0.xdc] for cell 'design_1_i/processing_av_system/clock_generation/clk_wiz_2/inst'
 INFO: [Timing 38-35] Done setting XDC timing constraints. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_2_0/design_1_clk_wiz_2_0.xdc:54]
 INFO: [Timing 38-2] Deriving generated clocks [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_2_0/design_1_clk_wiz_2_0.xdc:54]
-get_clocks: Time (s): cpu = 00:00:13 ; elapsed = 00:00:12 . Memory (MB): peak = 1754.145 ; gain = 604.531
+get_clocks: Time (s): cpu = 00:00:22 ; elapsed = 00:00:24 . Memory (MB): peak = 1780.363 ; gain = 614.062
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_2_0/design_1_clk_wiz_2_0.xdc] for cell 'design_1_i/processing_av_system/clock_generation/clk_wiz_2/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_3_0/design_1_clk_wiz_3_0_board.xdc] for cell 'design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst'
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_3_0/design_1_clk_wiz_3_0_board.xdc] for cell 'design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst'
@@ -118,18 +153,32 @@ INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as o
 Finished Parsing XDC File [C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.srcs/constrs_1/new/timing.xdc]
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_1/design_1_axi_vdma_0_1_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_0/U0'
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_1/design_1_axi_vdma_0_1_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_0/U0'
-Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/s00_regslice/inst'
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-7' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:10]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:13]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:16]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:19]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:22]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:25]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:28]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:31]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:34]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc:38]
-Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_118/design_1_s00_regslice_118_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/s00_regslice/inst'
+Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/s00_regslice/inst'
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-7' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:10]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:13]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:16]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:19]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:22]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:25]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:28]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:31]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:34]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc:38]
+Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_193/design_1_s00_regslice_193_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/s00_regslice/inst'
+Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_1/U0'
+Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_2/design_1_axi_vdma_0_2_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_1/U0'
+Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/s00_regslice/inst'
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-7' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:10]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:13]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:16]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:19]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:22]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:25]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:28]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:31]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:34]
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc:38]
+Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_194/design_1_s00_regslice_194_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/s00_regslice/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_0_1/design_1_axi_register_slice_0_0_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_register_slice_0/inst'
 WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-7' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_0_1/design_1_axi_register_slice_0_0_clocks.xdc:10]
 WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_0_1/design_1_axi_register_slice_0_0_clocks.xdc:13]
@@ -144,78 +193,38 @@ WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_0_1/design_1_axi_register_slice_0_0_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_register_slice_0/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axis_register_slice_0_0/design_1_axis_register_slice_0_0_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axis_register_slice_0/inst'
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axis_register_slice_0_0/design_1_axis_register_slice_0_0_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axis_register_slice_0/inst'
-Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/s00_regslice/inst'
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-7' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:10]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:13]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:16]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:19]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:22]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:25]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:28]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:31]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:34]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc:38]
-Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_117/design_1_s00_regslice_117_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/s00_regslice/inst'
+Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_192/design_1_s00_regslice_192_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/s00_regslice/inst'
+WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-7' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_192/design_1_s00_regslice_192_clocks.xdc:10]
+INFO: [Common 17-14] Message 'Vivado_Tcl 4-921' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_192/design_1_s00_regslice_192_clocks.xdc:10]
+Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_192/design_1_s00_regslice_192_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/s00_regslice/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst'
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:35]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:39]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:42]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:45]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-10' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:49]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:52]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:56]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:60]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:63]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:66]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-2' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc:70]
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_auto_cc_0/design_1_auto_cc_0_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst'
+Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_2/design_1_axi_register_slice_0_2_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_register_slice_1/inst'
+Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_2/design_1_axi_register_slice_0_2_clocks.xdc] for cell 'design_1_i/processing_av_system/audio_video_engine/axi_register_slice_1/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0_late.xdc] for cell 'design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst'
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0_late.xdc] for cell 'design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst'
-Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc] for cell 'design_1_i/processing_av_system/interconnect_matrix/axi_interconnect_0/s00_couplers/s00_regslice/inst'
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-7' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:10]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:13]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:16]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:19]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:22]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:25]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:28]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:31]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:34]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc:38]
-Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_119/design_1_s00_regslice_119_clocks.xdc] for cell 'design_1_i/processing_av_system/interconnect_matrix/axi_interconnect_0/s00_couplers/s00_regslice/inst'
+Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_195/design_1_s00_regslice_195_clocks.xdc] for cell 'design_1_i/processing_av_system/interconnect_matrix/axi_interconnect_0/s00_couplers/s00_regslice/inst'
+Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_s00_regslice_195/design_1_s00_regslice_195_clocks.xdc] for cell 'design_1_i/processing_av_system/interconnect_matrix/axi_interconnect_0/s00_couplers/s00_regslice/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc] for cell 'design_1_i/processing_av_system/axi_dwidth_converter_0/inst'
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:9]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:12]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:15]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:18]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:21]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:24]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:27]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:33]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-1' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:36]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-10' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:39]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-10' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:42]
-WARNING: [Vivado_Tcl 4-921] Waiver ID 'CDC-10' -to list should not be empty. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:45]
-INFO: [Common 17-14] Message 'Vivado_Tcl 4-921' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:45]
+INFO: [Common 17-14] Message 'Vivado 12-180' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc:27]
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_dwidth_converter_0_0_1/design_1_axi_dwidth_converter_0_0_clocks.xdc] for cell 'design_1_i/processing_av_system/axi_dwidth_converter_0/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_1/design_1_axi_register_slice_0_1_clocks.xdc] for cell 'design_1_i/processing_av_system/axi_register_slice_0/inst'
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_0_1/design_1_axi_register_slice_0_1_clocks.xdc] for cell 'design_1_i/processing_av_system/axi_register_slice_0/inst'
 Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_1_0/design_1_axi_register_slice_1_0_clocks.xdc] for cell 'design_1_i/processing_av_system/axi_register_slice_1/inst'
-INFO: [Common 17-14] Message 'Vivado 12-180' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings. [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_1_0/design_1_axi_register_slice_1_0_clocks.xdc:19]
 Finished Parsing XDC File [c:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.gen/sources_1/bd/design_1/ip/design_1_axi_register_slice_1_0/design_1_axi_register_slice_1_0_clocks.xdc] for cell 'design_1_i/processing_av_system/axi_register_slice_1/inst'
-INFO: [Project 1-1714] 58 XPM XDC files have been applied to the design.
+INFO: [Project 1-1714] 62 XPM XDC files have been applied to the design.
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-INFO: [Project 1-1687] 114 scoped IP constraints or related sub-commands were skipped due to synthesis logic optimizations usually triggered by constant connectivity or unconnected output pins. To review the skipped constraints and messages, run the command 'set_param netlist.IPMsgFiltering false' before opening the design.
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 1767.574 ; gain = 0.000
+INFO: [Project 1-1687] 140 scoped IP constraints or related sub-commands were skipped due to synthesis logic optimizations usually triggered by constant connectivity or unconnected output pins. To review the skipped constraints and messages, run the command 'set_param netlist.IPMsgFiltering false' before opening the design.
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.022 . Memory (MB): peak = 1796.312 ; gain = 0.000
 INFO: [Project 1-111] Unisim Transformation Summary:
-  A total of 89 instances were transformed.
+  A total of 90 instances were transformed.
   IOBUF => IOBUF (IBUF, OBUFT): 72 instances
   RAM32M => RAM32M (RAMD32(x6), RAMS32(x2)): 15 instances
-  RAM32X1D => RAM32X1D (RAMD32(x2)): 2 instances
+  RAM32X1D => RAM32X1D (RAMD32(x2)): 3 instances
 
 19 Infos, 100 Warnings, 0 Critical Warnings and 0 Errors encountered.
 link_design completed successfully
-link_design: Time (s): cpu = 00:00:34 ; elapsed = 00:00:46 . Memory (MB): peak = 1767.574 ; gain = 1280.145
+link_design: Time (s): cpu = 00:00:58 ; elapsed = 00:01:19 . Memory (MB): peak = 1796.312 ; gain = 1307.520
 Command: place_design
 Attempting to get a license for feature 'Implementation' and/or device 'xc7z020'
 INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7z020'
@@ -234,66 +243,66 @@ Starting Placer Task
 Phase 1 Placer Initialization
 
 Phase 1.1 Placer Initialization Netlist Sorting
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.016 . Memory (MB): peak = 1767.574 ; gain = 0.000
-Phase 1.1 Placer Initialization Netlist Sorting | Checksum: 15b7d39aa
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.019 . Memory (MB): peak = 1796.312 ; gain = 0.000
+Phase 1.1 Placer Initialization Netlist Sorting | Checksum: 1afef0329
 
-Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.033 . Memory (MB): peak = 1767.574 ; gain = 0.000
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.036 . Memory (MB): peak = 1796.312 ; gain = 0.000
 INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as objects, only virtual clock 'VIRTUAL_clk_out1_design_1_clk_wiz_2_0_1' will be created. If you don't want this, please specify pin(s)/ports(s)/net(s) as objects to the command. [C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.srcs/constrs_1/new/timing.xdc:1]
 INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as objects, only virtual clock 'VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1' will be created. If you don't want this, please specify pin(s)/ports(s)/net(s) as objects to the command. [C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.srcs/constrs_1/new/timing.xdc:11]
 INFO: [Timing 38-35] Done setting XDC timing constraints.
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 1767.574 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.026 . Memory (MB): peak = 1796.312 ; gain = 0.000
 
 Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device
 WARNING: [Place 30-461] A non-muxed BUFG 'design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/clk_inst/clkin1_bufg' is driven by another global buffer 'design_1_i/processing_av_system/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG'. Remove non-muxed BUFG if it is not desired.
 INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as objects, only virtual clock 'VIRTUAL_clk_out1_design_1_clk_wiz_2_0_1' will be created. If you don't want this, please specify pin(s)/ports(s)/net(s) as objects to the command. [C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.srcs/constrs_1/new/timing.xdc:1]
 INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as objects, only virtual clock 'VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1' will be created. If you don't want this, please specify pin(s)/ports(s)/net(s) as objects to the command. [C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.srcs/constrs_1/new/timing.xdc:11]
 INFO: [Timing 38-35] Done setting XDC timing constraints.
-Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device | Checksum: 4d8748c2
+Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device | Checksum: 9c35eb38
 
-Time (s): cpu = 00:00:09 ; elapsed = 00:00:08 . Memory (MB): peak = 1767.574 ; gain = 0.000
+Time (s): cpu = 00:00:15 ; elapsed = 00:00:14 . Memory (MB): peak = 1796.312 ; gain = 0.000
 
 Phase 1.3 Build Placer Netlist Model
-Phase 1.3 Build Placer Netlist Model | Checksum: 1cc6c2bfc
+Phase 1.3 Build Placer Netlist Model | Checksum: db74d4c2
 
-Time (s): cpu = 00:00:23 ; elapsed = 00:00:18 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:00:40 ; elapsed = 00:00:32 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 1.4 Constrain Clocks/Macros
-Phase 1.4 Constrain Clocks/Macros | Checksum: 1cc6c2bfc
+Phase 1.4 Constrain Clocks/Macros | Checksum: db74d4c2
 
-Time (s): cpu = 00:00:23 ; elapsed = 00:00:18 . Memory (MB): peak = 1981.148 ; gain = 213.574
-Phase 1 Placer Initialization | Checksum: 1cc6c2bfc
+Time (s): cpu = 00:00:40 ; elapsed = 00:00:32 . Memory (MB): peak = 2024.148 ; gain = 227.836
+Phase 1 Placer Initialization | Checksum: db74d4c2
 
-Time (s): cpu = 00:00:23 ; elapsed = 00:00:18 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:00:40 ; elapsed = 00:00:32 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 2 Global Placement
 
 Phase 2.1 Floorplanning
-Phase 2.1 Floorplanning | Checksum: 18b0468ec
+Phase 2.1 Floorplanning | Checksum: ce84e95a
 
-Time (s): cpu = 00:00:26 ; elapsed = 00:00:20 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:00:45 ; elapsed = 00:00:36 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 2.2 Update Timing before SLR Path Opt
-Phase 2.2 Update Timing before SLR Path Opt | Checksum: 16088207a
+Phase 2.2 Update Timing before SLR Path Opt | Checksum: 17864fb87
 
-Time (s): cpu = 00:00:28 ; elapsed = 00:00:21 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:00:49 ; elapsed = 00:00:39 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 2.3 Post-Processing in Floorplanning
-Phase 2.3 Post-Processing in Floorplanning | Checksum: 16088207a
+Phase 2.3 Post-Processing in Floorplanning | Checksum: 17318392a
 
-Time (s): cpu = 00:00:28 ; elapsed = 00:00:21 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:00:49 ; elapsed = 00:00:39 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 2.4 Global Placement Core
 
 Phase 2.4.1 UpdateTiming Before Physical Synthesis
-Phase 2.4.1 UpdateTiming Before Physical Synthesis | Checksum: 21780d98a
+Phase 2.4.1 UpdateTiming Before Physical Synthesis | Checksum: 1da547341
 
-Time (s): cpu = 00:01:07 ; elapsed = 00:00:44 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:01:39 ; elapsed = 00:01:21 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 2.4.2 Physical Synthesis In Placer
-INFO: [Physopt 32-1035] Found 1 LUTNM shape to break, 2725 LUT instances to create LUTNM shape
+INFO: [Physopt 32-1035] Found 1 LUTNM shape to break, 3055 LUT instances to create LUTNM shape
 INFO: [Physopt 32-1044] Break lutnm for timing: one critical 1, two critical 0, total 1, new lutff created 0
-INFO: [Physopt 32-1138] End 1 Pass. Optimized 1244 nets or LUTs. Breaked 1 LUT, combined 1243 existing LUTs and moved 0 existing LUT
+INFO: [Physopt 32-1138] End 1 Pass. Optimized 1401 nets or LUTs. Breaked 1 LUT, combined 1400 existing LUTs and moved 0 existing LUT
 INFO: [Physopt 32-65] No nets found for high-fanout optimization.
 INFO: [Physopt 32-232] Optimized 0 net. Created 0 new instance.
 INFO: [Physopt 32-775] End 1 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
@@ -312,7 +321,7 @@ INFO: [Physopt 32-846] No candidate cells for URAM register optimization found i
 INFO: [Physopt 32-775] End 1 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
 INFO: [Physopt 32-949] No candidate nets found for dynamic/static region interface net replication
 INFO: [Physopt 32-775] End 1 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 1981.148 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.031 . Memory (MB): peak = 2024.148 ; gain = 0.000
 
 Summary of Physical Synthesis Optimizations
 ============================================
@@ -321,78 +330,78 @@ Summary of Physical Synthesis Optimizations
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 |  Optimization                                     |  Added Cells  |  Removed Cells  |  Optimized Cells/Nets  |  Dont Touch  |  Iterations  |  Elapsed   |
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
-|  LUT Combining                                    |            1  |           1243  |                  1244  |           0  |           1  |  00:00:04  |
+|  LUT Combining                                    |            1  |           1400  |                  1401  |           0  |           1  |  00:00:08  |
 |  Retime                                           |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
-|  Very High Fanout                                 |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
+|  Very High Fanout                                 |            0  |              0  |                     0  |           0  |           1  |  00:00:01  |
 |  DSP Register                                     |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
 |  Shift Register to Pipeline                       |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
 |  Shift Register                                   |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
 |  BRAM Register                                    |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
 |  URAM Register                                    |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
 |  Dynamic/Static Region Interface Net Replication  |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
-|  Total                                            |            1  |           1243  |                  1244  |           0  |           9  |  00:00:05  |
+|  Total                                            |            1  |           1400  |                  1401  |           0  |           9  |  00:00:09  |
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-Phase 2.4.2 Physical Synthesis In Placer | Checksum: 132281aef
+Phase 2.4.2 Physical Synthesis In Placer | Checksum: 1d42b44a4
 
-Time (s): cpu = 00:01:14 ; elapsed = 00:00:51 . Memory (MB): peak = 1981.148 ; gain = 213.574
-Phase 2.4 Global Placement Core | Checksum: 10bf49cd8
+Time (s): cpu = 00:01:53 ; elapsed = 00:01:35 . Memory (MB): peak = 2024.148 ; gain = 227.836
+Phase 2.4 Global Placement Core | Checksum: 21e239e99
 
-Time (s): cpu = 00:01:16 ; elapsed = 00:00:53 . Memory (MB): peak = 1981.148 ; gain = 213.574
-Phase 2 Global Placement | Checksum: 10bf49cd8
+Time (s): cpu = 00:01:56 ; elapsed = 00:01:40 . Memory (MB): peak = 2024.148 ; gain = 227.836
+Phase 2 Global Placement | Checksum: 21e239e99
 
-Time (s): cpu = 00:01:17 ; elapsed = 00:00:53 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:01:56 ; elapsed = 00:01:40 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3 Detail Placement
 
 Phase 3.1 Commit Multi Column Macros
-Phase 3.1 Commit Multi Column Macros | Checksum: 1373b128e
+Phase 3.1 Commit Multi Column Macros | Checksum: 15748049e
 
-Time (s): cpu = 00:01:19 ; elapsed = 00:00:54 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:01 ; elapsed = 00:01:43 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.2 Commit Most Macros & LUTRAMs
-Phase 3.2 Commit Most Macros & LUTRAMs | Checksum: 1f5389cdd
+Phase 3.2 Commit Most Macros & LUTRAMs | Checksum: 14c8f07b4
 
-Time (s): cpu = 00:01:24 ; elapsed = 00:00:58 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:11 ; elapsed = 00:01:51 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.3 Area Swap Optimization
-Phase 3.3 Area Swap Optimization | Checksum: 20d182abe
+Phase 3.3 Area Swap Optimization | Checksum: 1347f6098
 
-Time (s): cpu = 00:01:25 ; elapsed = 00:00:58 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:12 ; elapsed = 00:01:51 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.4 Pipeline Register Optimization
-Phase 3.4 Pipeline Register Optimization | Checksum: 2429cfcf5
+Phase 3.4 Pipeline Register Optimization | Checksum: 1a0166af1
 
-Time (s): cpu = 00:01:25 ; elapsed = 00:00:58 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:12 ; elapsed = 00:01:51 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.5 Fast Optimization
-Phase 3.5 Fast Optimization | Checksum: 29260e626
+Phase 3.5 Fast Optimization | Checksum: 14c085811
 
-Time (s): cpu = 00:01:36 ; elapsed = 00:01:05 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:31 ; elapsed = 00:02:03 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.6 Small Shape Detail Placement
-Phase 3.6 Small Shape Detail Placement | Checksum: 21791cf4e
+Phase 3.6 Small Shape Detail Placement | Checksum: 10bb15650
 
-Time (s): cpu = 00:01:49 ; elapsed = 00:01:17 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:48 ; elapsed = 00:02:21 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.7 Re-assign LUT pins
-Phase 3.7 Re-assign LUT pins | Checksum: 1974b9e8f
+Phase 3.7 Re-assign LUT pins | Checksum: d85d0f4f
 
-Time (s): cpu = 00:01:51 ; elapsed = 00:01:19 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:50 ; elapsed = 00:02:24 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.8 Pipeline Register Optimization
-Phase 3.8 Pipeline Register Optimization | Checksum: 124918d76
+Phase 3.8 Pipeline Register Optimization | Checksum: 176a67558
 
-Time (s): cpu = 00:01:51 ; elapsed = 00:01:19 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:02:51 ; elapsed = 00:02:24 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 3.9 Fast Optimization
-Phase 3.9 Fast Optimization | Checksum: 213227e30
+Phase 3.9 Fast Optimization | Checksum: 146f89631
 
-Time (s): cpu = 00:02:04 ; elapsed = 00:01:27 . Memory (MB): peak = 1981.148 ; gain = 213.574
-Phase 3 Detail Placement | Checksum: 213227e30
+Time (s): cpu = 00:03:11 ; elapsed = 00:02:35 . Memory (MB): peak = 2024.148 ; gain = 227.836
+Phase 3 Detail Placement | Checksum: 146f89631
 
-Time (s): cpu = 00:02:04 ; elapsed = 00:01:27 . Memory (MB): peak = 1981.148 ; gain = 213.574
+Time (s): cpu = 00:03:11 ; elapsed = 00:02:36 . Memory (MB): peak = 2024.148 ; gain = 227.836
 
 Phase 4 Post Placement Optimization and Clean-Up
 
@@ -402,7 +411,7 @@ INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as o
 INFO: [Timing 38-35] Done setting XDC timing constraints.
 
 Phase 4.1.1 Post Placement Optimization
-Post Placement Optimization Initialization | Checksum: 1a8a6ecd3
+Post Placement Optimization Initialization | Checksum: 89b5fe5b
 
 Phase 4.1.1.1 BUFG Insertion
 
@@ -410,35 +419,35 @@ Starting Physical Synthesis Task
 
 Phase 1 Physical Synthesis Initialization
 INFO: [Physopt 32-721] Multithreading enabled for phys_opt_design using a maximum of 2 CPUs
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.322 | TNS=-20.549 |
-Phase 1 Physical Synthesis Initialization | Checksum: 2573848ce
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.332 | TNS=-9.065 |
+Phase 1 Physical Synthesis Initialization | Checksum: b8569995
 
-Time (s): cpu = 00:00:04 ; elapsed = 00:00:02 . Memory (MB): peak = 2064.656 ; gain = 42.953
+Time (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 2122.121 ; gain = 47.309
 INFO: [Place 46-33] Processed net design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/SOFT_RESET_I/Reset2IP_Reset, BUFG insertion was skipped due to placement/routing conflicts.
 INFO: [Place 46-33] Processed net design_1_i/processing_av_system/clock_generation/clk_wiz_2/inst/SOFT_RESET_I/Reset2IP_Reset, BUFG insertion was skipped due to placement/routing conflicts.
 INFO: [Place 46-56] BUFG insertion identified 2 candidate nets. Inserted BUFG: 0, Replicated BUFG Driver: 0, Skipped due to Placement/Routing Conflicts: 2, Skipped due to Timing Degradation: 0, Skipped due to netlist editing failed: 0.
-Ending Physical Synthesis Task | Checksum: 2573848ce
+Ending Physical Synthesis Task | Checksum: b8569995
 
-Time (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 2067.336 ; gain = 45.633
-Phase 4.1.1.1 BUFG Insertion | Checksum: 1a8a6ecd3
+Time (s): cpu = 00:00:06 ; elapsed = 00:00:04 . Memory (MB): peak = 2126.812 ; gain = 52.000
+Phase 4.1.1.1 BUFG Insertion | Checksum: 89b5fe5b
 
-Time (s): cpu = 00:02:25 ; elapsed = 00:01:41 . Memory (MB): peak = 2067.336 ; gain = 299.762
+Time (s): cpu = 00:03:39 ; elapsed = 00:02:54 . Memory (MB): peak = 2126.812 ; gain = 330.500
 
 Phase 4.1.1.2 Post Placement Timing Optimization
-INFO: [Place 30-746] Post Placement Timing Summary WNS=-10.221. For the most accurate timing information please run report_timing.
-Phase 4.1.1.2 Post Placement Timing Optimization | Checksum: 1e192e454
+INFO: [Place 30-746] Post Placement Timing Summary WNS=-0.277. For the most accurate timing information please run report_timing.
+Phase 4.1.1.2 Post Placement Timing Optimization | Checksum: 3f39d95a
 
-Time (s): cpu = 00:02:51 ; elapsed = 00:02:01 . Memory (MB): peak = 2077.688 ; gain = 310.113
+Time (s): cpu = 00:04:20 ; elapsed = 00:03:25 . Memory (MB): peak = 2133.160 ; gain = 336.848
 
-Time (s): cpu = 00:02:51 ; elapsed = 00:02:01 . Memory (MB): peak = 2077.688 ; gain = 310.113
-Phase 4.1 Post Commit Optimization | Checksum: 1e192e454
+Time (s): cpu = 00:04:20 ; elapsed = 00:03:25 . Memory (MB): peak = 2133.160 ; gain = 336.848
+Phase 4.1 Post Commit Optimization | Checksum: 3f39d95a
 
-Time (s): cpu = 00:02:51 ; elapsed = 00:02:02 . Memory (MB): peak = 2077.688 ; gain = 310.113
+Time (s): cpu = 00:04:20 ; elapsed = 00:03:25 . Memory (MB): peak = 2133.160 ; gain = 336.848
 
 Phase 4.2 Post Placement Cleanup
-Phase 4.2 Post Placement Cleanup | Checksum: 1e192e454
+Phase 4.2 Post Placement Cleanup | Checksum: 3f39d95a
 
-Time (s): cpu = 00:02:52 ; elapsed = 00:02:02 . Memory (MB): peak = 2077.688 ; gain = 310.113
+Time (s): cpu = 00:04:21 ; elapsed = 00:03:26 . Memory (MB): peak = 2133.160 ; gain = 336.848
 
 Phase 4.3 Placer Reporting
 
@@ -450,109 +459,140 @@ INFO: [Place 30-612] Post-Placement Estimated Congestion
 |___________|___________________|___________________|
 |      North|                1x1|                2x2|
 |___________|___________________|___________________|
-|      South|                1x1|                2x2|
+|      South|                1x1|                4x4|
 |___________|___________________|___________________|
 |       East|                1x1|                2x2|
 |___________|___________________|___________________|
-|       West|                1x1|                1x1|
+|       West|                1x1|                2x2|
 |___________|___________________|___________________|
 
-Phase 4.3.1 Print Estimated Congestion | Checksum: 1e192e454
+Phase 4.3.1 Print Estimated Congestion | Checksum: 3f39d95a
 
-Time (s): cpu = 00:02:52 ; elapsed = 00:02:02 . Memory (MB): peak = 2077.688 ; gain = 310.113
-Phase 4.3 Placer Reporting | Checksum: 1e192e454
+Time (s): cpu = 00:04:21 ; elapsed = 00:03:26 . Memory (MB): peak = 2133.160 ; gain = 336.848
+Phase 4.3 Placer Reporting | Checksum: 3f39d95a
 
-Time (s): cpu = 00:02:52 ; elapsed = 00:02:02 . Memory (MB): peak = 2077.688 ; gain = 310.113
+Time (s): cpu = 00:04:21 ; elapsed = 00:03:26 . Memory (MB): peak = 2133.160 ; gain = 336.848
 
 Phase 4.4 Final Placement Cleanup
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.015 . Memory (MB): peak = 2077.688 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.021 . Memory (MB): peak = 2133.160 ; gain = 0.000
 
-Time (s): cpu = 00:02:52 ; elapsed = 00:02:02 . Memory (MB): peak = 2077.688 ; gain = 310.113
-Phase 4 Post Placement Optimization and Clean-Up | Checksum: 215cca97f
+Time (s): cpu = 00:04:21 ; elapsed = 00:03:26 . Memory (MB): peak = 2133.160 ; gain = 336.848
+Phase 4 Post Placement Optimization and Clean-Up | Checksum: 126d18bb6
 
-Time (s): cpu = 00:02:52 ; elapsed = 00:02:03 . Memory (MB): peak = 2077.688 ; gain = 310.113
-Ending Placer Task | Checksum: 18ef9bda0
+Time (s): cpu = 00:04:21 ; elapsed = 00:03:26 . Memory (MB): peak = 2133.160 ; gain = 336.848
+Ending Placer Task | Checksum: 1196b983c
 
-Time (s): cpu = 00:02:52 ; elapsed = 00:02:03 . Memory (MB): peak = 2077.688 ; gain = 310.113
+Time (s): cpu = 00:04:22 ; elapsed = 00:03:27 . Memory (MB): peak = 2133.160 ; gain = 336.848
 66 Infos, 101 Warnings, 0 Critical Warnings and 0 Errors encountered.
 place_design completed successfully
-place_design: Time (s): cpu = 00:02:58 ; elapsed = 00:02:06 . Memory (MB): peak = 2077.688 ; gain = 310.113
+place_design: Time (s): cpu = 00:04:29 ; elapsed = 00:03:31 . Memory (MB): peak = 2133.160 ; gain = 336.848
 INFO: [runtcl-4] Executing : report_io -file design_1_wrapper_io_placed.rpt
-report_io: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.137 . Memory (MB): peak = 2077.688 ; gain = 0.000
+report_io: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.147 . Memory (MB): peak = 2133.160 ; gain = 0.000
 INFO: [runtcl-4] Executing : report_utilization -file design_1_wrapper_utilization_placed.rpt -pb design_1_wrapper_utilization_placed.pb
 INFO: [runtcl-4] Executing : report_control_sets -verbose -file design_1_wrapper_control_sets_placed.rpt
-report_control_sets: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.083 . Memory (MB): peak = 2077.688 ; gain = 0.000
+report_control_sets: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.102 . Memory (MB): peak = 2133.160 ; gain = 0.000
 INFO: [Timing 38-480] Writing timing data to binary archive.
-Write ShapeDB Complete: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.348 . Memory (MB): peak = 2085.707 ; gain = 8.020
-Wrote PlaceDB: Time (s): cpu = 00:00:13 ; elapsed = 00:00:05 . Memory (MB): peak = 2085.707 ; gain = 8.020
-Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2085.707 ; gain = 0.000
+Write ShapeDB Complete: Time (s): cpu = 00:00:02 ; elapsed = 00:00:00.369 . Memory (MB): peak = 2142.156 ; gain = 8.996
+Wrote PlaceDB: Time (s): cpu = 00:00:17 ; elapsed = 00:00:07 . Memory (MB): peak = 2142.156 ; gain = 8.996
+Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.001 . Memory (MB): peak = 2142.156 ; gain = 0.000
 Writing XDEF routing.
 Writing XDEF routing logical nets.
 Writing XDEF routing special nets.
-Wrote RouteStorage: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.037 . Memory (MB): peak = 2085.707 ; gain = 0.000
-Wrote Netlist Cache: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.090 . Memory (MB): peak = 2085.707 ; gain = 0.000
-Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.019 . Memory (MB): peak = 2085.707 ; gain = 0.000
-Write Physdb Complete: Time (s): cpu = 00:00:14 ; elapsed = 00:00:05 . Memory (MB): peak = 2085.707 ; gain = 8.020
+Wrote RouteStorage: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.049 . Memory (MB): peak = 2142.156 ; gain = 0.000
+Wrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.114 . Memory (MB): peak = 2142.156 ; gain = 0.000
+Wrote Device Cache: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.027 . Memory (MB): peak = 2142.156 ; gain = 0.000
+Write Physdb Complete: Time (s): cpu = 00:00:18 ; elapsed = 00:00:07 . Memory (MB): peak = 2142.156 ; gain = 8.996
 INFO: [Common 17-1381] The checkpoint 'C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1/design_1_wrapper_placed.dcp' has been generated.
-write_checkpoint: Time (s): cpu = 00:00:17 ; elapsed = 00:00:10 . Memory (MB): peak = 2085.707 ; gain = 8.020
+write_checkpoint: Time (s): cpu = 00:00:21 ; elapsed = 00:00:12 . Memory (MB): peak = 2142.156 ; gain = 8.996
 Command: phys_opt_design
 Attempting to get a license for feature 'Implementation' and/or device 'xc7z020'
 INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7z020'
 
 Starting Initial Update Timing Task
 
-Time (s): cpu = 00:00:13 ; elapsed = 00:00:07 . Memory (MB): peak = 2132.398 ; gain = 46.691
-INFO: [Vivado_Tcl 4-1435] PhysOpt_Tcl_Interface Runtime Before Starting Physical Synthesis Task | CPU: 13.00s |  WALL: 7.58s
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.015 . Memory (MB): peak = 2132.500 ; gain = 0.102
+Time (s): cpu = 00:00:19 ; elapsed = 00:00:11 . Memory (MB): peak = 2193.367 ; gain = 51.211
+INFO: [Vivado_Tcl 4-1435] PhysOpt_Tcl_Interface Runtime Before Starting Physical Synthesis Task | CPU: 20.00s |  WALL: 11.37s
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.022 . Memory (MB): peak = 2193.500 ; gain = 0.133
 
 Starting Physical Synthesis Task
 
 Phase 1 Physical Synthesis Initialization
 INFO: [Physopt 32-721] Multithreading enabled for phys_opt_design using a maximum of 2 CPUs
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.221 | TNS=-20.439 |
-Phase 1 Physical Synthesis Initialization | Checksum: 2730bdad6
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.277 | TNS=-7.249 |
+Phase 1 Physical Synthesis Initialization | Checksum: 815da0a5
 
-Time (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 2134.793 ; gain = 2.293
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.221 | TNS=-20.439 |
+Time (s): cpu = 00:00:12 ; elapsed = 00:00:06 . Memory (MB): peak = 2195.781 ; gain = 2.281
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.277 | TNS=-7.249 |
 
 Phase 2 DSP Register Optimization
 INFO: [Physopt 32-456] No candidate cells for DSP register optimization found in the design.
 INFO: [Physopt 32-775] End 2 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
-Phase 2 DSP Register Optimization | Checksum: 2730bdad6
+Phase 2 DSP Register Optimization | Checksum: 815da0a5
 
-Time (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 2134.793 ; gain = 2.293
+Time (s): cpu = 00:00:12 ; elapsed = 00:00:07 . Memory (MB): peak = 2195.781 ; gain = 2.281
 
 Phase 3 Critical Path Optimization
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.221 | TNS=-20.439 |
-INFO: [Physopt 32-663] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/I2S_TX_V1_0_TIMGEN_INST/oLRClk.  Re-placed instance design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/I2S_TX_V1_0_TIMGEN_INST/rLRClk_reg
-INFO: [Physopt 32-735] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/I2S_TX_V1_0_TIMGEN_INST/oLRClk. Optimization improves timing on the net.
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.218 | TNS=-20.345 |
-INFO: [Physopt 32-663] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData.  Re-placed instance design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/rSDataOut_reg[31]
-INFO: [Physopt 32-735] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData. Optimization improves timing on the net.
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.166 | TNS=-20.293 |
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst/clk_out1_design_1_clk_wiz_3_0. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst/clk_out1_design_1_clk_wiz_3_0. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.166 | TNS=-20.293 |
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.033 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Phase 3 Critical Path Optimization | Checksum: 2730bdad6
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.277 | TNS=-7.249 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[13].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[13]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[13]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.277 | TNS=-7.124 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[14].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[14]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[14]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.277 | TNS=-6.999 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[1].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[1]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[1]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.277 | TNS=-6.874 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[3].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[3]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[3]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.272 | TNS=-6.749 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[12].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[12]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[12]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.272 | TNS=-6.654 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[24].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[24]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[24]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.272 | TNS=-6.600 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[26].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[26]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[26]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.271 | TNS=-6.546 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/p_6_in.  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[15]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/p_6_in. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.271 | TNS=-6.493 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[18].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[18]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[18]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.271 | TNS=-6.440 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[31].  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[31]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[31]. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.271 | TNS=-6.370 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/p_8_in.  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[7]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/p_8_in. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.250 | TNS=-6.300 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/p_3_in.  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[22]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/p_3_in. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.250 | TNS=-6.251 |
+INFO: [Physopt 32-663] Processed net design_1_i/z3660_0/inst/p_4_in.  Re-placed instance design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[29]
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/p_4_in. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-0.247 | TNS=-6.202 |
+INFO: [Physopt 32-702] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg_n_0_[20]. Optimizations did not improve timing on the net.
+INFO: [Physopt 32-702] Processed net design_1_i/z3660_0/inst/ENcondition. Optimizations did not improve timing on the net.
+INFO: [Physopt 32-702] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state[32]_i_3_n_0. Optimizations did not improve timing on the net.
+INFO: [Physopt 32-608] Optimized 1 net.  Swapped 18 pins.
+INFO: [Physopt 32-735] Processed net design_1_i/z3660_0/inst/FSM_onehot_RAM_state[32]_i_5_n_0. Optimization improves timing on the net.
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=0.045 | TNS=0.000 |
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=0.045 | TNS=0.000 |
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.017 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Phase 3 Critical Path Optimization | Checksum: b9dc9e41
 
-Time (s): cpu = 00:00:10 ; elapsed = 00:00:06 . Memory (MB): peak = 2134.793 ; gain = 2.293
+Time (s): cpu = 00:00:15 ; elapsed = 00:00:08 . Memory (MB): peak = 2195.781 ; gain = 2.281
 
 Phase 4 Critical Path Optimization
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.166 | TNS=-20.293 |
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst/clk_out1_design_1_clk_wiz_3_0. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-702] Processed net design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst/clk_out1_design_1_clk_wiz_3_0. Optimizations did not improve timing on the net.
-INFO: [Physopt 32-619] Estimated Timing Summary | WNS=-10.166 | TNS=-20.293 |
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.016 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Phase 4 Critical Path Optimization | Checksum: 2730bdad6
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=0.045 | TNS=0.000 |
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=0.045 | TNS=0.000 |
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.016 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Phase 4 Critical Path Optimization | Checksum: b9dc9e41
 
-Time (s): cpu = 00:00:10 ; elapsed = 00:00:06 . Memory (MB): peak = 2134.793 ; gain = 2.293
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.015 . Memory (MB): peak = 2134.793 ; gain = 0.000
-INFO: [Physopt 32-603] Post Physical Optimization Timing Summary | WNS=-10.166 | TNS=-20.293 |
+Time (s): cpu = 00:00:15 ; elapsed = 00:00:08 . Memory (MB): peak = 2195.781 ; gain = 2.281
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.019 . Memory (MB): peak = 2195.781 ; gain = 0.000
+INFO: [Physopt 32-603] Post Physical Optimization Timing Summary | WNS=0.045 | TNS=0.000 |
 
 Summary of Physical Synthesis Optimizations
 ============================================
@@ -562,32 +602,32 @@ Summary of Physical Synthesis Optimizations
 |  Optimization   |  WNS Gain (ns)  |  TNS Gain (ns)  |  Added Cells  |  Removed Cells  |  Optimized Cells/Nets  |  Dont Touch  |  Iterations  |  Elapsed   |
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
 |  DSP Register   |          0.000  |          0.000  |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
-|  Critical Path  |          0.054  |          0.146  |            0  |              0  |                     2  |           0  |           2  |  00:00:01  |
-|  Total          |          0.054  |          0.146  |            0  |              0  |                     2  |           0  |           3  |  00:00:01  |
+|  Critical Path  |          0.322  |          7.249  |            0  |              0  |                    14  |           0  |           2  |  00:00:02  |
+|  Total          |          0.322  |          7.249  |            0  |              0  |                    14  |           0  |           3  |  00:00:02  |
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Ending Physical Synthesis Task | Checksum: 1879b3766
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.017 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Ending Physical Synthesis Task | Checksum: c0665ba0
 
-Time (s): cpu = 00:00:11 ; elapsed = 00:00:06 . Memory (MB): peak = 2134.793 ; gain = 2.293
+Time (s): cpu = 00:00:16 ; elapsed = 00:00:09 . Memory (MB): peak = 2195.781 ; gain = 2.281
 INFO: [Common 17-83] Releasing license: Implementation
-98 Infos, 101 Warnings, 0 Critical Warnings and 0 Errors encountered.
+129 Infos, 101 Warnings, 0 Critical Warnings and 0 Errors encountered.
 phys_opt_design completed successfully
-phys_opt_design: Time (s): cpu = 00:00:24 ; elapsed = 00:00:14 . Memory (MB): peak = 2134.793 ; gain = 49.086
+phys_opt_design: Time (s): cpu = 00:00:36 ; elapsed = 00:00:20 . Memory (MB): peak = 2195.781 ; gain = 53.625
 INFO: [Timing 38-480] Writing timing data to binary archive.
-Write ShapeDB Complete: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.260 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Wrote PlaceDB: Time (s): cpu = 00:00:13 ; elapsed = 00:00:05 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2134.793 ; gain = 0.000
+Write ShapeDB Complete: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.246 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Wrote PlaceDB: Time (s): cpu = 00:00:14 ; elapsed = 00:00:06 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2195.781 ; gain = 0.000
 Writing XDEF routing.
 Writing XDEF routing logical nets.
 Writing XDEF routing special nets.
-Wrote RouteStorage: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.031 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Wrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.100 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.019 . Memory (MB): peak = 2134.793 ; gain = 0.000
-Write Physdb Complete: Time (s): cpu = 00:00:14 ; elapsed = 00:00:05 . Memory (MB): peak = 2134.793 ; gain = 0.000
+Wrote RouteStorage: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.032 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Wrote Netlist Cache: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.132 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.028 . Memory (MB): peak = 2195.781 ; gain = 0.000
+Write Physdb Complete: Time (s): cpu = 00:00:15 ; elapsed = 00:00:06 . Memory (MB): peak = 2195.781 ; gain = 0.000
 INFO: [Common 17-1381] The checkpoint 'C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1/design_1_wrapper_physopt.dcp' has been generated.
-write_checkpoint: Time (s): cpu = 00:00:17 ; elapsed = 00:00:10 . Memory (MB): peak = 2134.793 ; gain = 0.000
+write_checkpoint: Time (s): cpu = 00:00:18 ; elapsed = 00:00:11 . Memory (MB): peak = 2195.781 ; gain = 0.000
 Command: route_design
 Attempting to get a license for feature 'Implementation' and/or device 'xc7z020'
 INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7z020'
@@ -601,167 +641,131 @@ Starting Routing Task
 INFO: [Route 35-254] Multithreading enabled for route_design using a maximum of 8 CPUs
 
 Phase 1 Build RT Design
-Checksum: PlaceDB: 221bcb8d ConstDB: 0 ShapeSum: 676acefe RouteDB: 0
-Post Restoration Checksum: NetGraph: 610e601f | NumContArr: c93fe80a | Constraints: c2a8fa9d | Timing: c2a8fa9d
-Phase 1 Build RT Design | Checksum: 2afa03d63
+Checksum: PlaceDB: 676c504e ConstDB: 0 ShapeSum: f1a2316 RouteDB: 0
+Post Restoration Checksum: NetGraph: 3247e823 | NumContArr: 96c0524f | Constraints: c2a8fa9d | Timing: c2a8fa9d
+Phase 1 Build RT Design | Checksum: 24e5a2fac
 
-Time (s): cpu = 00:00:56 ; elapsed = 00:00:42 . Memory (MB): peak = 2218.508 ; gain = 83.715
+Time (s): cpu = 00:00:56 ; elapsed = 00:00:40 . Memory (MB): peak = 2273.887 ; gain = 78.105
 
 Phase 2 Router Initialization
 
 Phase 2.1 Fix Topology Constraints
-Phase 2.1 Fix Topology Constraints | Checksum: 2afa03d63
+Phase 2.1 Fix Topology Constraints | Checksum: 24e5a2fac
 
-Time (s): cpu = 00:00:57 ; elapsed = 00:00:42 . Memory (MB): peak = 2218.508 ; gain = 83.715
+Time (s): cpu = 00:00:57 ; elapsed = 00:00:41 . Memory (MB): peak = 2273.887 ; gain = 78.105
 
 Phase 2.2 Pre Route Cleanup
-Phase 2.2 Pre Route Cleanup | Checksum: 2afa03d63
+Phase 2.2 Pre Route Cleanup | Checksum: 24e5a2fac
 
-Time (s): cpu = 00:00:57 ; elapsed = 00:00:42 . Memory (MB): peak = 2218.508 ; gain = 83.715
+Time (s): cpu = 00:00:57 ; elapsed = 00:00:41 . Memory (MB): peak = 2273.887 ; gain = 78.105
  Number of Nodes with overlaps = 0
 
 Phase 2.3 Update Timing
-Phase 2.3 Update Timing | Checksum: 3037c17b2
+Phase 2.3 Update Timing | Checksum: 29149cbb4
 
-Time (s): cpu = 00:01:23 ; elapsed = 00:00:58 . Memory (MB): peak = 2277.023 ; gain = 142.230
-INFO: [Route 35-416] Intermediate Timing Summary | WNS=-10.173| TNS=-20.275| WHS=-1.181 | THS=-3024.144|
+Time (s): cpu = 00:01:26 ; elapsed = 00:00:59 . Memory (MB): peak = 2343.703 ; gain = 147.922
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=0.073  | TNS=0.000  | WHS=-1.086 | THS=-4480.753|
 
 
 Phase 2.4 Update Timing for Bus Skew
 
 Phase 2.4.1 Update Timing
-Phase 2.4.1 Update Timing | Checksum: 29d3fd33d
+Phase 2.4.1 Update Timing | Checksum: 209050700
 
-Time (s): cpu = 00:01:37 ; elapsed = 00:01:07 . Memory (MB): peak = 2388.367 ; gain = 253.574
-INFO: [Route 35-416] Intermediate Timing Summary | WNS=-10.173| TNS=-20.274| WHS=N/A    | THS=N/A    |
+Time (s): cpu = 00:01:41 ; elapsed = 00:01:08 . Memory (MB): peak = 2478.129 ; gain = 282.348
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=0.073  | TNS=0.000  | WHS=N/A    | THS=N/A    |
 
-Phase 2.4 Update Timing for Bus Skew | Checksum: 2c500b7c0
+Phase 2.4 Update Timing for Bus Skew | Checksum: 21a12c573
 
-Time (s): cpu = 00:01:37 ; elapsed = 00:01:07 . Memory (MB): peak = 2388.367 ; gain = 253.574
+Time (s): cpu = 00:01:41 ; elapsed = 00:01:08 . Memory (MB): peak = 2481.391 ; gain = 285.609
 
 Router Utilization Summary
-  Global Vertical Routing Utilization    = 0.277415 %
-  Global Horizontal Routing Utilization  = 0.214588 %
+  Global Vertical Routing Utilization    = 0.261002 %
+  Global Horizontal Routing Utilization  = 0.250338 %
   Routable Net Status*
   *Does not include unroutable nets such as driverless and loadless.
   Run report_route_status for detailed report.
-  Number of Failed Nets               = 36551
+  Number of Failed Nets               = 39370
     (Failed Nets is the sum of unrouted and partially routed nets)
-  Number of Unrouted Nets             = 36551
-  Number of Partially Routed Nets     = 0
+  Number of Unrouted Nets             = 39369
+  Number of Partially Routed Nets     = 1
   Number of Node Overlaps             = 0
 
-Phase 2 Router Initialization | Checksum: 288d370bd
+Phase 2 Router Initialization | Checksum: 2fc974df6
 
-Time (s): cpu = 00:01:38 ; elapsed = 00:01:08 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:01:42 ; elapsed = 00:01:08 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 3 Initial Routing
 
 Phase 3.1 Global Routing
-Phase 3.1 Global Routing | Checksum: 288d370bd
+Phase 3.1 Global Routing | Checksum: 2fc974df6
 
-Time (s): cpu = 00:01:38 ; elapsed = 00:01:08 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:01:42 ; elapsed = 00:01:08 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 3.2 Initial Net Routing
-Phase 3.2 Initial Net Routing | Checksum: 323c068a4
+Phase 3.2 Initial Net Routing | Checksum: 31a4c266b
 
-Time (s): cpu = 00:01:56 ; elapsed = 00:01:14 . Memory (MB): peak = 2417.273 ; gain = 282.480
-Phase 3 Initial Routing | Checksum: 323c068a4
+Time (s): cpu = 00:02:01 ; elapsed = 00:01:16 . Memory (MB): peak = 2525.160 ; gain = 329.379
+Phase 3 Initial Routing | Checksum: 31a4c266b
 
-Time (s): cpu = 00:01:56 ; elapsed = 00:01:14 . Memory (MB): peak = 2417.273 ; gain = 282.480
-INFO: [Route 35-580] Design has 10 pins with tight setup and hold constraints.
-
-The top 5 pins with tight setup and hold constraints:
-
-+==============================+===================+=========================================================+
-| Launch Setup Clock           | Launch Hold Clock | Pin                                                     |
-+==============================+===================+=========================================================+
-| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/nTA_IOBUF_inst_i_1/D            |
-| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[26]/CE |
-| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[16]/CE |
-| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[29]/CE |
-| AXI_clk_design_1_clk_wiz_0_0 | clk_fpga_1        | design_1_i/z3660_0/inst/FSM_onehot_RAM_state_reg[2]/CE  |
-+------------------------------+-------------------+---------------------------------------------------------+
-
-File with complete list of pins: tight_setup_hold_pins.txt
-
+Time (s): cpu = 00:02:02 ; elapsed = 00:01:16 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 4 Rip-up And Reroute
 
 Phase 4.1 Global Iteration 0
- Number of Nodes with overlaps = 3533
- Number of Nodes with overlaps = 111
+ Number of Nodes with overlaps = 3866
+ Number of Nodes with overlaps = 115
  Number of Nodes with overlaps = 27
- Number of Nodes with overlaps = 8
- Number of Nodes with overlaps = 2
- Number of Nodes with overlaps = 2
- Number of Nodes with overlaps = 0
-INFO: [Route 35-416] Intermediate Timing Summary | WNS=-10.172| TNS=-20.317| WHS=N/A    | THS=N/A    |
-
-Phase 4.1 Global Iteration 0 | Checksum: 27f35a3e9
-
-Time (s): cpu = 00:06:52 ; elapsed = 00:03:44 . Memory (MB): peak = 2417.273 ; gain = 282.480
-
-Phase 4.2 Global Iteration 1
- Number of Nodes with overlaps = 44
+ Number of Nodes with overlaps = 16
  Number of Nodes with overlaps = 6
- Number of Nodes with overlaps = 5
- Number of Nodes with overlaps = 2
+ Number of Nodes with overlaps = 1
  Number of Nodes with overlaps = 0
-INFO: [Route 35-416] Intermediate Timing Summary | WNS=-10.172| TNS=-20.317| WHS=N/A    | THS=N/A    |
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=0.326  | TNS=0.000  | WHS=N/A    | THS=N/A    |
 
-Phase 4.2 Global Iteration 1 | Checksum: 179303d80
+Phase 4.1 Global Iteration 0 | Checksum: 196c58254
 
-Time (s): cpu = 00:06:57 ; elapsed = 00:03:48 . Memory (MB): peak = 2417.273 ; gain = 282.480
-Phase 4 Rip-up And Reroute | Checksum: 179303d80
+Time (s): cpu = 00:07:40 ; elapsed = 00:04:10 . Memory (MB): peak = 2525.160 ; gain = 329.379
+Phase 4 Rip-up And Reroute | Checksum: 196c58254
 
-Time (s): cpu = 00:06:57 ; elapsed = 00:03:48 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:40 ; elapsed = 00:04:10 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 5 Delay and Skew Optimization
 
 Phase 5.1 Delay CleanUp
+Phase 5.1 Delay CleanUp | Checksum: 196c58254
 
-Phase 5.1.1 Update Timing
-Phase 5.1.1 Update Timing | Checksum: 18dfaa97f
-
-Time (s): cpu = 00:07:02 ; elapsed = 00:03:50 . Memory (MB): peak = 2417.273 ; gain = 282.480
-INFO: [Route 35-416] Intermediate Timing Summary | WNS=-10.172| TNS=-20.317| WHS=N/A    | THS=N/A    |
-
- Number of Nodes with overlaps = 0
-Phase 5.1 Delay CleanUp | Checksum: 270abebe9
-
-Time (s): cpu = 00:07:03 ; elapsed = 00:03:51 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:40 ; elapsed = 00:04:10 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 5.2 Clock Skew Optimization
-Phase 5.2 Clock Skew Optimization | Checksum: 270abebe9
+Phase 5.2 Clock Skew Optimization | Checksum: 196c58254
 
-Time (s): cpu = 00:07:03 ; elapsed = 00:03:51 . Memory (MB): peak = 2417.273 ; gain = 282.480
-Phase 5 Delay and Skew Optimization | Checksum: 270abebe9
+Time (s): cpu = 00:07:40 ; elapsed = 00:04:10 . Memory (MB): peak = 2525.160 ; gain = 329.379
+Phase 5 Delay and Skew Optimization | Checksum: 196c58254
 
-Time (s): cpu = 00:07:03 ; elapsed = 00:03:51 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:41 ; elapsed = 00:04:10 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 6 Post Hold Fix
 
 Phase 6.1 Hold Fix Iter
 
 Phase 6.1.1 Update Timing
-Phase 6.1.1 Update Timing | Checksum: 20b2fb3e0
+Phase 6.1.1 Update Timing | Checksum: 24517af8a
 
-Time (s): cpu = 00:07:07 ; elapsed = 00:03:53 . Memory (MB): peak = 2417.273 ; gain = 282.480
-INFO: [Route 35-416] Intermediate Timing Summary | WNS=-10.172| TNS=-20.317| WHS=0.055  | THS=0.000  |
+Time (s): cpu = 00:07:46 ; elapsed = 00:04:14 . Memory (MB): peak = 2525.160 ; gain = 329.379
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=0.357  | TNS=0.000  | WHS=0.054  | THS=0.000  |
 
-Phase 6.1 Hold Fix Iter | Checksum: 17681aeaf
+Phase 6.1 Hold Fix Iter | Checksum: 216aa0a8e
 
-Time (s): cpu = 00:07:07 ; elapsed = 00:03:53 . Memory (MB): peak = 2417.273 ; gain = 282.480
-Phase 6 Post Hold Fix | Checksum: 17681aeaf
+Time (s): cpu = 00:07:46 ; elapsed = 00:04:14 . Memory (MB): peak = 2525.160 ; gain = 329.379
+Phase 6 Post Hold Fix | Checksum: 216aa0a8e
 
-Time (s): cpu = 00:07:08 ; elapsed = 00:03:53 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:46 ; elapsed = 00:04:14 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 7 Route finalize
 
 Router Utilization Summary
-  Global Vertical Routing Utilization    = 11.0252 %
-  Global Horizontal Routing Utilization  = 13.2018 %
+  Global Vertical Routing Utilization    = 13.711 %
+  Global Horizontal Routing Utilization  = 16.3412 %
   Routable Net Status*
   *Does not include unroutable nets such as driverless and loadless.
   Run report_route_status for detailed report.
@@ -771,81 +775,51 @@ Router Utilization Summary
   Number of Partially Routed Nets     = 0
   Number of Node Overlaps             = 0
 
+Phase 7 Route finalize | Checksum: 216aa0a8e
 
---GLOBAL Congestion:
-Utilization threshold used for congestion level computation: 0.85
-Congestion Report
-North Dir 1x1 Area, Max Cong = 81.982%, No Congested Regions.
-South Dir 1x1 Area, Max Cong = 79.2793%, No Congested Regions.
-East Dir 1x1 Area, Max Cong = 77.9412%, No Congested Regions.
-West Dir 1x1 Area, Max Cong = 83.8235%, No Congested Regions.
-
-------------------------------
-Reporting congestion hotspots
-------------------------------
-Direction: North
-----------------
-Congested clusters found at Level 0
-Effective congestion level: 0 Aspect Ratio: 1 Sparse Ratio: 0
-Direction: South
-----------------
-Congested clusters found at Level 0
-Effective congestion level: 0 Aspect Ratio: 1 Sparse Ratio: 0
-Direction: East
-----------------
-Congested clusters found at Level 0
-Effective congestion level: 0 Aspect Ratio: 1 Sparse Ratio: 0
-Direction: West
-----------------
-Congested clusters found at Level 0
-Effective congestion level: 0 Aspect Ratio: 1 Sparse Ratio: 0
-
-Phase 7 Route finalize | Checksum: 17681aeaf
-
-Time (s): cpu = 00:07:08 ; elapsed = 00:03:54 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:47 ; elapsed = 00:04:14 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 8 Verifying routed nets
 
  Verification completed successfully
-Phase 8 Verifying routed nets | Checksum: 17681aeaf
+Phase 8 Verifying routed nets | Checksum: 216aa0a8e
 
-Time (s): cpu = 00:07:08 ; elapsed = 00:03:54 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:47 ; elapsed = 00:04:14 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 9 Depositing Routes
-Phase 9 Depositing Routes | Checksum: 1329429c8
+Phase 9 Depositing Routes | Checksum: 1f76df97d
 
-Time (s): cpu = 00:07:13 ; elapsed = 00:03:57 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:53 ; elapsed = 00:04:18 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Phase 10 Post Router Timing
-INFO: [Route 35-57] Estimated Timing Summary | WNS=-10.172| TNS=-20.317| WHS=0.055  | THS=0.000  |
+INFO: [Route 35-57] Estimated Timing Summary | WNS=0.357  | TNS=0.000  | WHS=0.054  | THS=0.000  |
 
-WARNING: [Route 35-328] Router estimated timing not met.
-Resolution: For a complete and accurate timing signoff, report_timing_summary must be run after route_design. Alternatively, route_design can be run with the -timing_summary option to enable a complete timing signoff at the end of route_design.
-Phase 10 Post Router Timing | Checksum: 1329429c8
+INFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.
+Phase 10 Post Router Timing | Checksum: 1f76df97d
 
-Time (s): cpu = 00:07:18 ; elapsed = 00:03:59 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:07:58 ; elapsed = 00:04:21 . Memory (MB): peak = 2525.160 ; gain = 329.379
 INFO: [Route 35-16] Router Completed Successfully
 
 Phase 11 Post-Route Event Processing
-Phase 11 Post-Route Event Processing | Checksum: 13066fe01
+Phase 11 Post-Route Event Processing | Checksum: 2882c337
 
-Time (s): cpu = 00:07:19 ; elapsed = 00:04:01 . Memory (MB): peak = 2417.273 ; gain = 282.480
-Ending Routing Task | Checksum: 13066fe01
+Time (s): cpu = 00:07:59 ; elapsed = 00:04:22 . Memory (MB): peak = 2525.160 ; gain = 329.379
+Ending Routing Task | Checksum: 2882c337
 
-Time (s): cpu = 00:07:20 ; elapsed = 00:04:02 . Memory (MB): peak = 2417.273 ; gain = 282.480
+Time (s): cpu = 00:08:00 ; elapsed = 00:04:24 . Memory (MB): peak = 2525.160 ; gain = 329.379
 
 Routing Is Done.
 INFO: [Common 17-83] Releasing license: Implementation
-115 Infos, 102 Warnings, 0 Critical Warnings and 0 Errors encountered.
+144 Infos, 101 Warnings, 0 Critical Warnings and 0 Errors encountered.
 route_design completed successfully
-route_design: Time (s): cpu = 00:07:27 ; elapsed = 00:04:06 . Memory (MB): peak = 2417.273 ; gain = 282.480
+route_design: Time (s): cpu = 00:08:09 ; elapsed = 00:04:28 . Memory (MB): peak = 2525.160 ; gain = 329.379
 INFO: [runtcl-4] Executing : report_drc -file design_1_wrapper_drc_routed.rpt -pb design_1_wrapper_drc_routed.pb -rpx design_1_wrapper_drc_routed.rpx
 Command: report_drc -file design_1_wrapper_drc_routed.rpt -pb design_1_wrapper_drc_routed.pb -rpx design_1_wrapper_drc_routed.rpx
 INFO: [IP_Flow 19-1839] IP Catalog is up to date.
 INFO: [DRC 23-27] Running DRC with 2 threads
 INFO: [Vivado_Tcl 2-168] The results of DRC are in file C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1/design_1_wrapper_drc_routed.rpt.
 report_drc completed successfully
-report_drc: Time (s): cpu = 00:00:15 ; elapsed = 00:00:08 . Memory (MB): peak = 2417.273 ; gain = 0.000
+report_drc: Time (s): cpu = 00:00:17 ; elapsed = 00:00:10 . Memory (MB): peak = 2525.160 ; gain = 0.000
 INFO: [runtcl-4] Executing : report_methodology -file design_1_wrapper_methodology_drc_routed.rpt -pb design_1_wrapper_methodology_drc_routed.pb -rpx design_1_wrapper_methodology_drc_routed.rpx
 Command: report_methodology -file design_1_wrapper_methodology_drc_routed.rpt -pb design_1_wrapper_methodology_drc_routed.pb -rpx design_1_wrapper_methodology_drc_routed.rpx
 INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as objects, only virtual clock 'VIRTUAL_clk_out1_design_1_clk_wiz_2_0_1' will be created. If you don't want this, please specify pin(s)/ports(s)/net(s) as objects to the command. [C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.srcs/constrs_1/new/timing.xdc:1]
@@ -854,7 +828,7 @@ INFO: [Timing 38-35] Done setting XDC timing constraints.
 INFO: [DRC 23-133] Running Methodology with 2 threads
 INFO: [Vivado_Tcl 2-1520] The results of Report Methodology are in file C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1/design_1_wrapper_methodology_drc_routed.rpt.
 report_methodology completed successfully
-report_methodology: Time (s): cpu = 00:00:34 ; elapsed = 00:00:19 . Memory (MB): peak = 2443.008 ; gain = 25.734
+report_methodology: Time (s): cpu = 00:00:45 ; elapsed = 00:00:25 . Memory (MB): peak = 2575.152 ; gain = 49.992
 INFO: [runtcl-4] Executing : report_power -file design_1_wrapper_power_routed.rpt -pb design_1_wrapper_power_summary_routed.pb -rpx design_1_wrapper_power_routed.rpx
 Command: report_power -file design_1_wrapper_power_routed.rpt -pb design_1_wrapper_power_summary_routed.pb -rpx design_1_wrapper_power_routed.rpx
 INFO: [Constraints 18-483] create_clock: no pin(s)/port(s)/net(s) specified as objects, only virtual clock 'VIRTUAL_clk_out1_design_1_clk_wiz_2_0_1' will be created. If you don't want this, please specify pin(s)/ports(s)/net(s) as objects to the command. [C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.srcs/constrs_1/new/timing.xdc:1]
@@ -865,9 +839,9 @@ Running Vector-less Activity Propagation...
 Finished Running Vector-less Activity Propagation
 WARNING: [Power 33-332] Found switching activity that implies high-fanout reset nets being asserted for excessive periods of time which may result in inaccurate power analysis.
 Resolution: To review and fix problems, please run Power Constraints Advisor in the GUI from Tools > Power Constraints Advisor or run report_power with the -advisory option to generate a text report.
-129 Infos, 103 Warnings, 0 Critical Warnings and 0 Errors encountered.
+158 Infos, 102 Warnings, 0 Critical Warnings and 0 Errors encountered.
 report_power completed successfully
-report_power: Time (s): cpu = 00:00:32 ; elapsed = 00:00:18 . Memory (MB): peak = 2467.203 ; gain = 24.195
+report_power: Time (s): cpu = 00:00:35 ; elapsed = 00:00:21 . Memory (MB): peak = 2594.934 ; gain = 19.781
 INFO: [runtcl-4] Executing : report_route_status -file design_1_wrapper_route_status.rpt -pb design_1_wrapper_route_status.pb
 INFO: [runtcl-4] Executing : report_timing_summary -max_paths 10 -file design_1_wrapper_timing_summary_routed.rpt -pb design_1_wrapper_timing_summary_routed.pb -rpx design_1_wrapper_timing_summary_routed.rpx
 INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -3, Delay Type: min_max.
@@ -880,18 +854,18 @@ INFO: [runtcl-4] Executing : report_bus_skew -warn_on_violation -file design_1_w
 INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -3, Delay Type: min_max.
 INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 2 CPUs
 INFO: [Timing 38-480] Writing timing data to binary archive.
-Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.233 . Memory (MB): peak = 2509.316 ; gain = 19.125
-Wrote PlaceDB: Time (s): cpu = 00:00:12 ; elapsed = 00:00:05 . Memory (MB): peak = 2513.750 ; gain = 23.559
-Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2513.750 ; gain = 0.000
+Write ShapeDB Complete: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.275 . Memory (MB): peak = 2617.734 ; gain = 15.379
+Wrote PlaceDB: Time (s): cpu = 00:00:18 ; elapsed = 00:00:07 . Memory (MB): peak = 2617.734 ; gain = 13.289
+Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2617.734 ; gain = 0.000
 Writing XDEF routing.
 Writing XDEF routing logical nets.
 Writing XDEF routing special nets.
-Wrote RouteStorage: Time (s): cpu = 00:00:02 ; elapsed = 00:00:00.824 . Memory (MB): peak = 2513.750 ; gain = 0.000
-Wrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.093 . Memory (MB): peak = 2513.750 ; gain = 0.000
-Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.024 . Memory (MB): peak = 2513.750 ; gain = 0.000
-Write Physdb Complete: Time (s): cpu = 00:00:14 ; elapsed = 00:00:06 . Memory (MB): peak = 2513.750 ; gain = 23.559
+Wrote RouteStorage: Time (s): cpu = 00:00:01 ; elapsed = 00:00:01 . Memory (MB): peak = 2617.734 ; gain = 0.000
+Wrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.123 . Memory (MB): peak = 2617.734 ; gain = 0.000
+Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.017 . Memory (MB): peak = 2617.734 ; gain = 0.000
+Write Physdb Complete: Time (s): cpu = 00:00:19 ; elapsed = 00:00:09 . Memory (MB): peak = 2617.734 ; gain = 13.289
 INFO: [Common 17-1381] The checkpoint 'C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1/design_1_wrapper_routed.dcp' has been generated.
-write_checkpoint: Time (s): cpu = 00:00:18 ; elapsed = 00:00:10 . Memory (MB): peak = 2513.750 ; gain = 41.449
+write_checkpoint: Time (s): cpu = 00:00:23 ; elapsed = 00:00:13 . Memory (MB): peak = 2617.734 ; gain = 22.801
 Command: phys_opt_design
 Attempting to get a license for feature 'Implementation' and/or device 'xc7z020'
 INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7z020'
@@ -899,76 +873,37 @@ INFO: [Vivado_Tcl 4-241] Physical synthesis in post route mode
 
 Starting Initial Update Timing Task
 
-Time (s): cpu = 00:00:19 ; elapsed = 00:00:10 . Memory (MB): peak = 2513.750 ; gain = 0.000
-INFO: [Vivado_Tcl 4-1435] PhysOpt_Tcl_Interface Runtime Before Starting Physical Synthesis Task | CPU: 21.00s |  WALL: 12.08s
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 2513.750 ; gain = 0.000
-
-Starting Physical Synthesis Task
-
-Phase 1 Physical Synthesis Initialization
-INFO: [Physopt 32-721] Multithreading enabled for phys_opt_design using a maximum of 2 CPUs
-INFO: [Physopt 32-668] Current Timing Summary | WNS=-10.174 | TNS=-20.320 | WHS=0.055 | THS=0.000 |
-Phase 1 Physical Synthesis Initialization | Checksum: 27bd37983
-
-Time (s): cpu = 00:00:12 ; elapsed = 00:00:06 . Memory (MB): peak = 2513.750 ; gain = 0.000
-WARNING: [Physopt 32-745] Physical Optimization has determined that the magnitude of the negative slack is too large and it is highly unlikely that slack will be improved. Post-Route Physical Optimization is most effective when WNS is above -0.5ns
-
-Phase 2 Critical Path Optimization
-INFO: [Physopt 32-668] Current Timing Summary | WNS=-10.174 | TNS=-20.320 | WHS=0.055 | THS=0.000 |
-INFO: [Physopt 32-953] Path group WNS did not improve. Path group: VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1. Processed net: design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData.
-INFO: [Physopt 32-953] Path group WNS did not improve. Path group: VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1. Processed net: design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst/clk_out1_design_1_clk_wiz_3_0.
-INFO: [Physopt 32-953] Path group WNS did not improve. Path group: VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1. Processed net: design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/oSData.
-INFO: [Physopt 32-953] Path group WNS did not improve. Path group: VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1. Processed net: design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst/clk_out1_design_1_clk_wiz_3_0.
-INFO: [Physopt 32-668] Current Timing Summary | WNS=-10.174 | TNS=-20.320 | WHS=0.055 | THS=0.000 |
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 2529.180 ; gain = 0.000
-Phase 2 Critical Path Optimization | Checksum: 27bd37983
-
-Time (s): cpu = 00:00:15 ; elapsed = 00:00:09 . Memory (MB): peak = 2529.180 ; gain = 15.430
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 2529.180 ; gain = 0.000
-INFO: [Physopt 32-669] Post Physical Optimization Timing Summary | WNS=-10.174 | TNS=-20.320 | WHS=0.055 | THS=0.000 |
-
-Summary of Physical Synthesis Optimizations
-============================================
-
-
--------------------------------------------------------------------------------------------------------------------------------------------------------------
-|  Optimization   |  WNS Gain (ns)  |  TNS Gain (ns)  |  Added Cells  |  Removed Cells  |  Optimized Cells/Nets  |  Dont Touch  |  Iterations  |  Elapsed   |
--------------------------------------------------------------------------------------------------------------------------------------------------------------
-|  Critical Path  |          0.000  |          0.000  |            0  |              0  |                     0  |           0  |           1  |  00:00:02  |
--------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.014 . Memory (MB): peak = 2529.180 ; gain = 0.000
-Ending Physical Synthesis Task | Checksum: 27bd37983
-
-Time (s): cpu = 00:00:17 ; elapsed = 00:00:10 . Memory (MB): peak = 2529.180 ; gain = 15.430
+Time (s): cpu = 00:00:24 ; elapsed = 00:00:13 . Memory (MB): peak = 2617.734 ; gain = 0.000
+INFO: [Vivado_Tcl 4-383] Design worst setup slack (WNS) is greater than or equal to 0.000 ns. Skipping all physical synthesis optimizations.
+INFO: [Vivado_Tcl 4-232] No setup violation found. The netlist was not modified.
 INFO: [Common 17-83] Releasing license: Implementation
-18 Infos, 1 Warnings, 0 Critical Warnings and 0 Errors encountered.
+10 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
 phys_opt_design completed successfully
-phys_opt_design: Time (s): cpu = 00:00:38 ; elapsed = 00:00:22 . Memory (MB): peak = 2529.180 ; gain = 15.430
+phys_opt_design: Time (s): cpu = 00:00:25 ; elapsed = 00:00:15 . Memory (MB): peak = 2617.734 ; gain = 0.000
 INFO: [runtcl-4] Executing : report_timing_summary -max_paths 10 -warn_on_violation -file design_1_wrapper_timing_summary_postroute_physopted.rpt -pb design_1_wrapper_timing_summary_postroute_physopted.pb -rpx design_1_wrapper_timing_summary_postroute_physopted.rpx
 INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -3, Delay Type: min_max.
 INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 2 CPUs
-CRITICAL WARNING: [Timing 38-282] The design failed to meet the timing requirements. Please see the timing summary report for details on the timing violations.
 WARNING: [Timing 38-436] There are set_bus_skew constraint(s) in this design. Please run report_bus_skew to ensure that bus skew requirements are met.
-report_timing_summary: Time (s): cpu = 00:00:23 ; elapsed = 00:00:13 . Memory (MB): peak = 2529.180 ; gain = 0.000
+report_timing_summary: Time (s): cpu = 00:00:28 ; elapsed = 00:00:16 . Memory (MB): peak = 2617.734 ; gain = 0.000
 INFO: [runtcl-4] Executing : report_bus_skew -warn_on_violation -file design_1_wrapper_bus_skew_postroute_physopted.rpt -pb design_1_wrapper_bus_skew_postroute_physopted.pb -rpx design_1_wrapper_bus_skew_postroute_physopted.rpx
 INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -3, Delay Type: min_max.
 INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 2 CPUs
 INFO: [Timing 38-480] Writing timing data to binary archive.
-Write ShapeDB Complete: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.219 . Memory (MB): peak = 2529.180 ; gain = 0.000
-Wrote PlaceDB: Time (s): cpu = 00:00:13 ; elapsed = 00:00:05 . Memory (MB): peak = 2529.180 ; gain = 0.000
-Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2529.180 ; gain = 0.000
+Write ShapeDB Complete: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.347 . Memory (MB): peak = 2627.258 ; gain = 9.523
+Wrote PlaceDB: Time (s): cpu = 00:00:15 ; elapsed = 00:00:06 . Memory (MB): peak = 2628.348 ; gain = 10.613
+Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2628.348 ; gain = 0.000
 Writing XDEF routing.
 Writing XDEF routing logical nets.
 Writing XDEF routing special nets.
-Wrote RouteStorage: Time (s): cpu = 00:00:02 ; elapsed = 00:00:00.858 . Memory (MB): peak = 2529.180 ; gain = 0.000
-Wrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.089 . Memory (MB): peak = 2529.180 ; gain = 0.000
-Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.017 . Memory (MB): peak = 2529.180 ; gain = 0.000
-Write Physdb Complete: Time (s): cpu = 00:00:15 ; elapsed = 00:00:06 . Memory (MB): peak = 2529.180 ; gain = 0.000
+Wrote RouteStorage: Time (s): cpu = 00:00:02 ; elapsed = 00:00:01 . Memory (MB): peak = 2628.348 ; gain = 0.000
+Wrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.131 . Memory (MB): peak = 2628.348 ; gain = 0.000
+Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.021 . Memory (MB): peak = 2628.348 ; gain = 0.000
+Write Physdb Complete: Time (s): cpu = 00:00:17 ; elapsed = 00:00:08 . Memory (MB): peak = 2628.348 ; gain = 10.613
 INFO: [Common 17-1381] The checkpoint 'C:/Users/shanshe/OneDrive/Escritorio/z3660/z3660.runs/impl_1/design_1_wrapper_postroute_physopt.dcp' has been generated.
-write_checkpoint: Time (s): cpu = 00:00:23 ; elapsed = 00:00:15 . Memory (MB): peak = 2529.180 ; gain = 0.000
+write_checkpoint: Time (s): cpu = 00:00:22 ; elapsed = 00:00:12 . Memory (MB): peak = 2628.348 ; gain = 10.613
+INFO: [Memdata 28-208] The XPM instance: <design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_1/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst> is part of IP: <design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_1>. This XPM instance will be excluded from the .mmi because updatemem is prohibited from making changes to an XPM that is part of an IP.
 INFO: [Memdata 28-208] The XPM instance: <design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_0/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst> is part of IP: <design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_0>. This XPM instance will be excluded from the .mmi because updatemem is prohibited from making changes to an XPM that is part of an IP.
+INFO: [Memdata 28-208] The XPM instance: <design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_1/U0/GEN_SPRT_FOR_MM2S.MM2S_LINEBUFFER_I/GEN_LINEBUF_NO_SOF.GEN_LINEBUFFER.GEN_SYNC_FIFO.I_LINEBUFFER_FIFO/xpm_fifo_sync_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst> is part of IP: <design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_1>. This XPM instance will be excluded from the .mmi because updatemem is prohibited from making changes to an XPM that is part of an IP.
 INFO: [Memdata 28-208] The XPM instance: <design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_0/U0/GEN_SPRT_FOR_MM2S.MM2S_LINEBUFFER_I/GEN_LINEBUF_NO_SOF.GEN_LINEBUFFER.GEN_SYNC_FIFO.I_LINEBUFFER_FIFO/xpm_fifo_sync_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst> is part of IP: <design_1_i/processing_av_system/audio_video_engine/video/axi_vdma_0>. This XPM instance will be excluded from the .mmi because updatemem is prohibited from making changes to an XPM that is part of an IP.
 INFO: [Memdata 28-208] The XPM instance: <design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst> is part of IP: <design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0>. This XPM instance will be excluded from the .mmi because updatemem is prohibited from making changes to an XPM that is part of an IP.
 INFO: [Memdata 28-208] The XPM instance: <design_1_i/processing_av_system/audio_video_engine/audio_formatter_0/inst/MM2S_INCLUDED.mm2s_top_1/mm2s_logic_1/buffering_1/INTERLEAVED.interleaved_xpm_fifo_buffer/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst> is part of IP: <design_1_i/processing_av_system/audio_video_engine/audio_formatter_0>. This XPM instance will be excluded from the .mmi because updatemem is prohibited from making changes to an XPM that is part of an IP.
@@ -1133,30 +1068,32 @@ WARNING: [DRC DPOP-2] MREG Output pipelining: DSP design_1_i/processing_av_syste
 WARNING: [DRC DPOP-2] MREG Output pipelining: DSP design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/mmcm_drp_inst/sel00__0 multiplier stage design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/mmcm_drp_inst/sel00__0/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
 WARNING: [DRC DPOP-2] MREG Output pipelining: DSP design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/mmcm_drp_inst/sel00__1 multiplier stage design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/mmcm_drp_inst/sel00__1/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
 WARNING: [DRC DPOP-2] MREG Output pipelining: DSP design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/mmcm_drp_inst/sel00__2 multiplier stage design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/mmcm_drp_inst/sel00__2/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[16] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[17] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[18] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[19] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[20] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[21] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[22] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[23] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[24] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[25] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[26] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A1' of cell design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grdch2.axi_rdch/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grdch2.axi_rdch/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A3)+((~A3)*(~A2)*A5)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1/I0) is not included in the LUT equation: 'O6=(A6+~A6)*((A4*A3*(~A5))+(A4*(~A3)*A5)+((~A4)*A3)+((~A4)*(~A3)*A5))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_1/I2) is not included in the LUT equation: 'O6=(A6+~A6)*((A4*A5)+((~A4)*A1*A3*A5)+((~A4)*A1*(~A3))+((~A4)*(~A1)*A5))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_4 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_4/I0) is not included in the LUT equation: 'O5=(A1*A3*A5)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1/I5) is not included in the LUT equation: 'O6=((~A1)*A6*(~A4)*(~A3))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A5)+((~A5)*(~A4)*A3)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A4' of cell design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grach2.axi_rach/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grach2.axi_rach/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A2)+((~A2)*(~A1)*A5)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A4' of cell design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A6)+((~A6)*(~A5)*A3)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A4' of cell design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_0/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_0/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1/I0) is not included in the LUT equation: 'O5=(A1*A2*(~A3))+(A1*(~A2)*A3)+((~A1)*A2)+((~A1)*(~A2)*A3)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
-WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A5' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1/I2) is not included in the LUT equation: 'O6=((~A1)*A6*(~A4)*(~A3))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[16] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[17] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[18] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[19] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[20] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[21] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[22] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[23] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[24] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[25] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC IOSR-1] IOB set reset sharing: IO A060[26] connects to flops which have these design_1_i/z3660_0/inst/m00_axi_araddr[26]_i_1_n_0, and design_1_i/z3660_0/inst/m00_axi_awaddr[26]_i_1_n_0 set/reset signals.  For optimal IOB flop packing there should be only one set/reset signal coming into the IOB.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A1' of cell design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A6)+((~A6)*(~A2)*A4)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A1' of cell design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A3)+((~A3)*(~A2)*A4)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1/I5) is not included in the LUT equation: 'O6=((~A3)*A5*(~A4)*(~A1))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_0/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_0/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1/I0) is not included in the LUT equation: 'O5=(A5*A1*(~A3))+(A5*(~A1)*A3)+((~A5)*A1)+((~A5)*(~A1)*A3)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A2' of cell design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_1/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/video/axis_data_fifo_1/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1/I0) is not included in the LUT equation: 'O5=(A3*A5*(~A4))+(A3*(~A5)*A4)+((~A3)*A5)+((~A3)*(~A5)*A4)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A3' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/FSM_sequential_gen_fwft.curr_fwft_state[1]_i_1/I0) is not included in the LUT equation: 'O6=(A6+~A6)*((A1*A4*(~A5))+(A1*(~A4)*A5)+((~A1)*A4)+((~A1)*(~A4)*A5))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A4' of cell design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grach2.axi_rach/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grach2.axi_rach/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A6)+((~A6)*(~A5)*A3)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A4' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_1/I2) is not included in the LUT equation: 'O6=(A6+~A6)*((A5*A3)+((~A5)*A2*A1*A3)+((~A5)*A2*(~A1))+((~A5)*(~A2)*A3))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A5' of cell design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A1)+((~A1)*(~A6)*A3)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A5' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_4 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/gen_fwft.rdpp1_inst_i_4/I0) is not included in the LUT equation: 'O5=(A3*A2*A1)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A6' of cell design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grdch2.axi_rdch/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grdch2.axi_rdch/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O6=(A2)+((~A2)*(~A1)*A4)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A6' of cell design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1 (pin design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/AXIS_FIFO_INST/xpm_fifo_async_inst/gnuram_async_fifo.xpm_fifo_base_inst/xpm_fifo_rst_inst/FSM_onehot_gen_rst_ic.curr_wrst_state[3]_i_1/I2) is not included in the LUT equation: 'O6=((~A3)*A5*(~A4)*(~A1))'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
 WARNING: [DRC PLBUFGOPT-1] Non-Optimal connections to BUFG: A non-muxed BUFG design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/clk_inst/clkin1_bufg is driven by another global buffer design_1_i/processing_av_system/processing_system7_0/inst/buffer_fclk_clk_0.FCLK_CLK_0_BUFG. Remove non-muxed BUFG if it is not desired
-WARNING: [DRC RTSTAT-10] No routable loads: 10019 net(s) have no routable loads. The problem bus(es) and/or net(s) are design_1_i/z3660_0/inst/BP_STATE_reg_i_2_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_2_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_3_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_3_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_3_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_7_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_7_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_7_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_16_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_16_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_16_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_17_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_17_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_17_n_3, design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grdch2.axi_rdch/grf.rf/gntv_or_sync_fifo.mem/gdm.dm_gen.dm/RAM_reg_0_15_0_5/DOA1... and (the first 15 of 9726 listed).
-INFO: [Vivado 12-3199] DRC finished with 0 Errors, 178 Warnings
+WARNING: [DRC RTSTAT-10] No routable loads: 10409 net(s) have no routable loads. The problem bus(es) and/or net(s) are design_1_i/z3660_0/inst/BP_STATE_reg_i_2_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_2_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_4_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_4_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_4_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_8_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_8_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_8_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_17_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_17_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_17_n_3, design_1_i/z3660_0/inst/BP_STATE_reg_i_18_n_1, design_1_i/z3660_0/inst/BP_STATE_reg_i_18_n_2, design_1_i/z3660_0/inst/BP_STATE_reg_i_18_n_3, design_1_i/processing_av_system/audio_video_engine/axi_interconnect_0/s00_couplers/auto_cc/inst/gen_clock_conv.gen_async_conv.asyncfifo_axi/inst_fifo_gen/gaxi_full_lite.gread_ch.grdch2.axi_rdch/grf.rf/gntv_or_sync_fifo.mem/gdm.dm_gen.dm/RAM_reg_0_15_0_5/DOA1... and (the first 15 of 9919 listed).
+INFO: [Vivado 12-3199] DRC finished with 0 Errors, 180 Warnings
 INFO: [Vivado 12-3200] Please refer to the DRC report (report_drc) for more information.
 INFO: [Designutils 20-2272] Running write_bitstream with 2 threads.
 Loading data files...
@@ -1169,7 +1106,7 @@ Writing bitstream ./design_1_wrapper.bit...
 INFO: [Vivado 12-1842] Bitgen Completed Successfully.
 INFO: [Project 1-1876] WebTalk data collection is mandatory when using a ULT device. To see the specific WebTalk data collected for your design, open the usage_statistics_webtalk.html or usage_statistics_webtalk.xml file in the implementation directory.
 INFO: [Common 17-83] Releasing license: Implementation
-39 Infos, 180 Warnings, 1 Critical Warnings and 0 Errors encountered.
+33 Infos, 181 Warnings, 0 Critical Warnings and 0 Errors encountered.
 write_bitstream completed successfully
-write_bitstream: Time (s): cpu = 00:00:57 ; elapsed = 00:00:38 . Memory (MB): peak = 2868.883 ; gain = 339.703
-INFO: [Common 17-206] Exiting Vivado at Sat Nov 22 21:42:21 2025...
+write_bitstream: Time (s): cpu = 00:01:08 ; elapsed = 00:00:45 . Memory (MB): peak = 3094.008 ; gain = 465.660
+INFO: [Common 17-206] Exiting Vivado at Wed May  6 09:39:32 2026...

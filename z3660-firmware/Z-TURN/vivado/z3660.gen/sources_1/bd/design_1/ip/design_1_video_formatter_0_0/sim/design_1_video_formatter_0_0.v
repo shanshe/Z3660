@@ -1,5 +1,5 @@
 // (c) Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
-// (c) Copyright 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// (c) Copyright 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of AMD and is protected under U.S. and international copyright
@@ -62,6 +62,12 @@ module design_1_video_formatter_0_0 (
   m_axis_vid_tvalid,
   m_axis_vid_aclk,
   aresetn,
+  m_axis_ovl_tdata,
+  m_axis_ovl_tlast,
+  m_axis_ovl_tready,
+  m_axis_ovl_tuser,
+  m_axis_ovl_tvalid,
+  m_axis_ovl_aclk,
   dvi_clk,
   dvi_hsync,
   dvi_vsync,
@@ -108,6 +114,20 @@ input wire m_axis_vid_aclk;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME aresetn, POLARITY ACTIVE_LOW, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 aresetn RST" *)
 input wire aresetn;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_ovl TDATA" *)
+input wire [31 : 0] m_axis_ovl_tdata;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_ovl TLAST" *)
+input wire m_axis_ovl_tlast;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_ovl TREADY" *)
+output wire m_axis_ovl_tready;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_ovl TUSER" *)
+input wire [0 : 0] m_axis_ovl_tuser;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME m_axis_ovl, TDATA_NUM_BYTES 4, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 1, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.0, CLK_DOMAIN design_1_processing_system7_0_0_FCLK_CLK2, LAYERED_METADATA undef, INSERT_VIP 0" *)
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_ovl TVALID" *)
+input wire m_axis_ovl_tvalid;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME m_axis_ovl_aclk, ASSOCIATED_BUSIF m_axis_ovl, FREQ_HZ 100000000, FREQ_TOLERANCE_HZ 0, PHASE 0.0, CLK_DOMAIN design_1_processing_system7_0_0_FCLK_CLK2, INSERT_VIP 0" *)
+(* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 m_axis_ovl_aclk CLK" *)
+input wire m_axis_ovl_aclk;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME dvi_clk, FREQ_HZ 148500000, FREQ_TOLERANCE_HZ 0, PHASE 0.0, CLK_DOMAIN /processing_av_system/clock_generation/clk_wiz_2_clk_out1, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 dvi_clk CLK" *)
 input wire dvi_clk;
@@ -171,6 +191,12 @@ input wire S_AXI_RREADY;
     .m_axis_vid_tvalid(m_axis_vid_tvalid),
     .m_axis_vid_aclk(m_axis_vid_aclk),
     .aresetn(aresetn),
+    .m_axis_ovl_tdata(m_axis_ovl_tdata),
+    .m_axis_ovl_tlast(m_axis_ovl_tlast),
+    .m_axis_ovl_tready(m_axis_ovl_tready),
+    .m_axis_ovl_tuser(m_axis_ovl_tuser),
+    .m_axis_ovl_tvalid(m_axis_ovl_tvalid),
+    .m_axis_ovl_aclk(m_axis_ovl_aclk),
     .dvi_clk(dvi_clk),
     .dvi_hsync(dvi_hsync),
     .dvi_vsync(dvi_vsync),

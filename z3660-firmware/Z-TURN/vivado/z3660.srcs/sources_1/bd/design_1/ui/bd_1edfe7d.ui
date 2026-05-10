@@ -1,7 +1,7 @@
 {
    "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"0.446847",
-   "Default View_TopLeft":"-237,-9",
+   "Default View_ScaleFactor":"1.31594",
+   "Default View_TopLeft":"853,201",
    "ExpandedHierarchyInLayout":"",
    "No Loops_ExpandedHierarchyInLayout":"",
    "No Loops_Layout":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0 threadsafe
@@ -133,68 +133,70 @@ preplace portBus peripheral_reset -pg 1 -lvl 6 -x 2250 -y 750 -defaultsOSRD
 preplace portBus aresetn -pg 1 -lvl 6 -x 2250 -y 190 -defaultsOSRD
 preplace portBus aresetn1 -pg 1 -lvl 6 -x 2250 -y 70 -defaultsOSRD
 preplace inst processing_system7_0 -pg 1 -lvl 4 -x 1550 -y 330 -defaultsOSRD
-preplace inst audio_video_engine -pg 1 -lvl 3 -x 870 -y 830 -defaultsOSRD
+preplace inst audio_video_engine -pg 1 -lvl 3 -x 870 -y 860 -defaultsOSRD
 preplace inst clock_generation -pg 1 -lvl 4 -x 1550 -y 860 -defaultsOSRD
-preplace inst interconnect_matrix -pg 1 -lvl 3 -x 870 -y 550 -defaultsOSRD
+preplace inst interconnect_matrix -pg 1 -lvl 3 -x 870 -y 560 -defaultsOSRD
 preplace inst proc_sys_reset_0 -pg 1 -lvl 3 -x 870 -y 330 -defaultsOSRD
 preplace inst axi_dwidth_converter_0 -pg 1 -lvl 2 -x 440 -y 120 -defaultsOSRD
 preplace inst axi_protocol_convert_0 -pg 1 -lvl 4 -x 1550 -y 630 -defaultsOSRD
 preplace inst axi_register_slice_0 -pg 1 -lvl 3 -x 870 -y 140 -defaultsOSRD
 preplace inst axi_register_slice_1 -pg 1 -lvl 1 -x 150 -y 100 -defaultsOSRD
 preplace inst xlconcat_0 -pg 1 -lvl 5 -x 2020 -y 120 -defaultsOSRD
-preplace netloc Net 1 4 2 1910 900 2160J
+preplace netloc Net 1 4 2 1800 870 NJ
 preplace netloc Net1 1 4 2 N 930 NJ
-preplace netloc aud_mclk_1 1 2 4 610J 1060 1060J 1070 1830 1090 2220
-preplace netloc audio_video_engine_I2SO_D0 1 3 3 1180J 20 1860J 0 2210J
-preplace netloc audio_video_engine_I2S_FSYNC_OUT 1 3 3 1190J 50 1880J 20 2200J
-preplace netloc audio_video_engine_I2S_SCLK 1 3 3 1230J 60 1890J 30 2180J
-preplace netloc audio_video_engine_control_vblank 1 3 3 1150J 1050 NJ 1050 2170J
-preplace netloc audio_video_engine_dout 1 3 2 1210 40 1870J
-preplace netloc audio_video_engine_hdmi_clk 1 3 3 1250J 70 1900J 40 2170J
-preplace netloc audio_video_engine_hdmi_data 1 3 3 1140J 1040 NJ 1040 2180J
-preplace netloc audio_video_engine_hdmi_de 1 3 3 1130J 1030 NJ 1030 2120J
-preplace netloc audio_video_engine_hdmi_hs 1 3 3 1120J 1060 NJ 1060 2210J
-preplace netloc audio_video_engine_hdmi_vs 1 3 3 1160J 1020 NJ 1020 2190J
-preplace netloc clock_generation_AXI_clk 1 0 6 30 180 280 40 620 230 1310 550 1910 550 2120
-preplace netloc clock_generation_BCLK_clk 1 4 2 1910J 870 2150J
+preplace netloc aud_mclk_1 1 2 4 640J 1090 NJ 1090 1780 1050 N
+preplace netloc audio_video_engine_I2SO_D0 1 3 3 1150J 1080 NJ 1080 2180J
+preplace netloc audio_video_engine_I2S_FSYNC_OUT 1 3 3 1230J 40 NJ 40 2200J
+preplace netloc audio_video_engine_I2S_SCLK 1 3 3 1270J 50 NJ 50 2130J
+preplace netloc audio_video_engine_control_vblank 1 3 3 1170J 1030 1830J 710 NJ
+preplace netloc audio_video_engine_dout 1 3 2 1280 90 1870J
+preplace netloc audio_video_engine_hdmi_clk 1 3 3 1250J 0 NJ 0 2210J
+preplace netloc audio_video_engine_hdmi_data 1 3 3 1140J 1040 1860J 730 NJ
+preplace netloc audio_video_engine_hdmi_de 1 3 3 1160J 1020 1870J 950 NJ
+preplace netloc audio_video_engine_hdmi_hs 1 3 3 1110J 1060 NJ 1060 2220J
+preplace netloc audio_video_engine_hdmi_vs 1 3 3 1130J 1070 NJ 1070 2130J
+preplace netloc clock_generation_AXI_clk 1 0 6 30 20 280 20 610 20 1180 1050 1760 770 N
+preplace netloc clock_generation_BCLK_clk 1 4 2 NJ 830 2170J
 preplace netloc clock_generation_PCLK_clk 1 4 2 NJ 810 NJ
-preplace netloc clock_generation_PCLK_reg 1 4 2 1880J 880 2140J
-preplace netloc clock_generation_clk90_detected 1 4 2 1790J 1080 2230J
-preplace netloc clock_generation_cpuclk_detected 1 4 2 1910J 1070 2200J
+preplace netloc clock_generation_PCLK_reg 1 4 2 1790J 880 2160J
+preplace netloc clock_generation_clk90_detected 1 4 2 NJ 970 2140J
+preplace netloc clock_generation_cpuclk_detected 1 4 2 1850J 890 NJ
 preplace netloc clock_generation_nCLKEN_clk 1 4 2 NJ 790 NJ
-preplace netloc clock_generation_nCLKEN_reg 1 4 2 NJ 890 2130J
-preplace netloc enable_clk_output_1 1 0 4 NJ 20 NJ 20 NJ 20 1170
-preplace netloc hdmi_intn_1 1 0 3 NJ 900 NJ 900 N
-preplace netloc interconnect_matrix_interconnect_aresetn 1 3 3 1200 80 1910J 50 2140J
-preplace netloc interconnect_matrix_peripheral_aresetn1 1 2 2 630 1040 1110
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 0 6 20 190 270 30 660J 60 1220 30 1870J 10 2220
-preplace netloc proc_sys_reset_0_peripheral_reset 1 3 3 1080 530 NJ 530 2130J
-preplace netloc processing_system7_0_FCLK_CLK0 1 2 3 640 1030 1050 100 1760
-preplace netloc processing_system7_0_FCLK_CLK1 1 2 4 620 1050 1090 120 1820 190 2130
-preplace netloc processing_system7_0_FCLK_CLK2 1 2 3 700 220 1330 90 1780
-preplace netloc processing_system7_0_FCLK_RESET0_N 1 2 3 680 50 1100 10 1790
-preplace netloc processing_system7_0_IRQ_P2F_USB0 1 4 1 1850 130n
-preplace netloc vid_clk_1 1 2 3 600J 1070 1040J 1080 1770
-preplace netloc xlconcat_0_dout 1 3 3 1340 110 1860J 270 2120
-preplace netloc Conn1 1 4 2 1840J 290 2200J
-preplace netloc Conn2 1 4 2 1830J 300 2220J
-preplace netloc Conn3 1 4 2 1810J 280 2150J
-preplace netloc S_AXI_1 1 2 2 670 1000 1060
+preplace netloc clock_generation_nCLKEN_reg 1 4 2 1770J 900 2150J
+preplace netloc enable_clk_output_1 1 0 4 20J 1080 NJ 1080 NJ 1080 1120
+preplace netloc hdmi_intn_1 1 0 3 NJ 900 NJ 900 600
+preplace netloc interconnect_matrix_interconnect_aresetn 1 3 3 1220 100 1860J 210 2160J
+preplace netloc interconnect_matrix_peripheral_aresetn1 1 2 2 650 1070 1070
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 0 6 30 180 280 200 600J 0 1240 10 NJ 10 2220
+preplace netloc proc_sys_reset_0_peripheral_reset 1 3 3 1200 20 NJ 20 2190J
+preplace netloc processing_system7_0_FCLK_CLK0 1 2 3 660 1060 1060 110 1780
+preplace netloc processing_system7_0_FCLK_CLK1 1 2 4 670 1050 1100 530 1870 270 N
+preplace netloc processing_system7_0_FCLK_CLK2 1 2 3 640 40 1190 80 1790
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 2 3 630 10 1210 70 1800
+preplace netloc processing_system7_0_IRQ_P2F_USB0 1 4 1 1840 130n
+preplace netloc vid_clk_1 1 2 3 620J 30 NJ 30 1810
+preplace netloc xlconcat_0_dout 1 3 3 1340 60 1870J 30 2120
+preplace netloc Conn1 1 4 2 1850J 220 2150J
+preplace netloc Conn2 1 4 2 NJ 230 2120J
+preplace netloc Conn3 1 4 2 1820J 200 2140J
+preplace netloc S_AXI_1 1 2 2 660 60 1050
 preplace netloc S_AXI_2 1 0 1 NJ 80
-preplace netloc S_AXI_LITE_1 1 2 2 690 990 1070
-preplace netloc audio_video_engine_M00_AXI 1 3 1 1280 310n
-preplace netloc audio_video_engine_M_AXI 1 3 1 1260 290n
+preplace netloc S_AXI_LITE_1 1 2 2 680 230 1040
+preplace netloc audio_video_engine_M00_AXI 1 3 1 1310 300n
+preplace netloc audio_video_engine_M_AXI 1 3 1 1290 280n
+preplace netloc audio_video_engine_M_AXI_1 1 3 1 1330 320n
 preplace netloc axi_dwidth_converter_0_M_AXI 1 2 1 N 120
 preplace netloc axi_protocol_convert_0_M_AXI 1 4 2 NJ 630 N
-preplace netloc axi_register_slice_0_M_AXI 1 3 1 1320 140n
+preplace netloc axi_register_slice_0_M_AXI 1 3 1 1330 140n
 preplace netloc axi_register_slice_1_M_AXI 1 1 1 N 100
-preplace netloc interconnect_matrix_M01_AXI 1 3 3 1240 130 1830J 200 2170J
-preplace netloc processing_system7_0_M_AXI_GP0 1 2 3 670J 40 1090J 0 1800
-preplace netloc processing_system7_0_M_AXI_GP1 1 3 2 1340 540 1770
-preplace netloc s_axi_ctrl_1 1 2 2 650 1020 1100
-preplace netloc s_axi_lite1_1 1 2 2 660 1010 1040
-preplace netloc s_axi_lite1_2 1 3 1 1240 590n
-preplace netloc s_axi_lite_2 1 3 1 1270 570n
+preplace netloc interconnect_matrix_M01_AXI 1 3 3 1260 130 1830J 190 2150J
+preplace netloc interconnect_matrix_M08_AXI 1 2 2 690 1040 1040
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 3 670J 220 1210J 120 1760
+preplace netloc processing_system7_0_M_AXI_GP1 1 3 2 1340 550 1760
+preplace netloc s_axi_ctrl_1 1 2 2 650 50 1070
+preplace netloc s_axi_lite1_1 1 2 2 700 1030 1050
+preplace netloc s_axi_lite1_2 1 3 1 1300 590n
+preplace netloc s_axi_lite_2 1 3 1 1320 570n
 levelinfo -pg 1 0 150 440 870 1550 2020 2250
 pagesize -pg 1 -db -bbox -sgen -180 -10 2450 1100
 "

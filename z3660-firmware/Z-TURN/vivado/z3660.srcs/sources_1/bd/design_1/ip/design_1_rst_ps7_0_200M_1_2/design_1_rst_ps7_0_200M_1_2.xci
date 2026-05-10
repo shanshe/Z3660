@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "design_1_rst_ps7_0_200M_1_2",
-    "cell_name": "rst_ps7_0_200M_1",
+    "cell_name": "processing_av_system/audio_video_engine/rst_ps7_0_200M_1",
     "component_reference": "xilinx.com:ip:proc_sys_reset:5.0",
     "ip_revision": "14",
     "gen_directory": "../../../../../../z3660.gen/sources_1/bd/design_1/ip/design_1_rst_ps7_0_200M_1_2",

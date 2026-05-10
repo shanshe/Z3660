@@ -1,5 +1,5 @@
 // (c) Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
-// (c) Copyright 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// (c) Copyright 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of AMD and is protected under U.S. and international copyright
@@ -69,9 +69,9 @@ design_1_auto_pc_1_sc::design_1_auto_pc_1_sc(const sc_core::sc_module_name& nm) 
     model_param_props.addLong("C_AXI_DATA_WIDTH", "32");
     model_param_props.addLong("C_AXI_SUPPORTS_WRITE", "0");
     model_param_props.addLong("C_AXI_SUPPORTS_READ", "1");
-    model_param_props.addLong("C_AXI_SUPPORTS_USER_SIGNALS", "1");
+    model_param_props.addLong("C_AXI_SUPPORTS_USER_SIGNALS", "0");
     model_param_props.addLong("C_AXI_AWUSER_WIDTH", "1");
-    model_param_props.addLong("C_AXI_ARUSER_WIDTH", "4");
+    model_param_props.addLong("C_AXI_ARUSER_WIDTH", "1");
     model_param_props.addLong("C_AXI_WUSER_WIDTH", "1");
     model_param_props.addLong("C_AXI_RUSER_WIDTH", "1");
     model_param_props.addLong("C_AXI_BUSER_WIDTH", "1");

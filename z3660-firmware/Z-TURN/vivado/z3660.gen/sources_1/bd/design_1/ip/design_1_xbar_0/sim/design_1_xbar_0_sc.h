@@ -2,7 +2,7 @@
 #define IP_DESIGN_1_XBAR_0_SC_H_
 
 // (c) Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
-// (c) Copyright 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// (c) Copyright 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of AMD and is protected under U.S. and international copyright
@@ -94,6 +94,8 @@ public:
   xtlm::xtlm_aximm_initiator_socket* initiator_6_wr_socket;
   xtlm::xtlm_aximm_initiator_socket* initiator_7_rd_socket;
   xtlm::xtlm_aximm_initiator_socket* initiator_7_wr_socket;
+  xtlm::xtlm_aximm_initiator_socket* initiator_8_rd_socket;
+  xtlm::xtlm_aximm_initiator_socket* initiator_8_wr_socket;
 
   // module socket-to-socket TLM interfaces
 

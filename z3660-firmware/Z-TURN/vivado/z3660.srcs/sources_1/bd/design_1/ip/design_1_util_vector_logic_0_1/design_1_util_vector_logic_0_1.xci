@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "design_1_util_vector_logic_0_1",
-    "cell_name": "util_vector_logic_0",
+    "cell_name": "processing_av_system/audio_video_engine/video/util_vector_logic_0",
     "component_reference": "xilinx.com:ip:util_vector_logic:2.0",
     "ip_revision": "3",
     "gen_directory": "../../../../../../z3660.gen/sources_1/bd/design_1/ip/design_1_util_vector_logic_0_1",

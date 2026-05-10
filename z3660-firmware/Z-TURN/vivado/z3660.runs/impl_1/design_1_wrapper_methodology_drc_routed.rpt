@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2023.2 (win64) Build 4029153 Fri Oct 13 20:14:34 MDT 2023
-| Date         : Sat Nov 22 21:40:20 2025
+| Date         : Wed May  6 09:37:23 2026
 | Host         : CoreBox-X running 64-bit major release  (build 9200)
 | Command      : report_methodology -file design_1_wrapper_methodology_drc_routed.rpt -pb design_1_wrapper_methodology_drc_routed.pb -rpx design_1_wrapper_methodology_drc_routed.rpx
 | Design       : design_1_wrapper
@@ -23,23 +23,21 @@ Table of Contents
           Floorplan: design_1
       Design limits: <entire design considered>
              Max violations: <unlimited>
-             Violations found: 168
-+-----------+------------------+------------------------------------------------------+------------+
-| Rule      | Severity         | Description                                          | Violations |
-+-----------+------------------+------------------------------------------------------+------------+
-| TIMING-4  | Critical Warning | Invalid primary clock redefinition on a clock tree   | 2          |
-| TIMING-6  | Critical Warning | No common primary clock between related clocks       | 5          |
-| TIMING-7  | Critical Warning | No common node between related clocks                | 5          |
-| TIMING-8  | Critical Warning | No common period between related clocks              | 1          |
-| TIMING-27 | Critical Warning | Invalid primary clock on hierarchical pin            | 2          |
-| CKLD-1    | Warning          | Clock Net has non-BUF driver and too many loads      | 1          |
-| LUTAR-1   | Warning          | LUT drives async reset alert                         | 2          |
-| TIMING-9  | Warning          | Unknown CDC Logic                                    | 1          |
-| TIMING-10 | Warning          | Missing property on synchronizer                     | 1          |
-| TIMING-16 | Warning          | Large setup violation                                | 2          |
-| TIMING-18 | Warning          | Missing input or output delay                        | 145        |
-| TIMING-28 | Warning          | Auto-derived clock referenced by a timing constraint | 1          |
-+-----------+------------------+------------------------------------------------------+------------+
+             Violations found: 166
++-----------+------------------+-------------------------------------------------------------------------------------------------------+------------+
+| Rule      | Severity         | Description                                                                                           | Violations |
++-----------+------------------+-------------------------------------------------------------------------------------------------------+------------+
+| TIMING-4  | Critical Warning | Invalid primary clock redefinition on a clock tree                                                    | 2          |
+| TIMING-6  | Critical Warning | No common primary clock between related clocks                                                        | 5          |
+| TIMING-7  | Critical Warning | No common node between related clocks                                                                 | 5          |
+| TIMING-27 | Critical Warning | Invalid primary clock on hierarchical pin                                                             | 2          |
+| CKLD-1    | Warning          | Clock Net has non-BUF driver and too many loads                                                       | 1          |
+| LUTAR-1   | Warning          | LUT drives async reset alert                                                                          | 3          |
+| TIMING-9  | Warning          | Unknown CDC Logic                                                                                     | 1          |
+| TIMING-18 | Warning          | Missing input or output delay                                                                         | 145        |
+| TIMING-28 | Warning          | Auto-derived clock referenced by a timing constraint                                                  | 1          |
+| TIMING-47 | Warning          | False path, asynchronous clock group or max delay datapath only constraint between synchronous clocks | 1          |
++-----------+------------------+-------------------------------------------------------------------------------------------------------+------------+
 
 2. REPORT DETAILS
 -----------------
@@ -103,11 +101,6 @@ No common node between related clocks
 The clocks clk_fpga_1 and clk_fpga_2 are related (timed together) but they have no common node. The design could fail in hardware. To find a timing path between these clocks, run the following command: report_timing -from [get_clocks clk_fpga_1] -to [get_clocks clk_fpga_2]
 Related violations: <none>
 
-TIMING-8#1 Critical Warning
-No common period between related clocks  
-The clocks clk_out1_design_1_clk_wiz_3_0_1 and VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1 are found related (timed together) but have no common (expandable) period
-Related violations: <none>
-
 TIMING-27#1 Critical Warning
 Invalid primary clock on hierarchical pin  
 A primary clock design_1_i/processing_av_system/clock_generation/clk_wiz_2/inst/clk_in1 is created on an inappropriate internal pin design_1_i/processing_av_system/clock_generation/clk_wiz_2/inst/clk_in1. It is not recommended to create a primary clock on a hierarchical pin when its driver pin has a fanout connected to multiple clock pins
@@ -120,8 +113,9 @@ Related violations: <none>
 
 CKLD-1#1 Warning
 Clock Net has non-BUF driver and too many loads  
-Clock net design_1_i/processing_av_system/processing_system7_0/inst/FCLK_CLK2 is not driven by a Clock Buffer and has more than 512 loads. Driver(s): design_1_i/processing_av_system/processing_system7_0/inst/PS7_i/FCLKCLK[2]
+Clock net design_1_i/processing_av_system/processing_system7_0/inst/FCLK_CLK2 is not driven by a Clock Buffer and has more than 512 loads. Driver(s): design_1_i/processing_av_system/processing_system7_0/inst/PS7_i/FCLKCLK[2],
 design_1_i/processing_av_system/processing_system7_0/inst/PS7_i/SAXIHP0ACLK
+design_1_i/processing_av_system/processing_system7_0/inst/PS7_i/SAXIHP2ACLK
 Related violations: <none>
 
 LUTAR-1#1 Warning
@@ -146,6 +140,26 @@ Related violations: <none>
 
 LUTAR-1#2 Warning
 LUT drives async reset alert  
+LUT cell design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/RST_FULL_FF_INST_0, with 2 or more inputs, drives asynchronous preset/clear pin(s) design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_reg/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/grss.rsts/ram_empty_fb_i_reg/PRE,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/grss.rsts/ram_empty_i_reg/PRE,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_full_fb_i_reg/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_full_i_reg/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_d1_reg[0]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_d1_reg[1]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_d1_reg[2]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_d1_reg[3]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_d1_reg[4]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_reg[0]/PRE,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_reg[1]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_reg[2]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_reg[3]/CLR,
+design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_0/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/wpntr/gcc0.gc0.count_reg[4]/CLR
+ (the first 15 of 32 listed). The LUT may glitch and trigger an unexpected reset, even if it is a properly timed path.
+Related violations: <none>
+
+LUTAR-1#3 Warning
+LUT drives async reset alert  
 LUT cell design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/RST_FULL_FF_INST_0, with 2 or more inputs, drives asynchronous preset/clear pin(s) design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_reg/CLR,
 design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/grss.rsts/ram_empty_fb_i_reg/PRE,
 design_1_i/processing_av_system/audio_video_engine/video/axi_interconnect_1/s00_couplers/auto_pc/inst/gen_axi4_axi3.axi3_conv_inst/USE_READ.USE_SPLIT_R.read_addr_inst/USE_R_CHANNEL.cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/grss.rsts/ram_empty_i_reg/PRE,
@@ -167,21 +181,6 @@ Related violations: <none>
 TIMING-9#1 Warning
 Unknown CDC Logic  
 One or more asynchronous Clock Domain Crossing has been detected between 2 clock domains through a set_false_path or a set_clock_groups or set_max_delay -datapath_only constraint but no double-registers logic synchronizer has been found on the side of the capture clock. It is recommended to run report_cdc for a complete and detailed CDC coverage. Please consider using XPM_CDC to avoid Critical severities
-Related violations: <none>
-
-TIMING-10#1 Warning
-Missing property on synchronizer  
-One or more logic synchronizer has been detected between 2 clock domains but the synchronizer does not have the property ASYNC_REG defined on one or both registers. It is recommended to run report_cdc for a complete and detailed CDC coverage
-Related violations: <none>
-
-TIMING-16#1 Warning
-Large setup violation  
-There is a large setup violation of -10.146 ns between design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/I2S_TX_V1_0_TIMGEN_INST/rLRClk_reg/C (clocked by clk_out1_design_1_clk_wiz_3_0_1) and I2S_FSYNC_OUT (clocked by VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#2 Warning
-Large setup violation  
-There is a large setup violation of -10.174 ns between design_1_i/processing_av_system/audio_video_engine/i2s_transmitter_0/inst/I2S_TX_V1_0_SYS_INST/genblk4[0].I2S_TX_V1_0_SER_INST/rSDataOut_reg[31]/C (clocked by clk_out1_design_1_clk_wiz_3_0_1) and I2SO_D0 (clocked by VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
 Related violations: <none>
 
 TIMING-18#1 Warning
@@ -911,7 +910,12 @@ Related violations: <none>
 
 TIMING-28#1 Warning
 Auto-derived clock referenced by a timing constraint  
-The auto-derived clock AXI_clk_design_1_clk_wiz_0_0 is referenced by name inside timing constraint (see constraint position 37 in the Timing Constraint window in Vivado IDE). It is recommended to reference an auto-derived clock by the pin name attached to the clock: get_clocks -of_objects [get_pins design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/clk_inst/mmcm_adv_inst/CLKOUT0]
+The auto-derived clock AXI_clk_design_1_clk_wiz_0_0 is referenced by name inside timing constraint (see constraint position 39 in the Timing Constraint window in Vivado IDE). It is recommended to reference an auto-derived clock by the pin name attached to the clock: get_clocks -of_objects [get_pins design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/clk_inst/mmcm_adv_inst/CLKOUT0]
+Related violations: <none>
+
+TIMING-47#1 Warning
+False path, asynchronous clock group or max delay datapath only constraint between synchronous clocks  
+A False Path timing constraint is set between synchronous clocks clk_out1_design_1_clk_wiz_3_0_1 and VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1 (see constraint position 55 in the Timing Constraint window in Vivado IDE). Masking entire synchronous clock domains via  set_false_path, set_clock_groups or set_max_delay -datapath_only may result in failure in hardware.
 Related violations: <none>
 
 

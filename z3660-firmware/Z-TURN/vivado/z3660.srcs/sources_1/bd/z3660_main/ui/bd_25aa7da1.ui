@@ -1,0 +1,61 @@
+{
+   "ActiveEmotionalView":"Default View",
+   "Default View_ScaleFactor":"1.93217",
+   "Default View_TopLeft":"-288,3",
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
+#  -string -flagsOSRD
+preplace port S00_AXI -pg 1 -lvl 0 -x 0 -y 50 -defaultsOSRD
+preplace port S01_AXI -pg 1 -lvl 0 -x 0 -y 80 -defaultsOSRD
+preplace port m00_axi -pg 1 -lvl 2 -x 500 -y 110 -defaultsOSRD
+preplace port port-id_BP -pg 1 -lvl 2 -x 500 -y 380 -defaultsOSRD
+preplace port port-id_CLK18M_clk -pg 1 -lvl 0 -x 0 -y 440 -defaultsOSRD
+preplace port port-id_PCLK_clk -pg 1 -lvl 0 -x 0 -y 170 -defaultsOSRD
+preplace port port-id_RESET_IN -pg 1 -lvl 0 -x 0 -y 320 -defaultsOSRD
+preplace port port-id_R_W040 -pg 1 -lvl 2 -x 500 -y 230 -defaultsOSRD
+preplace port port-id_S00_AXI_ACLK -pg 1 -lvl 0 -x 0 -y 260 -defaultsOSRD
+preplace port port-id_S00_AXI_ARESETN -pg 1 -lvl 0 -x 0 -y 290 -defaultsOSRD
+preplace port port-id_S01_AXI_ACLK -pg 1 -lvl 0 -x 0 -y 380 -defaultsOSRD
+preplace port port-id_S01_AXI_ARESETN -pg 1 -lvl 0 -x 0 -y 410 -defaultsOSRD
+preplace port port-id_interrupt -pg 1 -lvl 2 -x 500 -y 140 -defaultsOSRD
+preplace port port-id_nCLKEN_clk -pg 1 -lvl 0 -x 0 -y 230 -defaultsOSRD
+preplace port port-id_nTA -pg 1 -lvl 2 -x 500 -y 260 -defaultsOSRD
+preplace port port-id_nTBI -pg 1 -lvl 2 -x 500 -y 350 -defaultsOSRD
+preplace port port-id_nTCI -pg 1 -lvl 0 -x 0 -y 140 -defaultsOSRD
+preplace port port-id_nTEA -pg 1 -lvl 0 -x 0 -y 110 -defaultsOSRD
+preplace port port-id_nTS -pg 1 -lvl 0 -x 0 -y 200 -defaultsOSRD
+preplace port port-id_nTS_FPGA_out -pg 1 -lvl 2 -x 500 -y 320 -defaultsOSRD
+preplace portBus A060 -pg 1 -lvl 2 -x 500 -y 200 -defaultsOSRD
+preplace portBus D040 -pg 1 -lvl 2 -x 500 -y 170 -defaultsOSRD
+preplace portBus SIZ40 -pg 1 -lvl 2 -x 500 -y 290 -defaultsOSRD
+preplace portBus control_vblank -pg 1 -lvl 0 -x 0 -y 350 -defaultsOSRD
+preplace inst z3660_0 -pg 1 -lvl 1 -x 260 -y 210 -defaultsOSRD
+preplace netloc Net 1 1 1 450J 240n
+preplace netloc Net1 1 1 1 480J 160n
+preplace netloc Net2 1 1 1 480J 180n
+preplace netloc Net3 1 1 1 470J 200n
+preplace netloc Net4 1 1 1 460J 220n
+preplace netloc amiga_0_nTCI 1 0 1 20J 120n
+preplace netloc amiga_0_nTEA 1 0 1 20J 100n
+preplace netloc amiga_0_nTS_out 1 0 1 40J 160n
+preplace netloc processing_av_system_0_AXI_clk 1 0 1 80J 320n
+preplace netloc processing_av_system_0_CLK18M_clk 1 0 1 100J 360n
+preplace netloc processing_av_system_0_PCLK_reg 1 0 1 30J 140n
+preplace netloc processing_av_system_0_aresetn 1 0 1 90J 340n
+preplace netloc processing_av_system_0_control_vblank 1 0 1 70J 260n
+preplace netloc processing_av_system_0_nCLKEN_reg 1 0 1 50J 180n
+preplace netloc processing_av_system_0_peripheral_reset 1 0 1 20J 240n
+preplace netloc processing_av_system_AXI1_clk 1 0 1 60 200n
+preplace netloc processing_av_system_aresetn1 1 0 1 80 220n
+preplace netloc z3660_0_BP 1 1 1 420J 300n
+preplace netloc z3660_0_interrupt 1 1 1 NJ 140
+preplace netloc z3660_0_nTBI 1 1 1 430J 280n
+preplace netloc z3660_0_nTS_FPGA_out 1 1 1 440J 260n
+preplace netloc processing_av_system_0_M_AXI 1 0 1 NJ 80
+preplace netloc processing_av_system_0_M_AXI1 1 0 1 20J 50n
+preplace netloc z3660_0_m00_axi 1 1 1 480J 110n
+levelinfo -pg 1 0 260 500
+pagesize -pg 1 -db -bbox -sgen -170 0 640 460
+"
+}
+

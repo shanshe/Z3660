@@ -1,64 +1,73 @@
 {
    "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"0.565564",
-   "Default View_TopLeft":"-458,0",
+   "Default View_ScaleFactor":"0.957806",
+   "Default View_TopLeft":"-572,-24",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
 #  -string -flagsOSRD
-preplace port S_AXI -pg 1 -lvl 0 -x -20 -y 320 -defaultsOSRD
-preplace port S_AXI_LITE -pg 1 -lvl 0 -x -20 -y 530 -defaultsOSRD
-preplace port M00_AXI -pg 1 -lvl 4 -x 1570 -y 600 -defaultsOSRD
-preplace port port-id_hdmi_de -pg 1 -lvl 4 -x 1570 -y 360 -defaultsOSRD
-preplace port port-id_hdmi_hs -pg 1 -lvl 4 -x 1570 -y 320 -defaultsOSRD
-preplace port port-id_hdmi_vs -pg 1 -lvl 4 -x 1570 -y 340 -defaultsOSRD
-preplace port port-id_hdmi_clk -pg 1 -lvl 4 -x 1570 -y 480 -defaultsOSRD
-preplace port port-id_vid_clk -pg 1 -lvl 0 -x -20 -y 610 -defaultsOSRD
-preplace port port-id_s_axi_aclk -pg 1 -lvl 0 -x -20 -y 550 -defaultsOSRD
-preplace port port-id_s_axi_aresetn -pg 1 -lvl 0 -x -20 -y 590 -defaultsOSRD
-preplace port port-id_s_axis_aclk -pg 1 -lvl 0 -x -20 -y 570 -defaultsOSRD
-preplace port port-id_ext_reset_in -pg 1 -lvl 0 -x -20 -y 670 -defaultsOSRD
-preplace portBus hdmi_data -pg 1 -lvl 4 -x 1570 -y 380 -defaultsOSRD
-preplace portBus hdmi_intn -pg 1 -lvl 0 -x -20 -y 60 -defaultsOSRD
-preplace portBus dout -pg 1 -lvl 4 -x 1570 -y 100 -defaultsOSRD
-preplace portBus control_vblank -pg 1 -lvl 4 -x 1570 -y 400 -defaultsOSRD
-preplace portBus aresetn -pg 1 -lvl 4 -x 1570 -y 720 -defaultsOSRD
-preplace portBus peripheral_aresetn -pg 1 -lvl 4 -x 1570 -y 740 -defaultsOSRD
-preplace portBus audio_irq -pg 1 -lvl 0 -x -20 -y 220 -defaultsOSRD
-preplace inst rst_ps7_0_200M_1 -pg 1 -lvl 2 -x 610 -y 780 -defaultsOSRD
-preplace inst axi_vdma_0 -pg 1 -lvl 1 -x 220 -y 570 -defaultsOSRD
-preplace inst axis_data_fifo_0 -pg 1 -lvl 2 -x 610 -y 620 -defaultsOSRD
-preplace inst util_vector_logic_0 -pg 1 -lvl 2 -x 610 -y 60 -defaultsOSRD
-preplace inst xlconcat_0 -pg 1 -lvl 3 -x 1330 -y 60 -defaultsOSRD
-preplace inst xlslice_0 -pg 1 -lvl 2 -x 610 -y 160 -defaultsOSRD
-preplace inst video_formatter_0 -pg 1 -lvl 3 -x 1330 -y 260 -defaultsOSRD
-preplace inst axi_interconnect_0 -pg 1 -lvl 3 -x 1330 -y 700 -defaultsOSRD
-preplace inst axi_interconnect_1 -pg 1 -lvl 3 -x 1330 -y 480 -defaultsOSRD
-preplace netloc In3_1 1 0 3 0J -10 NJ -10 1140J
-preplace netloc axi_vdma_0_mm2s_introut 1 1 2 390J 0 800
-preplace netloc ext_reset_in_0_1 1 0 3 NJ 670 430 260 NJ
-preplace netloc hdmi_intn_1 1 0 2 NJ 60 NJ
-preplace netloc rst_ps7_0_200M_1_peripheral_aresetn 1 1 3 440 530 1100 820 1550J
-preplace netloc s_axi_aclk_0_1 1 0 3 20 300 NJ 300 NJ
-preplace netloc s_axi_aresetn_0_1 1 0 3 40 320 NJ 320 NJ
-preplace netloc s_axis_aclk_1 1 0 3 50 470 420 470 1140
-preplace netloc s_axis_aresetn_1 1 2 2 1150 830 1540J
-preplace netloc util_vector_logic_0_Res 1 2 1 780J 20n
-preplace netloc vid_clk_1 1 0 4 30J 460 NJ 460 1130 840 1520J
-preplace netloc video_formatter_0_control_vblank 1 1 3 440 -40 NJ -40 1540
-preplace netloc video_formatter_0_dvi_active_video 1 3 1 1520J 260n
-preplace netloc video_formatter_0_dvi_hsync 1 3 1 1550J 220n
-preplace netloc video_formatter_0_dvi_vsync 1 3 1 1530J 240n
-preplace netloc video_formatter_0_hdmi_data 1 3 1 1510J 280n
-preplace netloc xlconcat_0_dout 1 3 1 1550J 60n
-preplace netloc xlslice_0_Dout 1 2 1 1120J 60n
-preplace netloc Conn2 1 0 1 NJ 530
-preplace netloc axi_interconnect_0_M00_AXI 1 3 1 1510J 600n
-preplace netloc axi_vdma_0_M_AXIS_MM2S 1 1 1 400 560n
-preplace netloc axi_vdma_0_M_AXI_MM2S 1 1 2 N 540 1110J
-preplace netloc axis_data_fifo_0_M_AXIS 1 2 1 1120 200n
-preplace netloc ctrl_1 1 0 3 10J 220 NJ 220 NJ
-levelinfo -pg 1 -20 220 610 1330 1570
-pagesize -pg 1 -db -bbox -sgen -160 -120 1770 880
+preplace port S_AXI -pg 1 -lvl 0 -x -460 -y 320 -defaultsOSRD
+preplace port S_AXI_LITE -pg 1 -lvl 0 -x -460 -y 380 -defaultsOSRD
+preplace port M00_AXI -pg 1 -lvl 4 -x 920 -y 650 -defaultsOSRD
+preplace port S_AXI_LITE_overlay -pg 1 -lvl 0 -x -460 -y 570 -defaultsOSRD
+preplace port M00_AXI_1 -pg 1 -lvl 4 -x 920 -y 620 -defaultsOSRD
+preplace port port-id_hdmi_de -pg 1 -lvl 4 -x 920 -y 360 -defaultsOSRD
+preplace port port-id_hdmi_hs -pg 1 -lvl 4 -x 920 -y 320 -defaultsOSRD
+preplace port port-id_hdmi_vs -pg 1 -lvl 4 -x 920 -y 340 -defaultsOSRD
+preplace port port-id_hdmi_clk -pg 1 -lvl 4 -x 920 -y 500 -defaultsOSRD
+preplace port port-id_vid_clk -pg 1 -lvl 0 -x -460 -y 900 -defaultsOSRD
+preplace port port-id_s_axi_aclk -pg 1 -lvl 0 -x -460 -y 340 -defaultsOSRD
+preplace port port-id_s_axi_aresetn -pg 1 -lvl 0 -x -460 -y 400 -defaultsOSRD
+preplace port port-id_s_axis_aclk -pg 1 -lvl 0 -x -460 -y 300 -defaultsOSRD
+preplace port port-id_ext_reset_in -pg 1 -lvl 0 -x -460 -y 920 -defaultsOSRD
+preplace portBus hdmi_data -pg 1 -lvl 4 -x 920 -y 380 -defaultsOSRD
+preplace portBus hdmi_intn -pg 1 -lvl 0 -x -460 -y 20 -defaultsOSRD
+preplace portBus dout -pg 1 -lvl 4 -x 920 -y 140 -defaultsOSRD
+preplace portBus control_vblank -pg 1 -lvl 4 -x 920 -y 400 -defaultsOSRD
+preplace portBus aresetn -pg 1 -lvl 4 -x 920 -y 800 -defaultsOSRD
+preplace portBus peripheral_aresetn -pg 1 -lvl 4 -x 920 -y 820 -defaultsOSRD
+preplace portBus audio_irq -pg 1 -lvl 0 -x -460 -y 40 -defaultsOSRD
+preplace inst rst_ps7_0_200M_1 -pg 1 -lvl 2 -x 210 -y 790 -defaultsOSRD
+preplace inst axi_vdma_0 -pg 1 -lvl 1 -x -220 -y 410 -defaultsOSRD
+preplace inst util_vector_logic_0 -pg 1 -lvl 2 -x 210 -y 70 -defaultsOSRD
+preplace inst xlconcat_0 -pg 1 -lvl 3 -x 700 -y 140 -defaultsOSRD
+preplace inst xlslice_0 -pg 1 -lvl 2 -x 210 -y 170 -defaultsOSRD
+preplace inst video_formatter_0 -pg 1 -lvl 3 -x 700 -y 360 -defaultsOSRD
+preplace inst axi_interconnect_1 -pg 1 -lvl 3 -x 700 -y 840 -defaultsOSRD
+preplace inst axi_vdma_1 -pg 1 -lvl 1 -x -220 -y 610 -defaultsOSRD
+preplace inst axis_data_fifo_0 -pg 1 -lvl 2 -x 210 -y 360 -defaultsOSRD
+preplace inst axis_data_fifo_1 -pg 1 -lvl 2 -x 210 -y 500 -defaultsOSRD
+preplace inst axi_interconnect_0 -pg 1 -lvl 3 -x 700 -y 620 -defaultsOSRD
+preplace netloc In3_1 1 0 3 -400J -10 N -10 440J
+preplace netloc axi_vdma_0_mm2s_introut 1 1 2 -50 10 400
+preplace netloc ext_reset_in_0_1 1 0 3 NJ 920 20 260 470J
+preplace netloc hdmi_intn_1 1 0 2 NJ 20 -40
+preplace netloc rst_ps7_0_200M_1_peripheral_aresetn 1 1 3 40 610 410 970 900J
+preplace netloc s_axi_aclk_0_1 1 0 3 -400 240 N 240 480J
+preplace netloc s_axi_aresetn_0_1 1 0 3 -420 250 N 250 460J
+preplace netloc s_axis_aclk_1 1 0 3 -440 310 10 600 510
+preplace netloc s_axis_aresetn_1 1 2 2 520 960 890J
+preplace netloc util_vector_logic_0_Res 1 2 1 390J 70n
+preplace netloc vid_clk_1 1 0 4 -390J 510 -40 590 490 500 NJ
+preplace netloc video_formatter_0_control_vblank 1 1 3 40 0 NJ 0 880
+preplace netloc video_formatter_0_dvi_active_video 1 3 1 NJ 360
+preplace netloc video_formatter_0_dvi_hsync 1 3 1 NJ 320
+preplace netloc video_formatter_0_dvi_vsync 1 3 1 NJ 340
+preplace netloc video_formatter_0_hdmi_data 1 3 1 NJ 380
+preplace netloc xlconcat_0_dout 1 3 1 NJ 140
+preplace netloc xlslice_0_Dout 1 2 1 480J 140n
+preplace netloc Conn2 1 0 1 -410J 370n
+preplace netloc S_AXI_LITE_overlay_1 1 0 1 N 570
+preplace netloc axi_interconnect_0_M00_AXI 1 3 1 N 620
+preplace netloc axi_interconnect_1_M00_AXI 1 3 1 880 650n
+preplace netloc axi_vdma_0_M_AXIS_MM2S 1 1 1 30 340n
+preplace netloc axi_vdma_0_M_AXI_MM2S 1 1 2 -40 270 420J
+preplace netloc axi_vdma_1_M_AXIS_MM2S 1 1 1 -50 480n
+preplace netloc axi_vdma_1_M_AXI_MM2S 1 1 2 NJ 580 500
+preplace netloc axis_data_fifo_0_M_AXIS 1 2 1 450 300n
+preplace netloc axis_data_fifo_1_M_AXIS 1 2 1 440 280n
+preplace netloc ctrl_1 1 0 3 -430J 300 -30 280 430J
+levelinfo -pg 1 -460 -220 210 700 920
+pagesize -pg 1 -db -bbox -sgen -650 -20 2090 1040
 "
 }
 0

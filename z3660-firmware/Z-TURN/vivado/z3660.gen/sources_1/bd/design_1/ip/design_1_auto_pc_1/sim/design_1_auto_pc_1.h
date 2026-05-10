@@ -2,7 +2,7 @@
 #define IP_DESIGN_1_AUTO_PC_1_H_
 
 // (c) Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
-// (c) Copyright 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// (c) Copyright 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of AMD and is protected under U.S. and international copyright
@@ -93,7 +93,6 @@ public:
   sc_core::sc_in< sc_dt::sc_bv<3> > s_axi_arprot;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arregion;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arqos;
-  sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_aruser;
   sc_core::sc_in< bool > s_axi_arvalid;
   sc_core::sc_out< bool > s_axi_arready;
   sc_core::sc_out< sc_dt::sc_bv<32> > s_axi_rdata;
@@ -109,7 +108,6 @@ public:
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arcache;
   sc_core::sc_out< sc_dt::sc_bv<3> > m_axi_arprot;
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arqos;
-  sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_aruser;
   sc_core::sc_out< bool > m_axi_arvalid;
   sc_core::sc_in< bool > m_axi_arready;
   sc_core::sc_in< sc_dt::sc_bv<32> > m_axi_rdata;
@@ -127,10 +125,10 @@ protected:
 
 private:
 
-  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,4,1>* mp_S_AXI_transactor;
+  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,1,1>* mp_S_AXI_transactor;
   xsc::common::vectorN2scalar_converter<1>* mp_s_axi_arlock_converter;
   sc_signal< bool > m_s_axi_arlock_converter_signal;
-  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,4,1>* mp_M_AXI_transactor;
+  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,1,1>* mp_M_AXI_transactor;
   xsc::common::vector2vector_converter<8,4>* mp_m_axi_arlen_converter;
   sc_signal< sc_bv<8> > m_m_axi_arlen_converter_signal;
   xsc::common::scalar2vectorN_converter<2>* mp_m_axi_arlock_converter;
@@ -167,7 +165,6 @@ public:
   sc_core::sc_in< sc_dt::sc_bv<3> > s_axi_arprot;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arregion;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arqos;
-  sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_aruser;
   sc_core::sc_in< bool > s_axi_arvalid;
   sc_core::sc_out< bool > s_axi_arready;
   sc_core::sc_out< sc_dt::sc_bv<32> > s_axi_rdata;
@@ -183,7 +180,6 @@ public:
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arcache;
   sc_core::sc_out< sc_dt::sc_bv<3> > m_axi_arprot;
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arqos;
-  sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_aruser;
   sc_core::sc_out< bool > m_axi_arvalid;
   sc_core::sc_in< bool > m_axi_arready;
   sc_core::sc_in< sc_dt::sc_bv<32> > m_axi_rdata;
@@ -201,10 +197,10 @@ protected:
 
 private:
 
-  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,4,1>* mp_S_AXI_transactor;
+  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,1,1>* mp_S_AXI_transactor;
   xsc::common::vectorN2scalar_converter<1>* mp_s_axi_arlock_converter;
   sc_signal< bool > m_s_axi_arlock_converter_signal;
-  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,4,1>* mp_M_AXI_transactor;
+  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,1,1>* mp_M_AXI_transactor;
   xsc::common::vector2vector_converter<8,4>* mp_m_axi_arlen_converter;
   sc_signal< sc_bv<8> > m_m_axi_arlen_converter_signal;
   xsc::common::scalar2vectorN_converter<2>* mp_m_axi_arlock_converter;
@@ -241,7 +237,6 @@ public:
   sc_core::sc_in< sc_dt::sc_bv<3> > s_axi_arprot;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arregion;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arqos;
-  sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_aruser;
   sc_core::sc_in< bool > s_axi_arvalid;
   sc_core::sc_out< bool > s_axi_arready;
   sc_core::sc_out< sc_dt::sc_bv<32> > s_axi_rdata;
@@ -257,7 +252,6 @@ public:
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arcache;
   sc_core::sc_out< sc_dt::sc_bv<3> > m_axi_arprot;
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arqos;
-  sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_aruser;
   sc_core::sc_out< bool > m_axi_arvalid;
   sc_core::sc_in< bool > m_axi_arready;
   sc_core::sc_in< sc_dt::sc_bv<32> > m_axi_rdata;
@@ -275,10 +269,10 @@ protected:
 
 private:
 
-  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,4,1>* mp_S_AXI_transactor;
+  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,1,1>* mp_S_AXI_transactor;
   xsc::common::vectorN2scalar_converter<1>* mp_s_axi_arlock_converter;
   sc_signal< bool > m_s_axi_arlock_converter_signal;
-  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,4,1>* mp_M_AXI_transactor;
+  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,1,1>* mp_M_AXI_transactor;
   xsc::common::vector2vector_converter<8,4>* mp_m_axi_arlen_converter;
   sc_signal< sc_bv<8> > m_m_axi_arlen_converter_signal;
   xsc::common::scalar2vectorN_converter<2>* mp_m_axi_arlock_converter;
@@ -317,7 +311,6 @@ public:
   sc_core::sc_in< sc_dt::sc_bv<3> > s_axi_arprot;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arregion;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arqos;
-  sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_aruser;
   sc_core::sc_in< bool > s_axi_arvalid;
   sc_core::sc_out< bool > s_axi_arready;
   sc_core::sc_out< sc_dt::sc_bv<32> > s_axi_rdata;
@@ -333,7 +326,6 @@ public:
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arcache;
   sc_core::sc_out< sc_dt::sc_bv<3> > m_axi_arprot;
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arqos;
-  sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_aruser;
   sc_core::sc_out< bool > m_axi_arvalid;
   sc_core::sc_in< bool > m_axi_arready;
   sc_core::sc_in< sc_dt::sc_bv<32> > m_axi_rdata;
@@ -351,10 +343,10 @@ protected:
 
 private:
 
-  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,4,1>* mp_S_AXI_transactor;
+  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,1,1>* mp_S_AXI_transactor;
   xsc::common::vectorN2scalar_converter<1>* mp_s_axi_arlock_converter;
   sc_signal< bool > m_s_axi_arlock_converter_signal;
-  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,4,1>* mp_M_AXI_transactor;
+  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,1,1>* mp_M_AXI_transactor;
   xsc::common::vector2vector_converter<8,4>* mp_m_axi_arlen_converter;
   sc_signal< sc_bv<8> > m_m_axi_arlen_converter_signal;
   xsc::common::scalar2vectorN_converter<2>* mp_m_axi_arlock_converter;
@@ -399,7 +391,6 @@ public:
   sc_core::sc_in< sc_dt::sc_bv<3> > s_axi_arprot;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arregion;
   sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_arqos;
-  sc_core::sc_in< sc_dt::sc_bv<4> > s_axi_aruser;
   sc_core::sc_in< bool > s_axi_arvalid;
   sc_core::sc_out< bool > s_axi_arready;
   sc_core::sc_out< sc_dt::sc_bv<32> > s_axi_rdata;
@@ -415,7 +406,6 @@ public:
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arcache;
   sc_core::sc_out< sc_dt::sc_bv<3> > m_axi_arprot;
   sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_arqos;
-  sc_core::sc_out< sc_dt::sc_bv<4> > m_axi_aruser;
   sc_core::sc_out< bool > m_axi_arvalid;
   sc_core::sc_in< bool > m_axi_arready;
   sc_core::sc_in< sc_dt::sc_bv<32> > m_axi_rdata;
@@ -433,10 +423,10 @@ protected:
 
 private:
 
-  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,4,1>* mp_S_AXI_transactor;
+  xtlm::xaximm_pin2xtlm_t<32,32,1,1,1,1,1,1>* mp_S_AXI_transactor;
   xsc::common::vectorN2scalar_converter<1>* mp_s_axi_arlock_converter;
   sc_signal< bool > m_s_axi_arlock_converter_signal;
-  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,4,1>* mp_M_AXI_transactor;
+  xtlm::xaximm_xtlm2pin_t<32,32,1,1,1,1,1,1>* mp_M_AXI_transactor;
   xsc::common::vector2vector_converter<8,4>* mp_m_axi_arlen_converter;
   sc_signal< sc_bv<8> > m_m_axi_arlen_converter_signal;
   xsc::common::scalar2vectorN_converter<2>* mp_m_axi_arlock_converter;

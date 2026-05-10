@@ -2,13 +2,13 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "design_1_axi_interconnect_1_0",
-    "cell_name": "axi_interconnect_1",
+    "cell_name": "processing_av_system/audio_video_engine/video/axi_interconnect_1",
     "component_reference": "xilinx.com:ip:axi_interconnect:2.1",
     "ip_revision": "30",
     "gen_directory": "../../../../../../z3660.gen/sources_1/bd/design_1/ip/design_1_axi_interconnect_1_0",
     "parameters": {
       "component_parameters": {
-        "NUM_SI": [ { "value": "1", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "NUM_SI": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "NUM_MI": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "STRATEGY": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "ENABLE_ADVANCED_OPTIONS": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -147,7 +147,7 @@
         "M62_HAS_DATA_FIFO": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M63_HAS_DATA_FIFO": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S00_HAS_REGSLICE": [ { "value": "4", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "S01_HAS_REGSLICE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "S01_HAS_REGSLICE": [ { "value": "4", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S02_HAS_REGSLICE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S03_HAS_REGSLICE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S04_HAS_REGSLICE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],

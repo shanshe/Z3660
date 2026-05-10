@@ -293,12 +293,12 @@ vlog -work axi_crossbar_v2_1_30  -v2k5 "+incdir+../../../../z3660.gen/sources_1/
 
 vlog -work xil_defaultlib  -v2k5 "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/ec67/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/6b2b/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/7fb4/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/434f/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/c2c6" "+incdir+C:/Xilinx/Vivado/2023.2/data/xilinx_vip/include" -l xilinx_vip -l xpm -l axi_infrastructure_v1_1_0 -l axi_vip_v1_1_15 -l processing_system7_vip_v1_0_17 -l xil_defaultlib -l lib_cdc_v1_0_2 -l proc_sys_reset_v5_0_14 -l lib_pkg_v1_0_3 -l fifo_generator_v13_2_9 -l lib_fifo_v1_0_18 -l blk_mem_gen_v8_4_7 -l lib_bmg_v1_0_16 -l lib_srl_fifo_v1_0_3 -l axi_datamover_v5_1_31 -l axi_vdma_v6_3_17 -l axis_infrastructure_v1_1_1 -l axis_data_fifo_v2_0_11 -l util_vector_logic_v2_0_3 -l xlconcat_v2_1_5 -l xlslice_v1_0_3 -l audio_formatter_v1_0_11 -l axi_register_slice_v2_1_29 -l axis_register_slice_v1_1_29 -l i2s_transmitter_v1_0_7 -l generic_baseblocks_v2_1_1 -l axi_data_fifo_v2_1_28 -l axi_protocol_converter_v2_1_29 -l axi_clock_converter_v2_1_28 -l axi_dwidth_converter_v2_1_29 -l axi_crossbar_v2_1_30 \
 "../../../bd/design_1/ip/design_1_xbar_0/sim/design_1_xbar_0.v" \
-"../../../bd/design_1/ip/design_1_s00_regslice_115/sim/design_1_s00_regslice_115.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_128/sim/design_1_s00_regslice_128.v" \
 "../../../bd/design_1/ip/design_1_auto_pc_0/sim/design_1_auto_pc_0.v" \
-"../../../bd/design_1/ip/design_1_s00_regslice_114/sim/design_1_s00_regslice_114.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_127/sim/design_1_s00_regslice_127.v" \
 "../../../bd/design_1/ip/design_1_auto_cc_0/sim/design_1_auto_cc_0.v" \
 "../../../bd/design_1/ip/design_1_auto_pc_1/sim/design_1_auto_pc_1.v" \
-"../../../bd/design_1/ip/design_1_s00_regslice_116/sim/design_1_s00_regslice_116.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_129/sim/design_1_s00_regslice_129.v" \
 "../../../bd/design_1/ip/design_1_auto_pc_2/sim/design_1_auto_pc_2.v" \
 "../../../bd/design_1/sim/design_1.v" \
 

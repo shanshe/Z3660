@@ -226,6 +226,24 @@
             },
             "V5": {
                 "VT": "AC",
+                "BA": "0x00000000",
+                "HA": "0x3FFFFFFF",
+                "BP": "C_BASEADDR",
+                "HP": "C_HIGHADDR",
+                "MA": "Data_MM2S",
+                "MX": "/processing_av_system/audio_video_engine/video/axi_vdma_1",
+                "MI": "M_AXI_MM2S",
+                "MS": "SEG_processing_system7_0_HP2_DDR_LOWOCM",
+                "MV": "xilinx.com:ip:axi_vdma:6.3",
+                "SX": "/processing_av_system/processing_system7_0",
+                "SI": "S_AXI_HP2",
+                "SS": "HP2_DDR_LOWOCM",
+                "SV": "xilinx.com:ip:processing_system7:5.5",
+                "TM": "both",
+                "TU": "memory"
+            },
+            "V6": {
+                "VT": "AC",
                 "BA": "0x20000000",
                 "HA": "0x3FFFFFFF",
                 "BP": "C_BASEADDR",
@@ -242,7 +260,7 @@
                 "TM": "both",
                 "TU": "memory"
             },
-            "V6": {
+            "V7": {
                 "VT": "AC",
                 "BA": "0x40000000",
                 "HA": "0x7FFFFFFF",
@@ -260,7 +278,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V7": {
+            "V8": {
                 "VT": "AC",
                 "BA": "0x7FC00000",
                 "HA": "0x7FC0FFFF",
@@ -278,7 +296,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V8": {
+            "V9": {
                 "VT": "AC",
                 "BA": "0x7FC10000",
                 "HA": "0x7FC1FFFF",
@@ -296,7 +314,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V9": {
+            "V10": {
                 "VT": "AC",
                 "BA": "0x7FC20000",
                 "HA": "0x7FC2FFFF",
@@ -314,7 +332,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V10": {
+            "V11": {
                 "VT": "AC",
                 "BA": "0x7FC30000",
                 "HA": "0x7FC3FFFF",
@@ -332,7 +350,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V11": {
+            "V12": {
                 "VT": "AC",
                 "BA": "0x7FC50000",
                 "HA": "0x7FC5FFFF",
@@ -350,7 +368,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V12": {
+            "V13": {
                 "VT": "AC",
                 "BA": "0x7FC60000",
                 "HA": "0x7FC6FFFF",
@@ -368,7 +386,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V13": {
+            "V14": {
                 "VT": "AC",
                 "BA": "0x7FC70000",
                 "HA": "0x7FC7FFFF",
@@ -386,7 +404,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V14": {
+            "V15": {
                 "VT": "AC",
                 "BA": "0x7FC80000",
                 "HA": "0x7FC8FFFF",
@@ -404,7 +422,25 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V15": {
+            "V16": {
+                "VT": "AC",
+                "BA": "0x7FC90000",
+                "HA": "0x7FC9FFFF",
+                "BP": "C_BASEADDR",
+                "HP": "C_HIGHADDR",
+                "MA": "Data",
+                "MX": "/processing_av_system/processing_system7_0",
+                "MI": "M_AXI_GP0",
+                "MS": "SEG_axi_vdma_1_Reg",
+                "MV": "xilinx.com:ip:processing_system7:5.5",
+                "SX": "/processing_av_system/audio_video_engine/video/axi_vdma_1",
+                "SI": "S_AXI_LITE",
+                "SS": "Reg",
+                "SV": "xilinx.com:ip:axi_vdma:6.3",
+                "TM": "both",
+                "TU": "register"
+            },
+            "V17": {
                 "VT": "AC",
                 "BA": "0x80000000",
                 "HA": "0x9FFFFFFF",
@@ -422,7 +458,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V16": {
+            "V18": {
                 "VT": "AC",
                 "BA": "0x80000000",
                 "HA": "0xBFFFFFFF",
@@ -440,7 +476,7 @@
                 "TM": "both",
                 "TU": "register"
             },
-            "V17": {
+            "V19": {
                 "VT": "AC",
                 "BA": "0xE0000000",
                 "HA": "0xE03FFFFF",
@@ -540,6 +576,16 @@
             },
             {
                 "src": "V17",
+                "trg": "V2",
+                "EH": "2"
+            },
+            {
+                "src": "V18",
+                "trg": "V2",
+                "EH": "2"
+            },
+            {
+                "src": "V19",
                 "trg": "V2",
                 "EH": "2"
             }

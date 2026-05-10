@@ -2,7 +2,7 @@
 //Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2023.2 (win64) Build 4029153 Fri Oct 13 20:14:34 MDT 2023
-//Date        : Sat Nov 22 20:08:00 2025
+//Date        : Mon Feb  9 15:18:03 2026
 //Host        : CoreBox-X running 64-bit major release  (build 9200)
 //Command     : generate_target design_1.bd
 //Design      : design_1
@@ -6977,7 +6977,7 @@ module s00_couplers_imp_17YN31X
         .s_axi_rready(s00_regslice_to_auto_pc_RREADY),
         .s_axi_rresp(s00_regslice_to_auto_pc_RRESP),
         .s_axi_rvalid(s00_regslice_to_auto_pc_RVALID));
-  design_1_s00_regslice_115 s00_regslice
+  design_1_s00_regslice_128 s00_regslice
        (.aclk(S_ACLK_1),
         .aresetn(S_ARESETN_1),
         .m_axi_araddr(s00_regslice_to_auto_pc_ARADDR),
@@ -7355,7 +7355,7 @@ module s00_couplers_imp_271I2I
         .s_axi_wready(s00_regslice_to_auto_pc_WREADY),
         .s_axi_wstrb(s00_regslice_to_auto_pc_WSTRB),
         .s_axi_wvalid(s00_regslice_to_auto_pc_WVALID));
-  design_1_s00_regslice_116 s00_regslice
+  design_1_s00_regslice_129 s00_regslice
        (.aclk(S_ACLK_1),
         .aresetn(S_ARESETN_1),
         .m_axi_araddr(s00_regslice_to_auto_pc_ARADDR),
@@ -7679,7 +7679,7 @@ module s00_couplers_imp_GW5FJ5
         .s_axi_rready(auto_cc_to_auto_pc_RREADY),
         .s_axi_rresp(auto_cc_to_auto_pc_RRESP),
         .s_axi_rvalid(auto_cc_to_auto_pc_RVALID));
-  design_1_s00_regslice_114 s00_regslice
+  design_1_s00_regslice_127 s00_regslice
        (.aclk(S_ACLK_1),
         .aresetn(S_ARESETN_1),
         .m_axi_araddr(s00_regslice_to_auto_cc_ARADDR),

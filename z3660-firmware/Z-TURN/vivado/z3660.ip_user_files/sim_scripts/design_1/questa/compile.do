@@ -290,12 +290,12 @@ vlog -work axi_crossbar_v2_1_30  -incr -mfcu  "+incdir+../../../../z3660.gen/sou
 
 vlog -work xil_defaultlib  -incr -mfcu  "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/ec67/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/6b2b/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/7fb4/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/434f/hdl" "+incdir+../../../../z3660.gen/sources_1/bd/design_1/ipshared/c2c6" "+incdir+C:/Xilinx/Vivado/2023.2/data/xilinx_vip/include" \
 "../../../bd/design_1/ip/design_1_xbar_0/sim/design_1_xbar_0.v" \
-"../../../bd/design_1/ip/design_1_s00_regslice_115/sim/design_1_s00_regslice_115.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_128/sim/design_1_s00_regslice_128.v" \
 "../../../bd/design_1/ip/design_1_auto_pc_0/sim/design_1_auto_pc_0.v" \
-"../../../bd/design_1/ip/design_1_s00_regslice_114/sim/design_1_s00_regslice_114.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_127/sim/design_1_s00_regslice_127.v" \
 "../../../bd/design_1/ip/design_1_auto_cc_0/sim/design_1_auto_cc_0.v" \
 "../../../bd/design_1/ip/design_1_auto_pc_1/sim/design_1_auto_pc_1.v" \
-"../../../bd/design_1/ip/design_1_s00_regslice_116/sim/design_1_s00_regslice_116.v" \
+"../../../bd/design_1/ip/design_1_s00_regslice_129/sim/design_1_s00_regslice_129.v" \
 "../../../bd/design_1/ip/design_1_auto_pc_2/sim/design_1_auto_pc_2.v" \
 "../../../bd/design_1/sim/design_1.v" \
 

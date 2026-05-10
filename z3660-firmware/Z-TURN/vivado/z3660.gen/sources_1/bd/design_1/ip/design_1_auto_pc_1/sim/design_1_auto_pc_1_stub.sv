@@ -1,5 +1,5 @@
 // (c) Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
-// (c) Copyright 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// (c) Copyright 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of AMD and is protected under U.S. and international copyright
@@ -77,7 +77,6 @@ module design_1_auto_pc_1 (
   input bit [2 : 0] s_axi_arprot,
   input bit [3 : 0] s_axi_arregion,
   input bit [3 : 0] s_axi_arqos,
-  input bit [3 : 0] s_axi_aruser,
   input bit_as_bool s_axi_arvalid,
   output bit_as_bool s_axi_arready,
   output bit [31 : 0] s_axi_rdata,
@@ -93,7 +92,6 @@ module design_1_auto_pc_1 (
   output bit [3 : 0] m_axi_arcache,
   output bit [2 : 0] m_axi_arprot,
   output bit [3 : 0] m_axi_arqos,
-  output bit [3 : 0] m_axi_aruser,
   output bit_as_bool m_axi_arvalid,
   input bit_as_bool m_axi_arready,
   input bit [31 : 0] m_axi_rdata,
@@ -107,7 +105,7 @@ endmodule
 
 `ifdef XCELIUM
 (* XMSC_MODULE_EXPORT *)
-module design_1_auto_pc_1 (aclk,aresetn,s_axi_araddr,s_axi_arlen,s_axi_arsize,s_axi_arburst,s_axi_arlock,s_axi_arcache,s_axi_arprot,s_axi_arregion,s_axi_arqos,s_axi_aruser,s_axi_arvalid,s_axi_arready,s_axi_rdata,s_axi_rresp,s_axi_rlast,s_axi_rvalid,s_axi_rready,m_axi_araddr,m_axi_arlen,m_axi_arsize,m_axi_arburst,m_axi_arlock,m_axi_arcache,m_axi_arprot,m_axi_arqos,m_axi_aruser,m_axi_arvalid,m_axi_arready,m_axi_rdata,m_axi_rresp,m_axi_rlast,m_axi_rvalid,m_axi_rready)
+module design_1_auto_pc_1 (aclk,aresetn,s_axi_araddr,s_axi_arlen,s_axi_arsize,s_axi_arburst,s_axi_arlock,s_axi_arcache,s_axi_arprot,s_axi_arregion,s_axi_arqos,s_axi_arvalid,s_axi_arready,s_axi_rdata,s_axi_rresp,s_axi_rlast,s_axi_rvalid,s_axi_rready,m_axi_araddr,m_axi_arlen,m_axi_arsize,m_axi_arburst,m_axi_arlock,m_axi_arcache,m_axi_arprot,m_axi_arqos,m_axi_arvalid,m_axi_arready,m_axi_rdata,m_axi_rresp,m_axi_rlast,m_axi_rvalid,m_axi_rready)
 (* integer foreign = "SystemC";
 *);
   input bit aclk;
@@ -121,7 +119,6 @@ module design_1_auto_pc_1 (aclk,aresetn,s_axi_araddr,s_axi_arlen,s_axi_arsize,s_
   input bit [2 : 0] s_axi_arprot;
   input bit [3 : 0] s_axi_arregion;
   input bit [3 : 0] s_axi_arqos;
-  input bit [3 : 0] s_axi_aruser;
   input bit s_axi_arvalid;
   output wire s_axi_arready;
   output wire [31 : 0] s_axi_rdata;
@@ -137,7 +134,6 @@ module design_1_auto_pc_1 (aclk,aresetn,s_axi_araddr,s_axi_arlen,s_axi_arsize,s_
   output wire [3 : 0] m_axi_arcache;
   output wire [2 : 0] m_axi_arprot;
   output wire [3 : 0] m_axi_arqos;
-  output wire [3 : 0] m_axi_aruser;
   output wire m_axi_arvalid;
   input bit m_axi_arready;
   input bit [31 : 0] m_axi_rdata;

@@ -153,3 +153,5 @@ set_false_path -from [get_pins {design_1_i/z3660_0/inst/GPIO_s_reg[*]/C}] -to [g
 set_false_path -from [get_pins {design_1_i/z3660_0/inst/GPIO_s_reg[*]/C}] -to [get_pins design_1_i/z3660_0/inst/BP_STATE_reg/D]
 
 set_false_path -from [get_pins design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/mmcm_drp_inst/RST_MMCM_PLL_reg/C] -to [get_pins {design_1_i/processing_av_system/clock_generation/clk_wiz_0/inst/CLK_CORE_DRP_I/clk_inst/seq_reg3_reg[*]/CLR}]
+
+set_false_path -from [get_clocks -of_objects [get_pins design_1_i/processing_av_system/clock_generation/clk_wiz_3/inst/mmcm_adv_inst/CLKOUT0]] -to [get_clocks VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1]

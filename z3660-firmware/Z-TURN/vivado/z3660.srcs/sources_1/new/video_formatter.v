@@ -47,6 +47,13 @@ module video_formatter(
   input m_axis_vid_aclk,
   input aresetn,
 
+  input [31:0] m_axis_ovl_tdata,
+  input m_axis_ovl_tlast,
+  output m_axis_ovl_tready,
+  input [0:0]  m_axis_ovl_tuser,
+  input m_axis_ovl_tvalid,
+  input m_axis_ovl_aclk,
+
   input dvi_clk,
   output reg dvi_hsync,
   output reg dvi_vsync,
@@ -143,6 +150,10 @@ localparam OP_REPORT_LINE=17;
 localparam OP_PALETTE_SEL=18; // switch display to secondary 256 color palette for screen split
 localparam OP_PALETTE_HI=19; // set values in secondary 256 color palette for screen split
 
+localparam OP_OVERLAY_XY = 20;
+localparam OP_OVERLAY_WH = 21;
+localparam OP_OVERLAY_ENABLE = 22;
+
 localparam CMODE_8BIT=0;
 localparam CMODE_16BIT=1;
 localparam CMODE_32BIT=2;
@@ -174,14 +185,23 @@ reg [15:0] screen_v_sync_end;
 localparam MAXWIDTH=1280;
 reg [31:0] line_buffer[MAXWIDTH-1:0];
 
+// overlay buffer
+reg [31:0] overlay_buffer[MAXWIDTH-1:0];
+
 // (input) vdma state
 reg [3:0] next_input_state;
 reg [11:0] inptr;
 reg ready_for_vdma;
 reg [1:0] control_vblank;
 
+// overlay input state
+reg [3:0] next_ovl_state;
+reg [11:0] ovl_inptr;
+reg ready_for_ovl;
+
 assign control_vblank_out = control_vblank;
 assign m_axis_vid_tready = ready_for_vdma;
+assign m_axis_ovl_tready = ready_for_ovl;
 
 reg [11:0] counter_x; // vga domain
 reg [11:0] counter_y; // vga domain
@@ -192,13 +212,30 @@ reg [11:0] need_line_fetch_reg2;
 reg [11:0] need_line_fetch_reg3;
 reg [11:0] last_line_fetch;
 
+// overlay line fetch signals
+reg [11:0] ovl_need_line_fetch; // vga domain
+reg [11:0] ovl_need_line_fetch_reg; // fetch domain
+reg [11:0] ovl_need_line_fetch_reg2; // segunda etapa de sincronización
+reg [11:0] ovl_vga_v_rez_reg; // vga_v_rez sincronizada al dominio overlay
+reg [11:0] ovl_last_line_fetch;
+
 wire [31:0] pixin = m_axis_vid_tdata;
 wire pixin_valid = m_axis_vid_tvalid;
 wire pixin_end_of_line = m_axis_vid_tlast;
 wire pixin_framestart = m_axis_vid_tuser[0];
 
+// overlay input signals
+wire [31:0] ovl_pixin = m_axis_ovl_tdata;
+wire ovl_pixin_valid = m_axis_ovl_tvalid;
+wire ovl_pixin_end_of_line = m_axis_ovl_tlast;
+wire ovl_pixin_framestart = m_axis_ovl_tuser[0];
+
 reg need_frame_sync; // vga domain
 reg need_frame_sync_reg; // fetch domain
+
+// overlay frame sync
+reg ovl_need_frame_sync; // vga domain
+reg ovl_need_frame_sync_reg; // fetch domain
 
 // sprite
 localparam SPRITE_W = 32;
@@ -222,7 +259,37 @@ reg sprite_on; // vga domain
 reg [11:0] vga_report_y; // vga domain
 reg [11:0] vga_report_y_next; // vga domain
 reg vga_selected_palette; // vga domain
+reg vga_overlay_enable; // vga domain
+reg [11:0] vga_overlay_w; // vga domain
+reg [11:0] vga_overlay_h; // vga domain
 
+// VGA timing signals
+reg [11:0] vga_v_rez;
+reg [11:0] vga_v_crop;
+reg [11:0] vga_h_rez;
+reg [11:0] vga_h_rez_delayed;
+reg [11:0] vga_v_max;
+reg [11:0] vga_h_max;
+reg [11:0] vga_h_sync_start;
+reg [11:0] vga_h_sync_end;
+reg [11:0] vga_h_sync_start_delayed;
+reg [11:0] vga_h_sync_end_delayed;
+reg [11:0] vga_v_sync_start;
+reg [11:0] vga_v_sync_end;
+reg [2:0] vga_colormode;
+reg vga_scale_x;
+reg vga_scale_y;
+reg vga_sync_polarity;
+
+reg [11:0] overlay_x;
+reg [11:0] overlay_y;
+reg [11:0] overlay_w;
+reg [11:0] overlay_h;
+reg [11:0] overlay_x2;
+reg [11:0] overlay_y2;
+reg overlay_enable = 0; // enable/disable overlay
+reg overlay_on;
+reg [23:0] overlay_pix; // vga domain
 
   // AXI4LITE signals
   reg [`C_S_AXI_ADDR_WIDTH-1 : 0]   axi_awaddr;
@@ -413,6 +480,17 @@ reg vga_selected_palette; // vga domain
                 end
                 OP_REPORT_LINE: begin
                     report_y <= S_AXI_WDATA[11:0];
+                end
+                OP_OVERLAY_XY: begin
+                    overlay_y <= S_AXI_WDATA[31:16];
+                    overlay_x <= S_AXI_WDATA[15:0];
+                end
+                OP_OVERLAY_WH: begin
+                    overlay_h <= S_AXI_WDATA[31:16];
+                    overlay_w <= S_AXI_WDATA[15:0];
+                end
+                OP_OVERLAY_ENABLE: begin
+                    overlay_enable <= S_AXI_WDATA[0];
                 end
             endcase
           end
@@ -633,26 +711,83 @@ begin
   end
 end
 
+// overlay input state machine
+always @(posedge m_axis_ovl_aclk)
+  begin
+    if (~aresetn) begin
+      ready_for_ovl <= 0;
+      next_ovl_state <= 0;
+      ovl_inptr <= 0;
+      ovl_need_frame_sync_reg <= 0;
+      ovl_need_line_fetch_reg <= 0;
+      ovl_need_line_fetch_reg2 <= 0;
+      ovl_vga_v_rez_reg <= 0;
+      ovl_last_line_fetch <= 0;
+    end
+  else begin
+    ovl_need_frame_sync_reg <= ovl_need_frame_sync;
+    ovl_need_line_fetch_reg <= ovl_need_line_fetch;
+    ovl_need_line_fetch_reg2 <= ovl_need_line_fetch_reg; // segunda etapa de sincronización
+    ovl_vga_v_rez_reg <= vga_v_rez; // sincronizar vga_v_rez al dominio overlay
+
+    if (ovl_pixin_valid && ready_for_ovl) begin
+      overlay_buffer[ovl_inptr] <= ovl_pixin;
+      // disabling this makes the picture go wild
+      if (ovl_pixin_framestart) // we might have missed the frame start
+        ovl_inptr <= 1;
+      else if (ovl_pixin_end_of_line) // next after this is the first pixel of the line (0)
+        ovl_inptr <= 0;
+      else
+        ovl_inptr <= ovl_inptr + 1'b1;
+    end
+
+    // one-hot encoded
+    case (next_ovl_state)
+      4'h0: begin
+          // wait for start of frame
+          ready_for_ovl <= 1;
+          if (ovl_pixin_framestart)
+            next_ovl_state <= 4'h4;
+        end
+      4'h1: begin
+          // reading from overlay stream
+          ovl_last_line_fetch <= ovl_need_line_fetch_reg;
+          if (ovl_pixin_valid && ovl_pixin_end_of_line) begin
+            ready_for_ovl <= 0;
+            next_ovl_state <= 4'h2;
+          end else
+            ready_for_ovl <= 1; // moved here
+        end
+      4'h2: begin
+          // we've read more than enough of this line, wait until it's time for the next
+          if (vsync_request) begin
+            next_ovl_state <= 4'h0;
+          end
+          else if (ovl_need_line_fetch_reg2 != ovl_last_line_fetch && ovl_need_line_fetch_reg2 < ovl_vga_v_rez_reg) begin
+            // time to read the next line (verificar límites)
+            next_ovl_state <= 4'h1;
+          end
+          // Agregar pequeño delay para asegurar procesamiento
+          else begin
+            next_ovl_state <= 4'h2; // mantener estado actual
+          end
+        end
+      4'h4: begin
+          // we are at frame start, wait for the first line of video output
+          ready_for_ovl <= 0;
+
+          if (ovl_need_frame_sync_reg==1) begin
+            next_ovl_state <= 4'h2;
+          end
+        end
+    endcase
+    end
+  end
+
 localparam PIPE_DELAY = 4;
 
 reg [31:0] palout;
-reg [11:0] vga_v_rez;
-reg [11:0] vga_v_crop;
-reg [11:0] vga_h_rez;
-reg [11:0] vga_h_rez_delayed;
-reg [11:0] vga_v_max;
-reg [11:0] vga_h_max;
-reg [11:0] vga_h_sync_start;
-reg [11:0] vga_h_sync_end;
-reg [11:0] vga_h_sync_start_delayed;
-reg [11:0] vga_h_sync_end_delayed;
-reg [11:0] vga_v_sync_start;
-reg [11:0] vga_v_sync_end;
 reg [11:0] counter_scanout;
-reg [2:0] vga_colormode;
-
-reg vga_scale_x = 0;
-reg vga_scale_y = 0;
 reg [31:0] pixout;
 reg [7:0]  pixout8;
 reg [15:0] pixout16;
@@ -669,9 +804,13 @@ wire [7:0] blue15  = {pixout16[14:10], pixout16[14:12]};
 reg [3:0] counter_scanout_step;
 reg [3:0] counter_subpixel = 0;
 
-reg vga_sync_polarity = 0;
-
 always @(posedge dvi_clk) begin
+  if (~aresetn) begin
+    counter_x <= 0;
+    counter_y <= 0;
+    need_line_fetch <= 0;
+    ovl_need_line_fetch <= 0;
+  end else begin
   vga_h_rez <= screen_width;
   vga_v_rez <= screen_height;
   vga_v_crop <= screen_height_crop;
@@ -699,6 +838,14 @@ always @(posedge dvi_clk) begin
   vga_sprite_dbl <= sprite_dbl;
   vga_report_y_next <= report_y;
   vga_selected_palette <= selected_palette;
+
+  overlay_x2 <= overlay_x + overlay_w;
+  overlay_y2 <= overlay_y + overlay_h;
+
+  // overlay enable signal synchronized to vga domain
+  vga_overlay_enable <= overlay_enable;
+  vga_overlay_w <= overlay_w;
+  vga_overlay_h <= overlay_h;
 
   /*
     pipelines (4 clocks):
@@ -790,8 +937,20 @@ always @(posedge dvi_clk) begin
   end else begin
     sprite_on <= 0;
   end
+  
+  // overlay pixel reading
+  if (vga_overlay_enable && counter_y >= overlay_y && counter_y < overlay_y2
+      && counter_x >= overlay_x && counter_x < overlay_x2) begin
+    overlay_on <= 1;
+    // Read overlay pixel from current line buffer (same as video main)
+    overlay_pix <= overlay_buffer[counter_x - overlay_x];
+  end else begin
+    overlay_on <= 0;
+    overlay_pix <= 24'h0; // Clear overlay pixel when not active
+  end
 
-  dvi_rgb <= (sprite_on && sprite_pix!='hff00ff) ? sprite_pix : pixout;
+  dvi_rgb <= (sprite_on && sprite_pix!='hff00ff) ? sprite_pix :
+             (overlay_on) ? overlay_pix : pixout;
 
   if (counter_x >= vga_h_max) begin
     counter_x <= 0;
@@ -811,6 +970,12 @@ always @(posedge dvi_clk) begin
       need_line_fetch <= counter_y + 1'b1;
     else
       need_line_fetch <= 0;
+
+    // overlay line fetch
+    if (counter_y<vga_v_rez-1'b1)
+      ovl_need_line_fetch <= counter_y + 1'b1;
+    else
+      ovl_need_line_fetch <= 0;
   end
 
   // signal synchronization point to fetch process
@@ -818,6 +983,12 @@ always @(posedge dvi_clk) begin
     need_frame_sync <= 1;
   else
     need_frame_sync <= 0;
+
+  // overlay frame sync signal
+  if (counter_x<8 && counter_y==vga_v_sync_start)
+    ovl_need_frame_sync <= 1;
+  else
+    ovl_need_frame_sync <= 0;
 
   // rasterline interrupt:
   // - first time on vblank start (1 pixel long)
@@ -860,6 +1031,7 @@ always @(posedge dvi_clk) begin
 
   if (counter_x==vga_h_rez_delayed)
     dvi_active_video <= 0;
+  end
 end
 
 endmodule

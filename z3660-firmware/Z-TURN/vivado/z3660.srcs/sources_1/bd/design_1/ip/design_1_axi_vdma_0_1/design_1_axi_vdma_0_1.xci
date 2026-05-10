@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "design_1_axi_vdma_0_1",
-    "cell_name": "axi_vdma_0",
+    "cell_name": "processing_av_system/audio_video_engine/video/axi_vdma_0",
     "component_reference": "xilinx.com:ip:axi_vdma:6.3",
     "ip_revision": "17",
     "gen_directory": "../../../../../../z3660.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_1",
