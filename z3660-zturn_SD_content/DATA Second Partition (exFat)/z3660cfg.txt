@@ -1,14 +1,17 @@
 #### Z3660 config file
 
-# Select the default boot mode: "CPU" for 060 CPU, "MUSASHI" / "UAE" / "UAEJIT" for emulator
-# This selection can be overriden by env/bootmode file on SD root
-#bootmode UAEJIT
+# Select the default boot mode: "MOBOCPU" for mother board CPU, "CPU" for 060 CPU, "MUSASHI" / "UAE_030" / "UAEJIT_030" / "UAE_040" / "UAEJIT_040" for emulator
+# This selection can be overriden by presets/presetX.txt files on SD exFAT partition
+#bootmode UAEJIT_040
+#bootmode UAEJIT_030
+#bootmode UAE_040
+#bootmode UAE_030
 #bootmode MUSASHI
-#bootmode UAE
 bootmode CPU
+#bootmode MOBOCPU
 
 # Select 060 CPU frequency in MHz
-# This value can be overriden by env/cpufreq file on SD root
+# This value can be overriden by presets/presetX.txt files on SD exFAT partition
 cpufreq 50
 
 # Declare up to 9 kickstarts files. (1-9)
@@ -18,19 +21,19 @@ kickstart3 kicks/A4kOS31.rom
 kickstart4 kicks/A4kOS321.rom
 kickstart5 kicks/A3kOS322.rom
 # Select the number (1-9) to map one of the above kickstarts on ARM's internal RAM, or 0 to use the installed kickstart on your Amiga
-# This selection can be overriden by env/kickstart file on SD root
+# This selection can be overriden by presets/presetX.txt files on SD exFAT partition
 kickstart 5
 
 # Declare up to 9 extended kickstarts files. (1-9)
 ext_kickstart1 kicks/kick060.rom
 ext_kickstart2 kicks/kick060_scsi.rom
 # Select the number (1-9) to map one of the above extended kickstarts on ARM's internal RAM, or 0 to use the installed extended kickstart on your Amiga (if any)
-# This selection can be overriden by env/ext_kickstart file on SD root
+# This selection can be overriden by presets/presetX.txt files file on SD exFAT partition
 ext_kickstart 2
 
 # Load scsi ROM on boot (boot from SCSI hdf files on SD)
 # (YES or NO, in capitals)
-# This selection can be overriden by env/scsiboot file on SD root
+# This selection can be overriden by presets/presetX.txt files file on SD exFAT partition
 scsiboot YES
 #scsiboot NO
 
@@ -52,7 +55,7 @@ scsi3 3
 
 # Autoconfig RAM Enable (256 MB Zorro III RAM)
 # (YES or NO, in capitals)
-# This selection can be overriden by env/autoconfig_ram file on SD root
+# This selection can be overriden by presets/presetX.txt files on SD exFAT partition
 #autoconfig_ram NO
 autoconfig_ram YES
 
@@ -60,14 +63,14 @@ autoconfig_ram YES
 # When disabled, the RTG will not be part of the Autoconfig chain, but it will appear at $1000_0000
 # You will need the kick060_scsi.rom to make the Z3660 SCSI bootable (adds a new Zorro II "virtual" board)
 # (YES or NO, in capitals)
-# This selection can be overriden by env/autoconfig_rtg file on SD root
+# This selection can be overriden by presets/presetX.txt files on SD exFAT partition
 autoconfig_rtg NO
 #autoconfig_rtg YES
 
 # CPU RAM Enable (128 MB CPU RAM)
 # IMPORTANT NOTE: disabling CPU RAM, will also disable SCSIBOOT
 # (YES or NO, in capitals)
-# This selection can be overriden by env/cpu_ram file on SD root
+# This selection can be overriden by presets/presetX.txt files on SD exFAT partition
 #cpu_ram NO
 cpu_ram YES
 
