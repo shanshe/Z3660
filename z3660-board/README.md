@@ -1,6 +1,6 @@
 # Z3660 PCB
 
-In this folder you the fabrication files (gerber) I have sent to JLCPCB.
+In this folder are the fabrication files (Gerber) I have sent to JLCPCB.
 
 I have built the first prototype of version v0.21 and it is working as expected.
 
@@ -19,15 +19,22 @@ v0.21a
  * 01/08/2024: Uploaded BOM and CPL files for JLCPCB (thanks to @kavanoz64).
  
  v0.21b
- * 02/09/2024: Updated 060 footprint to 18x18 array pins (full 4 rows and columns).
+ * 09/02/2024: Updated 060 footprint to 18x18 array pins (full 4 rows and columns).
  
  v0.21c
- * A wrongly named version when uploading files to v0.21a. So, this version number skipped.
+ * Invalid version - this was a misnamed upload during v0.21a release and should be disregarded.
  
  v.021d
- * Changed the footprints for two fans to 3 pin and right angle.
- * Z3660_CPLD_prog is a tiny PCB to make v.021x versions to have the CPLD programmer.
+ * 03/03/2024 Changed the footprints for two fans to 3-pin right-angle connectors.
+ * 04/10/2024 Z3660_CPLD_prog is a tiny PCB to provide a CPLD programmer for v0.21x versions.
  
  v.022
- * Added an I2C gpio expander (PCF8574) to program the CPLD from the ARM.
- * Added optional onboard voltage regulator based on torsti76's <span>&#181;</span>VRM v0.1 design.
+ * 04/10/2024 Added an I2C gpio expander (PCF8574) to program the CPLD from the ARM.
+ * 04/10/2024 Added optional onboard voltage regulator based on torsti76's <span>&#181;</span>VRM v0.1 design.
+ 
+ v.023 (Contributed by @kavanoz)
+ * 05/13/2026 Connected BOSS to DBG3 to allow motherboard CPU option.
+ * 05/13/2026 Moved ZTurn 5mm towards the 060.
+ * 05/13/2026 Removed voltage detector alternatives to save space for moving components.
+ * 05/13/2026 Added a shunt for 3.34V solder jumper to set it as default. It needs to be cut before changing the onboard voltage regulator output.
+ 
