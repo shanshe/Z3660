@@ -4,6 +4,7 @@
 
 #include <inttypes.h>
 #include "mobotest.h"
+#include "sd_fileops.h"
 #include <xparameters.h>
 #include "main.h"
 #include "lwip.h"
@@ -1227,6 +1228,7 @@ void show_options(void)
    MSG_LINE("'J' - Copy Z3660.bin to FAILSAFE.bin");
    MSG_LINE("'K' - Copy FAILSAFE.bin to BOOT.bin");
    MSG_LINE("'L' - Copy FAILSAFE.bin to Z3660.bin");
+   MSG_LINE("'E' - SD card file manager (DIR/COPY/REN/DEL/MKDIR/CRC/FREE)");
    MSG_LINE(" ");
    MSG_LINE("'R' to reboot");
    MSG_LINE(" ");
@@ -2995,6 +2997,10 @@ tftp_restart:
             f_umount(Path);
             ACTIVITY_LED_OFF; // OFF
             free(DATA);
+         }
+         else if(keybd_data=='e' || keybd_data=='E')
+         {
+            sd_fileops_menu();
          }
          else if(keybd_data=='r' || keybd_data=='R')
          {
