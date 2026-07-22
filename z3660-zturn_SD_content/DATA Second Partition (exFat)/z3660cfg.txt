@@ -37,21 +37,33 @@ ext_kickstart 2
 scsiboot YES
 #scsiboot NO
 
-# Select your hdf files (from hdf0 to hdf19)
+# Select your hdf files (from hdf0 to hdf19). Use isoX instead of hdfX to use ISO CD ROM files.
 hdf0 hdf/a4000.hdf
 hdf1 hdf/Daten5_PFS3.hdf
 hdf2 hdf/Work.hdf
 hdf3 hdf/temp_1G_PFS3.hdf
 hdf4 hdf/hd0.hda
 hdf5 hdf/Programs.hdf
+iso6 iso/AmigaOS39.iso
+
 # Select the scsi number (scsi0 to scsi6) to assign one of the above hdf files
 scsi0 0
 scsi1 1
 #scsi2 2
 scsi3 3
-#scsi4 0
+scsi4 6
 #scsi5 0
 #scsi6 0
+
+# Declare your adf files (from adf_file0 to adf_file19)
+adf_file0 adf/Install3.2.adf
+adf_file1 adf/Classes3.2.adf
+adf_file2 adf/Locale.adf
+
+# Select the adf number (adf0 to adf7) to assign one of the above adf files
+adf0 0
+adf1 1
+# adf2 2
 
 # Autoconfig RAM Enable (256 MB Zorro III RAM)
 # (YES or NO, in capitals)

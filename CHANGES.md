@@ -178,7 +178,7 @@ And finally emu_extra. This value can be modified in the future (probably not to
  
  * Beta 20 CPLD returns to beta 12 timings. This means that 060 will be clocked with the PCLK clock that you select on timings, the mother board is clocked at BCLK clock, and the CPLD is clocked at BCLK instead of CLK_RECEIVED (received back from the mother board).
 So you will need to update the timing files manually at the same time than the BOOT.BIN (remember to remove FAILSAFE.BIN and Z3660.BIN files).<br>
-YES, youu have read correctly, you should copy the files manually, because your machine will not boot, and even respond to your keyboard, if you update the BOOT.BIN and use your previous timing files.
+YES, you have read correctly, you should copy the files manually, because your machine will not boot, and even respond to your keyboard, if you update the BOOT.BIN and use your previous timing files.
 The timing files are the default timings used in my machines (A4000CR and AA3000+), and after you update to beta 20 version, you can modify the timings as in beta 19, but if something goes wrong you can reset to the default values (they are saved in the BOOT.BIN) using the console 'C' and then 'G'.
  * USB: there is a new USB driver ported from the new @MiDWaN's ZZ9000 versions. You have to install poseidon stack and use the driver provided in the adf file. For now, it is only working when using the EMU.
  * MPEG: there is a builtin decoder (pl_mpeg.h library) than can decode mpeg 1 files (with mpeg 2 audio). In the c drawer of the adf you have a cli command called mpeg_streamer that feeds the mpeg data to the pl_mpeg.h library. It is also working with EMU, and it has some troubles with the memory managements (it hangs the Amiga after one or two videos). It uses a new PIP feature implemented on the FPGA, so it can be used in 8 bit, 16 bit and 32 bit modes (internally, it uses 32 bit (16 bit limited by the zturn HDMI hardware)).<br>
@@ -193,3 +193,14 @@ Then, can we use the RTG with the 030? Yes, we can with a small utility called z
 Also, @kavanoz has been modifying the board and he has now a new version that has this mod included ,and also he moved the zturn some more millimeters to the right.<br>
  * Update system: ethernet connection is now faster and more efficient (ARM caches are now enabled), so for the next versions, we will have a faster update system.
  * ARM speed. Almost all Zturn version I have seen, they have installed a rev 3 Z7020 chip. The Vivado project defaulted the speed to rev 1 that is 667 MHz. Rev 3 silicon versions can run 867 MHz nominal. But... in all my zturn's the ARM can be clocked at 1100 MHz !!!!! I have to say that I always used a small fan over the Z7020 chip. Now in the ZTop ARM app, you can choose the ARM speed (from 667 to 1300 MHz. I know that others zturn can be clocked at 1133 MHz, but I don't know the limit). Running at 1100 MHz and EMU gives 230 MIPS in sysinfo !!!! Games like Diablo or Settlers2 are now perfectly playable!!! In the other hand, I have been reported that Darkforces runs abnormally slow (like 15 FPS) and seems to be a common problem with ZZ9000 and Z3660 RTGs
+ 
+ ## v1.03 beta 21
+ 
+ * USB: Now it is working when using the EMUs and the 060.<br>
+ * MPEG: Now it is also working with the EMUs and the 060. It has been optimized with some ARM NEON/SIMD instruction so now it can play files at 800x600 resolution (but struggles with high bitrates).<br>
+ * ADF mount support. An adf floppy emulator has been added (adfs are not available at boot time yet. I need a proper ROM to do this).<br>
+ * SCSI ISO support. In z3660cfg.txt file isoX can replace hdfX for ISO CDROM emulation.<br>
+ * SD card file manager (DIR/COPY/REN/DEL/MKDIR/CRC/FREE) by @Jusii.<br>
+ * Replaced TFTP server by a httpd server (WIP).<br>
+ 
+ 
