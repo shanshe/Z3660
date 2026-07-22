@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Z3660 SD Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+
+<body>
+
+<div class="header">
+    <h1 id="title">Z3660 SD Manager</h1>
+    <p id="subtitle">Servidor Web - Gestión de archivos de la tarjeta SD</p>
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <h2 id="info_title">Información del sistema</h2>
+
+        <table>
+            <tr>
+                <td id="lbl_firmware">Firmware</td>
+                <td id="firmware">v1.0</td>
+            </tr>
+
+            <tr>
+                <td id="lbl_ip">Dirección IP</td>
+                <td id="ip">192.168.1.100</td>
+            </tr>
+
+            <tr>
+                <td id="lbl_free">Espacio libre</td>
+                <td id="free">245 MB</td>
+            </tr>
+
+        </table>
+    </div>
+
+    <div class="card">
+
+        <h2 id="files_title">Archivos</h2>
+
+        <table class="files">
+
+            <tr>
+                <th id="th_name">Nombre</th>
+                <th id="th_size">Tamaño</th>
+                <th id="th_action">Acción</th>
+            </tr>
+
+            <tr>
+                <td>core.bin</td>
+                <td>3.2 MB</td>
+                <td><button data-i18n="btn_download">Descargar</button></td>
+            </tr>
+
+            <tr>
+                <td>config.ini</td>
+                <td>2 KB</td>
+                <td><button data-i18n="btn_download">Descargar</button></td>
+            </tr>
+
+            <tr>
+                <td>logo.png</td>
+                <td>58 KB</td>
+                <td><button data-i18n="btn_download">Descargar</button></td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <div class="card">
+
+        <h2 id="upload_title">Subir archivo</h2>
+
+        <input type="file" id="file_input">
+
+        <br><br>
+
+        <label for="dest_select">Destino:</label>
+        <select id="dest_select">
+            <option value="1:/web">1:/web</option>
+        </select>
+
+        <button class="primary" id="btn_upload" data-i18n="btn_upload">Subir a la SD</button>
+        <span id="upload_status" style="margin-left: 10px; font-size: 0.9em; color: #666;"></span>
+
+    </div>
+
+    <div class="card">
+
+        <h2 id="actions_title">Acciones</h2>
+
+        <button class="primary" id="btn_update" data-i18n="btn_update">Actualizar Firmware</button>
+
+        <button id="btn_reboot" data-i18n="btn_reboot">Reiniciar</button>
+
+        <button id="btn_reload" data-i18n="btn_reload">Recargar Lista</button>
+
+    </div>
+
+</div>
+
+<div class="footer" id="footer">Z3660 HTTP Server - lwIP + FatFs</div>
+
+<script>
+// i18n loader: carga /locales/<lang>.json y aplica textos
+async function loadLocaleStrings() {
+    const nav = navigator.language || navigator.userLanguage || 'en';
+//    const lang = nav.split('-')[0];
+//    const candidates = [`/locales/${lang}.json`, '/locales/en.json'];
+    // Force English for testing
+    const lang = 'en';
+    const candidates = ['/locales/en.json'];
+    //
+    let strings = null;
+    for (const url of candidates) {
+        try {
+            const r = await fetch(url);
+            if (!r.ok) continue;
+            strings = await r.json();
+            break;
+        } catch (e) { continue; }
+    }
+    if (!strings) return null;
+
+    // Aplicar textos por id
+    const apply = (id, key) => {
+        if (!strings[key]) return;
+        const el = document.getElementById(id);
+        if (el) el.textContent = strings[key];
+    };
+
+    apply('title', 'title');
+    apply('subtitle', 'subtitle');
+    apply('info_title', 'info_title');
+    apply('files_title', 'files_title');
+    apply('upload_title', 'upload_title');
+    apply('actions_title', 'actions_title');
+    apply('lbl_firmware', 'firmware');
+    apply('lbl_ip', 'ip_address');
+    apply('lbl_free', 'free_space');
+    apply('th_name', 'name');
+    apply('th_size', 'size');
+    apply('th_action', 'action');
+    apply('footer', 'footer');
+
+    // elementos con data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (strings[key]) el.textContent = strings[key];
+    });
+
+    return strings;
+}
+
+// Función para cargar datos del sistema
+async function loadSystemInfo() {
+    try {
+        const response = await fetch('/api/system');
+        if (!response.ok) {
+            console.error('Error fetching system info:', response.status);
+            return;
+        }
+        const data = await response.json();
+        
+        // Actualizar los elementos del DOM con los datos recibidos
+        if (data.firmware) {
+            document.getElementById('firmware').textContent = data.firmware;
+        }
+        if (data.ip) {
+            document.getElementById('ip').textContent = data.ip;
+        }
+        if (data.free_mb !== undefined) {
+            document.getElementById('free').textContent = data.free_mb + ' MB';
+        }
+        
+        console.log('System info loaded:', data);
+    } catch (error) {
+        console.error('Error loading system info:', error);
+    }
+}
+
+// Carga las rutas disponibles para subir (llama a /api/dirs)
+async function loadDirs() {
+    try {
+        const resp = await fetch('/api/dirs');
+        if (!resp.ok) return;
+        const j = await resp.json();
+        const sel = document.getElementById('dest_select');
+        if (!sel) return;
+        sel.innerHTML = '';
+        (j.dirs || []).forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            sel.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('loadDirs error', e);
+    }
+}
+
+// Cargar datos al inicio del documento
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadLocaleStrings();
+    loadSystemInfo();
+    await loadDirs();
+    // Recargar cada 10 segundos para mantener datos actualizados
+//    setInterval(loadSystemInfo, 10000);
+    // Upload button handler: PUT /upload/<filename>
+    const btn = document.getElementById('btn_upload');
+    const input = document.getElementById('file_input');
+    if (btn && input) {
+        btn.addEventListener('click', async () => {
+            const files = input.files;
+            if (!files || files.length === 0) {
+                alert('Selecciona un archivo primero');
+                return;
+            }
+            const file = files[0];
+            const dest = document.getElementById('dest_select') ? document.getElementById('dest_select').value : '1:/web';
+            const url = '/upload/' + encodeURIComponent(file.name) + '?path=' + encodeURIComponent(dest);
+            const statusEl = document.getElementById('upload_status');
+            statusEl.textContent = 'Enviando...';
+            try {
+                const resp = await fetch(url, { method: 'PUT', body: file });
+                if (resp.ok) {
+                    statusEl.textContent = 'Finalizado';
+                    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+                } else {
+                    statusEl.textContent = 'Error: ' + resp.status;
+                    alert('Error al subir: ' + resp.status);
+                }
+            } catch (e) {
+                statusEl.textContent = 'Error de red';
+                alert('Error de red: ' + e);
+            }
+        });
+    }
+});
+</script>
+
+</body>
+</html>

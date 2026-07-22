@@ -166,6 +166,72 @@ enum piscsi_cmds {
    PISCSI_DBG_VAL8         = 0x12C,
    PISCSI_CMD_ROM          = 0x4000,
 };
+// Floppy command registers (offsets from PIFLOPPY_OFFSET base)
+enum floppy_cmds {
+    PIFLP_CMD_READ         = 0x400,  // Read sector(s) from ADF
+    PIFLP_CMD_WRITE        = 0x404,  // Write sector(s) to ADF
+    PIFLP_CMD_DRVNUM       = 0x408,  // Select drive number (0-3)
+    PIFLP_CMD_DRVTYPE      = 0x40C,  // Get drive type (0=none, 1=DD, 2=HD)
+    PIFLP_CMD_TRACK        = 0x410,  // Set/get current track
+    PIFLP_CMD_SIDE         = 0x414,  // Set/get current side (0 or 1)
+    PIFLP_CMD_SECTOR       = 0x418,  // Set/get current sector
+    PIFLP_CMD_MOTOR        = 0x41C,  // Motor on/off control
+    PIFLP_CMD_SEEK         = 0x420,  // Seek to track
+    PIFLP_CMD_STATUS       = 0x424,  // Get drive status
+    PIFLP_CMD_CHANGE       = 0x428,  // Disk change status
+    PIFLP_CMD_PROTECT      = 0x42C,  // Write protect status
+    PIFLP_CMD_FORMAT       = 0x430,  // Format track
+    PIFLP_CMD_READ_ADDR1   = 0x434,  // Read data address (offset)
+    PIFLP_CMD_READ_ADDR2   = 0x438,  // Read data address (length)
+    PIFLP_CMD_READ_ADDR3   = 0x43C,  // Read data address (buffer ptr)
+    PIFLP_CMD_READ_ADDR4   = 0x440,  // Read data address (actual)
+    PIFLP_CMD_WRITE_ADDR1  = 0x444,  // Write data address (offset)
+    PIFLP_CMD_WRITE_ADDR2  = 0x448,  // Write data address (length)
+    PIFLP_CMD_WRITE_ADDR3  = 0x44C,  // Write data address (buffer ptr)
+    PIFLP_CMD_WRITE_ADDR4  = 0x450,  // Write data address (actual)
+    PIFLP_CMD_DRVNUMX      = 0x454,  // Extended drive select (with side)
+    PIFLP_CMD_READ64       = 0x458,  // 64-bit read command
+    PIFLP_CMD_WRITE64      = 0x45C,  // 64-bit write command
+    PIFLP_CMD_USED_DMA     = 0x460,  // DMA used flag
+    PIFLP_CMD_BLOCKSIZE    = 0x464,  // Sector size (512 for DD, 1024 for HD)
+    PIFLP_CMD_TOTALTRACKS  = 0x468,  // Total tracks (80 for DD, 80 for HD)
+    PIFLP_CMD_TOTALSECTORS = 0x46C,  // Total sectors per track (11 DD, 22 HD)
+    PIFLP_CMD_TOTALSIDES   = 0x470,  // Total sides (1 or 2)
+    PIFLP_CMD_CYLINDERS    = 0x474,  // Number of cylinders
+    PIFLP_CMD_HEADS        = 0x478,  // Number of heads
+    PIFLP_CMD_SECPERTRACK  = 0x47C,  // Sectors per track
+    PIFLP_CMD_DISKINSERTED = 0x480,  // Disk inserted flag (ADF loaded)
+    PIFLP_CMD_ADFNAME      = 0x484,  // ADF filename pointer (ARM side)
+
+    // Per-unit block size registers (like SCSI)
+    PIFLP_CMD_BLOCKSIZE0   = 0x4A0,
+    PIFLP_CMD_BLOCKSIZE1   = 0x4A4,
+    PIFLP_CMD_BLOCKSIZE2   = 0x4A8,
+    PIFLP_CMD_BLOCKSIZE3   = 0x4AC,
+    PIFLP_CMD_BLOCKSIZE4   = 0x4B0,
+    PIFLP_CMD_BLOCKSIZE5   = 0x4B4,
+    PIFLP_CMD_BLOCKSIZE6   = 0x4B8,
+    PIFLP_CMD_BLOCKSIZE7   = 0x4BC,
+
+    // Per-unit total blocks registers
+    PIFLP_CMD_BLOCKS0      = 0x4C0,
+    PIFLP_CMD_BLOCKS1      = 0x4C4,
+    PIFLP_CMD_BLOCKS2      = 0x4C8,
+    PIFLP_CMD_BLOCKS3      = 0x4CC,
+    PIFLP_CMD_BLOCKS4      = 0x4D0,
+    PIFLP_CMD_BLOCKS5      = 0x4D4,
+    PIFLP_CMD_BLOCKS6      = 0x4D8,
+    PIFLP_CMD_BLOCKS7      = 0x4DC,
+
+    // Debug registers
+    PIFLP_DBG_MSG          = 0x500,
+    PIFLP_DBG_VAL1         = 0x510,
+    PIFLP_DBG_VAL2         = 0x514,
+    PIFLP_DBG_VAL3         = 0x518,
+    PIFLP_DBG_VAL4         = 0x51C,
+    PIFLP_DBG_VAL5         = 0x520,
+};
+
 uint32_t addr2=0;
 uint32_t addr3=0;
 extern "C" void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type)
@@ -187,7 +253,7 @@ extern "C" void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type)
       case PISCSI_CMD_CHECKFS:
       case PISCSI_CMD_ADDR1:
          Xil_L1DCacheFlush();
-         //    			Xil_DCacheFlush();
+//         Xil_DCacheFlush();
          break;
       case PISCSI_CMD_ADDR2:
          break;
@@ -201,8 +267,8 @@ extern "C" void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type)
       case PISCSI_CMD_READBYTES:
          Xil_L1DCacheFlush();
          break;
-         //    		default:
-            //    			printf("SCSI write command %02x\n",zaddr);
+//      default:
+//         printf("SCSI write command %02x\n",zaddr);
       }
    }
    //    if(zaddr!=last_zaddr1)
@@ -251,7 +317,7 @@ extern "C" uint32_t read_scsi_register(uint16_t zaddr,int type)
       case PISCSI_CMD_CHECKFS:
       case PISCSI_CMD_ADDR1:
          Xil_L1DCacheFlush();
-         //    			Xil_DCacheFlush();
+//         Xil_DCacheFlush();
          break;
       case PISCSI_CMD_ADDR2:
          break;
@@ -266,11 +332,127 @@ extern "C" uint32_t read_scsi_register(uint16_t zaddr,int type)
          Xil_L1DCacheInvalidate();
          break;
       default:
-         printf("SCSI read command %04x\n",zaddr);
+         printf("SCSI read command %02x\n",zaddr);
       }
    }
    while(shared->read_scsi==1){NOP;}
    return(shared->read_scsi_data);
+}
+extern "C" void write_floppy_register(uint16_t zaddr,uint32_t zdata,int type)
+{
+   if(zaddr < PIFLP_DBG_MSG)
+   {
+      switch(zaddr)
+      {
+      case PIFLP_CMD_BLOCKSIZE:
+      case PIFLP_CMD_USED_DMA:
+      case PIFLP_CMD_BLOCKS0:
+      case PIFLP_CMD_BLOCKS1:
+      case PIFLP_CMD_BLOCKS2:
+      case PIFLP_CMD_BLOCKS3:
+      case PIFLP_CMD_BLOCKS4:
+      case PIFLP_CMD_BLOCKS5:
+      case PIFLP_CMD_BLOCKS6:
+      case PIFLP_CMD_BLOCKS7:
+      case PIFLP_CMD_CYLINDERS:
+      case PIFLP_CMD_DRVTYPE:
+      case PIFLP_CMD_HEADS:
+      case PIFLP_CMD_TOTALSECTORS:
+      case PIFLP_CMD_READ_ADDR1:
+         Xil_L1DCacheFlush();
+//         Xil_DCacheFlush();
+         break;
+      case PIFLP_CMD_READ_ADDR2:
+         break;
+      case PIFLP_CMD_WRITE64:
+      case PIFLP_CMD_WRITE:
+         Xil_L1DCacheFlush();
+         break;
+      case PIFLP_CMD_READ64:
+      case PIFLP_CMD_READ:
+         Xil_L1DCacheFlush();
+         break;
+//      default:
+//         printf("FLOPPY write command %02x\n",zaddr);
+      }
+   }
+   //    if(zaddr!=last_zaddr1)
+   shared->write_floppy_addr=zaddr;
+   //    if(zdata!=last_zdata1)
+   shared->write_floppy_data=zdata;
+   //    if(type!=last_type1)
+   shared->write_floppy_type=type;
+   //    last_zaddr1=zaddr;
+   //    last_zdata1=zdata;
+   //    last_type1=type;
+   shared->write_floppy=1;
+   dsb();
+   shared->shared_data=1;
+
+
+   while(shared->write_floppy==1){NOP;}
+}
+
+extern "C" uint32_t read_floppy_register(uint16_t zaddr,int type)
+{
+   //    if(zaddr!=last_zaddr2)
+   shared->read_floppy_addr=zaddr;
+   //    if(type!=last_type2)
+   shared->read_floppy_type=type;
+   //    last_zaddr2=zaddr;
+   //    last_type2=type;
+   shared->read_floppy=1;
+   dsb();
+   shared->shared_data=1;
+
+   if(zaddr < PIFLP_DBG_MSG)
+   {
+      switch(zaddr)
+      {
+      case PIFLP_CMD_BLOCKSIZE:
+      case PIFLP_CMD_USED_DMA:
+      case PIFLP_CMD_BLOCKS0:
+      case PIFLP_CMD_BLOCKS1:
+      case PIFLP_CMD_BLOCKS2:
+      case PIFLP_CMD_BLOCKS3:
+      case PIFLP_CMD_BLOCKS4:
+      case PIFLP_CMD_BLOCKS5:
+      case PIFLP_CMD_BLOCKS6:
+      case PIFLP_CMD_BLOCKS7:
+      case PIFLP_CMD_CYLINDERS:
+      case PIFLP_CMD_DRVTYPE:
+      case PIFLP_CMD_HEADS:
+      case PIFLP_CMD_WRITE_ADDR1:
+         Xil_L1DCacheFlush();
+//         Xil_DCacheFlush();
+         break;
+      case PIFLP_CMD_WRITE_ADDR2:
+         break;
+      case PIFLP_CMD_WRITE64:
+      case PIFLP_CMD_WRITE:
+         Xil_L1DCacheFlush();
+         break;
+      case PIFLP_CMD_READ64:
+      case PIFLP_CMD_READ:
+         Xil_L1DCacheInvalidate();
+         break;
+      case PIFLP_CMD_SECPERTRACK:
+      case PIFLP_CMD_BLOCKSIZE0:
+      case PIFLP_CMD_BLOCKSIZE1:
+      case PIFLP_CMD_BLOCKSIZE2:
+      case PIFLP_CMD_BLOCKSIZE3:
+      case PIFLP_CMD_BLOCKSIZE4:
+      case PIFLP_CMD_BLOCKSIZE5:
+      case PIFLP_CMD_BLOCKSIZE6:
+      case PIFLP_CMD_BLOCKSIZE7:
+      case PIFLP_CMD_DISKINSERTED:
+         break;
+      default:
+         printf("FLOPPY read command %04x\n",zaddr);
+      }
+   }
+   while(shared->read_floppy==1){NOP;}
+   return(shared->read_floppy_data);
 }
 /*
 uint32_t video_formatter_read(uint16_t op)
@@ -358,7 +540,7 @@ extern "C" void ipl_main_read(void)
       dsb();
 
       do {
-         uint32_t read2=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
+//         uint32_t read2=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
          read_irq2 =(read1>>(PS_MIO_0   ))&1;
          read_irq2|=(read1>>(PS_MIO_9 -1))&2;
          read_irq2|=(read1>>(PS_MIO_12-2))&4;
@@ -375,23 +557,29 @@ extern "C" void ipl_main_read(void)
 }
 void ipl_interrupt_handler(void *CallBackRef, u32 Bank, u32 Status)
 {
+   (void)CallBackRef;
+   (void)Bank;
+   (void)Status;
    ipl_read++;
    //    z3660_printf("Interrupt!\n");
 }
 void SWInterruptHandler(void *data)
 {
+   (void)data;
    printf("[Core1] SW Interrupt!!! (Recoverable Error)\n");
    while(1);
 }
 void hard_reboot(void);
 void UndefinedExceptionHandler(void *data)
 {
+   (void)data;
    printf("[Core1] Undefined Exception!!! (Unrecoverable Error)\n");
    hard_reboot();
    while(1);
 }
 void PrefetchAbortHandler(void* data)
 {
+   (void)data;
    printf("[Core1] Prefetch Abort!!! (Unrecoverable Error)\n");
    hard_reboot();
    while(1);
@@ -401,7 +589,7 @@ void print_histogram_dataabort(void)
 {
    for(int j=0;j<2048;j++)
    {
-      printf("0x%3X",j);
+      printf("0x%03X",j);
       for(int i=0;i<32;i++)
       {
          printf(" %5d",histogram_dataabort[j*32+i]);
@@ -411,6 +599,7 @@ void print_histogram_dataabort(void)
 }
 void DataAbortHandler(void *data)
 {
+   (void)data;
    unsigned int FaultAddress;
    FaultAddress = mfcp(XREG_CP15_DATA_FAULT_ADDRESS);
    histogram_dataabort[FaultAddress>>16]++;
@@ -559,6 +748,7 @@ inline uint32_t video_formatter_read(uint16_t op)
 }
 void isr_video(void *dummy)
 {
+   (void)dummy;
    int vblank=video_formatter_read(0);
    if(vblank)
    {
@@ -746,6 +936,11 @@ int main()
          else// if(shared->cfg_emu==UAEJIT_040)
          {
             uae_emulator(1,68040);
+         }
+         else // decision #8: was a bare 'else' meaning UAEJIT_040 -- an unknown
+         {    // mode silently booted JIT-040. Halt loudly instead.
+            z3660_printf("[Core1] No emulator selected!!!\nHALT!!!\n");
+            while(1);
          }
 #endif
 #else

@@ -71,6 +71,21 @@ static void *(memmove_rom1)(void * s1, const void * s2, u32 n)
    return s1;
 }
 
+static inline void memset8(uint8_t *dst, uint8_t val, uint32_t count) {
+#ifdef __ARM_NEON__
+   uint8x16_t v = vdupq_n_u8(val);
+   while (count >= 16) {
+      vst1q_u8(dst, v);
+      dst += 16; count -= 16;
+   }
+#else
+   while (count >= 4) {
+      dst[0] = val; dst[1] = val; dst[2] = val; dst[3] = val;
+      dst += 4; count -= 4;
+   }
+#endif
+   while (count--) *dst++ = val;
+}
 static inline void memset16(uint16_t *dst, uint16_t val, uint32_t count) {
 #ifdef __ARM_NEON__
    uint16x8_t v = vdupq_n_u16(val);
@@ -164,28 +179,31 @@ void fill_rect(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint3
 
 void fill_rect_solid(uint16_t rect_x1, uint16_t rect_y1, uint16_t w, uint16_t h, uint32_t rect_rgb, uint32_t color_format)
 {
-   uint32_t* p = fb + (rect_y1 * fb_pitch);
-   uint16_t rect_y2 = rect_y1 + h;
    if(w==0 || h==0)
       return;
-   for (uint16_t cur_y = rect_y1; cur_y < rect_y2; cur_y++) {
-      switch(color_format) {
-      case MNTVA_COLOR_8BIT:
-         memset((uint8_t *)p + rect_x1, (uint8_t)(rect_rgb >> 24), w);
+   uint32_t* p = fb + (rect_y1 * fb_pitch);
+   switch(color_format) {
+      case MNTVA_COLOR_8BIT: {
+         uint8_t color=(uint8_t)(rect_rgb >> 24);
+         for (uint16_t cur_y = 0; cur_y < h; cur_y++, p += fb_pitch)
+            memset8((uint8_t *)p + rect_x1, color, w);
+         }
          break;
       case MNTVA_COLOR_16BIT565:
-      case MNTVA_COLOR_15BIT:
-         memset16((uint16_t *)p + rect_x1, rect_rgb, w);
+      case MNTVA_COLOR_15BIT: {
+         uint16_t color=(uint16_t)rect_rgb;
+         for (uint16_t cur_y = 0; cur_y < h; cur_y++, p += fb_pitch)
+            memset16((uint16_t *)p + rect_x1, color, w);
+         }
          break;
       case MNTVA_COLOR_32BIT:
-         memset32(p + rect_x1, rect_rgb, w);
+         for (uint16_t cur_y = 0; cur_y < h; cur_y++, p += fb_pitch)
+            memset32(p + rect_x1, rect_rgb, w);
          break;
       default:
          // Unknown/unhandled color format.
          printf("fillrectsolid Unknown/unhandled color format.\n");
          break;
-      }
-      p += fb_pitch;
    }
 }
 

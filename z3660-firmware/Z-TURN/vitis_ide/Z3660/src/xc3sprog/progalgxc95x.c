@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdio.h>
 #include <sys/time.h>
+#include "xc3_usleep.h"
 //#include <unistd.h>
 #include "progalgxc95x.h"
 #define false 0
@@ -93,7 +94,7 @@ void flow_disable()
 {
    //   printf("flow_disable()\n");
    shiftIR(alg.jtag,alg.io,&ISC_DISABLE,0);
-   usleep(100);
+   xc3_usleep(100);
    shiftIR(alg.jtag,alg.io,&BYPASS,0);
    cycleTCK(alg.jtag,alg.io,1,1);
 }
@@ -142,7 +143,7 @@ int flow_erase()
    byte o_data[3];
    shiftIR(alg.jtag,alg.io,&ISC_ERASE,0);
    shiftDR(alg.jtag,alg.io,i_data,0,18,0,true);
-   usleep(600000);
+   xc3_usleep(600000);
    shiftDR(alg.jtag,alg.io,0,o_data,18,0,true);
    if((o_data[0]& 0x03) != 0x01)
       printf( "Erase still running %02x\n", o_data[0]);

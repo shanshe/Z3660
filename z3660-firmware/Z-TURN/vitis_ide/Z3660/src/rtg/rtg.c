@@ -18,9 +18,9 @@
 #include "../adc.h"
 #include "../ax.h"
 #include "math.h"
-#include "sleep.h"
 #include "../config_file.h"
 #include "../scsi/scsi.h"
+#include "../floppy/floppy.h"
 #include "../ltc2990/ltc2990.h"
 #include "../config_clk.h"
 #include "../debug_console.h"
@@ -28,7 +28,6 @@
 #include "../lwip.h"
 #include "../ARM_ztop/slider.h"
 #include "../usb.h"
-#include "../z3660_usb_handler.h"
 #include "../z3660_debug_arm.h"
 #include "../usb/ehci.h"
 #include "../pt/pt.h"
@@ -42,6 +41,7 @@ extern uint32_t fifo_read_index;
 extern uint32_t fifo_write_index;
 
 extern uint32_t mpeg_param_registers[5];
+#define debug_printf(...) do{if(debug_console.debug_rtg) printf(__VA_ARGS__);}while(0)
 
 typedef enum {
    MA_DECODE_INIT,
@@ -238,24 +238,12 @@ void rtg_init(void)
 
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_KS_TXT)=0;
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_SCSI_TXT)=0;
+   *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_ADF_TXT)=0;
    *(uint32_t *)(RTG_BASE+REG_ZZ_SEL_PRESET_TXT)=0;
-   
-   // Initialize USB handler system
-//   printf("Initializing Z3660 USB handler...\n");
-//   z3660_usb_handler_init();
-   
+      
    // Initialize MPEG handler system
 //   printf("Initializing Z3660 MPEG handler...\n");
    z3660_mpeg_handler_init();
-/*
-   // Initialize USB OTG system
-   printf("Initializing USB OTG system...\n");
-   if (usb_otg_init() == 0) {
-      printf("USB OTG initialized successfully\n");
-   } else {
-      printf("USB OTG initialization failed\n");
-   }
-*/
 }
 uint32_t op_data=0;
 
@@ -292,6 +280,10 @@ void load_preset_to_config(void)
       for(int i=0;i<7;i++)
       {
          temp_config.scsi_num[i]=env_file_vars_temp[preset_selected].scsi_num[i];
+      }
+      for(int i=0;i<8;i++)
+      {
+         temp_config.adf_num[i]=env_file_vars_temp[preset_selected].adf_num[i];
       }
       for(int i=0;i<6;i++)
          temp_config.mac_address[i]=env_file_vars_temp[preset_selected].mac_address[i];
@@ -361,27 +353,27 @@ int usb_thread(struct pt *pt)
    while(1)
    {
       PT_WAIT_UNTIL(pt,usb_proxy_pending);
-//      z3660_usb_process_async_requests(pt);
 
       if (usb_proxy_pending) {
+//         Xil_L1DCacheFlush();
          volatile struct ZZUSBCommand *proxy_cmd =
             (volatile struct ZZUSBCommand *)USB_DATA_ADDRESS;
          uint8_t *proxy_data = (uint8_t *)USB_DATA_ADDRESS + ZZUSB_DATA_OFFSET;
-         u32 proxy_buf_size = 24576;
+//         u32 proxy_buf_size = 24576;
          usb_proxy_pending = 0;
-         Xil_DCacheInvalidateRange((u32)proxy_cmd, proxy_buf_size);
-         __asm__ __volatile__("dsb" ::: "memory");
+//         Xil_DCacheInvalidateRange((u32)proxy_cmd, proxy_buf_size);
+//         __asm__ __volatile__("dsb" ::: "memory");
 
          uint16_t result = usb_proxy_handle_command(proxy_cmd, proxy_data);
-
-         Xil_DCacheFlushRange((u32)proxy_data, proxy_buf_size - ZZUSB_DATA_OFFSET);
-         __asm__ __volatile__("dsb" ::: "memory");
-         Xil_DCacheFlushRange((u32)proxy_cmd + 16, 8);
-         __asm__ __volatile__("dsb" ::: "memory");
+// We don't need this because we have this zone covered by MMU with NOCACHE
+//         Xil_DCacheFlushRange((u32)proxy_data, proxy_buf_size - ZZUSB_DATA_OFFSET);
+//         __asm__ __volatile__("dsb" ::: "memory");
+//         Xil_DCacheFlushRange((u32)proxy_cmd + 16, 8);
+//         __asm__ __volatile__("dsb" ::: "memory");
 
          put_be16(proxy_cmd->status, result);
-         Xil_DCacheFlushRange((u32)proxy_cmd, 32);
-         __asm__ __volatile__("dsb" ::: "memory");
+//         Xil_DCacheFlushRange((u32)proxy_cmd, 32);
+//         __asm__ __volatile__("dsb" ::: "memory");
 
          usb_proxy_status = 0;
       }
@@ -604,7 +596,11 @@ int rtg_thread(struct pt *pt)
                   {
                      zdata=*(uint8_t*)address;
                   }
-                  handle_piscsi_reg_write(zaddr, zdata, type);
+//                  printf("writex address 0x%08lX\n",zaddr);
+                  if(zaddr<0x400 || zaddr>=0x600)
+                     handle_piscsi_reg_write(zaddr, zdata, type);
+                  else
+                     handle_pifloppy_reg_write(zaddr, zdata, type);
                }
 #define SCSI_ROM_MAX (SCSI_NO_DMA_ADDRESS-RTG_BASE)
                else if(zaddr>=SCSI_ROM_MAX)
@@ -679,7 +675,11 @@ int rtg_thread(struct pt *pt)
                if(zaddr<SCSI_ADDR_MAX)
                {
                   zaddr-=0x2000;
-                  zdata=handle_piscsi_read(zaddr&0x1FFFFC, 2);
+//                  printf("readx address 0x%08lX\n",zaddr);
+                  if(zaddr<0x400 || zaddr>=0x600)
+                     zdata=handle_piscsi_read(zaddr&0x1FFFFC, 2);
+                  else
+                     zdata=handle_pifloppy_read(zaddr&0x1FFFFC, 2);
 /*
                   int add_bits=gpio&0x3;
                   if(add_bits)
@@ -772,9 +772,11 @@ uint32_t read_rtg_register(uint32_t zaddr)
       printf("READ RTG reg 0x%lX %s\n",address,zz_reg_offsets_string[address]);
    }
 //   int address=(zaddr&0x1FFFFC);
-   if((address>=REG_ZZ_SEL_KS_TXT     && address<REG_ZZ_SEL_KS_TXT+   150) ||
-      (address>=REG_ZZ_SEL_SCSI_TXT   && address<REG_ZZ_SEL_SCSI_TXT+ 150) ||
-      (address>=REG_ZZ_SEL_PRESET_TXT && address<REG_ZZ_SEL_PRESET_TXT+150))
+   if((address>=REG_ZZ_SEL_KS_TXT     && address<REG_ZZ_SEL_KS_TXT     + 150) ||
+      (address>=REG_ZZ_SEL_SCSI_TXT   && address<REG_ZZ_SEL_SCSI_TXT   + 150) ||
+      (address>=REG_ZZ_SEL_ADF_TXT    && address<REG_ZZ_SEL_ADF_TXT    + 150) ||
+      (address>=REG_ZZ_SEL_PRESET_TXT && address<REG_ZZ_SEL_PRESET_TXT + 150)
+     )
    {
       data=swap32(*(uint32_t *)(RTG_BASE+address));
       return(data);
@@ -918,6 +920,16 @@ uint32_t read_rtg_register(uint32_t zaddr)
       case REG_ZZ_SCSI_SEL_6:
          data=env_file_vars_temp[preset_selected].scsi_num[(address-REG_ZZ_SCSI_SEL_0)>>2];
          break;
+      case REG_ZZ_ADF_SEL_0:
+      case REG_ZZ_ADF_SEL_1:
+      case REG_ZZ_ADF_SEL_2:
+      case REG_ZZ_ADF_SEL_3:
+      case REG_ZZ_ADF_SEL_4:
+      case REG_ZZ_ADF_SEL_5:
+      case REG_ZZ_ADF_SEL_6:
+      case REG_ZZ_ADF_SEL_7:
+         data=env_file_vars_temp[preset_selected].adf_num[(address-REG_ZZ_ADF_SEL_0)>>2];
+         break;
       case REG_ZZ_BPTON:
          data=(env_file_vars_temp[preset_selected].bp_ton+0.5e-6)*(SLIDER_BPTON_MAX/TON_MAX);
          break;
@@ -926,96 +938,13 @@ uint32_t read_rtg_register(uint32_t zaddr)
          break;
       case REG_ZZ_PRESET_SEL:
          data=preset_selected;
-         printf("read preset_selected %ld\n",data);
+//         printf("read preset_selected %ld\n",data);
          break;
-
-      case REG_ZZ_USB_PORTSC1: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PORTSC1);
-         if(debug_console.debug_usb)
-            printf("[USB] Command PORTSC1: 0x%lx\n", data);
-         break;
-      }
 
       case REG_ZZ_USB_STATUS: {
-         // Return USB system status and operation results
-//         data = usb_handle_register_read(REG_ZZ_USB_STATUS);
          data = usb_status;
          if(debug_console.debug_usb)
             printf("[USB] Status read: 0x%lx\n", data);
-         break;
-      }
-#if 0      
-      case REG_ZZ_USB_BU FSEL: {
-         // Return current buffer selection
-         data = usb_handle_register_read(REG_ZZ_USB_BU FSEL);
-         if(debug_console.debug_usb)
-            printf("[USB] Buffer select read: 0x%lx\n", data);
-         break;
-      }
-#endif
-      // USB register reads - provide status and data from ARM to Amiga
-      case REG_ZZ_USB_READ0: {
-         // Return number of connected USB devices
-//         data = usb_handle_register_read(REG_ZZ_USB_READ0);
-         if(debug_console.debug_usb)
-            printf("[USB] Device count read: %ld\n", data);
-         break;
-      }
-
-      // USB Parameter registers - dedicated for USB operations
-      case REG_ZZ_USB_PARAM0: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM0);
-         if(debug_console.debug_usb)
-            printf("[USB] Param0 read: 0x%lx\n", data);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM1: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM1);
-         if(debug_console.debug_usb)
-            printf("[USB] Param1 read: 0x%lx\n", data);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM2: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM2);
-         if(debug_console.debug_usb)
-            printf("[USB] Param2 read: 0x%lx\n", data);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM3: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM3);
-         if(debug_console.debug_usb)
-            printf("[USB] Param3 read: 0x%lx\n", data);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM4: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM4);
-         if(debug_console.debug_usb)
-            printf("[USB] Param4 read: 0x%lx\n", data);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM5: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM5);
-         if(debug_console.debug_usb)
-            printf("[USB] Param5 read: 0x%lx\n", data);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM6: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM6);
-         if(debug_console.debug_usb)
-            printf("[USB] Param6 read: 0x%lx\n", data);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM7: {
-//         data = usb_handle_register_read(REG_ZZ_USB_PARAM7);
-         if(debug_console.debug_usb)
-            printf("[USB] Param7 read: 0x%lx\n", data);
          break;
       }
       
@@ -1129,7 +1058,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case REG_ZZ_ORIG_RES:
          original_w=(zdata>>16)&0xFFFF;
          original_h=(zdata    )&0xFFFF;
-         printf("original_h %d\n",original_h);
+         debug_printf("original_h %d\n",original_h);
          break;
       case REG_ZZ_BLIT_SRC:
          blitter_src_offset = zdata;
@@ -1178,7 +1107,7 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
          {
             int colormode = (zdata & 0xf00) >> 8;
             int scalemode = (zdata & 0xf000) >> 12;
-            printf("mode: %d color: %d scale: %d\n", mode, colormode, scalemode);
+            debug_printf("mode: %d color: %d scale: %d\n", mode, colormode, scalemode);
             if(cached_videomode!=mode || cached_colormode!=colormode || cached_scalemode!=scalemode)
                video_mode_init(mode, scalemode, colormode);
             else
@@ -1394,17 +1323,17 @@ void write_rtg_register(uint32_t zaddr,uint32_t zdata)
       case ZZ_CUSTOM_VIDMODE_DATA: { // Custom video mode data
          switch(custom_vmode_param) {
             case VMODE_PARAM_HRES:     temp_preset_video_mode.hres=zdata;
-printf("framebuffer_pan_offset %lX\n",video_state->framebuffer_pan_offset);
-printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
-            printf("hres %ld\n"    ,zdata);break;
-            case VMODE_PARAM_VRES:     temp_preset_video_mode.vres=zdata;     printf("vres %ld\n"    ,zdata);break;
-            case VMODE_PARAM_HSTART:   temp_preset_video_mode.hstart=zdata;   printf("hstart %ld\n"  ,zdata);break;
-            case VMODE_PARAM_HEND:     temp_preset_video_mode.hend=zdata;     printf("hend %ld\n"    ,zdata);break;
-            case VMODE_PARAM_HMAX:     temp_preset_video_mode.hmax=zdata;     printf("hmax %ld\n"    ,zdata);break;
-            case VMODE_PARAM_VSTART:   temp_preset_video_mode.vstart=zdata;   printf("vstart %ld\n"  ,zdata);break;
-            case VMODE_PARAM_VEND:     temp_preset_video_mode.vend=zdata;     printf("vend %ld\n"    ,zdata);break;
-            case VMODE_PARAM_VMAX:     temp_preset_video_mode.vmax=zdata;     printf("vmax %ld\n"    ,zdata);break;
-            case VMODE_PARAM_POLARITY: temp_preset_video_mode.polarity=zdata; printf("polarity %ld\n",zdata);break;
+debug_printf("framebuffer_pan_offset %lX\n",video_state->framebuffer_pan_offset);
+debug_printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
+            debug_printf("hres %ld\n"    ,zdata);break;
+            case VMODE_PARAM_VRES:     temp_preset_video_mode.vres=zdata;     debug_printf("vres %ld\n"    ,zdata);break;
+            case VMODE_PARAM_HSTART:   temp_preset_video_mode.hstart=zdata;   debug_printf("hstart %ld\n"  ,zdata);break;
+            case VMODE_PARAM_HEND:     temp_preset_video_mode.hend=zdata;     debug_printf("hend %ld\n"    ,zdata);break;
+            case VMODE_PARAM_HMAX:     temp_preset_video_mode.hmax=zdata;     debug_printf("hmax %ld\n"    ,zdata);break;
+            case VMODE_PARAM_VSTART:   temp_preset_video_mode.vstart=zdata;   debug_printf("vstart %ld\n"  ,zdata);break;
+            case VMODE_PARAM_VEND:     temp_preset_video_mode.vend=zdata;     debug_printf("vend %ld\n"    ,zdata);break;
+            case VMODE_PARAM_VMAX:     temp_preset_video_mode.vmax=zdata;     debug_printf("vmax %ld\n"    ,zdata);break;
+            case VMODE_PARAM_POLARITY: temp_preset_video_mode.polarity=zdata; debug_printf("polarity %ld\n",zdata);break;
 
             case VMODE_PARAM_PHZ: {
                zz_video_mode *tpvm=&temp_preset_video_mode;
@@ -1443,7 +1372,7 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
                   tpvm->vmax   *=2;
                }
 */
-               printf("pixelclock %ld Hz\n",(uint32_t)phz);
+               debug_printf("pixelclock %ld Hz\n",(uint32_t)phz);
                uint32_t mul=1;
                uint32_t div=1;
                uint32_t div2=1;
@@ -1839,97 +1768,6 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
          }
          break;
       }
-      // USB Command Operation register - receives Poseidon commands from Amiga
-      case REG_ZZ_USB_CMD_OP: {
-         if(debug_console.debug_usb)
-            printf("[USB] Command operation: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_CMD_OP, zdata);
-         break;
-      }
-#if 0
-      // USB Command Data register - receives data for Poseidon commands
-      case REG_ZZ_USB_CMD_DATA: {
-         if(debug_console.debug_usb)
-            printf("[USB] Command data: 0x%lx\n", zdata);
-         usb_handle_register_write(REG_ZZ_USB_CMD_DATA, zdata);
-         break;
-      }
-#endif
-      // USB Status register - controls USB state and operations
-      case REG_ZZ_USB_STATUS: {
-            usb_status =0;
-         break;
-      }
-#if 0      
-      // USB Buffer Select register - selects active buffer for operations
-      case REG_ZZ_USB_BU FSEL: {
-         usb_handle_register_write(REG_ZZ_USB_BU FSEL, zdata);
-         break;
-      }
-#endif
-      // USB Command Data register - receives data for Poseidon count
-      case REG_ZZ_USB_READ0: {
-         if(debug_console.debug_usb)
-            printf("[USB] Command Read0: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_READ0, zdata);
-         break;
-      }
-      // USB Parameter registers - dedicated for USB operations
-      case REG_ZZ_USB_PARAM0: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param0 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM0, zdata);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM1: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param1 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM1, zdata);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM2: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param2 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM2, zdata);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM3: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param3 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM3, zdata);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM4: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param4 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM4, zdata);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM5: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param5 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM5, zdata);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM6: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param6 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM6, zdata);
-         break;
-      }
-      
-      case REG_ZZ_USB_PARAM7: {
-         if(debug_console.debug_usb)
-            printf("[USB] Param7 write: 0x%lx\n", zdata);
-//         usb_handle_register_write(REG_ZZ_USB_PARAM7, zdata);
-         break;
-      }
       case REG_ZZ_USB_PROXY_CMD: {
          usb_proxy_status = 1;
          usb_proxy_pending = 1;
@@ -2118,6 +1956,23 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
             printf("Apply SCSI magic code not valid: 0x%lx\n",zdata);
          }
          break;
+      case REG_ZZ_APPLY_ADF:
+         if(zdata==0x55AA)
+         {
+            if(preset_selected>=0)
+            {
+               read_preset_name();
+               printf("Apply ADF\n");
+               piscsi_shutdown();
+               if(write_env_files_adf(&env_file_vars_temp[preset_selected])==1)
+                  hard_reboot();
+            }
+         }
+         else
+         {
+            printf("Apply ADF magic code not valid: 0x%lx\n",zdata);
+         }
+         break;
       case REG_ZZ_APPLY_MISC:
          if(zdata==0x55AA)
          {
@@ -2260,6 +2115,20 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
             //printf("SCSI SELECT %ld\n",zdata);
          }
          break;
+      case REG_ZZ_ADF_SEL_0:
+      case REG_ZZ_ADF_SEL_1:
+      case REG_ZZ_ADF_SEL_2:
+      case REG_ZZ_ADF_SEL_3:
+      case REG_ZZ_ADF_SEL_4:
+      case REG_ZZ_ADF_SEL_5:
+      case REG_ZZ_ADF_SEL_6:
+      case REG_ZZ_ADF_SEL_7:
+         if(preset_selected>=0)
+         {
+            env_file_vars_temp[preset_selected].adf_num[(address-REG_ZZ_ADF_SEL_0)>>2]=zdata-1;
+            //printf("ADF SELECT %ld\n",zdata);
+         }
+         break;
       case REG_ZZ_KS_SEL_TXT:
       {
          int j=0;
@@ -2366,6 +2235,23 @@ printf("framebuffer %lX\n",(uint32_t)video_state->framebuffer);
             }
             for(c=0;c<4-(j&3);c++)
                *(char*)(RTG_BASE+REG_ZZ_SEL_SCSI_TXT+j+c)=0;
+         }
+      }
+      break;
+      case REG_ZZ_ADF_SEL_TXT:
+      {
+         int j=0;
+         char c=-1;
+         if(zdata<=19)
+         {
+            while(c!=0)
+            {
+               c=temp_config.hdf[zdata][j];
+               *(char*)(RTG_BASE+REG_ZZ_SEL_ADF_TXT+j)=c;
+               j++;
+            }
+            for(c=0;c<4-(j&3);c++)
+               *(char*)(RTG_BASE+REG_ZZ_SEL_ADF_TXT+j+c)=0;
          }
       }
       break;

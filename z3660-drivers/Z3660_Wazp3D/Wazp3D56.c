@@ -1,7 +1,7 @@
 /* Wazp3D Beta 56 : Alain THELLIER - Paris - FRANCE - (November 2006 to 2014)     */
 /* Code clean-up and library enhancements from Gunther Nikl                 */
 /* Adaptation to AROS from Matthias Rustler                            */
-/* Adaptation to Morphos from Szil???rd 'BSzili' Bir???                         */
+/* Adaptation to Morphos from Szil�rd 'BSzili' Bir�                         */
 /* LICENSE: GNU General Public License (GNU GPL) for this file                */
 
 /* This file contain the Warp3D -> Wazp3D wrapper                            */
@@ -3699,18 +3699,18 @@ SREM(loops)
         sizelarge=large*bpp1;
         YLOOP(high)
         {
-        XLOOP(sizelarge)
-            *RGB2++=*RGB1++;            /*update the area*/
-        RGB1+=offset1;
-        RGB2+=offset2;
+            XLOOP(sizelarge)
+                *RGB2++=*RGB1++;            /*update the area*/
+            RGB1+=offset1;
+            RGB2+=offset2;
         }
     }
 
     if(texture->texdata==NULL)
-        {
+    {
         SOFT3D_UpdateTexture(WC->SC,WT->ST,texture->texsource);
         WRETURN(W3D_SUCCESS);
-        }
+    }
 
 /* if got texsource->texdata re-convert the updated part */
     bpp1=texture->bytesperpix;                /*1=original  texture */
@@ -3800,10 +3800,10 @@ struct WAZP3D_context *WC=context->driver;
     WAZP3DFUNCTION(35);
     if(WC->state.LineSize!=line->linewidth)
     {
-    WC->state.Changed=TRUE;
-    WC->state.LineSize=line->linewidth;
-    if(WC->state.LineSize<1)
-        WC->state.LineSize=1;
+        WC->state.Changed=TRUE;
+        WC->state.LineSize=line->linewidth;
+        if(WC->state.LineSize<1)
+            WC->state.LineSize=1;
     }
 
     if( MAXPRIM < (WC->Pnb+2) )
@@ -3926,10 +3926,10 @@ LONG n,Pnb;
     SetTexStates(context,triangles->tex,W3D_PRIMITIVE_TRIANGLES);
 
     for (n=2;n<Pnb;n++)
-//    if (n&1)      /* reverse vertex order */
+    if (n&1)      /* reverse vertex order */
         GETPTRI(&v[n-1],&v[n-2],&v[n-0])
-//    else
-//        GETPTRI(&v[n-2],&v[n-1],&v[n-0])
+    else
+        GETPTRI(&v[n-2],&v[n-1],&v[n-0])
 
     if(!StateON(W3D_INDIRECT))        /*v53: If direct mode then draw each primitive (else bufferize primitives)*/
         DrawPrimitive(context);
@@ -4083,14 +4083,14 @@ struct WAZP3D_context *WC=context->driver;
     WAZP3DFUNCTION(45);
 
 /* patch: MiniGL/OS4 send some opengl's src & dst unimplemented values */
-    if(srcfunc==GL_CONSTANT_COLOR)        srcfunc=W3D_CONSTANT_COLOR;
+    if(srcfunc==GL_CONSTANT_COLOR)              srcfunc=W3D_CONSTANT_COLOR;
     if(srcfunc==GL_ONE_MINUS_CONSTANT_COLOR)    srcfunc=W3D_ONE_MINUS_CONSTANT_COLOR;
-    if(srcfunc==GL_CONSTANT_ALPHA )        srcfunc=W3D_CONSTANT_ALPHA;
+    if(srcfunc==GL_CONSTANT_ALPHA )             srcfunc=W3D_CONSTANT_ALPHA;
     if(srcfunc==GL_ONE_MINUS_CONSTANT_ALPHA)    srcfunc=W3D_ONE_MINUS_CONSTANT_ALPHA;
 
-    if(dstfunc==GL_CONSTANT_COLOR)        dstfunc=W3D_CONSTANT_COLOR;
+    if(dstfunc==GL_CONSTANT_COLOR)              dstfunc=W3D_CONSTANT_COLOR;
     if(dstfunc==GL_ONE_MINUS_CONSTANT_COLOR)    dstfunc=W3D_ONE_MINUS_CONSTANT_COLOR;
-    if(dstfunc==GL_CONSTANT_ALPHA )        dstfunc=W3D_CONSTANT_ALPHA;
+    if(dstfunc==GL_CONSTANT_ALPHA )             dstfunc=W3D_CONSTANT_ALPHA;
     if(dstfunc==GL_ONE_MINUS_CONSTANT_ALPHA)    dstfunc=W3D_ONE_MINUS_CONSTANT_ALPHA;
 
     if(15<srcfunc) WRETURN(W3D_ILLEGALINPUT);
@@ -4462,11 +4462,11 @@ VAR(Pnb)
     if(primitive==W3D_PRIMITIVE_TRISTRIP)
     {
     for (n=2;n<Pnb;n++)
-//    if (n&1)      /* reverse vertex order */
+    if (n&1)      /* reverse vertex order */
         DumpTriP(WC,&P[n-1],&P[n-2],&P[n-0]);
-//    else
-//        DumpTriP(WC,&P[n-2],&P[n-1],&P[n-0]);
-//    return;
+    else
+        DumpTriP(WC,&P[n-2],&P[n-1],&P[n-0]);
+    return;
     }
 
     if(primitive==W3D_PRIMITIVE_POINTS)
@@ -5420,10 +5420,10 @@ ULONG W3D_DrawTriStripV(W3D_Context *context, W3D_TrianglesV *triangles)
     SetTexStates(context,triangles->tex,W3D_PRIMITIVE_TRIANGLES);
 
     for (n=2;n<Pnb;n++)
-//    if (n&1)      /* reverse vertex order */
+    if (n&1)      /* reverse vertex order */
         GETPTRI(triangles->v[n-1],triangles->v[n-2],triangles->v[n-0])
-//    else
-//        GETPTRI(triangles->v[n-2],triangles->v[n-1],triangles->v[n-0])
+    else
+        GETPTRI(triangles->v[n-2],triangles->v[n-1],triangles->v[n-0])
 
     if(!StateON(W3D_INDIRECT))        /*v53: If direct mode then draw each primitive (else bufferize primitives)*/
         DrawPrimitive(context);
@@ -5713,10 +5713,10 @@ ULONG W3D_DrawArray(W3D_Context* context, ULONG primitive, ULONG base, ULONG cou
     if(primitive==W3D_PRIMITIVE_TRISTRIP)
     {
         for (n=2;n<Pnb;n++)
-//        if (n&1)      /* reverse vertex order */
+        if (n&1)      /* reverse vertex order */
             GETPTRI1(n-1,n-2,n-0)
-//        else
-//            GETPTRI1(n-2,n-1,n-0)
+        else
+            GETPTRI1(n-2,n-1,n-0)
     }
 
     if(primitive==W3D_PRIMITIVE_LINESTRIP)
@@ -5832,10 +5832,10 @@ ULONG W3D_DrawElements(W3D_Context* context, ULONG primitive, ULONG type, ULONG 
     if(primitive==W3D_PRIMITIVE_TRISTRIP)
     {
         for (n=2;n<Pnb;n++)
-//        if (n&1)      /* reverse vertex order */
+        if (n&1)      /* reverse vertex order */
             GETPTRI2(n-1,n-2,n-0)
-//        else
-//            GETPTRI2(n-2,n-1,n-0)
+        else
+            GETPTRI2(n-2,n-1,n-0)
     }
 
     if(primitive==W3D_PRIMITIVE_LINESTRIP)
@@ -5940,9 +5940,9 @@ ULONG W3D_SetTextureBlend(W3D_Context *context, struct TagItem *taglist)
         if(tag==W3D_ALPHA_ARG_B    )        S->AlphaInputB=data;
         if(tag==W3D_COLOR_ARG_C    )        S->ColorInputC=data;
         if(tag==W3D_ALPHA_ARG_C    )        S->AlphaInputC=data;
-        if(tag==W3D_ENV_MODE    )        {S->TexEnvMode=data;S->ColorCombineMode=S->AlphaCombineMode=W3D_COMBINE_DISABLED;}
-        if(tag==W3D_COLOR_COMBINE)        {S->ColorCombineMode=data; S->TexEnvMode=W3D_OFF; }
-        if(tag==W3D_ALPHA_COMBINE)        {S->AlphaCombineMode=data;S->TexEnvMode=W3D_OFF; }
+        if(tag==W3D_ENV_MODE       )        {S->TexEnvMode=data;S->ColorCombineMode=S->AlphaCombineMode=W3D_COMBINE_DISABLED;}
+        if(tag==W3D_COLOR_COMBINE  )        {S->ColorCombineMode=data; S->TexEnvMode=W3D_OFF; }
+        if(tag==W3D_ALPHA_COMBINE  )        {S->AlphaCombineMode=data;S->TexEnvMode=W3D_OFF; }
         if(tag==W3D_COLOR_SCALE    )        S->ScaleRGBA[0]=S->ScaleRGBA[1]=S->ScaleRGBA[2]=data;
         if(tag==W3D_ALPHA_SCALE    )        S->ScaleRGBA[3]=data;
         if(tag==W3D_BLEND_FACTOR)
@@ -6057,18 +6057,18 @@ ULONG W3D_SetTextureBlend(W3D_Context *context, struct TagItem *taglist)
                 switch(data)
                 {
                 case W3D_ADD:        Libprintf("W3D_ADD\n");break;
-                case W3D_BLEND:        Libprintf("W3D_BLEND\n");break;
-                case W3D_DECAL:        Libprintf("W3D_DECAL\n");break;
-                case W3D_MODULATE:    Libprintf("W3D_MODULATE\n");break;
+                case W3D_BLEND:      Libprintf("W3D_BLEND\n");break;
+                case W3D_DECAL:      Libprintf("W3D_DECAL\n");break;
+                case W3D_MODULATE:   Libprintf("W3D_MODULATE\n");break;
                 case W3D_OFF:        Libprintf("W3D_OFF\n");break;
-                case W3D_REPLACE:        Libprintf("W3D_REPLACE\n");break;
+                case W3D_REPLACE:    Libprintf("W3D_REPLACE\n");break;
                 case W3D_SUB:        Libprintf("W3D_SUB\n");break;
-                default:            VAR(data);break;
+                default:             VAR(data);break;
                 }
 
-            WTAG(W3D_BLEND_STAGE    ," W3D_BLEND_STAGE")
-            WTAG(W3D_COLOR_SCALE    ," W3D_COLOR_SCALE")
-            WTAG(W3D_ALPHA_SCALE    ," W3D_ALPHA_SCALE")
+            WTAG(W3D_BLEND_STAGE     ," W3D_BLEND_STAGE")
+            WTAG(W3D_COLOR_SCALE     ," W3D_COLOR_SCALE")
+            WTAG(W3D_ALPHA_SCALE     ," W3D_ALPHA_SCALE")
             WTAG(W3D_BLEND_FACTOR    ," W3D_BLEND_FACTOR")
             WTAG(W3D_BLEND_FACTOR    ," W3D_BLEND_FACTOR")
 

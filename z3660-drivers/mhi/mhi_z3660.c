@@ -340,10 +340,10 @@ APTR i_MHIAllocDecoder(REGA0(struct Task *mhi_task), REGD0(ULONG mhi_sigmask), R
 		mp->hw_addr = MHI_LibBase->hw_addr;
 
 		// FIFO offset as in axmp3
-		mp->encoded_offset = 0x06000000; // 0x07DE0000;
+		mp->encoded_offset = 0x06010000; // 0x07DE0000;
 		// Decoded audio offset right after FIFO with a little padding to be cache line aligned.
 //		mp->decode_offset = (0x06000000 + FIFOSIZE + 32) & 0xFFFFFFE0;
-		mp->decode_offset = 0x07000000;
+		mp->decode_offset = 0x06020000;
 
 		KPrintF((CONST_STRPTR)"encoded_offset = 0x%08lX\n", mp->encoded_offset);
 		KPrintF((CONST_STRPTR)"decode_offset  = 0x%08lX\n", mp->decode_offset);

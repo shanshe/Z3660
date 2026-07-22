@@ -360,8 +360,7 @@ struct vertex3D{
     float x,y,z;
 };
 /*==================================================================================*/
-__attribute__((aligned(16)))
-struct point3D {
+struct __attribute__((aligned(16))) point3D{
     union {
         float f;
         uint32_t i;
@@ -502,10 +501,10 @@ ULONG ASLminX,ASLmaxX,ASLminY,ASLmaxY;
 #define NLOOP(nbre) for(n=0;n<nbre;n++)
 #define XLOOP(nbre) for(x=0;x<nbre;x++)
 #define YLOOP(nbre) for(y=0;y<nbre;y++)
-#define SWAP(x,y) {temp=x;x=y;y=temp;}
-#define COPYRGBA(x,y)    *((ULONG *)(x))=*((ULONG *)(y));
-#define NOTSAMERGBA(x,y)    (*((ULONG *)(x))!=*((ULONG *)(y)))
-#define    SAMERGBA(x,y)    (*((ULONG *)(x))==*((ULONG *)(y)))
+#define SWAP(x,y) do{temp=x;x=y;y=temp;}while(0)
+#define COPYRGBA(x,y)    do{*((ULONG *)(x))=*((ULONG *)(y));}while(0)
+#define NOTSAMERGBA(x,y) (*((ULONG *)(x))!=*((ULONG *)(y)))
+#define    SAMERGBA(x,y) (*((ULONG *)(x))==*((ULONG *)(y)))
 /* simpler W3D_GetState used internally */
 #define StateON(s) ((context->state & s)!=0)
 #define FREEPTR(ptr) {MMfree(ptr);ptr=NULL;}
@@ -542,7 +541,8 @@ ULONG ASLminX,ASLmaxX,ASLminY,ASLmaxY;
 #define SFUNCTION(tex) ;
 #define  WINFO(var,val,doc) ;
 #define   WTAG(val,doc) ;
-#define  SINFO(var,val);
+//#define  SINFO(var,val);
+#define  SINFO(var,val) if(var == val) if(debug_console.debug_soft3d){Libprintf("SINFO " #val "\n");}
 #define WINFOB(var,val,doc) ;
 #define   VAR(var) ;
 #define  SVAR(var) ;
@@ -1067,7 +1067,7 @@ void Libloadfile(void *filename,void *pt,ULONG size);
 ULONG LibMilliTimer(void);
 /*==================================================================================*/
 
-#pragma pack(4)
+//#pragma pack(4)
 struct Soft3DData {
   volatile uint32_t offset[4];
   volatile uint32_t format[2];

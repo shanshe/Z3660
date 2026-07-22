@@ -13,7 +13,7 @@ SRCDIR  := $(ROOT)/src
 BUILDDIR:= $(ROOT)/build
 LDSCRIPT:= $(SRCDIR)/lscript.ld
 
-# Optional: Xilinx BSP includes (found in design_1_wrapper)
+# Xilinx BSP includes (found in design_1_wrapper)
 BSP_INC := $(ROOT)/../design_1_wrapper/zynq_fsbl/zynq_fsbl_bsp/ps7_cortexa9_0/include
 
 # LwIP from project first, then fallback to Xilinx standalone_domain
@@ -22,7 +22,7 @@ BSP_INC := $(ROOT)/../design_1_wrapper/ps7_cortexa9_0/standalone_domain/bsp/ps7_
 # BSP library path for standalone domain (core 0)
 BSP_LIB := $(ROOT)/../design_1_wrapper/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/lib
 
-INCLUDES:= -I$(SRCDIR) -I$(SRCDIR) -I$(BSP_INC) -I$(LWIP_INC) -I$(SRCDIR)/mbedtls/include -I$(ROOT)/../design_1_wrapper/zynq_fsbl
+INCLUDES:= -I$(SRCDIR) -I$(BSP_INC) -I$(LWIP_INC) -I$(SRCDIR)/mbedtls/include -I$(ROOT)/../design_1_wrapper/zynq_fsbl
 
 CFLAGS  := -mcpu=cortex-a9 -marm -mfpu=neon -mfloat-abi=hard -O3 -std=gnu99 -ftree-vectorize -mvectorize-with-neon-quad -ffast-math \
            -ffunction-sections -fdata-sections -Wall -Wextra \
@@ -32,7 +32,7 @@ CFLAGS  := -mcpu=cortex-a9 -marm -mfpu=neon -mfloat-abi=hard -O3 -std=gnu99 -ftr
 ASFLAGS := $(CFLAGS)
 # Use Xilinx runtime spec and link against BSP libs; remove -nostdlib
 # Ensure linker uses the same FPU/ABI as objects to avoid VFP arg mismatches
-LDFLAGS := -T $(LDSCRIPT) -Wl,--gc-sections -specs=$(SRCDIR)/Xilinx.spec -L$(BSP_LIB) \
+LDFLAGS := -T $(LDSCRIPT) -Wl,--gc-sections,-Map=$(BUILDDIR)/mapfile.txt -specs=$(SRCDIR)/Xilinx.spec -L$(BSP_LIB) \
            -mcpu=cortex-a9 -marm -mfpu=neon -mfloat-abi=hard -ffast-math -flto
 # CRT0 and libraries from BSP
 # Link against lwIP and FatFs (xilffs) in addition to libxil and libm.

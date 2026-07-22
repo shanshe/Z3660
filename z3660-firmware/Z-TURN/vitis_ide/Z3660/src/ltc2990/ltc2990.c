@@ -12,7 +12,7 @@
 //#include "xparameters.h"
 #include "../sii9022_init/sii9022_init.h"
 
-#include "sleep.h"
+#include "xc3_usleep.h"
 #include <stdio.h>
 
 #include "../debug_console.h"
@@ -163,16 +163,16 @@ void test_i2c(void)
          while (XIicPs_BusIsBusy(&IicInstance));
          printf("[I2C] 0x%02X read OK!!!!!!!!!!!!!!!!\n",i);
       }
-      usleep(25000);
+      xc3_usleep(25000);
    }
 }
 
 int ltc2990_init(void)
 {
    // 0 celsuis, 1 single, 0 reserved, 11 all mode, 111 V1, V2, V3, V4
-   usleep(2500);
+   xc3_usleep(2500);
    iic_write_ltc2990(LTC_CONTROL_REG,0b01011111); // V1, V2, V3, V4
-   usleep(25000);
+   xc3_usleep(25000);
 
    printf("Init LTC2990\n");
 /*

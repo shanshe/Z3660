@@ -2133,7 +2133,7 @@ reg BP_STATE=BP_STATE_IDLE;
 wire BP_IN;
 assign BP_IN = GPIO_s[28];
 assign BP = bp_out;
-assign enable_clk_output = GPIO_IN[16];
+assign enable_clk_output = GPIO_s[16];
 
 always @(posedge CLK18M_clk) begin
     bp_out <= 1'b0;

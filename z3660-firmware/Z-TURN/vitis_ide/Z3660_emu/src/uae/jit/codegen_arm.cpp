@@ -33,7 +33,7 @@
 
 #include "flags_arm.h"
 #include "sysdeps.h"
-#include "compemu.h"
+#include "compemu_arm.h"
 #include "codegen_arm.h"
 #include "memory.h"
 
@@ -542,7 +542,6 @@ LOWFUNC(NONE,NONE,2,compemu_raw_endblock_pc_inreg,(RR4 rr_pc, IM32 cycles))
   clobber_flags();
 
   // countdown -= scaled_cycles(totcycles);
-  countdown--;
   uintptr offs = (uintptr)&countdown - (uintptr)&regs;
 	LDR_rRI(REG_WORK1, R_REGSTRUCT, offs);
   if(CHECK32(cycles)) {
@@ -575,7 +574,6 @@ STATIC_INLINE uae_u32* compemu_raw_endblock_pc_isconst(IM32 cycles, IMPTR v)
   clobber_flags();
 
   // countdown -= scaled_cycles(totcycles);
-  countdown--;
   uintptr offs = (uintptr)&countdown - (uintptr)&regs;
 	LDR_rRI(REG_WORK1, R_REGSTRUCT, offs);
   if(CHECK32(cycles)) {

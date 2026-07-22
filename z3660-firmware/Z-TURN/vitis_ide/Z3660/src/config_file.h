@@ -68,7 +68,10 @@ typedef struct {
    int kickstart;
    int ext_kickstart;
    int scsi_num[7];
+   int cd_target[7];   // per-SCSI-target CD-ROM flag: cd_target[id]!=0 => target id is a read-only 2048-byte CD-ROM (pdt 0x05). Parsed from "cdrom_units".
+   int adf_num[8];
    char hdf[20][150];
+   char adf[20][150];
    int autoconfig_ram;
    int autoconfig_rtg;
    int cpu_ram;
@@ -126,6 +129,7 @@ typedef struct {
    int bootscreen_resolution;
    int doubled_cursor;
    int scsi_num[7];
+   int adf_num[8];
    uint8_t mac_address[6];
    char pad[2];
    float bp_ton;
@@ -162,6 +166,26 @@ enum CONFITEM {
    CONFITEM_HDF17,
    CONFITEM_HDF18,
    CONFITEM_HDF19,
+   CONFITEM_ISO0,
+   CONFITEM_ISO1,
+   CONFITEM_ISO2,
+   CONFITEM_ISO3,
+   CONFITEM_ISO4,
+   CONFITEM_ISO5,
+   CONFITEM_ISO6,
+   CONFITEM_ISO7,
+   CONFITEM_ISO8,
+   CONFITEM_ISO9,
+   CONFITEM_ISO10,
+   CONFITEM_ISO11,
+   CONFITEM_ISO12,
+   CONFITEM_ISO13,
+   CONFITEM_ISO14,
+   CONFITEM_ISO15,
+   CONFITEM_ISO16,
+   CONFITEM_ISO17,
+   CONFITEM_ISO18,
+   CONFITEM_ISO19,
    CONFITEM_SCSI0,
    CONFITEM_SCSI1,
    CONFITEM_SCSI2,
@@ -169,6 +193,34 @@ enum CONFITEM {
    CONFITEM_SCSI4,
    CONFITEM_SCSI5,
    CONFITEM_SCSI6,
+   CONFITEM_ADF_FILE0,
+   CONFITEM_ADF_FILE1,
+   CONFITEM_ADF_FILE2,
+   CONFITEM_ADF_FILE3,
+   CONFITEM_ADF_FILE4,
+   CONFITEM_ADF_FILE5,
+   CONFITEM_ADF_FILE6,
+   CONFITEM_ADF_FILE7,
+   CONFITEM_ADF_FILE8,
+   CONFITEM_ADF_FILE9,
+   CONFITEM_ADF_FILE10,
+   CONFITEM_ADF_FILE11,
+   CONFITEM_ADF_FILE12,
+   CONFITEM_ADF_FILE13,
+   CONFITEM_ADF_FILE14,
+   CONFITEM_ADF_FILE15,
+   CONFITEM_ADF_FILE16,
+   CONFITEM_ADF_FILE17,
+   CONFITEM_ADF_FILE18,
+   CONFITEM_ADF_FILE19,
+   CONFITEM_ADF0,
+   CONFITEM_ADF1,
+   CONFITEM_ADF2,
+   CONFITEM_ADF3,
+   CONFITEM_ADF4,
+   CONFITEM_ADF5,
+   CONFITEM_ADF6,
+   CONFITEM_ADF7,
    CONFITEM_AUTOCONFIG_RAM_ENABLE,
    CONFITEM_AUTOCONFIG_RTG_ENABLE,
    CONFITEM_CPU_RAM_ENABLE,
@@ -227,6 +279,7 @@ extern const char *bootmode_names[];
 int write_env_files(ENV_FILE_VARS *env_file);
 int write_env_files_boot(ENV_FILE_VARS *env_file);
 int write_env_files_scsi(ENV_FILE_VARS *env_file);
+int write_env_files_adf(ENV_FILE_VARS *env_file);
 int write_env_files_misc(ENV_FILE_VARS *env_file);
 int write_env_files_bootscres(ENV_FILE_VARS *env_file);
 int write_env_files_preset(ENV_FILE_VARS *env_file);

@@ -148,7 +148,7 @@ int ps7_init_custom(int freq_code) {
             return -1;
     }
     
-    printf("ps7_init_custom: Configuring ARM PLL for %s (FBDIV=%lu)...\n", freq_name, target_fbdiv);
+//    printf("ps7_init_custom: Configuring ARM PLL for %s (FBDIV=%lu)...\n", freq_name, target_fbdiv);
     
     // 1. UNLOCK SLCR (same as FSBL)
     EMIT_WRITE(0XF8000008, 0x0000DF0DU);
@@ -186,9 +186,9 @@ int ps7_init_custom(int freq_code) {
     EMIT_MASKWRITE(0XF8000120, 0x1F003F30U, 0x1F000200U);
 //    printf("Divisor=2 configured\n");
     
-    printf("ps7_init_custom: ARM PLL successfully configured for %s\n", freq_name);
+//    printf("ps7_init_custom: ARM PLL successfully configured for %s\n", freq_name);
 
-    ps7_ddr_get_frequency(1);
+    ps7_ddr_get_frequency(0);
 
     return 0;
 }
@@ -211,16 +211,16 @@ int ps7_ddr_get_frequency(int debug) {
     
     // Extraer el valor FBDIV (bits [18:12])
     uint32_t fbdiv = (ddr_pll_ctrl >> 12) & 0x7F;
-    
-    // Leer registro de divisores DDR (0xF8000124)
-    uint32_t ddr_divisors = Xil_In32(0xF8000124);
-    uint32_t ddr3x_divisor = (ddr_divisors >> 20) & 0x7;
-    uint32_t ddr2x_divisor = (ddr_divisors >> 26) & 0x7;
-    
+        
     // Leer si el PLL está en bypass
     uint32_t bypass = (ddr_pll_ctrl >> 4) & 0x1;
     uint32_t reset = ddr_pll_ctrl & 0x1;
-    
+
+    uint32_t ddr_divisors = Xil_In32(0xF8000124);
+    uint32_t ddr3x_divisor = (ddr_divisors >> 20) & 0x7;
+/*    
+    // Leer registro de divisores DDR (0xF8000124)
+    uint32_t ddr2x_divisor = (ddr_divisors >> 26) & 0x7;
     if (debug) {
         printf("DDR PLL Debug:\n");
         printf("  FBDIV=0x%lx (%lu)\n", fbdiv, fbdiv);
@@ -229,7 +229,7 @@ int ps7_ddr_get_frequency(int debug) {
         printf("  PLL_CTRL register: 0x%08lx\n", ddr_pll_ctrl);
         printf("  DIVISORS register: 0x%08lx\n", ddr_divisors);
     }
-    
+*/
     // Si el PLL está en bypass o reset, la frecuencia no es válida
     if (bypass || reset) {
         if (debug) printf("  DDR PLL not configured properly (bypass or reset)\n");

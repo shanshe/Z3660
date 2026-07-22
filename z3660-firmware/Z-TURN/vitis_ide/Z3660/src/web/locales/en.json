@@ -1,0 +1,20 @@
+{
+  "title": "Z3660 SD Manager",
+  "subtitle": "Web Server - SD card file management",
+  "info_title": "System information",
+  "firmware": "Firmware",
+  "ip_address": "IP address",
+  "free_space": "Free space",
+  "files_title": "Files",
+  "upload_title": "Upload file",
+  "actions_title": "Actions",
+  "btn_download": "Download",
+  "btn_upload": "Upload to SD",
+  "btn_update": "Update Firmware",
+  "btn_reboot": "Reboot",
+  "btn_reload": "Reload list",
+  "name": "Name",
+  "size": "Size",
+  "action": "Action",
+  "footer": "Z3660 HTTP Server - lwIP + FatFs"
+}

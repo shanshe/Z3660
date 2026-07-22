@@ -14,6 +14,7 @@ extern int timing_selected;
 ListSelect *ls_kickstart;
 ListSelect *ls_kickstart_ext;
 ListSelect *ls_scsi[7];
+ListSelect *ls_adf[8];
 ListSelect *ls_screen_res;
 ListSelect *ls_timings;
 ListSelect *ls_arm_frequency;
@@ -83,6 +84,8 @@ void list_selects_run(void)
    ls_run(ls_kickstart_ext);
    for(int i=0;i<7;i++)
       ls_run(ls_scsi[i]);
+   for(int i=0;i<8;i++)
+      ls_run(ls_adf[i]);
    ls_run(ls_timings);
    ls_run(ls_arm_frequency);
 }
@@ -129,24 +132,26 @@ void init_listselects(void)
    ls_kickstart->b_was_at_cursor=0;
    ls_kickstart->action=listselect_action;
    ls_kickstart->tab=TAB_BOOT;
+   for(int i=0;i<21;i++)
+      strcpy(ls_kickstart->text[i],"");
    strcpy(ls_kickstart->text[0],"Amiga mother board kickstart");
-   strcpy(ls_kickstart->text[1],config.kickstart1+3); // +3 skips "1:/"
-   strcpy(ls_kickstart->text[2],config.kickstart2+3);
-   strcpy(ls_kickstart->text[3],config.kickstart3+3);
-   strcpy(ls_kickstart->text[4],config.kickstart4+3);
-   strcpy(ls_kickstart->text[5],config.kickstart5+3);
-   strcpy(ls_kickstart->text[6],config.kickstart6+3);
-   strcpy(ls_kickstart->text[7],config.kickstart7+3);
-   strcpy(ls_kickstart->text[8],config.kickstart8+3);
-   strcpy(ls_kickstart->text[9],config.kickstart9+3);
-   for(int i=0;i<10;i++)
+   if(config.kickstart1[0]!=0) strcpy(ls_kickstart->text[1],config.kickstart1+3); // +3 skips "1:/"
+   if(config.kickstart2[0]!=0) strcpy(ls_kickstart->text[2],config.kickstart2+3);
+   if(config.kickstart3[0]!=0) strcpy(ls_kickstart->text[3],config.kickstart3+3);
+   if(config.kickstart4[0]!=0) strcpy(ls_kickstart->text[4],config.kickstart4+3);
+   if(config.kickstart5[0]!=0) strcpy(ls_kickstart->text[5],config.kickstart5+3);
+   if(config.kickstart6[0]!=0) strcpy(ls_kickstart->text[6],config.kickstart6+3);
+   if(config.kickstart7[0]!=0) strcpy(ls_kickstart->text[7],config.kickstart7+3);
+   if(config.kickstart8[0]!=0) strcpy(ls_kickstart->text[8],config.kickstart8+3);
+   if(config.kickstart9[0]!=0) strcpy(ls_kickstart->text[9],config.kickstart9+3);
+   // cut the text to 43 chars, because the listselect is not wide enough to display more than 43 chars
+   for(int i=0;i<21;i++)
       ls_kickstart->text[i][43]=0;
    ls_kickstart->num_items=0;
    while((ls_kickstart->text[ls_kickstart->num_items])[0]!=0)
    {
       ls_kickstart->num_items++;
    }
-
    ls_kickstart_ext=(ListSelect *)malloc(sizeof(ListSelect));
    ls_kickstart_ext->w=win.w-100;
    ls_kickstart_ext->h=Font->Height+2;
@@ -154,17 +159,20 @@ void init_listselects(void)
    ls_kickstart_ext->b_was_at_cursor=0;
    ls_kickstart_ext->action=listselect_action;
    ls_kickstart_ext->tab=TAB_BOOT;
+   for(int i=0;i<21;i++)
+      strcpy(ls_kickstart_ext->text[i],"");
    strcpy(ls_kickstart_ext->text[0],"Amiga mother board ext kickstart");
-   strcpy(ls_kickstart_ext->text[1],config.ext_kickstart1+3); // +3 skips "1:/"
-   strcpy(ls_kickstart_ext->text[2],config.ext_kickstart2+3);
-   strcpy(ls_kickstart_ext->text[3],config.ext_kickstart3+3);
-   strcpy(ls_kickstart_ext->text[4],config.ext_kickstart4+3);
-   strcpy(ls_kickstart_ext->text[5],config.ext_kickstart5+3);
-   strcpy(ls_kickstart_ext->text[6],config.ext_kickstart6+3);
-   strcpy(ls_kickstart_ext->text[7],config.ext_kickstart7+3);
-   strcpy(ls_kickstart_ext->text[8],config.ext_kickstart8+3);
-   strcpy(ls_kickstart_ext->text[9],config.ext_kickstart9+3);
-   for(int i=0;i<10;i++)
+   if(config.ext_kickstart1[0]!=0) strcpy(ls_kickstart_ext->text[1],config.ext_kickstart1+3); // +3 skips "1:/"
+   if(config.ext_kickstart2[0]!=0) strcpy(ls_kickstart_ext->text[2],config.ext_kickstart2+3);
+   if(config.ext_kickstart3[0]!=0) strcpy(ls_kickstart_ext->text[3],config.ext_kickstart3+3);
+   if(config.ext_kickstart4[0]!=0) strcpy(ls_kickstart_ext->text[4],config.ext_kickstart4+3);
+   if(config.ext_kickstart5[0]!=0) strcpy(ls_kickstart_ext->text[5],config.ext_kickstart5+3);
+   if(config.ext_kickstart6[0]!=0) strcpy(ls_kickstart_ext->text[6],config.ext_kickstart6+3);
+   if(config.ext_kickstart7[0]!=0) strcpy(ls_kickstart_ext->text[7],config.ext_kickstart7+3);
+   if(config.ext_kickstart8[0]!=0) strcpy(ls_kickstart_ext->text[8],config.ext_kickstart8+3);
+   if(config.ext_kickstart9[0]!=0) strcpy(ls_kickstart_ext->text[9],config.ext_kickstart9+3);
+   // cut the text to 43 chars, because the listselect is not wide enough to display more than 43 chars
+   for(int i=0;i<21;i++)
       ls_kickstart_ext->text[i][43]=0; // limit to 43 chars
    ls_kickstart_ext->num_items=0;
    while(ls_kickstart_ext->text[ls_kickstart_ext->num_items][0]!=0)
@@ -190,6 +198,27 @@ void init_listselects(void)
       while((ls_scsi[i]->text[ls_scsi[i]->num_items])[0]!=0)
       {
          ls_scsi[i]->num_items++;
+      }
+   }
+
+   for(int i=0;i<8;i++)
+   {
+      ls_adf[i]=(ListSelect *)malloc(sizeof(ListSelect));
+      ls_adf[i]->w=win.w-68;
+      ls_adf[i]->h=Font->Height+2;
+      ls_adf[i]->is_pressed=0;
+      ls_adf[i]->b_was_at_cursor=0;
+      ls_adf[i]->action=listselect_action;
+      ls_adf[i]->tab=TAB_ADF;
+      strcpy(ls_adf[i]->text[0],"Disabled");
+      for(int j=1;j<21;j++)
+         strcpy(ls_adf[i]->text[j],config.adf[j-1]+3); // +3 skips "1:/"
+      for(int j=0;j<21;j++)
+         ls_adf[i]->text[j][48]=0;
+      ls_adf[i]->num_items=0;
+      while((ls_adf[i]->text[ls_adf[i]->num_items])[0]!=0)
+      {
+         ls_adf[i]->num_items++;
       }
    }
 
@@ -223,6 +252,8 @@ void list_select_repaint(void)
    ls_repaint(ls_kickstart_ext);
    for(int i=0;i<7;i++)
       ls_repaint(ls_scsi[i]);
+   for(int i=0;i<8;i++)
+      ls_repaint(ls_adf[i]);
    ls_repaint(ls_timings);
    ls_repaint(ls_arm_frequency);
 }
@@ -236,6 +267,19 @@ void paint_ls_scsi(void)
       displayStringAt(Font,win.x+12,win.y+win.t+11+TAB_HEIGHT+25+17*i,(uint8_t*)temp,LEFT_MODE);
       LISTSEL(ls_scsi[i]->x,ls_scsi[i]->y,ls_scsi[i]->w,ls_scsi[i]->h);
       displayStringAt(Font,ls_scsi[i]->x+18,ls_scsi[i]->y+2,(uint8_t *)ls_scsi[i]->text[ls_scsi[i]->selected_item],LEFT_MODE);
+   }
+
+}
+void paint_ls_adf(void)
+{
+   char temp[10]="ADFX";
+
+   for(int i=0;i<8;i++)
+   {
+      temp[3]=i+'0';
+      displayStringAt(Font,win.x+12,win.y+win.t+11+TAB_HEIGHT+25+17*i,(uint8_t*)temp,LEFT_MODE);
+      LISTSEL(ls_adf[i]->x,ls_adf[i]->y,ls_adf[i]->w,ls_adf[i]->h);
+      displayStringAt(Font,ls_adf[i]->x+18,ls_adf[i]->y+2,(uint8_t *)ls_adf[i]->text[ls_adf[i]->selected_item],LEFT_MODE);
    }
 
 }
@@ -254,6 +298,12 @@ void recalculate_coords_list_select(void)
    {
       ls_scsi[i]->x=win.x+50;
       ls_scsi[i]->y=win.y+win.t+8+TAB_HEIGHT+25+17*i;
+   }
+
+   for(int i=0;i<8;i++)
+   {
+      ls_adf[i]->x=win.x+50;
+      ls_adf[i]->y=win.y+win.t+8+TAB_HEIGHT+25+17*i;
    }
 
    ls_timings->x=win.x+128;
@@ -313,6 +363,8 @@ void list_selects_action(void)
    list_select_action(ls_kickstart_ext);
    for(int i=0;i<7;i++)
       list_select_action(ls_scsi[i]);
+   for(int i=0;i<8;i++)
+      list_select_action(ls_adf[i]);
    list_select_action(ls_timings);
    list_select_action(ls_arm_frequency);
 }

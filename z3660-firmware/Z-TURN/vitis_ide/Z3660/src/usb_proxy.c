@@ -304,7 +304,7 @@ static uint16_t handle_control_xfer(volatile struct ZZUSBCommand *cmd,
     setup.index = le16(cmd->setup_wIndex);
     setup.length = le16(cmd->setup_wLength);
 
-    Xil_DCacheFlushRange((u32)&setup, ALIGN(sizeof(setup), 32));
+//    Xil_DCacheFlushRange((u32)&setup, ALIGN(sizeof(setup), 32));
 
     int is_in = (cmd->setup_bRequestType & 0x80) != 0;
     void *buf = NULL;
@@ -312,9 +312,9 @@ static uint16_t handle_control_xfer(volatile struct ZZUSBCommand *cmd,
     if (data_len > 0) {
         if (!is_in) {
             memcpy(dma_buf, data_buf, data_len);
-            Xil_DCacheFlushRange((u32)dma_buf, ALIGN(data_len, 32));
+//            Xil_DCacheFlushRange((u32)dma_buf, ALIGN(data_len, 32));
         } else {
-            Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(data_len, 32));
+//            Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(data_len, 32));
         }
         buf = dma_buf;
     }
@@ -325,7 +325,7 @@ static uint16_t handle_control_xfer(volatile struct ZZUSBCommand *cmd,
 
     if (result >= 0 && dev.status == 0) {
         if (is_in && data_len > 0 && dev.act_len > 0) {
-            Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(dev.act_len, 32));
+//            Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(dev.act_len, 32));
             memcpy(data_buf, dma_buf, dev.act_len);
         }
         put_be32(cmd->actual_length, dev.act_len);
@@ -409,9 +409,9 @@ static uint16_t handle_bulk_xfer(volatile struct ZZUSBCommand *cmd,
 
     if (data_len > 0) {
         if (!is_in) {
-            Xil_DCacheFlushRange((u32)xfer_buf, ALIGN(data_len, 32));
+//            Xil_DCacheFlushRange((u32)xfer_buf, ALIGN(data_len, 32));
         } else {
-            Xil_DCacheInvalidateRange((u32)xfer_buf, ALIGN(data_len, 32));
+//            Xil_DCacheInvalidateRange((u32)xfer_buf, ALIGN(data_len, 32));
         }
     }
 
@@ -422,7 +422,7 @@ static uint16_t handle_bulk_xfer(volatile struct ZZUSBCommand *cmd,
 
     if (result >= 0 && dev.status == 0) {
         if (is_in && data_len > 0 && dev.act_len > 0) {
-            Xil_DCacheInvalidateRange((u32)xfer_buf, ALIGN(dev.act_len, 32));
+//            Xil_DCacheInvalidateRange((u32)xfer_buf, ALIGN(dev.act_len, 32));
         }
         put_be32(cmd->actual_length, dev.act_len);
         return ZZUSB_STATUS_OK;
@@ -457,9 +457,9 @@ static uint16_t handle_int_xfer(volatile struct ZZUSBCommand *cmd,
 
     if (!is_in && data_len > 0) {
         memcpy(dma_buf, data_buf, data_len);
-        Xil_DCacheFlushRange((u32)dma_buf, ALIGN(data_len, 32));
+//        Xil_DCacheFlushRange((u32)dma_buf, ALIGN(data_len, 32));
     } else if (is_in && data_len > 0) {
-        Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(data_len, 32));
+//        Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(data_len, 32));
     }
 
     int result = submit_int_msg(&dev, pipe, data_len > 0 ? dma_buf : NULL,
@@ -479,7 +479,7 @@ static uint16_t handle_int_xfer(volatile struct ZZUSBCommand *cmd,
      */
     if (result >= 0 && dev.status == 0) {
         if (is_in && data_len > 0 && dev.act_len > 0) {
-            Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(dev.act_len, 32));
+//            Xil_DCacheInvalidateRange((u32)dma_buf, ALIGN(dev.act_len, 32));
             memcpy(data_buf, dma_buf, dev.act_len);
         }
         put_be32(cmd->actual_length, dev.act_len);
@@ -562,6 +562,7 @@ uint16_t usb_proxy_handle_command(volatile struct ZZUSBCommand *cmd,
     put_be32(cmd->actual_length, 0);
 
     if (command != ZZUSB_CMD_RESET_PORT && command != ZZUSB_CMD_CHECK_PORT && !is_port_connected()) {
+        printf("usb_proxy_handle_command return ZZUSB_STATUS_OFFLINE\n");
         return ZZUSB_STATUS_OFFLINE;
     }
 

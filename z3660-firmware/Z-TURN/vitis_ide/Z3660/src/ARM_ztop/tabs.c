@@ -12,6 +12,7 @@
 Tab *t_info;
 Tab *t_boot;
 Tab *t_scsi;
+Tab *t_adf;
 Tab *t_misc;
 Tab *t_preset;
 Tab *t_timings;
@@ -20,6 +21,7 @@ Tab **tabs[NUM_TABS] = {
       &t_info,
       &t_boot,
       &t_scsi,
+      &t_adf,
       &t_misc,
       &t_preset,
       &t_timings,
@@ -102,6 +104,24 @@ void init_tab_scsi(void)
    t_scsi->is_painted=0;
 }
 
+void paint_tab_adf(void);
+void t_adf_action(void)
+{
+   paint_tab_adf();
+}
+void init_tab_adf(void)
+{
+   t_adf=(Tab *)malloc(sizeof(Tab));
+   t_adf->w=TAB_MIN_WIDTH;
+   t_adf->h=TAB_HEIGHT;
+   t_adf->text="ADF";
+   t_adf->is_pressed=0;
+   t_adf->t_was_at_cursor=0;
+   t_adf->action=t_adf_action;
+   t_adf->tab=TAB_ADF;
+   t_adf->is_painted=0;
+}
+
 void paint_tab_misc(void);
 void t_misc_action(void)
 {
@@ -161,6 +181,7 @@ void init_tabs(void)
    init_tab_info();
    init_tab_boot();
    init_tab_scsi();
+   init_tab_adf();
    init_tab_misc();
    init_tab_preset();
    init_tab_timings();
@@ -177,6 +198,7 @@ void tab_change(Tab *t, uint8_t select)
          selected_tab=TAB_INFO;
       TAB(t_boot,0);
       TAB(t_scsi,0);
+      TAB(t_adf,0);
       TAB(t_misc,0);
       TAB(t_preset,0);
       TAB(t_timings,0);
@@ -187,6 +209,7 @@ void tab_change(Tab *t, uint8_t select)
          selected_tab=TAB_BOOT;
       TAB(t_info,0);
       TAB(t_scsi,0);
+      TAB(t_adf,0);
       TAB(t_misc,0);
       TAB(t_preset,0);
       TAB(t_timings,0);
@@ -197,6 +220,18 @@ void tab_change(Tab *t, uint8_t select)
          selected_tab=TAB_SCSI;
       TAB(t_info,0);
       TAB(t_boot,0);
+      TAB(t_adf,0);
+      TAB(t_misc,0);
+      TAB(t_preset,0);
+      TAB(t_timings,0);
+   }
+   else if(t==t_adf)
+   {
+      if(select)
+         selected_tab=TAB_ADF;
+      TAB(t_info,0);
+      TAB(t_boot,0);
+      TAB(t_scsi,0);
       TAB(t_misc,0);
       TAB(t_preset,0);
       TAB(t_timings,0);
@@ -208,6 +243,7 @@ void tab_change(Tab *t, uint8_t select)
       TAB(t_info,0);
       TAB(t_boot,0);
       TAB(t_scsi,0);
+      TAB(t_adf,0);
       TAB(t_preset,0);
       TAB(t_timings,0);
    }
@@ -218,6 +254,7 @@ void tab_change(Tab *t, uint8_t select)
       TAB(t_info,0);
       TAB(t_boot,0);
       TAB(t_scsi,0);
+      TAB(t_adf,0);
       TAB(t_misc,0);
       TAB(t_timings,0);
    }
@@ -228,6 +265,7 @@ void tab_change(Tab *t, uint8_t select)
       TAB(t_info,0);
       TAB(t_boot,0);
       TAB(t_scsi,0);
+      TAB(t_adf,0);
       TAB(t_misc,0);
       TAB(t_preset,0);
    }
@@ -258,6 +296,7 @@ void tab_repaint(Tab *t)
       TAB(t_info  ,selected_tab==TAB_INFO);
       TAB(t_boot  ,selected_tab==TAB_BOOT);
       TAB(t_scsi  ,selected_tab==TAB_SCSI);
+      TAB(t_adf   ,selected_tab==TAB_ADF);
       TAB(t_misc  ,selected_tab==TAB_MISC);
       TAB(t_preset,selected_tab==TAB_PRESET);
       TAB(t_timings,selected_tab==TAB_TIMINGS);
@@ -270,6 +309,7 @@ void tabs_paint_init(void)
    TAB(t_info,1);
    TAB(t_boot,0);
    TAB(t_scsi,0);
+   TAB(t_adf,0);
    TAB(t_misc,0);
    TAB(t_preset,0);
    TAB(t_timings,0);
@@ -279,6 +319,7 @@ void tabs_run(void)
    tab_run(t_info);
    tab_run(t_boot);
    tab_run(t_scsi);
+   tab_run(t_adf);
    tab_run(t_misc);
    tab_run(t_preset);
    tab_run(t_timings);
@@ -288,6 +329,7 @@ void tabs_action(void)
    tab_action(t_info);
    tab_action(t_boot);
    tab_action(t_scsi);
+   tab_action(t_adf);
    tab_action(t_misc);
    tab_action(t_preset);
    tab_action(t_timings);
@@ -297,6 +339,7 @@ void tabs_repaint(void)
    tab_repaint(t_info);
    tab_repaint(t_boot);
    tab_repaint(t_scsi);
+   tab_repaint(t_adf);
    tab_repaint(t_misc);
    tab_repaint(t_preset);
    tab_repaint(t_timings);
@@ -309,6 +352,7 @@ void recalculate_coords_tabs(void)
    T_TAB(t_info);
    T_TAB(t_boot);
    T_TAB(t_scsi);
+   T_TAB(t_adf);
    T_TAB(t_misc);
    T_TAB(t_preset);
    T_TAB(t_timings);
@@ -409,6 +453,14 @@ void paint_tab_scsi(void)
    paint_ls_scsi();
    paint_b_apply_scsi();
    paint_b_apply_all_scsi();
+}
+void paint_tab_adf(void)
+{
+   clear_tab();
+
+   paint_ls_adf();
+   paint_b_apply_adf();
+   paint_b_apply_all_adf();
 }
 extern char message[300];
 

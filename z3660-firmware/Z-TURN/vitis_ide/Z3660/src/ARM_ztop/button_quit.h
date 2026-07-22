@@ -45,6 +45,8 @@ void paint_b_apply_boot_mode(void);
 void paint_b_apply_all_boot(void);
 void paint_b_apply_scsi(void);
 void paint_b_apply_all_scsi(void);
+void paint_b_apply_adf(void);
+void paint_b_apply_all_adf(void);
 
 int8_t is_cursor_at_button_quit(ButtonQuit *b);
 void button_quit_run(void);

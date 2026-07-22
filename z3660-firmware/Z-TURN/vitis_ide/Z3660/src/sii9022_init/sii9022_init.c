@@ -10,10 +10,10 @@
 #include <stdio.h>
 //#include "xparameters.h"
 
-#include "sleep.h"
-XIicPs IicInstance;		/* The instance of the IIC device. */
+#include "main.h"
+XIicPs IicInstance;     /* The instance of the IIC device. */
 
-#define IIC_DEVICE_ID	XPAR_XIICPS_0_DEVICE_ID
+#define IIC_DEVICE_ID   XPAR_XIICPS_0_DEVICE_ID
 
 uint8_t WriteBuffer[1 + 1];
 

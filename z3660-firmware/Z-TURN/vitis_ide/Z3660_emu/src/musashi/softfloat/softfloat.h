@@ -94,12 +94,7 @@ this code that are retained.
  * probably be replaced with 'bool' but the uses would need to be audited
  * to check that they weren't accidentally relying on it being a larger type.
  */
-
-typedef uint64_t flag;
-
-#ifndef __cplusplus
-typedef uint8_t bool;
-#endif
+typedef uint8_t flag;
 
 #define LIT64( a ) a##ULL
 
@@ -504,7 +499,7 @@ static inline int floatx80_is_any_nan(floatx80 a)
 | pseudo-denormals, which must still be correctly handled as inputs even
 | if they are never generated as outputs.
 *----------------------------------------------------------------------------*/
-static inline uint8_t floatx80_invalid_encoding(floatx80 a)
+static inline bool floatx80_invalid_encoding(floatx80 a)
 {
     return (a.low & (1ULL << 63)) == 0 && (a.high & 0x7FFF) != 0 && (a.high & 0x7FFF) != 0x7FFF;
 }

@@ -8,12 +8,13 @@
 #include "textfield.h"
 #include <stdio.h>
 
-#define NUM_TABS 6
+#define NUM_TABS 7
 
 typedef enum {
    TAB_INFO=1,
    TAB_BOOT,
    TAB_SCSI,
+   TAB_ADF,
    TAB_MISC,
    TAB_PRESET,
    TAB_TIMINGS,

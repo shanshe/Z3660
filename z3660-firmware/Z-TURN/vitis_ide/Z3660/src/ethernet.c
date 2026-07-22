@@ -27,7 +27,6 @@
 #include "platform.h"
 #include <xil_cache.h>
 #include <xil_mmu.h>
-#include "sleep.h"
 //#include "xparameters.h"
 #include "xil_types.h"
 #include <xemacps.h>
@@ -350,21 +349,21 @@ void SetUpSLCRDivisors_z3660(UINTPTR mac_baseaddr, int32_t speed)
 				// Corrected: DIV0=8, DIV1=1 -> 125 MHz (correct)
 				SlcrDiv0 = 8;  // Corrected value
 				SlcrDiv1 = 1;  // Corrected value
-				printf("Setting corrected divisors for 1000 Mbps: DIV0=8, DIV1=1\n");
+//				printf("Setting corrected divisors for 1000 Mbps: DIV0=8, DIV1=1\n");
 			}
 		} else if (speed == 100) {
 			if (mac_baseaddr == XPAR_XEMACPS_0_BASEADDR) {
 				// Use corrected values to generate 25 MHz
 				SlcrDiv0 = 8;  // Corrected value
 				SlcrDiv1 = 5;  // Corrected value
-				printf("Setting corrected divisors for 100 Mbps: DIV0=8, DIV1=5\n");
+//				printf("Setting corrected divisors for 100 Mbps: DIV0=8, DIV1=5\n");
 			}
 		} else {
 			if (mac_baseaddr == XPAR_XEMACPS_0_BASEADDR) {
 				// Use corrected values to generate 2.5 MHz
 				SlcrDiv0 = 8;   // Corrected value
 				SlcrDiv1 = 50;  // Corrected value
-				printf("Setting corrected divisors for 10 Mbps: DIV0=8, DIV1=50\n");
+//				printf("Setting corrected divisors for 10 Mbps: DIV0=8, DIV1=50\n");
 			}
 		}
 
@@ -940,8 +939,8 @@ uint32_t micrel_auto_negotiate_step2(XEmacPs *xemacpsp, uint32_t phy_addr, int e
          else if((status_speed & 0xc000) == 0x8000)
             link_speed = 1000;
 
-         printf("PHY (MotorComm): Link speed: %d mbit (status: %x)\n", link_speed, status_speed);
-         printf("PHY (MotorComm): Link up: %x\n",(status_speed&(1<<10))>>10);
+//         printf("PHY (MotorComm): Link speed: %d mbit (status: %x)\n", link_speed, status_speed);
+//         printf("PHY (MotorComm): Link up: %x\n",(status_speed&(1<<10))>>10);
       } else {
          // http://www.fpgadeveloper.com/2018/05/board-bring-up-myir-myd-y7z010-dev-board.html
 
@@ -1203,9 +1202,9 @@ void FixEthernetPLLDivisors_z3660()
    uint32_t freq_1000 = IO_PLL_FREQ_HZ / (div0_1000 * div1_1000);
    
    if (freq_1000 == XPAR_PS7_ETHERNET_0_ENET_CLK_FREQ_HZ) {
-//      printf("✓ Corrected divisors generate 125 MHz correctly\n");
+//      printf("Corrected divisors generate 125 MHz correctly\n");
    } else {
-      printf("✗ ERROR: Corrected divisors do NOT generate 125 MHz\n");
+      printf("ERROR: Corrected divisors do NOT generate 125 MHz\n");
    }
    
 //   printf("=== End of correction ===\n");

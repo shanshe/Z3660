@@ -474,7 +474,7 @@ int mbedtls_ccm_finish(mbedtls_ccm_context *ctx,
                        unsigned char *tag, size_t tag_len)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char i;
+    unsigned int i;
 
     if (ctx->state & CCM_STATE__ERROR) {
         return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;

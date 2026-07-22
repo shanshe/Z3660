@@ -64,6 +64,7 @@ typedef struct {
 /* Global context */
 static TinyGLContext g_tinygl_ctx = {0};
 
+#if 0
 /* Convert Warp3D format to TinyGL */
 static void convert_texture_4bit_to_rgba(const uint8_t *src, PIXEL *dst, int width, int height)
 {
@@ -102,13 +103,14 @@ static void convert_texture_8bit_to_rgba(const uint8_t *src, PIXEL *dst, int wid
         );
     }
 }
-
+#endif
 /*===========================================================================*/
 /* HARD3D functions using TinyGL                                             */
 /*===========================================================================*/
 
 void HARD3D_Start(void *hc)
 {
+    (void)LibDebug;
     (void)hc;
     DEBUG_GL("HARD3D_Start");
     

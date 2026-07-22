@@ -48,8 +48,8 @@ void resample_s16(int16_t *input, int16_t *output, int in_samples, int out_sampl
 void audio_silence();
 void audio_debug_timer(int zdata);
 
-void audio_program_adau(u8* program, uint32_t program_len);
-void audio_program_adau_params(u8* params, uint32_t param_len);
+void audio_program_adau(uint8_t* program, uint32_t program_len);
+void audio_program_adau_params(uint8_t* params, uint32_t param_len);
 void audio_adau_set_lpf_params(int f0);
 
 // vol range: 0-100. 50 = 0db

@@ -91,11 +91,11 @@ enum zz_reg_offsets {
    REG_ZZ_FW_VERSION     = 0x1A0,
    REG_ZZ_ETH_RX_ADDRESS = 0x1A4,
    REG_ZZ_INT_STATUS     = 0x1A8,
-   REG_ZZ_USB_PORTSC1    = 0x1AC,
+   REG_ZZ_RESERVED_1AC   = 0x1AC,
 
    REG_ZZ_USB_CMD_OP     = 0x1B0,
    REG_ZZ_USB_STATUS     = 0x1B4,
-   REG_ZZ_USB_READ0      = 0x1B8,
+   REG_ZZ_USB_RESERVED0  = 0x1B8,
    REG_ZZ_USB_RESERVED1  = 0x1BC,
 
    REG_ZZ_DECODER_PARAM  = 0x1C0,
@@ -168,15 +168,7 @@ enum zz_reg_offsets {
    REG_ZZ_PRESET_SEL_TXT = 0x298,
    REG_ZZ_DELETE_PRESET  = 0x29C,
 
-   // USB parameter registers (dedicated to avoid BUFSEL corruption)
-   REG_ZZ_USB_PARAM0     = 0x2A0,  // Device/Endpoint/Direction flags
-   REG_ZZ_USB_PARAM1     = 0x2A4,  // Setup packet pointer
-   REG_ZZ_USB_PARAM2     = 0x2A8,  // Data buffer pointer
-   REG_ZZ_USB_PARAM3     = 0x2AC,  // Data length
-   REG_ZZ_USB_PARAM4     = 0x2B0,  // Additional parameter (interval, etc.)
-   REG_ZZ_USB_PARAM5     = 0x2B4,  // Reserved for future use
-   REG_ZZ_USB_PARAM6     = 0x2B8,  // Reserved for future use
-   REG_ZZ_USB_PARAM7     = 0x2BC,  // Reserved for future use
+   // 0x2A0, 0x2BC  // Reserved for future use
 
    // MPEG acceleration registers
    REG_ZZ_MPEG_CMD_OP    = 0x2C0,  // MPEG operation command
@@ -344,6 +336,7 @@ enum gfx_dma_op {
     OP_SPRITE_CLUT_BITMAP,
     OP_ETH_USB_OFFSETS,
     OP_SET_SPLIT_POS,
+    OP_SET_PALETTE,
     OP_NUM,
 };
 

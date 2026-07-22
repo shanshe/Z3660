@@ -6,7 +6,7 @@
 * (c) 1995 Bernd Schmidt
 */
 
-#define MMUOP_DEBUG 2
+#define MMUOP_DEBUG 0
 #define DEBUG_CD32CDTVIO 0
 #define EXCEPTION3_DEBUGGER 0
 #define CPUTRACE_DEBUG 0
@@ -80,7 +80,7 @@ extern int ovl;
 void fill_prefetch_quick (void);
 void custom_reset_cpu(bool hardreset, bool keyboardreset);
 #ifdef JIT
-#include "jit/compemu.h"
+#include "jit/compemu_arm.h"
 #include <signal.h>
 #else
 /* Need to have these somewhere */
@@ -1034,7 +1034,7 @@ static void update_68k_cycles (void)
    if (cpucycleunit < 1)
       cpucycleunit = 1;
 
-   write_log (_T("CPU cycleunit: %d (%.3f)\n"), cpucycleunit, (float)cpucycleunit / CYCLE_UNIT);
+//   write_log (_T("CPU cycleunit: %d (%.3f)\n"), cpucycleunit, (float)cpucycleunit / CYCLE_UNIT);
 //   set_config_changed ();
 }
 
@@ -2551,7 +2551,7 @@ static inline void check_uae_int_request(void)
    if(read_reset==0 && read_reset_last==1)
    {
 //      printf("Reset!!!\n");
-      usleep(100000L);
+      usleep2(100000L);
       do{
          uint32_t read1=*(volatile uint32_t*)(XPAR_PS7_GPIO_0_BASEADDR+XGPIOPS_DATA_RO_OFFSET);
          read_reset=(read1>>(n040RSTI   ))&1;
@@ -3818,7 +3818,7 @@ void m68k_go (int may_quit)
    init_cpu_thread();
 #endif
    if (in_m68k_go || !may_quit) {
-      write_log (_T("Bug! m68k_go is not reentrant.\n"));
+      printf("Bug! m68k_go is not reentrant.\n");
       abort ();
    }
 
@@ -3995,6 +3995,7 @@ void m68k_go (int may_quit)
       if (regs.halted) {
          cpu_halt (regs.halted);
          if (regs.halted < 0) {
+            printf("CPU halted: reason = %d PC=%08x\n", regs.halted, M68K_GETPC);
             haltloop();
             continue;
          }

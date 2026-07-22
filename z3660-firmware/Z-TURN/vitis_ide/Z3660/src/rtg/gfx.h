@@ -603,6 +603,7 @@ enum gfx_dma_op {
    OP_SPRITE_CLUT_BITMAP,
    OP_ETH_USB_OFFSETS,
    OP_SET_SPLIT_POS,
+   OP_SET_PALETTE,
    OP_NUM,
 };
 

@@ -41,6 +41,8 @@ void load_config_from_ztop(void)
 
    for(int i=0;i<7;i++)
       env_file_vars_temp[preset_selected].scsi_num[i]=ls_scsi[i]->selected_item-1;
+   for(int i=0;i<8;i++)
+      env_file_vars_temp[preset_selected].adf_num[i]=ls_adf[i]->selected_item-1;
    for(int i=0;i<6;i++)
       env_file_vars_temp[preset_selected].mac_address[i]=mac_textedit->mac_address[i];
    env_file_vars_temp[preset_selected].bp_ton=((slider_bpton->pos+0.5e-6)*TON_MAX)/slider_bpton->max;
@@ -83,6 +85,11 @@ void load_config_to_ztop(void)
    {
       ls_scsi[i]->selected_item=env_file_vars_temp[preset_selected].scsi_num[i]+1;
       config.scsi_num[i]=env_file_vars_temp[preset_selected].scsi_num[i];
+   }
+   for(int i=0;i<8;i++)
+   {
+      ls_adf[i]->selected_item=env_file_vars_temp[preset_selected].adf_num[i]+1;
+      config.adf_num[i]=env_file_vars_temp[preset_selected].adf_num[i];
    }
    for(int i=0;i<6;i++)
       mac_textedit->mac_address[i]=config.mac_address[i]=env_file_vars_temp[preset_selected].mac_address[i];

@@ -168,6 +168,12 @@ reg [11:0] screen_height;
 reg [11:0] screen_height_crop;
 reg scale_x = 0;
 reg scale_y = 0;
+reg scale_y_sync1, scale_y_sync2;
+
+always @(posedge m_axis_vid_aclk) begin
+    scale_y_sync1 <= scale_y; // double FF to sync
+    scale_y_sync2 <= scale_y_sync1;
+end
 reg [23:0] palette[511:0];
 reg [2:0] colormode = CMODE_32BIT;
 reg vsync_request;
@@ -641,7 +647,7 @@ always @(posedge m_axis_vid_aclk)
     need_frame_sync_reg <= need_frame_sync;
     need_line_fetch_reg  <= need_line_fetch; // sync to clock domain
 //    need_line_fetch_reg2 <= need_line_fetch_reg>>scale_y; // line duplication
-    if(scale_y==0)
+    if(scale_y_sync2==0)
         need_line_fetch_reg2 <= need_line_fetch_reg;
     else
         need_line_fetch_reg2[11:0] <= {1'b0,need_line_fetch_reg[11:1]}; // line duplication

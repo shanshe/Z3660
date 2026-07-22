@@ -19,6 +19,7 @@ void  SOFT3D_SetBitmap(APTR sc,APTR bm,APTR bmdata,ULONG bmformat,UWORD x,UWORD 
 void  SOFT3D_SetDrawState(APTR sc,APTR sta);
 void  SOFT3D_UpdateTexture(APTR sc,APTR st,APTR pt);
 void  SOFT3D_Debug(APTR txt);
+void  SOFT3D_SetRenderMode(APTR sc, UBYTE mode);
 #endif
 
 

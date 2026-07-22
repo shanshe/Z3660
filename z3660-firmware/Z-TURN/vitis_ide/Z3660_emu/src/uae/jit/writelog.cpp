@@ -54,7 +54,7 @@ void f_out(FILE* f, const TCHAR* format, ...)
 #endif
 	printf("%s", buffer);
 }
-
+#if 0
 TCHAR console_getch(void)
 {
 	//flushmsgpump();
@@ -79,7 +79,7 @@ TCHAR console_getch(void)
 	}
 	return 0;
 }
-/*
+
 void write_log(const char* format, ...)
 {
 	if (amiberry_options.write_logfile)
@@ -107,7 +107,8 @@ void write_log(const char* format, ...)
 #endif
 	}
 }
-*/
+#endif
+
 void jit_abort(const TCHAR* format, ...)
 {
 	static int happened;

@@ -30,6 +30,8 @@ extern "C" void m68k_write_memory_32(unsigned int address, unsigned int value);
 extern "C" void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 extern "C" void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type);
 extern "C" uint32_t read_scsi_register(uint16_t zaddr,int type);
+extern "C" void write_floppy_register(uint16_t zaddr,uint32_t zdata,int type);
+extern "C" uint32_t read_floppy_register(uint16_t zaddr,int type);
 extern "C" uint32_t read_rtg_register(uint16_t zaddr);
 extern SHARED *shared;
 /*
@@ -155,7 +157,12 @@ unsigned int z2scsi_read_32(uaecptr address)
          return(0xFFFFFFFF);
       else
       {
-         uint32_t data=read_scsi_register(add-0x2000,2);
+         uint32_t data;
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            data=read_scsi_register(add,2);
+         else
+            data=read_floppy_register(add,2);
 //         printf("scsi read32 %08X %08X\n",add,data);
          return(data);
       }
@@ -178,7 +185,12 @@ unsigned int z2scsi_read_16(uaecptr address)
          return(0xFFFFFFFF);
       else
       {
-         uint32_t data=read_scsi_register(add-0x2000,1);
+         uint32_t data;
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            data=read_scsi_register(add,1);
+         else
+            data=read_floppy_register(add,1);
 //         printf("scsi read16 %08X %08X\n",add,data);
          return(data);
       }
@@ -201,7 +213,12 @@ unsigned int z2scsi_read_8(uaecptr address)
          return(0xFFFFFFFF);
       else
       {
-         uint32_t data=read_scsi_register(add-0x2000,0);
+         uint32_t data;
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            data=read_scsi_register(add,0);
+         else
+            data=read_floppy_register(add,0);
 //         printf("scsi read8 %08X %08X\n",add,data);
          return(data);
       }
@@ -225,8 +242,11 @@ void z2scsi_write_32(uaecptr address, unsigned int data)
          write_rtg_register(add,data);
       else
       {
-//   	     printf("scsi write32 %08X %08X\n",add,data);
-         write_scsi_register(add-0x2000,data,2);
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            write_scsi_register(add,data,2);
+         else
+            write_floppy_register(add,data,2);
       }
    }
 }
@@ -241,8 +261,11 @@ void z2scsi_write_16(uaecptr address, unsigned int data)
          write_rtg_register(add,data);
       else
       {
-//	      printf("scsi write16 %08X %08X\n",add,data);
-         write_scsi_register(add-0x2000,data,1);
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            write_scsi_register(add,data,1);
+         else
+            write_floppy_register(add,data,1);
       }
    }
 }
@@ -256,8 +279,11 @@ void z2scsi_write_8(uaecptr address, unsigned int data)
          write_rtg_register(add,data);
       else
       {
-//	      printf("scsi write8 %08X %08X\n",add,data);
-         write_scsi_register(add-0x2000,data,0);
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            write_scsi_register(add,data,0);
+         else
+            write_floppy_register(add,data,0);
       }
    }
 }
@@ -455,7 +481,12 @@ unsigned int rtg_regs_read_32(uaecptr address)
          return(read_rtg_register(add));
       else
       {
-         uint32_t data=read_scsi_register(add-0x2000,2);
+         uint32_t data;
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            data=read_scsi_register(add,2);
+         else
+            data=read_floppy_register(add,2);
 //         printf("scsi read32 %08X %08X\n",add,data);
          return(data);
       }
@@ -478,7 +509,12 @@ unsigned int rtg_regs_read_16(uaecptr address)
          return(read_rtg_register(add));
       else
       {
-         uint32_t data=read_scsi_register(add-0x2000,1);
+         uint32_t data;
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            data=read_scsi_register(add,1);
+         else
+            data=read_floppy_register(add,1);
 //         printf("scsi read16 %08X %08X\n",add,data);
          return(data);
       }
@@ -514,7 +550,12 @@ unsigned int rtg_regs_read_8(uaecptr address)
       }
       else
       {
-         uint32_t data=read_scsi_register(add-0x2000,0);
+         uint32_t data;
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            data=read_scsi_register(add,0);
+         else
+            data=read_floppy_register(add,0);
 //         printf("scsi read8 %08X %08X\n",add,data);
          return(data);
       }
@@ -538,8 +579,11 @@ void rtg_regs_write_32(uaecptr address, unsigned int data)
          write_rtg_register(add,data);
       else
       {
-//         printf("scsi write32 %08X %08X\n",add,data);
-         write_scsi_register(add-0x2000,data,2);
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            write_scsi_register(add,data,2);
+         else
+            write_floppy_register(add,data,2);
       }
    }
 }
@@ -553,8 +597,11 @@ void rtg_regs_write_16(uaecptr address, unsigned int data)
          write_rtg_register(add,data);
       else
       {
-//         printf("scsi write16 %08X %08X\n",add,data);
-         write_scsi_register(add-0x2000,data,1);
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            write_scsi_register(add,data,1);
+         else
+            write_floppy_register(add,data,1);
       }
    }
 }
@@ -568,8 +615,11 @@ void rtg_regs_write_8(uaecptr address, unsigned int data)
          write_rtg_register(add,data<<24);
       else
       {
-//         printf("scsi write8 %08X %08X\n",add,data);
-         write_scsi_register(add-0x2000,data,0);
+         add-=0x2000;
+         if(add<0x400 || add>=0x600)
+            write_scsi_register(add,data,0);
+         else
+            write_floppy_register(add,data,0);
       }
    }
 }
@@ -1035,6 +1085,7 @@ void uae_emulator(int enable_jit, int cpu_model)
 
    while(1)
    {
+      printf("[Core1] emulator started\n");
       m68k_go(1);
    }
 
@@ -1042,12 +1093,14 @@ void uae_emulator(int enable_jit, int cpu_model)
 extern SHARED *shared;
 int jit_enabled_last=-1;
 void print_histogram_dataabort(void);
+int emu_heartbeat=0;
 
 void z3660_tasks(void)
 {
    static long int count=10000000;
    if(--count>0) return;
    count=10000000;
+//   xil_printf("[Core1] z3660_tasks heartbeat %ld\r\n",emu_heartbeat++);
    if(shared->printhist_dataabort)
    {
       shared->printhist_dataabort=0;

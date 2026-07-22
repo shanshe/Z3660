@@ -57,7 +57,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             printf("x0: %d y0: %d\n",data->x[0],data->y[0]);
             printf("x1: %d y1: %d\n",data->x[1],data->y[1]);
             printf("p0: %d o0: %lx\n",data->pitch[0],data->offset[0]);
-            printf("rgb0: %08lX\n",data->rgb[0]);
+            printf("rgb0: %08lX mask:%02X\n",data->rgb[0],data->mask);
          }
          set_fb((uint32_t*) (((uint32_t) vs->framebuffer) + data->offset[0]),
                data->pitch[0]);
@@ -66,8 +66,8 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             fill_rect_solid(data->x[0], data->y[0], data->x[1], data->y[1],
                   data->rgb[0], data->u8_user[GFXDATA_U8_COLORMODE]);
          else
-            fill_rect(data->x[0], data->y[0], data->x[1], data->y[1], data->rgb[0],
-                  data->u8_user[GFXDATA_U8_COLORMODE], data->mask);
+            fill_rect(data->x[0], data->y[0], data->x[1], data->y[1],
+                  data->rgb[0], data->u8_user[GFXDATA_U8_COLORMODE], data->mask);
          break;
 
       case OP_COPYRECT:
@@ -75,7 +75,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
          SWAP16(data->x[0]);      SWAP16(data->x[1]);      SWAP16(data->x[2]);
          SWAP16(data->y[0]);      SWAP16(data->y[1]);      SWAP16(data->y[2]);
 
-         SWAP16(data->pitch[0]);      SWAP16(data->pitch[1]);
+         SWAP16(data->pitch[0]);    SWAP16(data->pitch[1]);
          SWAP32(data->offset[0]);   SWAP32(data->offset[1]);
          if(debug_console.debug_rtg)
          {
@@ -116,7 +116,7 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             SWAP16(data->x[0]);      SWAP16(data->x[1]);      SWAP16(data->x[2]);
             SWAP16(data->y[0]);      SWAP16(data->y[1]);      SWAP16(data->y[2]);
 
-            SWAP16(data->pitch[0]);      SWAP16(data->pitch[1]);
+            SWAP16(data->pitch[0]);    SWAP16(data->pitch[1]);
             SWAP32(data->offset[0]);   SWAP32(data->offset[1]);
             if(debug_console.debug_rtg)
             {
@@ -311,7 +311,25 @@ void handle_blitter_dma_op(ZZ_VIDEO_STATE* vs,uint16_t zdata)
             vs->bgbuf_offset = data->offset[0];
             vs->split_request_pos = data->y[0];
             break;
+        case OP_SET_PALETTE: {
+            SWAP16(data->user[0]);
+            SWAP16(data->user[1]);
+            uint16_t start = data->user[0];
+            uint16_t count = data->user[1];
+            uint16_t op = data->u8_user[0] ? 19 : 3;
 
+            if (count > 256) count = 256;
+
+            for (uint16_t i = 0; i < count; i++) {
+                uint32_t idx = (start + i) & 0xFF;
+                uint32_t r = data->clut1[i * 3];
+                uint32_t g = data->clut1[i * 3 + 1];
+                uint32_t b = data->clut1[i * 3 + 2];
+                uint32_t xrgb = (idx << 24) | (r << 16) | (g << 8) | b;
+                video_formatter_write(xrgb, op);
+            }
+            break;
+        }
          default:
             break;
    }

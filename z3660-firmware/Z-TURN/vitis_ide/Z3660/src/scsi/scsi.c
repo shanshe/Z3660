@@ -29,7 +29,7 @@ extern CONFIG config;
 uint32_t used_dma=0;
 #define MEMCPY memcpy
 //#define MEMCPY memcpy_neon
-//extern void *(memcpy_neon)(void * s1, const void * s2, u32 n);
+//extern void *(memcpy_neon)(void * dst, const void * src, u32 n);
 
 #ifdef PISCSI_DEBUG
 #define read8(a) *(uint8_t*)(a)
@@ -52,7 +52,7 @@ static const char *op_type_names[4] = {
 extern DEBUG_CONSOLE debug_console;
 void DEBUG(const char *format, ...)
 {
-   if(debug_console.debug_scsi==0)
+   if(debug_console.debug_scsi==0)   // SCSI debug channel (DSCSI menu toggle)
       return;
    va_list args;
    va_start(args, format);
@@ -144,7 +144,7 @@ int piscsi_init() {
       unsigned int n_bytes;
       memset((uint8_t*) piscsi_rom_ptr,0,BOOT_ROM_SIZE);
       f_read(&in,piscsi_rom_ptr, piscsi_rom_size, &n_bytes);
-      uint32_t* ptr_src=(uint32_t*)BOOT_ROM_ADDRESS;
+         uint32_t* ptr_src=(uint32_t*)BOOT_ROM_ADDRESS;
       uint32_t* ptr_dst1=(uint32_t*)0x10006000;
       uint32_t* ptr_dst2=(uint32_t*)0x00E96000;
       for(int i=0;i<BOOT_ROM_SIZE/4;i++)
@@ -154,9 +154,8 @@ int piscsi_init() {
 //         ptr_dst2[i]=
 //         ptr_dst1[i]= swap32(ptr_src[i]);
       }
-
       f_lseek(&in, PISCSI_DRIVER_OFFSET);
-      process_hunks(&in, &piscsi_hinfo, piscsi_hreloc, PISCSI_DRIVER_OFFSET);
+      process_hunks(&in, &piscsi_hinfo, piscsi_hreloc, PISCSI_DRIVER_OFFSET,0);
       f_close(&in);
 
       Xil_DCacheFlush();
@@ -172,7 +171,7 @@ int piscsi_init() {
    {
       if(config.scsi_num[i]>=0 && config.scsi_num[i]<=19)
          if(config.hdf[config.scsi_num[i]][0]!=0)
-            piscsi_map_drive(config.hdf[config.scsi_num[i]], i, 0, 0);
+            piscsi_map_drive(config.hdf[config.scsi_num[i]], i, 0, 0, config.cd_target[i]);
    }
    uint32_t root_partition_length=-1L;
    // and now the SD partitions
@@ -199,7 +198,7 @@ int piscsi_init() {
             {
                if(config.mount_sd_0x76)
                {
-                  piscsi_map_drive("",11+i,p0_Start,p0_Len); // 10 reserved for the full SD
+                  piscsi_map_drive("",11+i,p0_Start,p0_Len,0); // 10 reserved for the full SD
                }
             }
          }
@@ -212,7 +211,7 @@ int piscsi_init() {
       if(root_partition_length!=(uint32_t)-1L)
       {
          printf("Full SD start 0, length 0x%08lx\n", root_partition_length);
-         piscsi_map_drive("",10,0,root_partition_length);
+         piscsi_map_drive("",10,0,root_partition_length,0);
       }
    }
    Xil_L1DCacheFlush();
@@ -621,9 +620,9 @@ PISCSI_DEV *piscsi_get_dev(uint8_t index) {
    return &devs[index];
 }
 
-FIL fd[8];
+FIL fd[16];
 
-int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len) {
+int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len, uint8_t is_cd) {
    if (index > NUM_SCSI_UNITS_MAX) {
       if(index<8)
          printf("[PISCSI] Drive index %d out of range.\nUnable to map file %s to drive.\n", index, filename);
@@ -637,7 +636,8 @@ int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t 
    FIL *tmp_fd=&fd[index];
    if(index<8)
    {
-      int ret = f_open(tmp_fd,filename, FA_READ|FA_WRITE|FA_OPEN_EXISTING);
+      // A CD-ROM is read-only media: open its backing image without write access.
+      int ret = f_open(tmp_fd,filename, is_cd ? (FA_READ|FA_OPEN_EXISTING) : (FA_READ|FA_WRITE|FA_OPEN_EXISTING));
       if (ret != FR_OK) {
          printf("[PISCSI] Failed to open file %s, could not map drive %d.\n", filename, index);
          return -1;
@@ -662,7 +662,22 @@ int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t 
       f_lseek(d->fd, 0);
       printf("[PISCSI] Map %d: [%s] - %llu bytes.\n", index, filename, file_size);
 
-      if (piscsi_parse_rdb(d) == -1) {
+      if (is_cd) {
+         // Raw ISO/UDF optical image: a bare CD image has no Amiga RDB, so bypass the
+         // RDB scan entirely. Report a read-only 2048-byte-block CD-ROM: the READ
+         // CAPACITY / BLOCKS path returns d->fs / d->block_size, and pdt 0x05 marks it
+         // optical for the CDB decoders. Benign non-zero CHS keeps the geometry maths
+         // (and any divide by heads*sectors) away from a divide-by-zero.
+         d->block_size = 2048;
+         d->pdt = 0x05;
+         d->h = 16;
+         d->s = 63;
+         d->c = (file_size / d->block_size) / (d->s * d->h);
+         if (d->c == 0)
+            d->c = 1;
+         printf("[PISCSI] Map %d is a CD-ROM: %llu blocks of %ld bytes.\n", index, file_size / d->block_size, d->block_size);
+      }
+      else if (piscsi_parse_rdb(d) == -1) {
          printf("[PISCSI] No RDB found on disk, making up some CHS values.\n");
          d->h = 16;
          d->s = 63;
@@ -1020,6 +1035,20 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          if(map>=0x40000000) map-=(0x40000000-0x20000000);
          DEBUG("[PISCSI-%ld] \"DMA\" Read goes to mapped range 0x%08lX.\n", val, map);
          used_dma=0;
+         /* Direct-DMA read coherency: the destination is guest RAM the 68k side may
+          * have written recently. Core1 cleans its whole L1 at trigger time (main.cc
+          * write_scsi_register READ case), which PARKS those stale dirty lines in the
+          * shared PL310 L2. The SD controller's DMA writes DRAM *below* the L2, and
+          * XSdPs_ReadPolled (sdps_v4_2) only invalidates the range AFTER the transfer
+          * -- so a stale dirty L2 line written back during the multi-ms transfer lands
+          * in DRAM ON TOP of the freshly DMA-ed bytes (observed on real HW: the UFS
+          * superblock read returning old guest-memory content, [CRUMB 3118]).
+          * Invalidate the range from L1+L2 BEFORE the transfer so nothing stale can be
+          * written back over it. Unaligned edge lines are clean+invalidated by the BSP
+          * (xil_cache.c), preserving neighbours of odd driver buffers; the sdps
+          * post-transfer invalidate then covers lines speculatively re-fetched while
+          * the DMA ran. */
+         Xil_L1DCacheInvalidateRange((INTPTR)map, piscsi_u32_read[1]);
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
@@ -1120,6 +1149,14 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          if(map>=0x40000000) map-=0x20000000;
          DEBUG("[PISCSI-%ld] \"DMA\" Write comes from mapped range 0x%08lX.\n", val, map);
          used_dma=0;
+         /* Direct-DMA write coherency: the guest's freshest bytes live in the cache
+          * hierarchy, not DRAM -- core1's trigger-time L1 clean (main.cc) moves them
+          * only as far as the shared PL310 L2. The SD controller's write DMA reads
+          * DRAM *below* the L2, and XSdPs_WritePolled (sdps_v4_2) performs NO cache
+          * maintenance at all -- without this clean, every direct write would put
+          * STALE DRAM bytes on the disk. Clean the range through L1+L2 to DRAM
+          * first so the DMA reads exactly what the guest wrote. */
+         Xil_L1DCacheFlushRange((INTPTR)map, piscsi_u32_write[1]);
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
@@ -1212,7 +1249,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
 
          piscsi_hinfo.base_offset = val;
 
-         reloc_hunks(piscsi_hreloc, dst_data + addr, &piscsi_hinfo);
+         reloc_hunks(piscsi_hreloc, dst_data + addr, &piscsi_hinfo, 0);
 
 #define PUTNODELONG(val) *(uint32_t *)&dst_data[p_offs] = htobe32(val); p_offs += 4;
 #define PUTNODELONGBE(val) *(uint32_t *)&dst_data[p_offs] = val; p_offs += 4;
@@ -1225,7 +1262,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          rom_cur_partition = 0;
 
          //                uint32_t data_addr = addr + 0x3F00;
-         uint32_t data_addr = addr + BOOT_ROM_SIZE -0x100;
+         uint32_t data_addr = addr + BOOT_ROM_SIZE - 0x100;
          sprintf((char *)dst_data + data_addr, "z3660_scsi.device");
          uint32_t addr2 = addr + BOOT_ROM_SIZE;
          for (int i = 0; i < NUM_SCSI_UNITS_MAX; i++) {
@@ -1308,7 +1345,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          MEMCPY((uint8_t *)addr, filesystems[rom_cur_fs].binary_data, filesystems[rom_cur_fs].h_info.byte_size);
          filesystems[rom_cur_fs].h_info.base_offset = addr;
          printf("[PISCSI] Relocating file system %ld with base offset %.8lX\n", rom_cur_fs + 1, filesystems[rom_cur_fs].h_info.base_offset);
-         reloc_hunks(filesystems[rom_cur_fs].relocs, (uint8_t*) addr, &filesystems[rom_cur_fs].h_info);
+         reloc_hunks(filesystems[rom_cur_fs].relocs, (uint8_t*) addr, &filesystems[rom_cur_fs].h_info, 0);
          filesystems[rom_cur_fs].handler = addr;
          printf("[PISCSI] Flushing caches after copying file system %ld.\n", rom_cur_fs + 1);
          Xil_L1DCacheFlush();
@@ -1555,6 +1592,11 @@ uint32_t handle_piscsi_read(uint32_t addr, uint8_t type) {
       DEBUG("[PISCSI] %s Read from DRVTYPE %d, drive attached.\n", op_type_names[type], piscsi_cur_drive);
       ACTIVITY_LED_OFF; // OFF
       return 1;
+      break;
+   case PISCSI_CMD_PDT:
+      DEBUG("[PISCSI] %s Read from PDT %d: 0x%02X\n", op_type_names[type], piscsi_cur_drive, devs[piscsi_cur_drive].pdt);
+      ACTIVITY_LED_OFF; // OFF
+      return devs[piscsi_cur_drive].pdt;
       break;
    case PISCSI_CMD_DRVNUM:
       ACTIVITY_LED_OFF; // OFF

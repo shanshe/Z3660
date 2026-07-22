@@ -20,6 +20,7 @@ extern ListSelect *ls_screen_res;
 extern ListSelect *ls_kickstart;
 extern ListSelect *ls_kickstart_ext;
 extern ListSelect *ls_scsi[7];
+extern ListSelect *ls_adf[8];
 extern ListSelect *ls_arm_frequency;
 extern ListButton *b_list_emu;
 extern CheckBox *cb_scsi_boot;
@@ -170,6 +171,8 @@ void b_apply_all_action(void)
    write_rtg_register(REG_ZZ_EXT_KS_SEL,ls_kickstart_ext->selected_item);
    for(int i=0;i<7;i++)
       write_rtg_register(REG_ZZ_SCSI_SEL_0+4*i,ls_scsi[i]->selected_item);
+   for(int i=0;i<8;i++)
+      write_rtg_register(REG_ZZ_ADF_SEL_0+4*i,ls_adf[i]->selected_item);
    write_rtg_register(REG_ZZ_ETH_MAC_HI,(mac_textedit->mac_address[0]<<8)|mac_textedit->mac_address[1]);
    write_rtg_register(REG_ZZ_ETH_MAC_LO,(mac_textedit->mac_address[2]<<24)|(mac_textedit->mac_address[3]<<16)|(mac_textedit->mac_address[4]<<8)|mac_textedit->mac_address[5]);
    for(int i=0;i<6;i++)
@@ -204,6 +207,18 @@ void b_apply_scsi_action(void)
       hard_reboot();
 }
 Button *b_apply_all_scsi;
+
+Button *b_apply_adf;
+void b_apply_adf_action(void)
+{
+   load_config_from_ztop();
+   for(int i=0;i<7;i++)
+      write_rtg_register(REG_ZZ_ADF_SEL_0+4*i,ls_adf[i]->selected_item);
+   if(write_env_files_adf(&env_file_vars_temp[preset_selected])==1)
+      hard_reboot();
+}
+Button *b_apply_all_adf;
+
 Button *b_apply_misc;
 void b_apply_misc_action(void)
 {
@@ -282,6 +297,9 @@ void recalculate_coords_buttons(void)
    b_apply_scsi->x=win.x+23;
    b_apply_scsi->y=win.y+164+16+16+16+16;
 
+   b_apply_adf->x=win.x+23;
+   b_apply_adf->y=win.y+164+16+16+16+16;
+
    b_apply_misc->x=win.x+23;
    b_apply_misc->y=win.y+164+16+16+16+16;
 
@@ -299,6 +317,9 @@ void recalculate_coords_buttons(void)
 
    b_apply_all_scsi->x=win.x+win.w-80-23;
    b_apply_all_scsi->y=win.y+164+16+16+16+16;
+
+   b_apply_all_adf->x=win.x+win.w-80-23;
+   b_apply_all_adf->y=win.y+164+16+16+16+16;
 
    b_apply_all_misc->x=win.x+win.w-80-23;
    b_apply_all_misc->y=win.y+164+16+16+16+16;
@@ -338,6 +359,11 @@ void init_buttons(void)
    b_apply_scsi->action=b_apply_scsi_action;
    b_apply_scsi->tab=TAB_SCSI;
 
+   b_apply_adf=(Button *)malloc(sizeof(Button));
+   SET_BUTTON_DEFAULTS(b_apply_adf,"Apply ADF");
+   b_apply_adf->action=b_apply_adf_action;
+   b_apply_adf->tab=TAB_ADF;
+
    b_apply_misc=(Button *)malloc(sizeof(Button));
    SET_BUTTON_DEFAULTS(b_apply_misc,"Apply Misc");
    b_apply_misc->action=b_apply_misc_action;
@@ -367,6 +393,11 @@ void init_buttons(void)
    SET_BUTTON_DEFAULTS(b_apply_all_scsi,"Apply All");
    b_apply_all_scsi->action=b_apply_all_action;
    b_apply_all_scsi->tab=TAB_SCSI;
+
+   b_apply_all_adf=(Button *)malloc(sizeof(Button));
+   SET_BUTTON_DEFAULTS(b_apply_all_adf,"Apply All");
+   b_apply_all_adf->action=b_apply_all_action;
+   b_apply_all_adf->tab=TAB_ADF;
 
    b_apply_all_misc=(Button *)malloc(sizeof(Button));
    SET_BUTTON_DEFAULTS(b_apply_all_misc,"Apply All");
@@ -405,6 +436,14 @@ void paint_b_apply_all_scsi(void)
 {
    BUTTON(b_apply_all_scsi);
 }
+void paint_b_apply_adf(void)
+{
+   BUTTON(b_apply_adf);
+}
+void paint_b_apply_all_adf(void)
+{
+   BUTTON(b_apply_all_adf);
+}
 void paint_b_apply_misc(void)
 {
    BUTTON(b_apply_misc);
@@ -441,6 +480,8 @@ void buttons_run(void)
    button_run(b_apply_all_boot);
    button_run(b_apply_scsi);
    button_run(b_apply_all_scsi);
+   button_run(b_apply_adf);
+   button_run(b_apply_all_adf);
    button_run(b_apply_misc);
    button_run(b_apply_all_misc);
    button_run(b_apply_preset);
@@ -483,6 +524,8 @@ void buttons_action(void)
    button_action(b_apply_all_boot);
    button_action(b_apply_scsi);
    button_action(b_apply_all_scsi);
+   button_action(b_apply_adf);
+   button_action(b_apply_all_adf);
    button_action(b_apply_misc);
    button_action(b_apply_all_misc);
    button_action(b_apply_preset);
@@ -499,6 +542,8 @@ void buttons_repaint(void)
    button_repaint(b_apply_all_boot);
    button_repaint(b_apply_scsi);
    button_repaint(b_apply_all_scsi);
+   button_repaint(b_apply_adf);
+   button_repaint(b_apply_all_adf);
    button_repaint(b_apply_misc);
    button_repaint(b_apply_all_misc);
    button_repaint(b_apply_preset);

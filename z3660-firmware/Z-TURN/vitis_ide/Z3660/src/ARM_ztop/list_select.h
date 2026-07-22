@@ -39,6 +39,7 @@ enum TIMINGS{
 extern ListSelect *ls_kickstart;
 extern ListSelect *ls_kickstart_ext;
 extern ListSelect *ls_scsi[7];
+extern ListSelect *ls_adf[8];
 extern ListSelect *ls_screen_res;
 extern ListSelect *ls_timings;
 extern ListSelect *ls_arm_frequency;
@@ -62,6 +63,7 @@ void init_listselects(void);
 void list_select_repaint(void);
 void list_selects_action(void);
 void paint_ls_scsi(void);
+void paint_ls_adf(void);
 void paint_ls_kickstart_ext(void);
 void recalculate_coords_list_select(void);
 void paint_ls_kickstart(void);

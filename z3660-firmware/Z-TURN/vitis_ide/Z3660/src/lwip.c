@@ -6,7 +6,7 @@
 #include "lwip/tcp.h"
 #include "lwip/dhcp.h"
 #include "lwip/inet.h"
-//#include "sleep.h"
+#include "xc3_usleep.h"
 #include "mobotest.h"
 #include "lwip/priv/tcp_priv.h"
 #include "netif/xadapter.h"
@@ -19,7 +19,6 @@
 #include "xscugic.h"
 #include "lwip.h"
 #include "lwip/dns.h"
-#include <sleep.h>
 
 #ifdef USE_RTOS
 #define THREAD_STACKSIZE 1024
@@ -204,7 +203,9 @@ void platform_setup_timer(void)
       /*
        * Set for 250 milli seconds timeout.
        */
-      TimerLoadValue = XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ / 8;
+       // XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ
+extern unsigned int _cpufreq;
+      TimerLoadValue = _cpufreq * 1000000L / 8;
 
       XScuTimer_LoadTimer(&TimerInstance, TimerLoadValue);
    }
@@ -272,14 +273,14 @@ static void assign_default_ip(ip_addr_t *ip, ip_addr_t *mask, ip_addr_t *gw)
       printf("Invalid default gateway address: %d\n", err);
 }
 extern uint8_t EmacPsMAC[6];
-
+extern char ip_address[30];
 int z3660_lwip_connect(void)
 {
    netif = &server_netif;
 
    platform_setup_timer();
    platform_setup_interrupts();
-   usleep(1000000);
+   xc3_usleep(1000000);
    lwip_init();
    if (!xemac_add(netif, NULL, NULL, NULL, EmacPsMAC,
          PLATFORM_EMAC_BASEADDR)) {
@@ -308,6 +309,11 @@ int z3660_lwip_connect(void)
          return(0);
       }
    }
+   snprintf(ip_address,20,ipaddr_ntoa(&netif->ip_addr));
+   char message[100];
+   sprintf(message,"IP Address : %s", ip_address);
+   print_hdmi_ln(0,message,1);
+   printf("%s\n",message);
    return(1);
 }
 #define TIMEOUTS_USTEPS 100 // 10 us steps
@@ -453,7 +459,7 @@ int z3660_lwip_get(char * file, int alfa, void* callback,long int timeout, int g
          txrx_loop(); // it executes at a rate of 250 and 500 ms
          if((timeout_temp%TIMEOUTS_1S_US)==0)
             hdmi_tick(0); // 0 = roll the bar
-         usleep(TIMEOUTS_USTEPS);
+         xc3_usleep(TIMEOUTS_USTEPS);
 #else
          vTaskDelay(1000/portTICK_PERIOD_MS);//
          hdmi_tick(0); // 0 = roll the bar
@@ -538,7 +544,7 @@ getjson:
          txrx_loop(); // it executes at a rate of 250 and 500 ms
          if((timeout_temp%TIMEOUTS_1S_US)==0)
             hdmi_tick(0); // 0 = roll the bar
-         usleep(TIMEOUTS_USTEPS);
+         xc3_usleep(TIMEOUTS_USTEPS);
 #else
          vTaskDelay(1000/portTICK_PERIOD_MS);
          hdmi_tick(0); // 0 = roll the bar

@@ -60,6 +60,8 @@ void paint_b_apply_boot_mode(void);
 void paint_b_apply_all_boot(void);
 void paint_b_apply_scsi(void);
 void paint_b_apply_all_scsi(void);
+void paint_b_apply_adf(void);
+void paint_b_apply_all_adf(void);
 void paint_b_apply_misc(void);
 void paint_b_apply_all_misc(void);
 void paint_b_apply_preset(void);

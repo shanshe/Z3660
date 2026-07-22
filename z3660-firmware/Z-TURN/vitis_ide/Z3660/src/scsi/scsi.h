@@ -84,6 +84,7 @@ typedef struct piscsi_dev_ {
     uint32_t num_partitions;
     uint32_t fshd_offs;
     uint32_t block_size;
+    uint8_t pdt;    // SCSI peripheral device type: 0x00 = direct-access disk, 0x05 = read-only CD-ROM
     struct PartitionBlock *pb[16];
     struct RigidDiskBlock *rdb;
     DWORD SeekTbl[64];
@@ -105,12 +106,12 @@ typedef struct hunk_info_ {
     uint32_t *hunk_offsets;
     uint32_t *hunk_sizes;
 } HUNK_INFO;
-int process_hunk(uint32_t index, HUNK_INFO *info, FIL *f, HUNK_RELOC *r);
+int process_hunk(uint32_t index, HUNK_INFO *info, FIL *f, HUNK_RELOC *r, int debug);
 int load_lseg(PISCSI_DEV *d, uint8_t **buf_p, HUNK_INFO *i, HUNK_RELOC *relocs, uint32_t block_size);
 
-void reloc_hunk(HUNK_RELOC *h, uint8_t *buf, HUNK_INFO *i);
-void process_hunks(FIL *in, HUNK_INFO *h_info, HUNK_RELOC *r, uint32_t offset);
-void reloc_hunks(HUNK_RELOC *r, uint8_t *buf, HUNK_INFO *h_info);
+void reloc_hunk(HUNK_RELOC *h, uint8_t *buf, HUNK_INFO *i, int debug);
+void process_hunks(FIL *in, HUNK_INFO *h_info, HUNK_RELOC *r, uint32_t offset, int debug);
+void reloc_hunks(HUNK_RELOC *r, uint8_t *buf, HUNK_INFO *h_info, int debug);
 
 typedef struct piscsi_fs_ {
    struct FileSysHeaderBlock * fhb;
@@ -299,7 +300,7 @@ typedef enum {
 
 int piscsi_init();
 void piscsi_shutdown();
-int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len);
+int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t p0_Len, uint8_t is_cd);
 void piscsi_unmap_drive(uint8_t index);
 PISCSI_DEV *piscsi_get_dev(uint8_t index);
 

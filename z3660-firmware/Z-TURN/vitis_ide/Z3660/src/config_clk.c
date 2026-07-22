@@ -483,17 +483,12 @@ void configure_clk(int clk, int verbose, int emu)
 
    // force CLKEN to 0
    //   cd[ind].clken.dutycycle=0;
-   int emu_div, extra_phase;
+   int emu_div=1, extra_phase=0;
 
    if(emu)
    {
       emu_div=2;
       extra_phase=cd[ind].emu_extra_phase;
-   }
-   else
-   {
-      emu_div=1;
-      extra_phase=0;
    }
 
    XClk_Wiz_WriteReg(XPAR_CLK_WIZ_0_BASEADDR, 0x200, (clkbase_remainder)+ M + D); // M=8 D=1 -> 8*200 / 1 -> 1600MHz VCO

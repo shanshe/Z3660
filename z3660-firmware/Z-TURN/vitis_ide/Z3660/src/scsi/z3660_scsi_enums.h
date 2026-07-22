@@ -54,6 +54,9 @@ enum piscsi_cmds {
    PISCSI_CMD_LOADFS       = 0x94,
    PISCSI_CMD_GET_FS_INFO  = 0x98,
    PISCSI_CMD_USED_DMA     = 0x9C,
+   // Read-only device-type register. SINGLE SOURCE OF TRUTH for the peripheral
+   // device type: 0x00 = direct-access disk, 0x05 = read-only CD-ROM.
+   PISCSI_CMD_PDT          = 0xA0,
 
    PISCSI_DBG_MSG          = 0x100,
    PISCSI_DBG_VAL1         = 0x110,

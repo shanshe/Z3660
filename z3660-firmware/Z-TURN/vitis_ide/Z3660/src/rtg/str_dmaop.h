@@ -19,5 +19,6 @@ char *dma_op_string[]={
    STRINGIZER(OP_SPRITE_CLUT_BITMAP ),
    STRINGIZER(OP_ETH_USB_OFFSETS    ),
    STRINGIZER(OP_SET_SPLIT_POS      ),
+   STRINGIZER(OP_SET_PALETTE        ),
    STRINGIZER(OP_NUM                ),
 };

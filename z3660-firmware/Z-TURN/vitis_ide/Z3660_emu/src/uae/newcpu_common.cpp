@@ -490,9 +490,9 @@ int getDivu68kCycles (uae_u32 dividend, uae_u16 divisor)
 			dividend <<= 1;
 
 			// If carry from shift
-			if ((uae_s32)temp < 0)
+			if ((uae_s32)temp < 0) {
 				dividend -= hdivisor;
-			else {
+			} else {
 				mcycles += 2;
 				if (dividend >= hdivisor) {
 					dividend -= hdivisor;
@@ -511,8 +511,9 @@ int getDivs68kCycles (uae_s32 dividend, uae_s16 divisor)
 	uae_u32 aquot;
 	int i;
 
-	if (divisor == 0)
+	if (divisor == 0) {
 		return 0;
+	}
 
 	if (currprefs.cpu_model == 68010) {
 		// Check for absolute overflow
@@ -520,8 +521,9 @@ int getDivs68kCycles (uae_s32 dividend, uae_s16 divisor)
 			return 12;
 		mcycles = 116;
 		// add 2 extra cycles if negative dividend
-		if (dividend < 0)
+		if (dividend < 0) {
 			mcycles += 2;
+		}
 		return mcycles;
 	}
 

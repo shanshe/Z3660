@@ -4,7 +4,6 @@
 #include "xi2stx.h"
 #include "xaudioformatter.h"
 #include "interrupt.h"
-#include "sleep.h"
 #include <stdlib.h>
 #include "memorymap.h"
 #include "xtime_l.h"

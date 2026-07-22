@@ -34,15 +34,14 @@
 #include "main.h"
 #include "config_clk.h"
 #include "mobotest.h"
-#include "sleep.h"
 #include "xil_misc_psreset_api.h"
 #include "config_file.h"
 #include "scsi/scsi.h"
+#include "floppy/floppy.h"
 #include "ltc2990/ltc2990.h"
 #include "../../Z3660_emu/src/defines.h"
 #include "ARM_ztop/slider.h"
 #include "debug_console.h"
-#include <sleep.h>
 #ifdef CPU_EMULATOR
 #include "cpu_emulator.h"
 #endif
@@ -361,7 +360,7 @@ void configure_gpio(void)
    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO51_501, 1);
    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO51_501, 1);
    XGpioPs_WritePin(&GpioPs, PS_MIO51_501, 0);
-   usleep(10000);
+   xc3_usleep(10000);
    XGpioPs_WritePin(&GpioPs, PS_MIO51_501, 1);
 
    //   GpioConfigPtr = XGpio_LookupConfig(XPAR_AXI_GPIO_0_DEVICE_ID);
@@ -374,7 +373,7 @@ void configure_gpio(void)
    DiscreteClear(REG0, FPGA_RAM_BURST_READ_EN);
    DiscreteClear(REG0, FPGA_RAM_BURST_WRITE_EN);
    DiscreteSet(REG0, FPGA_RESET);
-   usleep(500);
+   xc3_usleep(500);
    DiscreteClear(REG0, FPGA_RESET);
 */
    printf("[Core0] Configured GPIO...\n");
@@ -510,7 +509,7 @@ void flash_colors(void)
    NBR_ARM(0);
    CPLD_RESET_ARM(1);
 
-   usleep(100);
+   xc3_usleep(100);
    {
       NBR_ARM(0);
       int a,c;
@@ -542,7 +541,7 @@ void DataAbortHandler(void *data)
    unsigned int FaultAddress;
    FaultAddress = mfcp(XREG_CP15_DATA_FAULT_ADDRESS);
    FaultStatus = mfcp(XREG_CP15_DATA_FAULT_STATUS);
-   usleep(100000); // let other printf to finish
+   xc3_usleep(100000); // let other printf to finish
    printf("[Core0] DataAbortHandler()!!!!\n");
    printf("Data abort with Data Fault Status Register 0x%08lx\n",FaultStatus);
    printf("Address of Instruction causing Data abort 0x%08lx\n",DataAbortAddr);
@@ -552,7 +551,7 @@ void DataAbortHandler(void *data)
    else
       printf("Read Fault from 0x%08X\n",FaultAddress);
    printf("Instruction 0x%08lX\n",*((uint32_t *)(uint32_t)DataAbortAddr));
-   usleep(10000);
+   xc3_usleep(10000);
    hard_reboot();
    while(1);
 }
@@ -564,7 +563,7 @@ void PrefetchAbortHandler(void *CallBackRef){
 
    printf("Prefetch abort with Instruction Fault Status Register  0x%08lx\n",FaultStatus);
    printf("Address of Instruction causing Prefetch abort 0x%08lx\n",PrefetchAbortAddr);
-   usleep(10000);
+   xc3_usleep(10000);
    hard_reboot();
    while(1);
 }
@@ -715,7 +714,7 @@ int reset_thread(struct pt *pt)
       piscsi_refresh_drives();
       printf("Reset active (DOWN)...\n");
       printf("[PISCSI] Refreshed drives\n");
-      usleep(100000);
+      xc3_usleep(100000);
       state68k=M68K_RESET;
       reset_time_counter_max=60*4; // 4 seconds
       reset_time_counter=0;
@@ -725,11 +724,11 @@ int reset_thread(struct pt *pt)
       ethernet_init();
 
       DiscreteSet(REG0, FPGA_RESET);
-      usleep(10000);
+      xc3_usleep(10000);
       DiscreteClear(REG0, FPGA_RESET);
-      usleep(10000);
+      xc3_usleep(10000);
       CPLD_RESET_ARM(1);
-      usleep(10000);
+      xc3_usleep(10000);
       read_reset=0;
    }
    PT_END(pt);
@@ -745,7 +744,7 @@ void test_beeper(uint32_t ton, uint32_t toff)
    for(int i=0;i<10000;i++)
    {
       ACTIVITY_LED_ON;
-      usleep(50);
+      xc3_usleep(50);
       ACTIVITY_LED_OFF;
    }
 }
@@ -1092,12 +1091,12 @@ int main()
    configure_gpio();
 
 //   NBR_ARM(0);
-//   usleep(1000);
+//   xc3_usleep(1000);
 //   CPLD_RESET_ARM(0);
    int sw1_is_down=0;
    sw1_is_down|=!XGpioPs_ReadPin(&GpioPs, USER_SW1);
 
-   usleep(1000);
+   xc3_usleep(1000);
    DiscreteSet(REG0, FPGA_RESET);
 
    ENABLE_TSCONDITION(FPGA_TSCONDITION0);
@@ -1115,7 +1114,7 @@ int main()
 
    int clk_config=10; // 50 MHz
    int verbose=0;
-   int emu=1; //EMU will configure the 060 at 50 MHz or less
+   int emu=1; //emu=1 will configure the 060 at 50 MHz or less
    switch(clk_config)
    {
    case 0:
@@ -1183,6 +1182,15 @@ int main()
    }
    printf("[Core0] ARM Silicon Version %d -> %3.3f MHz Max\n",pcw_ver, silicon_MHZ);
    printf("Current CPU Frequency: %3.3f MHz\n",get_current_cpu_frequency()/1000000.0f);
+
+   // A more robust way to detect if the CPUCLK and CLK90 are connected to the FPGA
+   // @kavanoz detected this issue in a board with version 0.23. It always detected the CPUCLK and CLK90 even if the jumpers were in EXT position.
+   // The problem was that the CPUCLK output was always enabled or counters were not cleared, so the FPGA detected it.
+   // The solution is to disable the CPUCLK output for a while (also reseting the counters).
+   DISABLE_CPUCLK_OUTPUT_FPGA;
+   usleep(1000);
+   ENABLE_CPUCLK_OUPUT_FPGA;
+   usleep(10000);
 
    int register6=read_reg_s01(REG6);
    if(register6&(FPGA_CLK90_DETECTED|FPGA_CPUCLK_DETECTED))
@@ -1295,7 +1303,7 @@ int main()
 //ps7_ddr_init_custom(1); // DDR a 667 MHz  
 //ps7_ddr_init_custom(2); // DDR a 800 MHz
 //   int ddr_freq = ps7_ddr_get_frequency_simple();
-   int ddr_freq = ps7_ddr_get_frequency(1);
+   int ddr_freq = ps7_ddr_get_frequency(0);
    printf("DDR running at %d MHz\n", ddr_freq);
 
    switch(pcw_ver)
@@ -1391,12 +1399,15 @@ int main()
    }
    printf("Current CPU Frequency: %3.3f MHz (applied value)\n",get_current_cpu_frequency()/1000000.0f);
 
-   if(   config.boot_mode==MUSASHI
+   if(   config.boot_mode==MOBOCPU    )
+      emu=2;
+   else if(
+         config.boot_mode==MUSASHI
       || config.boot_mode==UAE_030
       || config.boot_mode==UAEJIT_030
       || config.boot_mode==UAE_040
       || config.boot_mode==UAEJIT_040)
-      emu=1;
+      emu=1; // -> 060 not used -> PCLK/2
    else
       emu=0;
    write_reg_s01(REG2,INT_TON); // 100 us aprox
@@ -1444,7 +1455,7 @@ int main()
 
    sw1_is_down|=!XGpioPs_ReadPin(&GpioPs, USER_SW1);
 
-   if(emu)
+   if(emu==1) // EMUs
    {
       //the autoconfig and CPU RAM are emulated in cpu_emulator(), so we don't need hardware autoconfig
 //      DISABLE_CPU_RAM_FPGA;
@@ -1467,7 +1478,7 @@ int main()
       rtg_cache_policy_core0(ini,RTG_FB_CACHE_POLICY_FOR_EMU,RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
       rtg_cache_policy_core0((RTG_BASE>>20)&0xFFF, RTG_FB_CACHE_POLICY_FOR_EMU, RTG_SOFT3D_CACHE_POLICY_FOR_EMU);
    }
-   else
+   else // 060 or Mohter Board CPU
    {
       int ini;
       if(config.autoconfig_rtg==1)
@@ -1544,6 +1555,9 @@ int main()
    read_timings();
 
    configure_clk(config.cpufreq,0,1);
+   extern unsigned int cpufreq_values[FREQ_NUM];
+   set_cpu_freq_for_usleep(cpufreq_values[config.arm_frequency]);
+   ps7_init_custom(config.arm_frequency);
 
    //    PrepareHdf();
    //    InitGayle();
@@ -1551,18 +1565,18 @@ int main()
    //   video_reset();
 
    DiscreteSet(REG0, FPGA_RESET);
-   usleep(2500);
+   xc3_usleep(2500);
    monitor_switch(1); // 1=RTG
    DiscreteClear(REG0, FPGA_RESET);
 
-   usleep(1000);
+   xc3_usleep(1000);
    CPLD_RESET_ARM(0); // CPLD RESET
-   usleep(100);
+   xc3_usleep(100);
    // PS_MIO_15 as output
    XGpioPs_WritePin(&GpioPs, PS_MIO_15, 0);
    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_15, 1);
    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_15, 1);
-   usleep(100);
+   xc3_usleep(100);
 
    if(config.boot_mode==MOBOCPU)
    {
@@ -1578,25 +1592,25 @@ int main()
    }
    // Move as a clock NBR
    NBR_ARM(0);
-   usleep(100);
+   xc3_usleep(100);
    NBR_ARM(1);
-   usleep(100);
+   xc3_usleep(100);
    NBR_ARM(0);
-   usleep(100);
+   xc3_usleep(100);
    NBR_ARM(1);
-   usleep(100);
+   xc3_usleep(100);
    NBR_ARM(0);
-   usleep(100);
+   xc3_usleep(100);
 
    // PS_MIO_15 as input
    XGpioPs_SetDirectionPin(&GpioPs, PS_MIO_15, 0);
    XGpioPs_SetOutputEnablePin(&GpioPs, PS_MIO_15, 0);
-   usleep(100);
+   xc3_usleep(100);
 
    CPLD_RESET_ARM(1); // CPLD RUN
-   usleep(100000);
+   xc3_usleep(100000);
    read_reset=0;
-   usleep(10000);
+   xc3_usleep(10000);
    if(!sw1_is_down)
    {
       if(read_reset)
@@ -1620,7 +1634,7 @@ int main()
    for(int i=0;i<200;i++)
    {
       sw1_is_down|=!XGpioPs_ReadPin(&GpioPs, USER_SW1);
-      usleep(10000);
+      xc3_usleep(10000);
    }
 
    mobotest(sw1_is_down);
@@ -1657,7 +1671,6 @@ int main()
    Xil_Out32(0xE000A000 + 0x248,0x00080000);
    Xil_Out32(0xE000A000 +   0xC,0xFFF70008);
     */
-   //   sleep(1);
 
    debug_console_init();
 
@@ -1721,7 +1734,10 @@ int main()
 
 #ifndef DISABLE_SCSI
    piscsi_init();
-
+#endif
+//#define DISABLE_FLOPPY
+#ifndef DISABLE_FLOPPY
+   pifloppy_init();
 #endif
    Xil_L1DCacheFlush();
    Xil_L2CacheFlush();
@@ -1759,7 +1775,7 @@ int main()
    usb_read_pending = 0;
    usb_write_pending = 0;
 
-   if(emu)
+   if(emu==1) // EMUs
    {
       configure_clk(config.cpufreq,1,1);
       audio_reset();
@@ -1774,10 +1790,10 @@ int main()
       while(shared->shared_data==1){}
       //   printf("[Core0] ACK OK\n");
 
-      //      usleep(10000);
+      //      xc3_usleep(10000);
       NBR_ARM(0);        // bus request
       eth_backlog_nag_counter_max = ETH_BACKLOG_NAG_COUNTER_MAX_EMU;
-      usleep(1000);
+//      xc3_usleep(1000);
       CPLD_RESET_ARM(1); // CPLD RUN
       while(READ_NBG_ARM()!=0); // make sure that we have the bus control
 
@@ -1816,8 +1832,8 @@ int main()
       }
 
    }
-
-   PT_INIT(&pt_rtg);       // exclusive for real CPU
+// exclusive for real CPU (060 or Mother board CPU)
+   PT_INIT(&pt_rtg);
    PT_INIT(&pt_ethernet);
    PT_INIT(&pt_usb);
    PT_INIT(&pt_reset);
@@ -1836,7 +1852,7 @@ int main()
 
    flash_colors();
 
-   usleep(10000);
+   xc3_usleep(10000);
    read_reset=0;
    
    // Check USB interrupt status BEFORE starting 060
@@ -1844,11 +1860,11 @@ int main()
    
    CPLD_RESET_ARM(1); // CPLD RUN -> 060 RUN
    NBR_ARM(1);        // relinquish bus
-   usleep(1000);
+   xc3_usleep(1000);
    printf("060 starting now...\n");
    
    // Wait a bit and check USB interrupt status AFTER starting 060
-   usleep(10000); // Give 060 time to start
+   xc3_usleep(10000); // Give 060 time to start
 //   check_usb_interrupt_status("After 060 startup");
    while(1)
    {
@@ -1906,9 +1922,9 @@ int main()
                   for(int i=0;i<env_file_vars_temp[preset_selected].boot_mode+1;i++)
                   {
                      DiscreteSet(REG0,FPGA_BP); // beep
-                     usleep(10000);
+                     xc3_usleep(10000);
                      DiscreteClear(REG0,FPGA_BP);
-                     usleep(100000);
+                     xc3_usleep(100000);
                   }
                }
                else // long_reset==1
@@ -1918,12 +1934,12 @@ int main()
                   for(int i=0;i<5+1;i++)
                   {
                      DiscreteSet(REG0,FPGA_BP); // beep
-                     usleep(10000);
+                     xc3_usleep(10000);
                      DiscreteClear(REG0,FPGA_BP);
-                     usleep(100000);
+                     xc3_usleep(100000);
                   }
                   DiscreteSet(REG0,FPGA_BP); // beep
-                  usleep(30000);
+                  xc3_usleep(30000);
                   DiscreteClear(REG0,FPGA_BP);
                   hard_reboot(); //
                }

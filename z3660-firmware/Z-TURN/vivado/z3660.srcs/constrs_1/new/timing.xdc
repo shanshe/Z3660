@@ -16,6 +16,11 @@ set_output_delay -clock [get_clocks VIRTUAL_clk_out1_design_1_clk_wiz_3_0_1] -ma
 
 
 set_false_path -from [get_clocks AXI_clk_design_1_clk_wiz_0_0] -to [get_clocks clk_fpga_1]
+set_false_path -from [get_clocks clk_fpga_1] -to [get_clocks AXI_clk_design_1_clk_wiz_0_0]
+set_clock_groups -asynchronous 
+    -group [get_clocks clk_fpga_1] 
+    -group [get_clocks clk_fpga_2] 
+    -group [get_clocks AXI_clk_design_1_clk_wiz_0_0]
 
 set_false_path -from [get_clocks clk_fpga_1] -to [get_clocks -of_objects [get_pins design_1_i/processing_av_system/clock_generation/clk_wiz_2/inst/CLK_CORE_DRP_I/clk_inst/mmcm_adv_inst/CLKOUT0]]
 set_multicycle_path -from [get_clocks -of_objects [get_pins design_1_i/processing_av_system/clock_generation/clk_wiz_2/inst/CLK_CORE_DRP_I/clk_inst/mmcm_adv_inst/CLKOUT0]] -to [get_clocks VIRTUAL_clk_out1_design_1_clk_wiz_2_0_1] 3

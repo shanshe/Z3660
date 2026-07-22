@@ -79,8 +79,8 @@ typedef struct
 } fpdata;
 
 #ifdef JIT
-#include "jit/comptbl.h"
-#include "jit/compemu.h"
+#include "jit/comptbl_arm.h"
+#include "jit/compemu_arm.h"
 #endif
 
 struct regstruct

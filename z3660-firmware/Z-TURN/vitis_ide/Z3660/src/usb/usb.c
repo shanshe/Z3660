@@ -970,10 +970,10 @@ static int usb_setup_descriptor(struct usb_device *dev, bool do_read)
 		dev->descriptor.bMaxPacketSize0 = 8;
 		dev->maxpacketsize = PACKET_SIZE_8;
 		printf("[usb] Low Speed device detected, using 8-byte packets\n");
-	} else if(dev->speed == USB_SPEED_FULL) {
-		dev->descriptor.bMaxPacketSize0 = 64;
-		dev->maxpacketsize = PACKET_SIZE_64;
-		printf("[usb] Full Speed device detected, using 64-byte packets\n");
+//	} else if(dev->speed == USB_SPEED_FULL) {
+//		dev->descriptor.bMaxPacketSize0 = 64;
+//		dev->maxpacketsize = PACKET_SIZE_64;
+//		printf("[usb] Full Speed device detected, using 64-byte packets\n");
 	} else {
 		dev->descriptor.bMaxPacketSize0 = 64;
 		dev->maxpacketsize = PACKET_SIZE_64;
@@ -982,7 +982,7 @@ static int usb_setup_descriptor(struct usb_device *dev, bool do_read)
 	dev->epmaxpacketin[0] = dev->descriptor.bMaxPacketSize0;
 	dev->epmaxpacketout[0] = dev->descriptor.bMaxPacketSize0;
 
-	if (do_read && (dev->speed == USB_SPEED_FULL || dev->speed == USB_SPEED_HIGH)) {
+	if (do_read && (dev->speed == USB_SPEED_FULL)) { //|| dev->speed == USB_SPEED_HIGH)) {
 		int err;
 
 		/*

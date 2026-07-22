@@ -78,6 +78,14 @@ int __attribute__((no_reorder)) _start()
     return -1;
 }
 
+#ifdef DEBUG
+void exit(int status)
+{
+   (void)status;
+   while(1);
+}
+#endif
+
 extern const uint32_t auto_init_tables[4];
 
 const struct Resident RomTag = {
@@ -93,7 +101,7 @@ const struct Resident RomTag = {
     (APTR)&auto_init_tables              /* This table is for initializing the Library. */
 };
 
-//char device_name[] = DEVICE_NAME;
+char device_name[] = DEVICE_NAME;
 char device_id_string[] = DEVICE_ID_STRING;
 
 __saveds struct GFXBase* OpenLib(__REGA6(struct GFXBase *gfxbase));
@@ -118,16 +126,33 @@ char dummies[128];
 #define Z3_TEMPLATE_ADDR   (0x03210000 - Z3660_MEMBASE_ADDR)
 #define ZZVMODE_800x600 1
 #define ZZVMODE_720x576 6
+#define ZZ_CARD_DATA_GFXDATA 0
+#define ZZ_CARD_DATA_SCANDBL_800X600 1
+#define ZZ_CARD_DATA_NSVSYNC 2
+#define ZZ_CARD_DATA_MONITOR_SWITCH 3
+#define ZZ_CARD_DATA_DISPLAY_ENABLED 4
+#define ZZ_CARD_DATA_SECONDARY_PALETTE 5
+
+/*
+ * Only advertise formats the firmware/video formatter interprets natively.
+ * RGBA and the PC/BGR 15-bit variants use different byte or component order,
+ * but the firmware only has one 32-bit mode and one RGB555 mode.
+ */
+#define ZZ_SUPPORTED_RGB_FORMATS (  \
+          RTG_COLOR_FORMAT_CLUT   | \
+          RTG_COLOR_FORMAT_RGB555 | \
+          RTG_COLOR_FORMAT_RGB565 | \
+          RTG_COLOR_FORMAT_BGRA    )
 
 struct ExecBase *SysBase;
-//static LONG scandoubler_800x600 = 0;
-static LONG secondary_palette_enabled = 0;
 
-#ifdef DMARTG
-static volatile struct GFXData *gfxdata;
-#endif
+static inline volatile struct GFXData *zz_gfxdata(struct BoardInfo *b) {
+   return (volatile struct GFXData *)b->CardData[ZZ_CARD_DATA_GFXDATA];
+}
 
-uint16_t rtg_to_mnt[21] = {
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
+static const uint16_t rtg_to_mnt[21] = {
    MNTVA_COLOR_8BIT,       // 0x00 -- None
    MNTVA_COLOR_8BIT,       // 0x01 -- 8BPP CLUT
    MNTVA_COLOR_NO_USE,     // 0x02 -- 24BPP RGB
@@ -150,6 +175,38 @@ uint16_t rtg_to_mnt[21] = {
    MNTVA_COLOR_NO_USE,     // 0x13 -- YUV 4:2:2 Planar
    MNTVA_COLOR_NO_USE,     // 0x14 -- YUV 4:2:2PC Planar
 };
+
+static inline uint16_t mnt_colormode(UWORD format) {
+   if (format < ARRAY_SIZE(rtg_to_mnt))
+      return rtg_to_mnt[format];
+
+   return MNTVA_COLOR_NO_USE;
+}
+
+static inline uint16_t panning_colormode(uint16_t colormode) {
+   return (colormode == MNTVA_COLOR_15BIT) ? MNTVA_COLOR_16BIT565 : colormode;
+}
+
+static inline UBYTE direct_color_mask(uint16_t colormode, UBYTE mask) {
+   return (colormode == MNTVA_COLOR_32BIT) ? 0xFF : mask;
+}
+
+static inline BOOL supported_rgb_format(RGBFTYPE format) {
+   if (format >= 32)
+      return FALSE;
+
+   return (ZZ_SUPPORTED_RGB_FORMATS & (1UL << format)) != 0;
+}
+
+static inline uint16_t planar_line_bytes(SHORT x, SHORT w) {
+	return ((((UWORD)x) & 0x07) + (UWORD)w + 7) >> 3;
+}
+
+static inline uint16_t planar_line_bytes_padded(SHORT w) {
+   // P2C keeps the historical two-byte padding; the firmware's
+   // source byte wrap check otherwise fires at the end of most scanlines.
+   return (((UWORD)w) >> 3) + 2;
+}
 
 #define ZZ_REGS_WRITE(b, c) do{registers[(b)>>2]=(c);}while(0)
 #define ZZ_REGS_READ(b) registers[(b)>>2]
@@ -182,12 +239,31 @@ static inline void writeBlitterRGB(MNTZZ9KRegs* registers, ULONG color) {
 }
 
 static inline void writeBlitterSrcPitch(MNTZZ9KRegs* registers, UWORD srcpitch) {
-// This can't be cached here because the firmware doesn't cache it either!
-//   static UWORD old = 0;
-//   if(srcpitch != old) {
+   if (blitter_cache_src_pitch_write_needed(&blitter_register_cache,
+         registers, srcpitch)) {
       zzwrite16(&registers->blitter_src_pitch, srcpitch);
-//      old = srcpitch;
-//   }
+   }
+}
+
+static inline void writeBlitterRGB2(MNTZZ9KRegs* registers, ULONG color) {
+   if (blitter_cache_write32_needed(&blitter_register_cache, registers,
+         BLITTER_CACHE_RGB2, &blitter_register_cache.rgb2, color)) {
+      zzwrite32(&registers->blitter_rgb2_hi, color);
+   }
+}
+
+static inline void writeBlitterUser1(MNTZZ9KRegs* registers, UWORD value) {
+   if (blitter_cache_write16_needed(&blitter_register_cache, registers,
+         BLITTER_CACHE_USER1, &blitter_register_cache.user1, value)) {
+      zzwrite16(&registers->blitter_user1, value);
+   }
+}
+
+static inline void writeBlitterUser2(MNTZZ9KRegs* registers, UWORD value) {
+   if (blitter_cache_write16_needed(&blitter_register_cache, registers,
+         BLITTER_CACHE_USER2, &blitter_register_cache.user2, value)) {
+      zzwrite16(&registers->blitter_user2, value);
+   }
 }
 
 static inline void writeBlitterDstPitch(MNTZZ9KRegs* registers, UWORD dstpitch) {
@@ -254,6 +330,7 @@ static inline void writeBlitterY3(MNTZZ9KRegs* registers, UWORD y) {
    }
 }
 */
+
 // useful for debugging
 void waitclick() {
 #define CIAAPRA ((volatile uint8_t*)0xbfe001)
@@ -273,6 +350,10 @@ __saveds struct GFXBase* __attribute__((used)) InitLib(__REGA6(struct ExecBase *
    (void)sysbase;
    (void)seglist;
    _gfxbase = exb;
+   _gfxbase->libNode.lib_Node.ln_Name = device_name;
+   _gfxbase->libNode.lib_Version = DEVICE_VERSION;
+   _gfxbase->libNode.lib_Revision = DEVICE_REVISION;
+   _gfxbase->libNode.lib_IdString = device_id_string;
    _gfxbase->Name = gfxname;
    SysBase = *(struct ExecBase **)4L;
    return _gfxbase;
@@ -328,14 +409,10 @@ ULONG ExtFuncLib(void)
 {
    return 0;
 }
-void exit(int status)
-{
-   (void)status;
-   while(1);
-}
+
 #define LOADLIB(a, b) if ((a = (struct a*)OpenLibrary((STRPTR)b,0L))==NULL) { \
       KPrintF((STRPTR)"Z3660.card: Failed to load %s.\n", b); \
-      return 0; \
+      goto cleanup; \
    } \
 
 
@@ -346,12 +423,13 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
    struct IntuitionBase *IntuitionBase = NULL;
    struct ExecBase *SysBase = *(struct ExecBase **)4L;
    LONG zorro_version = 0;
-   LONG hwrev = 0;
    LONG fwrev_major = 0;
    LONG fwrev_minor = 0;
    LONG fwrev = 0;
-
-   KPrintF((CONST_STRPTR)"FindCard()\n");
+//   int result = 0;
+#ifdef DEBUG
+   LONG hwrev = 0;
+#endif
 
    LOADLIB(ExpansionBase, "expansion.library");
    LOADLIB(DOSBase, "dos.library");
@@ -359,6 +437,13 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 
    zorro_version = 0;
    b->CardFlags = 0;
+   b->CardData[ZZ_CARD_DATA_GFXDATA] = 0;
+   b->CardData[ZZ_CARD_DATA_SCANDBL_800X600] = 0;
+   b->CardData[ZZ_CARD_DATA_NSVSYNC] = 0;
+   b->CardData[ZZ_CARD_DATA_MONITOR_SWITCH] = 1;
+   b->CardData[ZZ_CARD_DATA_DISPLAY_ENABLED] = 1;
+   b->CardData[ZZ_CARD_DATA_SECONDARY_PALETTE] = 0;
+
    if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1))) zorro_version = 3;
    if(zorro_version==0)
    {
@@ -382,17 +467,17 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
       new_zz_cd->cd_Node.ln_Pred = &last_CD->cd_Node;
       new_zz_cd->cd_Flags = 0;
       new_zz_cd->cd_BoardAddr=(APTR)0x10000000; /* where in memory the board was placed */
-      new_zz_cd->cd_BoardSize=0x8000000;	/* 128MB size of board in bytes */
+      new_zz_cd->cd_BoardSize=0x8000000;   /* 128MB size of board in bytes */
       new_zz_cd->cd_Rom.er_Type = ERT_ZORROIII | 2; // ZorroIII and 128 MB
       new_zz_cd->cd_Rom.er_Manufacturer = 0x144B;
       new_zz_cd->cd_Rom.er_Product = 0x1;
       new_zz_cd->cd_Rom.er_Flags = 0;
       new_zz_cd->cd_Rom.er_InitDiagVec = 0;
-      //UWORD		cd_SlotAddr;	/* which slot number (PRIVATE) */
-      //UWORD		cd_SlotSize;	/* number of slots (PRIVATE) */
-      //APTR		cd_Driver;	/* pointer to node of driver */
-      //struct ConfigDev *	cd_NextCD;	/* linked list of drivers to config */
-      //ULONG		cd_Unused[4];	/* for whatever the driver wants */
+      //UWORD      cd_SlotAddr;   /* which slot number (PRIVATE) */
+      //UWORD      cd_SlotSize;   /* number of slots (PRIVATE) */
+      //APTR      cd_Driver;   /* pointer to node of driver */
+      //struct ConfigDev *   cd_NextCD;   /* linked list of drivers to config */
+      //ULONG      cd_Unused[4];   /* for whatever the driver wants */
       AddConfigDev(new_zz_cd);
       cd = new_zz_cd;
    }
@@ -425,13 +510,14 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
          // one full HD screen @8bit ~ 2MB
          b->MemorySize = 0x3000000 - Z3660_MEMBASE_ADDR;
          b->CardFlags |= CARDFLAG_ZORRO_3;
-#ifdef DMARTG
-         gfxdata = (struct GFXData*)(((uint32_t)b->MemoryBase) + (uint32_t)Z3_GFXDATA_ADDR);
-         KPrintF((CONST_STRPTR)"GFXData   0x%lx\n",gfxdata);
-         memset((void *)gfxdata, 0x00, sizeof(struct GFXData));
-#endif
+         volatile struct GFXData *gd = (struct GFXData*)(((uint32_t)b->MemoryBase) + (uint32_t)Z3_GFXDATA_ADDR);
+         b->CardData[ZZ_CARD_DATA_GFXDATA] = (ULONG)gd;
+         KPrintF((CONST_STRPTR)"GFXData   0x%lx\n",gd);
+         memset((void *)gd, 0x00, sizeof(struct GFXData));
       }
-      b->RegisterBase = (uint8*)(cd->cd_BoardAddr);
+      b->MemorySpaceBase = b->MemoryBase;
+      b->MemorySpaceSize = b->MemorySize;
+      b->RegisterBase = (void*)(cd->cd_BoardAddr);
 #ifdef DMARTG
       volatile uint32_t* registers = (uint32_t *)b->RegisterBase;
 #endif
@@ -440,7 +526,6 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
 //    ZZ_REGS_WRITE(REG_ZZ_DEBUG,(u32)cd->cd_BoardAddr);
 //    ZZ_REGS_WRITE(REG_ZZ_DEBUG,(u32)cd->cd_BoardAddr);
 
-      (void)hwrev;
 #ifdef DMARTG
       fwrev = registers[REG_ZZ_FW_VERSION>>2];
 #else
@@ -501,8 +586,16 @@ int __attribute__((used)) FindCard(__REGA0(struct BoardInfo* b)) {
       KPrintF((CONST_STRPTR)"Z3660.card: Z3660 not found!\n");
 //      DisplayAlert(RECOVERY_ALERT, (unsigned char*)"\x01\x04\x10Z3660 not found\x00\x00", 30);
    }
+   
+   cleanup:
+   if (IntuitionBase) CloseLibrary((struct Library *)IntuitionBase);
+   if (DOSBase) CloseLibrary((struct Library *)DOSBase);
+   if (ExpansionBase) CloseLibrary((struct Library *)ExpansionBase);
+   
    return(1);
 }
+
+#define gfxdata zz_gfxdata(b)
 
 int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
    int i;
@@ -518,25 +611,20 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
    b->PaletteChipType = PCT_S3ViRGE;
    b->GraphicsControllerType = GCT_S3ViRGE;
 
-
    b->Flags |= BIF_GRANTDIRECTACCESS |
-            BIF_HARDWARESPRITE |
-//            BIF_FLICKERFIXER |
-            BIF_VGASCREENSPLIT |
-            BIF_PALETTESWITCH |
-            BIF_BLITTER |
-//            BIF_INTERNALMODESONLY | // this doesn't work as expected
-//            BIF_VIDEOCAPTURE |
-            BIF_VIDEOWINDOW |
-            BIF_OVERCLOCK|
-            0;
-
-   b->RGBFormats = RTG_COLOR_FORMAT_CLUT |   //  8bit
-               RTG_COLOR_FORMAT_RGB565 | // 16bit
-               RTG_COLOR_FORMAT_BGRA |   // 32bit
-//               RTG_COLOR_FORMAT_BGR888 | // 24bit
-               RTG_COLOR_FORMAT_RGB555 | // 15bit
+               BIF_HARDWARESPRITE |
+//               BIF_FLICKERFIXER |
+               BIF_VGASCREENSPLIT |
+               BIF_PALETTESWITCH |
+               BIF_BLITTER |
+//               BIF_INTERNALMODESONLY | // this doesn't work as expected
+//               BIF_VIDEOCAPTURE |
+               BIF_VIDEOWINDOW |
+               BIF_OVERCLOCK|
+               BIF_CACHEMODECHANGE|
                0;
+
+   b->RGBFormats = ZZ_SUPPORTED_RGB_FORMATS;
    b->SoftSpriteFlags = 0;
    b->BitsPerCannon = 8;
 #define PIXELCLOCK_MHZ_MAX 220
@@ -573,7 +661,6 @@ int __attribute__((used)) InitCard(__REGA0(struct BoardInfo* b)) {
    b->SetReadPlane = (void *)SetReadPlane;
 
    b->WaitVerticalSync = (void *)WaitVerticalSync;
-   //b->SetInterrupt = (void *)NULL;
 
    b->WaitBlitter = (void *)WaitBlitter;
 
@@ -681,33 +768,7 @@ APTR CreateFeature(__REGA0(struct BoardInfo *bi), __REGD0(ULONG type), __REGA1(s
    overlay->type = type;
    overlay->active = FALSE;
    overlay->occlusion = FALSE;
-/*
-   // Obtener atributos iniciales desde los tags
-   if (tags) {
-      ULONG left = 0, top = 0, width = 0, height = 0;
-      GetTagData(tags, FA_Left, &left);
-      GetTagData(tags, FA_Top, &top);
-      GetTagData(tags, FA_Width, &width);
-      GetTagData(tags, FA_Height, &height);
-      KPrintF((CONST_STRPTR)"Overlay position %lu,%lu size %lux%lu\n", left, top, width, height);
-      // Algunos valores por defecto si no se proporcionan
-      overlay->left = left;
-      overlay->top = top;
-      overlay->width = width ? width : 320;
-      overlay->height = height ? height : 240;
-      overlay->source_width = width ? width : 320;
-      overlay->source_height = height ? height : 240;
-      overlay->format = RGBFF_R5G6B5; // Por defecto
 
-      // Verificar si hay bitmap proporcionado
-      GetTagData(tags, FA_BitMap, &overlay->bitmap);
-      KPrintF((CONST_STRPTR)"Overlay bitmap 0x%lx\n", overlay->bitmap);
-//      if (overlay->bitmap && bi->SetMemoryMode) {
-         // Ajustar el modo de memoria para el overlay
-//         bi->SetMemoryMode(bi, overlay->format);
-//      }
-   }
-*/
    struct TagItem *tagPtr = (struct TagItem *)tags;
    KPrintF((CONST_STRPTR)"tags 0x%08lX\n", (ULONG)tags);
    KPrintF((CONST_STRPTR)"tagPtr 0x%08lX\n", (ULONG)tagPtr);
@@ -1314,7 +1375,7 @@ UWORD DeleteFeature(__REGA0(struct BoardInfo *bi), __REGA1(APTR feature), __REGD
    if (!overlay || overlay->type != type)
       return 0;
    KPrintF((CONST_STRPTR)"Deleting overlay feature.\n");
-   // Desactivar el overlay en hardware si est?? activo
+
    if (overlay->active) {
       overlay->active = FALSE;
       KPrintF((CONST_STRPTR)"Disabling overlay in hardware.\n");
@@ -1331,18 +1392,17 @@ UWORD DeleteFeature(__REGA0(struct BoardInfo *bi), __REGA1(APTR feature), __REGD
       ptr = &((*ptr)->next);
    }
    
-   // Liberar recursos
+   // Free resources
    if (overlay->bitmap && overlay->free_bitmap) {
       bi->FreeCardMem(bi, overlay->bitmap->Planes[0]);
       overlay->bitmap = NULL;
    }
    
-   // Liberar la estructura
+   // Free overlay struct
    FreeVec(overlay);
    overlay = NULL;
    KPrintF((CONST_STRPTR)"Overlay struct freed.\n");
    
-   // Actualizar estado si ya no hay overlays
    if ((APTR)bi->CardData[0] == NULL)
       bi->Flags &= ~BIF_VIDEOWINDOW;
    
@@ -1445,30 +1505,31 @@ void init_modeline(volatile uint32_t* registers, uint16 w, uint16 h, uint8 color
       h = mode_info->Height;
       mode = ZZVMODE_CUSTOM;
       ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_HRES);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Width);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VRES);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Height);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_HSTART);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Width+mode_info->HorSyncStart);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_HEND);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Width+mode_info->HorSyncStart+mode_info->HorSyncSize);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_HMAX);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->HorTotal);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VSTART);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Height+mode_info->VerSyncStart);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VEND);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Height+mode_info->VerSyncStart+mode_info->VerSyncSize);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VMAX);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->VerTotal);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_POLARITY);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,0);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_PHZ);
-        ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->PixelClock);
-    }
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Width);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VRES);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Height);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_HSTART);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Width+mode_info->HorSyncStart);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_HEND);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Width+mode_info->HorSyncStart+mode_info->HorSyncSize);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_HMAX);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->HorTotal);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VSTART);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Height+mode_info->VerSyncStart);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VEND);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->Height+mode_info->VerSyncStart+mode_info->VerSyncSize);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_VMAX);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->VerTotal);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_POLARITY);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,0);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE,VMODE_PARAM_PHZ);
+      ZZ_REGS_WRITE(ZZ_CUSTOM_VIDMODE_DATA,mode_info->PixelClock);
+   }
 
     ZZ_REGS_WRITE(REG_ZZ_ORIG_RES, (((uint32_t)w)<<16)|((uint32_t)h));
     ZZ_REGS_WRITE(REG_ZZ_MODE, ((u32)mode)|(((u32)colormode)<<8)|(((u32)scalemode)<<12));
 }
+
 // SetGC sets the graphics mode
 // This function shall reprogram the hardware to display video data according to the video mode encoded in the
 // ModeInfo structure, and shall adjust the border blank according to the value in d0. This value shall also be
@@ -1478,23 +1539,22 @@ void init_modeline(volatile uint32_t* registers, uint16 w, uint16 h, uint8 color
 // the requested mode. The RAMDAC should not be touched, but will be reprogrammed by SetDAC().
 // The start address of the bitmap to be displayed will be neither installed by this function, but by SetPanning()
 void SetGC(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __REGD0(BOOL border)) {
-   volatile uint32_t* registers = (volatile uint32_t*)b->RegisterBase;
    uint16_t scale = 0;
    uint16_t colormode;
 
-   KPrintF((CONST_STRPTR)"SetGC()\n");
-
-   if(mode_info==NULL)
-   {
-      KPrintF((CONST_STRPTR)"SetGC: mode_info ptr is null");
+   if (!b || !mode_info)
       return;
-   }
+
+   volatile uint32_t* registers = (volatile uint32_t*)b->RegisterBase;
+
    b->ModeInfo = mode_info;
    b->Border = border;
    if (mode_info->Width < 320 || mode_info->Height < 200)
       return;
 
-   colormode = rtg_to_mnt[b->RGBFormat];
+   colormode = mnt_colormode(b->RGBFormat);
+   if (colormode == MNTVA_COLOR_NO_USE)
+      return;
 
    if (mode_info->Height >= 400 || mode_info->Width >= 640) {
       scale = 0;
@@ -1512,8 +1572,16 @@ void SetGC(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __
 //z3660 -> no scandoubler :(
 
 UWORD SetSwitch(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
+   UWORD old = b ? (UWORD)b->CardData[ZZ_CARD_DATA_MONITOR_SWITCH] : 1;
+
+   if (!b || !b->RegisterBase)
+      return old;
+
+   b->CardData[ZZ_CARD_DATA_MONITOR_SWITCH] = enabled ? 1 : 0;
+
    if(b->MoniSwitch == enabled)
       return enabled;
+
    UWORD last=b->MoniSwitch;
    b->MoniSwitch=enabled;
 
@@ -1592,16 +1660,18 @@ UWORD SetSwitch(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
       // rtg mode
       ZZ_REGS_WRITE(REG_ZZ_OP_CAPTUREMODE, 0); // capture mode off
 
-      if(b->ModeInfo==NULL)
-         KPrintF((CONST_STRPTR)"SetSwitch: mode_info ptr is null");
-      else
+      if(b->ModeInfo) {
          SetGC(b, b->ModeInfo, b->Border);
+      } else {
+         KPrintF((CONST_STRPTR)"SetSwitch: mode_info ptr is null");
+      }
    }
    return last;
 }
 
 void SetPanning(__REGA0(struct BoardInfo *b), __REGA1(UBYTE *addr), __REGD0(UWORD width), __REGD3(UWORD height), __REGD1(WORD x_offset), __REGD2(WORD y_offset), __REGD7(RGBFTYPE format)) {
    (void)height;
+   if (!b) return;
    b->XOffset = x_offset;
    b->YOffset = y_offset;
    uint32_t* registers = (uint32_t *)b->RegisterBase;
@@ -1616,7 +1686,7 @@ void SetPanning(__REGA0(struct BoardInfo *b), __REGA1(UBYTE *addr), __REGD0(UWOR
       gfxdata->x[0] = x_offset;
       gfxdata->y[0] = y_offset;
       gfxdata->x[1] = width;
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8)rtg_to_mnt[format];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8)panning_colormode(mnt_colormode(format));
       ZZ_REGS_WRITE(REG_ZZ_BLITTER_DMA_OP, OP_PAN);
    } else {
       uint32_t offset = ((uint32_t)addr - (uint32_t)b->MemoryBase);
@@ -1624,51 +1694,65 @@ void SetPanning(__REGA0(struct BoardInfo *b), __REGA1(UBYTE *addr), __REGD0(UWOR
       ZZ_REGS_WRITE(REG_ZZ_X1, x_offset);
       ZZ_REGS_WRITE(REG_ZZ_Y1, y_offset);
       ZZ_REGS_WRITE(REG_ZZ_X2, width);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[format]);
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, panning_colormode(mnt_colormode(format)));
       ZZ_REGS_WRITE(REG_ZZ_PAN, offset);
    }
 }
 
 void SetColorArray(__REGA0(struct BoardInfo *b), __REGD0(UWORD start), __REGD1(UWORD num)) {
-
-   if (!b->CLUT)
+   if (!b || !num)
       return;
 
    uint32_t* registers = (uint32_t*)b->RegisterBase;
-   volatile uint16_t i = start;
-   volatile uint16_t j = start + num;
-   int op = 3; // OP_PALETTE
+   struct CLUTEntry *clut = (start >= 256) ? b->SecondaryCLUT : b->CLUT;
+   UWORD count = (num > 256) ? 256 : num;
    KPrintF((CONST_STRPTR)"SetColorArray start %ld num %ld\n", (int32_t)start, (int32_t)num);
    KPrintF((CONST_STRPTR)"j %ld\n", (int32_t)j);
 
    if (start >= 256) {
       // Select secondary palette if start index is above 255
-      if (!secondary_palette_enabled) {
+      if (!b->CardData[ZZ_CARD_DATA_SECONDARY_PALETTE]) {
          ZZ_REGS_WRITE(REG_ZZ_USER1, CARD_FEATURE_SECONDARY_PALETTE);
          ZZ_REGS_WRITE(REG_ZZ_SET_FEATURE, 1);
-         secondary_palette_enabled = 1;
+         b->CardData[ZZ_CARD_DATA_SECONDARY_PALETTE] = 1;
       }
-      op = 19; // OP_PALETTE_HI
    }
-
-   for (i = start; i < j; i++) {
-      uint32_t xrgb = ((uint32_t)(i & 0xFF) << 24) | ((uint32_t)b->CLUT[(i & 0xFF)].Red << 16) | ((uint32_t)b->CLUT[(i & 0xFF)].Green << 8) | ((uint32_t)b->CLUT[(i & 0xFF)].Blue);
-      KPrintF((CONST_STRPTR)"Setting color index %ld: R=%d G=%d B=%d\n", (int32_t)i, b->CLUT[(i & 0xFF)].Red, b->CLUT[(i & 0xFF)].Green, b->CLUT[(i & 0xFF)].Blue);
-      ZZ_REGS_WRITE(REG_ZZ_OP_DATA,xrgb);
-      ZZ_REGS_WRITE(REG_ZZ_OP,op);
-//      ZZ_REGS_WRITE(REG_ZZ_OP_NOP,0); // NOP
+   if (b->CardFlags & CARDFLAG_ZORRO_3) {
+      for (int i = 0; i < count; i++) {
+         int ci = (start + i) & 0xFF;
+         gfxdata->clut1[i * 3]     = clut[ci].Red;
+         gfxdata->clut1[i * 3 + 1] = clut[ci].Green;
+         gfxdata->clut1[i * 3 + 2] = clut[ci].Blue;
+      }
+      gfxdata->user[0] = start;
+      gfxdata->user[1] = count;
+      gfxdata->u8_user[0] = (start >= 256) ? 1 : 0;
+      ZZ_REGS_WRITE(REG_ZZ_BLITTER_DMA_OP, OP_SET_PALETTE);
+   } else {
+      int op = (start >= 256) ? 19 : 3; // 3 OP_PALETTE, 19 OP_PALETTE_HI
+      for (int i = 0; i < count; i++) {
+         int ci = (start + i) & 0xFF;
+         uint32_t xrgb = ((uint32_t)ci << 24) | ((uint32_t)clut[ci].Red << 16) | ((uint32_t)clut[ci].Green << 8) | ((uint32_t)clut[ci].Blue);
+         KPrintF((CONST_STRPTR)"Setting color index %ld: R=%d G=%d B=%d\n", (int32_t)ci, clut[ci].Red, clut[ci].Green, clut[ci].Blue);
+         ZZ_REGS_WRITE(REG_ZZ_OP_DATA,xrgb);
+         ZZ_REGS_WRITE(REG_ZZ_OP,op);
+//         ZZ_REGS_WRITE(REG_ZZ_OP_NOP,0); // NOP
+      }
    }
 }
 
 uint16_t calc_pitch_bytes(uint16_t w, uint16_t colormode) {
-   uint16_t pitch = w;
-
-   if (colormode == MNTVA_COLOR_15BIT) {
-      pitch = w<<1;
-   } else {
-      pitch = w<<colormode;
+   switch (colormode) {
+      case MNTVA_COLOR_8BIT:
+         return w;
+      case MNTVA_COLOR_16BIT565:
+      case MNTVA_COLOR_15BIT:
+         return w << 1;
+      case MNTVA_COLOR_32BIT:
+         return w << 2;
    }
-   return pitch;
+
+	return 0;
 }
 
 uint16_t pitch_to_shift(uint16_t p) {
@@ -1681,32 +1765,39 @@ uint16_t pitch_to_shift(uint16_t p) {
    return 0;
 }
 
-UWORD CalculateBytesPerRow(__REGA0(struct BoardInfo *b), __REGD0(UWORD width), __REGD1(UWORD height), __REGA1(struct ModeInfo *mi), __REGD7(RGBFTYPE format)) {
+UWORD CalculateBytesPerRow(__REGA0(struct BoardInfo *b), __REGD0(UWORD width), __REGD1(UWORD height), __REGA1(struct ModeInfo *mode_info), __REGD7(RGBFTYPE format)) {
    (void)height;
-   (void)mi;
+   (void)mode_info;
    if (!b)
       return 0;
+	if (!supported_rgb_format(format))
+		return 0;
 
-   return calc_pitch_bytes(width, rtg_to_mnt[format]);
+   return calc_pitch_bytes(width, mnt_colormode(format));
 }
 
 APTR CalculateMemory(__REGA0(struct BoardInfo *b), __REGA1(APTR addr), __REGD0(struct RenderInfo *ri), __REGD7(RGBFTYPE format)) {
-   (void)b;
    (void)ri;
-   (void)format;
+   if (!b || !supported_rgb_format(format))
+      return NULL;
    return addr;
 }
 
 ULONG GetCompatibleFormats(__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format)) {
-   (void)b;
-   (void)format;
-   return 0xFFFFFFFF;
+   if (!supported_rgb_format(format))
+      return 0;
+
+   return b ? b->RGBFormats : ZZ_SUPPORTED_RGB_FORMATS;
 }
 
 UWORD SetDisplay(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
-   (void)b;
-   (void)enabled;
-   return 1;
+	UWORD old = b ? (UWORD)b->CardData[ZZ_CARD_DATA_DISPLAY_ENABLED] : 1;
+
+	if (b)
+		b->CardData[ZZ_CARD_DATA_DISPLAY_ENABLED] = enabled ? 1 : 0;
+	// No firmware display-blanking register is exposed; keep sync and report
+	// the previous logical state as required by the P96 callback contract.
+	return old;
 }
 // ResolvePixelClock - computes a pixel clock index from a target frequency
 // Inputs:
@@ -1723,26 +1814,20 @@ UWORD SetDisplay(__REGA0(struct BoardInfo *b), __REGD0(UWORD enabled)) {
 // It shall also install the effective pixel clock (in Hz) into mi->PixelClock of the ModeInfo structure.
 //  The information in the ModeInfo structure is later used to adjust the timing of the VGA chip through SetPixelClock.
 LONG ResolvePixelClock(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __REGD0(ULONG pixel_clock), __REGD7(RGBFTYPE format)) {
-   (void)b;
-   (void)format;
-   if(mode_info!=NULL)
-   {
-      mode_info->PixelClock = pixel_clock;//mode_info->HorTotal * mode_info->VerTotal * 60;
-      mode_info->Flags&=~(GMF_INTERLACE|GMF_DOUBLESCAN);
-      mode_info->PixelClock = mode_info->PixelClock;
-      mode_info->pll1.Clock = 1;
-      mode_info->pll2.ClockDivide = 1;
-   }
-   else{
-      KPrintF((CONST_STRPTR)"ResolvePixelClock() mode_info is null!!!\n");
-   }
+   if (!b || !mode_info || !supported_rgb_format(format))
+      return -1;
+
+   mode_info->PixelClock = pixel_clock;
+   mode_info->Flags&=~(GMF_INTERLACE|GMF_DOUBLESCAN);
+   mode_info->pll1.Clock = 1;
+   mode_info->pll2.ClockDivide = 1;
    return (mode_info->PixelClock-PIXELCLOCK_MHZ_MIN*1000000)/250000;
 }
 
 ULONG GetPixelClock(__REGA0(struct BoardInfo *b), __REGA1(struct ModeInfo *mode_info), __REGD0(ULONG index), __REGD7(RGBFTYPE format)) {
-   (void)b;
-   (void)mode_info;
-   (void)format;
+   if (!b || !mode_info || !supported_rgb_format(format))
+      return 0;
+
    KPrintF((CONST_STRPTR)"GetPixelClock() index %ld,mode_info->PixelClock %ld\n", index, mode_info->PixelClock);
    return (index*250000+PIXELCLOCK_MHZ_MIN*1000000);
 }
@@ -1757,25 +1842,32 @@ void SetClock (__REGA0(struct BoardInfo *b)) {
    // Do nothing as the pixel clock will be programmed when changing the video mode...
 }
 
-void WaitVerticalSync(__REGA0(struct BoardInfo *b), __REGD0(BOOL toggle)) {
-   (void)toggle;
+#define VBLANK_WAIT_LIMIT 200000UL
+
+static inline BOOL vblank_state(struct BoardInfo *b) {
    volatile uint32_t* registers =(volatile uint32_t*)b->RegisterBase;
-   uint32 vblank_state = !!ZZ_REGS_READ(REG_ZZ_VBLANK_STATUS);
+   return (ZZ_REGS_READ(REG_ZZ_VBLANK_STATUS) != 0);
+}
 
-   while(vblank_state != 0) {
-      vblank_state = !!ZZ_REGS_READ(REG_ZZ_VBLANK_STATUS);
-   }
+void WaitVerticalSync(__REGA0(struct BoardInfo *b), __REGD0(BOOL end)) {
+   (void)end;
+   ULONG guard = VBLANK_WAIT_LIMIT;
 
-   while(vblank_state == 0) {
-      vblank_state = !!ZZ_REGS_READ(REG_ZZ_VBLANK_STATUS);
+   if (!b || !b->RegisterBase)
+      return;
+
+   if (end) {
+      while (vblank_state(b) && --guard) { }
+      } else {
+      while (!vblank_state(b) && --guard) { }
    }
 }
 
-BOOL GetVSyncState(__REGA0(struct BoardInfo *b), __REGD0(BOOL toggle)) {
-   (void)toggle;
-   volatile uint32_t* registers =(volatile uint32_t*)b->RegisterBase;
+BOOL GetVSyncState(__REGA0(struct BoardInfo *b), __REGD0(BOOL expected)) {
+   if (!b || !b->RegisterBase)
+      return expected;
 
-   return !!ZZ_REGS_READ(REG_ZZ_VBLANK_STATUS);
+   return vblank_state(b);
 }
 
 void FillRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD w), __REGD3(WORD h), __REGD4(ULONG color), __REGD5(UBYTE mask), __REGD7(RGBFTYPE format)) {
@@ -1788,7 +1880,7 @@ void FillRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
       gfxdata->offset[GFXDATA_DST] = ((uint32_t)r->Memory - (uint32_t)b->MemoryBase);
       gfxdata->pitch[GFXDATA_DST] = (r->BytesPerRow >> 2);
 
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[r->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)mnt_colormode(r->RGBFormat);
       gfxdata->mask = mask;
 
       gfxdata->rgb[0] = color;
@@ -1805,7 +1897,7 @@ void FillRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
       ZZ_REGS_WRITE(REG_ZZ_BLIT_DST, offset);
       ZZ_REGS_WRITE(REG_ZZ_RGB, color);
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow >> 2);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat]);
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, mnt_colormode(r->RGBFormat));
       ZZ_REGS_WRITE(REG_ZZ_X1, x);
       ZZ_REGS_WRITE(REG_ZZ_Y1, y);
       ZZ_REGS_WRITE(REG_ZZ_X2, w);
@@ -1819,12 +1911,19 @@ void InvertRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __R
    if (!b || !r)
       return;
 
+   uint16_t colormode = mnt_colormode(format);
+   if (colormode == MNTVA_COLOR_NO_USE) {
+      if (b->InvertRectDefault)
+         b->InvertRectDefault(b, r, x, y, w, h, mask, format);
+      return;
+   }
+   mask = direct_color_mask(colormode, mask);
+   uint32_t* registers =(uint32_t*)b->RegisterBase;
    if (b->CardFlags & CARDFLAG_ZORRO_3) {
-       uint32_t* registers =(uint32_t*)b->RegisterBase;
       gfxdata->offset[GFXDATA_DST] = (uint32_t)r->Memory - (uint32_t)b->MemoryBase;
       gfxdata->pitch[GFXDATA_DST] = (r->BytesPerRow >> 2);
 
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[r->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)colormode;
       gfxdata->mask = mask;
 
       gfxdata->x[0] = x;
@@ -1832,14 +1931,13 @@ void InvertRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __R
       gfxdata->y[0] = y;
       gfxdata->y[1] = h;
 
-       ZZ_REGS_WRITE(REG_ZZ_BLITTER_DMA_OP, OP_INVERTRECT);
+      ZZ_REGS_WRITE(REG_ZZ_BLITTER_DMA_OP, OP_INVERTRECT);
    } else {
-       uint32_t* registers =(uint32_t*)b->RegisterBase;
       uint32_t offset = ((uint32_t)r->Memory - (uint32_t)b->MemoryBase);
 
       ZZ_REGS_WRITE(REG_ZZ_BLIT_DST, offset);
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow >> 2);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat]);
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, mnt_colormode(r->RGBFormat));
 
       ZZ_REGS_WRITE(REG_ZZ_X1, x);
       ZZ_REGS_WRITE(REG_ZZ_Y1, y);
@@ -1854,10 +1952,17 @@ void InvertRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __R
 void BlitRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD dx), __REGD3(WORD dy), __REGD4(WORD w), __REGD5(WORD h), __REGD6(UBYTE mask), __REGD7(RGBFTYPE format)) {
    (void)format;
    if (w<1 || h<1) return;
-   if (!r) return;
+   if (!b || !r) return;
+
+   uint16_t colormode = mnt_colormode(format);
+   if (colormode == MNTVA_COLOR_NO_USE) {
+      if (b->BlitRectDefault)
+         b->BlitRectDefault(b, r, x, y, dx, dy, w, h, mask, format);
+      return;
+   }
+   uint32_t* registers =(uint32_t*)b->RegisterBase;
 
    if (b->CardFlags & CARDFLAG_ZORRO_3) {
-      uint32_t* registers =(uint32_t*)b->RegisterBase;
 
       // RenderInfo describes the video RAM containing the source and target rectangle,
       gfxdata->offset[GFXDATA_DST] = ((uint32_t)r->Memory - (uint32_t)b->MemoryBase);
@@ -1877,7 +1982,7 @@ void BlitRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
       gfxdata->y[1] = h;
 
       // RGBFormat is the format of the source (and destination); this format shall not be taken from the RenderInfo.
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[r->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)colormode;
 
       // Mask is a bitmask that defines which (logical) planes are affected by the copy for planar or chunky bitmaps. It can be ignored for direct color modes.
       gfxdata->mask = mask;
@@ -1885,8 +1990,6 @@ void BlitRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
       // Source and destination rectangle may be overlapping, a proper copy operation shall be performed in either case.
       ZZ_REGS_WRITE(REG_ZZ_BLITTER_DMA_OP, OP_COPYRECT);
    } else {
-      uint32_t* registers =(uint32_t*)b->RegisterBase;
-
       ZZ_REGS_WRITE(REG_ZZ_Y1, dy);
       ZZ_REGS_WRITE(REG_ZZ_Y2, h);
       ZZ_REGS_WRITE(REG_ZZ_Y3, y);
@@ -1896,7 +1999,7 @@ void BlitRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
       ZZ_REGS_WRITE(REG_ZZ_X3, x);
 
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow >> 2);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat] | (mask << 8));
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, colormode | (mask << 8));
 
       uint32_t offset = ((uint32_t)r->Memory - (uint32_t)b->MemoryBase);
       ZZ_REGS_WRITE(REG_ZZ_BLIT_SRC, offset);
@@ -1910,14 +2013,20 @@ void BlitRect(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
 void BlitRectNoMaskComplete(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *rs), __REGA2(struct RenderInfo *rt), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD dx), __REGD3(WORD dy), __REGD4(WORD w), __REGD5(WORD h), __REGD6(UBYTE minterm), __REGD7(RGBFTYPE format)) {
    (void)format;
    if (w<1 || h<1) return;
-   if (!rs || !rt) return;
+   if (!b || !rs || !rt) return;
+
+   uint16_t colormode = mnt_colormode(format);
+   if (colormode == MNTVA_COLOR_NO_USE) {
+      if (b->BlitRectNoMaskCompleteDefault)
+         b->BlitRectNoMaskCompleteDefault(b, rs, rt, x, y, dx, dy, w, h, minterm, format);
+      return;
+   }
+   uint32_t* registers =(uint32_t*)b->RegisterBase;
 
    // b->BlitRectNoMaskCompleteDefault(b, rs, rt, x, y, dx, dy, w, h, minterm, format);
    // return;
 
    if (b->CardFlags & CARDFLAG_ZORRO_3) {
-      uint32_t* registers =(uint32_t*)b->RegisterBase;
-
       // The source region in video RAM is given by the source RenderInfo in a1 and a position within it in x and y.
       gfxdata->x[2] = x;
       gfxdata->y[2] = y;
@@ -1938,12 +2047,10 @@ void BlitRectNoMaskComplete(__REGA0(struct BoardInfo *b), __REGA1(struct RenderI
       gfxdata->minterm = minterm;
 
       // The common RGBFormat of source and destination is in register d7, it shall not be taken from the source or destination RenderInfo.
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[rt->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = colormode;
 
       ZZ_REGS_WRITE(REG_ZZ_BLITTER_DMA_OP, OP_COPYRECT_NOMASK);
    } else {
-      uint32_t* registers =(uint32_t*)b->RegisterBase;
-
       ZZ_REGS_WRITE(REG_ZZ_Y1, dy);
       ZZ_REGS_WRITE(REG_ZZ_Y2, h);
       ZZ_REGS_WRITE(REG_ZZ_Y3, y);
@@ -1952,7 +2059,7 @@ void BlitRectNoMaskComplete(__REGA0(struct BoardInfo *b), __REGA1(struct RenderI
       ZZ_REGS_WRITE(REG_ZZ_X2, w);
       ZZ_REGS_WRITE(REG_ZZ_X3, x);
 
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[rt->RGBFormat] | (minterm << 8));
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, colormode | (minterm << 8));
 
       ZZ_REGS_WRITE(REG_ZZ_SRC_PITCH, rs->BytesPerRow >> 2);
       uint32_t offset = ((uint32_t)rs->Memory - (uint32_t)b->MemoryBase);
@@ -1968,11 +2075,19 @@ void BlitRectNoMaskComplete(__REGA0(struct BoardInfo *b), __REGA1(struct RenderI
 
 void BlitTemplate (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGA2(struct Template *t), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD w), __REGD3(WORD h), __REGD4(UBYTE mask), __REGD7(RGBFTYPE format)) {
    (void)format;
-   if (!r) return;
+   if (!b || !r) return;
    if (w<1 || h<1) return;
    if (!t) return;
 
+   uint16_t colormode = mnt_colormode(format);
+   if (colormode == MNTVA_COLOR_NO_USE) {
+      if (b->BlitTemplateDefault)
+         b->BlitTemplateDefault(b, r, t, x, y, w, h, mask, format);
+      return;
+   }
+   mask = direct_color_mask(colormode, mask);
    uint32_t* registers = (uint32_t *)b->RegisterBase;
+
    if (!(b->CardFlags & CARDFLAG_ZORRO_3)) {
       uint32_t offset = ((uint32_t)r->Memory - (uint32_t)b->MemoryBase);
        ZZ_REGS_WRITE(REG_ZZ_BLIT_DST, offset);
@@ -2000,7 +2115,7 @@ void BlitTemplate (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), 
       gfxdata->rgb[0] = t->FgPen;
       gfxdata->rgb[1] = t->BgPen;
 
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[r->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)colormode;
       gfxdata->u8_user[GFXDATA_U8_DRAWMODE] = t->DrawMode;
       gfxdata->mask = mask;
 
@@ -2013,7 +2128,7 @@ void BlitTemplate (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), 
 
       ZZ_REGS_WRITE(REG_ZZ_SRC_PITCH, t->BytesPerRow);
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat] | (t->DrawMode << 8));
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, colormode | (t->DrawMode << 8));
       ZZ_REGS_WRITE(REG_ZZ_X1, x);
       ZZ_REGS_WRITE(REG_ZZ_Y1, y);
       ZZ_REGS_WRITE(REG_ZZ_X2, w);
@@ -2026,9 +2141,17 @@ void BlitTemplate (__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), 
 
 void BlitPattern(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGA2(struct Pattern *pat), __REGD0(WORD x), __REGD1(WORD y), __REGD2(WORD w), __REGD3(WORD h), __REGD4(UBYTE mask), __REGD7(RGBFTYPE format)) {
    (void)format;
-   if (!r) return;
+   if (!b || !r) return;
    if (w<1 || h<1) return;
    if (!pat) return;
+
+   uint16_t colormode = mnt_colormode(format);
+   if (colormode == MNTVA_COLOR_NO_USE) {
+      if (b->BlitPatternDefault)
+         b->BlitPatternDefault(b, r, pat, x, y, w, h, mask, format);
+      return;
+   }
+   mask = direct_color_mask(colormode, mask);
    uint32_t* registers =(uint32_t*)b->RegisterBase;
 
    if (!(b->CardFlags & CARDFLAG_ZORRO_3)) {
@@ -2041,6 +2164,7 @@ void BlitPattern(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __
       zz_template_addr = b->MemorySize;
    }
 
+   if (pat->Size > 15) return;
    memcpy((uint8_t*)(((uint32_t)b->MemoryBase) + zz_template_addr), pat->Memory, 2 * (1 << pat->Size));
 
    if (b->CardFlags & CARDFLAG_ZORRO_3) {
@@ -2058,7 +2182,7 @@ void BlitPattern(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __
       gfxdata->rgb[0] = pat->FgPen;
       gfxdata->rgb[1] = pat->BgPen;
 
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[r->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)colormode;
       gfxdata->u8_user[GFXDATA_U8_DRAWMODE] = pat->DrawMode;
       gfxdata->user[0] = (1 << pat->Size);
       gfxdata->mask = mask;
@@ -2072,7 +2196,7 @@ void BlitPattern(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __
 
       ZZ_REGS_WRITE(REG_ZZ_USER1, mask);
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat] | (pat->DrawMode << 8));
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, colormode | (pat->DrawMode << 8));
       ZZ_REGS_WRITE(REG_ZZ_X1, x);
       ZZ_REGS_WRITE(REG_ZZ_Y1, y);
       ZZ_REGS_WRITE(REG_ZZ_X2, w);
@@ -2086,15 +2210,23 @@ void BlitPattern(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __
 
 void DrawLine(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REGA2(struct Line *l), __REGD0(UBYTE mask), __REGD7(RGBFTYPE format)) {
    (void)format;
-   if (!l || !r)
+   if (!b || !l || !r)
       return;
 
+   uint16_t colormode = mnt_colormode(format);
+   if (colormode == MNTVA_COLOR_NO_USE) {
+      if (b->DrawLineDefault)
+         b->DrawLineDefault(b, r, l, mask, format);
+      return;
+   }
+   mask = direct_color_mask(colormode, mask);
+   uint32_t* registers =(uint32_t*)b->RegisterBase;
+
    if (b->CardFlags & CARDFLAG_ZORRO_3) {
-      uint32_t* registers =(uint32_t*)b->RegisterBase;
       gfxdata->offset[GFXDATA_DST] = (uint32_t)r->Memory - (uint32_t)b->MemoryBase;
       gfxdata->pitch[GFXDATA_DST] = (r->BytesPerRow >> 2);
 
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[r->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)colormode;
       gfxdata->u8_user[GFXDATA_U8_DRAWMODE] = l->DrawMode;
       gfxdata->u8_user[GFXDATA_U8_LINE_PATTERN_OFFSET] = l->PatternShift;
       gfxdata->u8_user[GFXDATA_U8_LINE_PADDING] = l->pad;
@@ -2115,13 +2247,12 @@ void DrawLine(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
 
       ZZ_REGS_WRITE(REG_ZZ_BLITTER_DMA_OP, OP_DRAWLINE);
    } else {
-      uint32_t* registers =(uint32_t*)b->RegisterBase;
       uint32_t offset = ((uint32_t)r->Memory - (uint32_t)b->MemoryBase);
 
       ZZ_REGS_WRITE(REG_ZZ_BLIT_DST, offset);
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow >> 2);
 
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat] | (l->DrawMode << 8));
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, colormode | (l->DrawMode << 8));
 
       ZZ_REGS_WRITE(REG_ZZ_RGB, l->FgPen);
 
@@ -2138,13 +2269,83 @@ void DrawLine(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
       ZZ_REGS_WRITE(REG_ZZ_DRAWLINE, mask);
    }
 }
+/*
+struct BitMap * ZZ_AllocBitMap(__REGA0(struct BoardInfo *b), __REGD0(ULONG width), __REGD1(ULONG height), __REGA1(struct TagItem *tags)) {
+	if (!(b->CardFlags & CARDFLAG_ZORRO_3))
+		return NULL;
 
+	MNTZZ9KRegs* registers = (MNTZZ9KRegs*)b->RegisterBase;
+	ULONG rgbformat = RGBFB_CLUT;
+	ULONG bytesperrow_override = 0;
+
+	struct TagItem *tag = tags;
+	while (tag && tag->ti_Tag != TAG_DONE) {
+		switch (tag->ti_Tag) {
+			case TAG_IGNORE: break;
+			case TAG_SKIP: tag += tag->ti_Data; break;
+			case TAG_MORE: tag = (struct TagItem *)tag->ti_Data; continue;
+			case ABMA_RGBFormat: rgbformat = tag->ti_Data; break;
+			case ABMA_NoMemory: return NULL;
+			case ABMA_ConstantBytesPerRow: bytesperrow_override = tag->ti_Data; break;
+			default: break;
+		}
+		tag++;
+	}
+
+	uint16_t bytesperrow = bytesperrow_override ? bytesperrow_override :
+		CalculateBytesPerRow(b, NULL, width, height, rgbformat);
+	uint32_t size = (uint32_t)bytesperrow * height;
+	if (!size) return NULL;
+
+	dmy_cache
+	gfxdata->u8_user[1] = 1;
+	gfxdata->offset[1] = size;
+	zzwrite16(&registers->blitter_acc_op, ACC_OP_ALLOC_SURFACE);
+
+	uint32_t card_offset = gfxdata->offset[0];
+	if (!card_offset) return NULL;
+
+	struct BitMap *bm = (struct BitMap *)AllocMem(sizeof(struct BitMap), MEMF_PUBLIC | MEMF_CLEAR);
+	if (!bm) {
+		gfxdata->offset[0] = card_offset;
+		gfxdata->u8_user[0] = 0;
+		zzwrite16(&registers->blitter_acc_op, ACC_OP_FREE_SURFACE);
+		return NULL;
+	}
+
+	bm->BytesPerRow = bytesperrow;
+	bm->Rows = height;
+	bm->Depth = 1;
+	bm->Planes[0] = (PLANEPTR)((uint32_t)b->MemoryBase + card_offset);
+
+	return bm;
+}
+
+BOOL ZZ_FreeBitMap(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm), __REGA2(struct TagItem *tags)) {
+	if (!bm) return FALSE;
+
+	if (b->CardFlags & CARDFLAG_ZORRO_3) {
+		MNTZZ9KRegs* registers = (MNTZZ9KRegs*)b->RegisterBase;
+		uint32_t card_offset = (uint32_t)bm->Planes[0] - (uint32_t)b->MemoryBase;
+		dmy_cache
+		gfxdata->offset[0] = card_offset;
+		gfxdata->u8_user[0] = 0;
+		zzwrite16(&registers->blitter_acc_op, ACC_OP_FREE_SURFACE);
+	}
+
+	FreeMem(bm, sizeof(struct BitMap));
+	return TRUE;
+}
+
+ */
 // This function shall blit a planar bitmap anywhere in the 68K address space into a chunky bitmap in video RAM.
 // The source bitmap that contains the data to be blitted is in the bm argument.
 // If one of its plane pointers is 0x0, the source data of that bitplane shall be considered to consist of all-zeros.
 // If one of its plane pointers is 0xffffffff, the data in this bitplane shall be considered to be all ones.
 void BlitPlanar2Chunky(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm), __REGA2(struct RenderInfo *r), __REGD0(SHORT x), __REGD1(SHORT y), __REGD2(SHORT dx), __REGD3(SHORT dy), __REGD4(SHORT w), __REGD5(SHORT h), __REGD6(UBYTE minterm), __REGD7(UBYTE mask)) {
-   if (!b || !r)
+   if (!b || !r || !bm)
+      return;
+   if (w<1 || h<1)
       return;
 
    // b->BlitPlanar2ChunkyDefault(b, bm, r, x, y, dx, dy, w, h, minterm, mask);
@@ -2156,15 +2357,13 @@ void BlitPlanar2Chunky(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm),
    uint16_t zz_mask = mask;
    uint8_t cur_plane = 0x01;
 
-   uint32_t plane_size = bm->BytesPerRow * bm->Rows;
+   uint16_t line_size = planar_line_bytes_padded(w);
+   uint32_t output_plane_size = line_size * h;
 
-   if (plane_size * bm->Depth > 0xFFFF && (!(b->CardFlags & CARDFLAG_ZORRO_3))) {
+   if (output_plane_size * bm->Depth > 0xFFFF && (!(b->CardFlags & CARDFLAG_ZORRO_3))) {
       b->BlitPlanar2ChunkyDefault(b, bm, r, x, y, dx, dy, w, h, minterm, mask);
       return;
    }
-
-   uint16_t line_size = (w >> 3) + 2;
-   uint32_t output_plane_size = line_size * h;
 
    if (!(b->CardFlags & CARDFLAG_ZORRO_3)) {
       zz_template_addr = b->MemorySize;
@@ -2181,7 +2380,7 @@ void BlitPlanar2Chunky(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm),
    } else {
       ZZ_REGS_WRITE(REG_ZZ_BLIT_DST, offset);
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow >> 2);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat] | (minterm << 8));
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, mnt_colormode(r->RGBFormat) | (minterm << 8));
       ZZ_REGS_WRITE(REG_ZZ_BLIT_SRC, zz_template_addr);
       ZZ_REGS_WRITE(REG_ZZ_SRC_PITCH, line_size);
    }
@@ -2232,7 +2431,9 @@ void BlitPlanar2Chunky(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm),
 }
 
 void BlitPlanar2Direct(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm), __REGA2(struct RenderInfo *r), __REGA3(struct ColorIndexMapping *clut), __REGD0(SHORT x), __REGD1(SHORT y), __REGD2(SHORT dx), __REGD3(SHORT dy), __REGD4(SHORT w), __REGD5(SHORT h), __REGD6(UBYTE minterm), __REGD7(UBYTE mask)) {
-   if (!b || !r)
+   if (!b || !r || !bm || !clut)
+      return;
+   if (w<1 || h<1)
       return;
 
    // b->BlitPlanar2DirectDefault(b, bm, r, clut, x, y, dx, dy, w, h, minterm, mask);
@@ -2244,15 +2445,14 @@ void BlitPlanar2Direct(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm),
    uint16_t zz_mask = mask;
    uint8_t cur_plane = 0x01;
 
-   uint32_t plane_size = bm->BytesPerRow * bm->Rows;
+   uint16_t line_size = planar_line_bytes(x, w);
+   uint32_t output_plane_size = line_size * h;
+   uint32_t staged_size = (256 << 2) + (output_plane_size * bm->Depth);
 
-   if (plane_size * bm->Depth > 0xFFFF && (!(b->CardFlags & CARDFLAG_ZORRO_3))) {
+   if (staged_size > 0xFFFF && (!(b->CardFlags & CARDFLAG_ZORRO_3))) {
       b->BlitPlanar2DirectDefault(b, bm, r, clut, x, y, dx, dy, w, h, minterm, mask);
       return;
    }
-
-   uint16_t line_size = (w >> 3) + 2;
-   uint32_t output_plane_size = line_size * h;
 
    if (!(b->CardFlags & CARDFLAG_ZORRO_3)) {
       zz_template_addr = b->MemorySize;
@@ -2265,13 +2465,13 @@ void BlitPlanar2Direct(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm),
       gfxdata->pitch[GFXDATA_SRC] = line_size;
       gfxdata->rgb[0] = clut->ColorMask;
 
-      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)rtg_to_mnt[r->RGBFormat];
+      gfxdata->u8_user[GFXDATA_U8_COLORMODE] = (uint8_t)mnt_colormode(r->RGBFormat);
       gfxdata->mask = mask;
       gfxdata->minterm = minterm;
    } else {
       ZZ_REGS_WRITE(REG_ZZ_BLIT_DST, offset);
       ZZ_REGS_WRITE(REG_ZZ_ROW_PITCH, r->BytesPerRow >> 2);
-      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, rtg_to_mnt[r->RGBFormat] | (minterm << 8));
+      ZZ_REGS_WRITE(REG_ZZ_COLORMODE, mnt_colormode(r->RGBFormat) | (minterm << 8));
       ZZ_REGS_WRITE(REG_ZZ_BLIT_SRC, zz_template_addr);
       ZZ_REGS_WRITE(REG_ZZ_SRC_PITCH, line_size);
       ZZ_REGS_WRITE(REG_ZZ_RGB, clut->ColorMask);
@@ -2332,25 +2532,32 @@ void BlitPlanar2Direct(__REGA0(struct BoardInfo *b), __REGA1(struct BitMap *bm),
    }
 }
 
-void SetSprite(__REGA0(struct BoardInfo *b), __REGD0(BOOL active), __REGD7(RGBFTYPE format)) {
-   (void)active; // it doesn't work as expected
+BOOL SetSprite(__REGA0(struct BoardInfo *b), __REGD0(BOOL what), __REGD7(RGBFTYPE format)) {
+   (void)what;
    (void)format;
-//   static BOOL active_last=0;
+	if (!b || !b->RegisterBase)
+		return FALSE;
    uint32_t* registers = (uint32_t*)b->RegisterBase;
-//   if(active!=active_last)
-   {
-      ZZ_REGS_WRITE(REG_ZZ_SPRITE_BITMAP, 1);//active?1:2);
-//      active_last=active;
-   }
+   /*
+    * Keep the legacy ZZ9000 behavior here: the existing firmware/driver
+    * path expects SetSprite() to assert hardware-sprite visibility even
+    * when P96 passes FALSE during setup or screen transitions.
+    */
+      ZZ_REGS_WRITE(REG_ZZ_SPRITE_BITMAP, 1);
+   return TRUE;
 }
 
 void SetSpritePosition(__REGA0(struct BoardInfo *b), __REGD0(WORD x), __REGD1(WORD y), __REGD7(RGBFTYPE format)) {
    (void)format;
-   // see http://wiki.icomp.de/wiki/P96_Driver_Development#SetSpritePosition
+   if (!b || !b->RegisterBase)
+      return;
+
+   uint32_t* registers = (uint32_t*)b->RegisterBase;
+   // The firmware stores b->XOffset/YOffset through SetPanning/SetSpriteImage
+   // and applies the P96 sprite offset adjustment when positioning the sprite.
    b->MouseX = x;
    b->MouseY = y;
 
-   uint32_t* registers = (uint32_t*)b->RegisterBase;
    if(b->CardFlags & CARDFLAG_ZORRO_3) {
       gfxdata->x[0] = x - b->XOffset;
       gfxdata->y[0] = y - b->YOffset + b->YSplit;
@@ -2405,7 +2612,9 @@ void SetSpriteImage(__REGA0(struct BoardInfo *b), __REGD7(RGBFTYPE format)) {
 
 void SetSpriteColor (__REGA0(struct BoardInfo *b), __REGD0(UBYTE idx), __REGD1(UBYTE R), __REGD2(UBYTE G), __REGD3(UBYTE B), __REGD7(RGBFTYPE format)) {
    (void)format;
+   if (!b) return;
    uint32_t* registers =(uint32_t*)b->RegisterBase;
+
    if (b->CardFlags & CARDFLAG_ZORRO_3) {
 //      ((char *)&gfxdata->rgb[0])[0] = B;
 //      ((char *)&gfxdata->rgb[0])[1] = G;
@@ -2443,10 +2652,25 @@ BOOL EnableSoftSprite(__REGA0(struct BoardInfo *b),__REGD0(ULONG fmtflags),__REG
    return(FALSE);
 }
 void SetSplitPosition(__REGA0(struct BoardInfo *b),__REGD0(SHORT pos)) {
-   b->YSplit = pos;
+   if (!b)
+      return;
 
-   uint32_t offset = ((uint32_t)b->VisibleBitMap->Planes[0]) - ((uint32_t)b->MemoryBase);
+   b->YSplit = pos;
+   if (!b->RegisterBase)
+      return;
+
    uint32_t* registers =(uint32_t*)b->RegisterBase;
+   uint32_t offset = 0;
+   
+   if (pos != 0) {
+      if (!b->VisibleBitMap || !b->VisibleBitMap->Planes[0]) {
+         pos = 0;
+         b->YSplit = 0;
+      } else {
+         offset = ((uint32_t)b->VisibleBitMap->Planes[0]) - ((uint32_t)b->MemoryBase);
+      }
+   }
+
    if (b->CardFlags & CARDFLAG_ZORRO_3) {
       gfxdata->offset[0] = offset;
       gfxdata->y[0] = pos;
@@ -2476,7 +2700,7 @@ struct InitTable
 };
 
 const uint32_t auto_init_tables[4] = {
-   sizeof(struct Library),
+   sizeof(struct GFXBase),
    (uint32_t)device_vectors,
    0,
    (uint32_t)InitLib,

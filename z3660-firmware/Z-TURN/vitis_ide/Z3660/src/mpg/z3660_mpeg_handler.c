@@ -63,46 +63,7 @@ extern void plm_frame_to_bgra_custom(plm_frame_t *frame, uint8_t *dest);
 // External video functions
 extern void video_mode_init(int mode, int scalemode, int colormode);
 extern void set_fb(uint32_t* fb_, uint32_t pitch);
-#if 0
-// Configure video mode based on frame dimensions
-void configure_video_mode(int width, int height) {
-    int mode;
-    int scale = 0;
-    
-    if (width <= 320 && height <= 200) {
-        mode = ZZVMODE_640x400;
-        scale = 1;
-    } else if (width <= 320 && height <= 240) {
-        mode = ZZVMODE_640x480;
-        scale = 1;
-    } else if (width <= 320 && height <= 256) {
-        mode = ZZVMODE_640x512;
-        scale = 1;
-    } else if (width <= 640 && height <= 400) {
-        mode = ZZVMODE_640x400;
-    } else if (width <= 640 && height <= 480) {
-        mode = ZZVMODE_640x480;
-    } else if (width <= 800 && height <= 600) {
-        mode = ZZVMODE_800x600;
-    } else if (width <= 1280 && height <= 720) {
-        mode = ZZVMODE_1280x720;
-    } else {
-        mode = ZZVMODE_1920x1080_50;
-    }
-    
-    // Initialize video mode
-    video_mode_init(mode, scale, MNTVA_COLOR_32BIT);
-    
-    // Set framebuffer
-    set_fb((uint32_t*)(((uint32_t)vs.framebuffer) + 0), vs.vmode_hsize / vs.vmode_hdiv);
-    
-    // Clear framebuffer
-    memset(vs.framebuffer, 0, vs.framebuffer_size);
-    
-    printf("[Z3660 MPEG ARM] Video mode configured: %dx%d -> mode %d, scale %d\n", 
-           width, height, mode, scale);
-}
-#endif
+
 // External video functions
 extern void video_mode_init(int mode, int scalemode, int colormode);
 extern void set_fb(uint32_t* fb_, uint32_t pitch);
@@ -190,8 +151,8 @@ int z3660_mpeg_process_command(uint32_t command) {
             printf("  Shared memory: %p\n", bridge_state_arm);
 */
             // Invalidate cache to ensure we see fresh data from Amiga
-            Xil_DCacheInvalidateRange((uintptr_t)fifo_buffer, fifo_size);
-            Xil_DCacheInvalidateRange((uintptr_t)bridge_state_arm, sizeof(arm_decoder_shared_arm_t));
+//            Xil_DCacheInvalidateRange((uintptr_t)fifo_buffer, fifo_size);
+//            Xil_DCacheInvalidateRange((uintptr_t)bridge_state_arm, sizeof(arm_decoder_shared_arm_t));
 /*
             // Debug: Check first few bytes of FIFO buffer
             printf("[Z3660 MPEG ARM] First 16 bytes of FIFO buffer: ");
@@ -246,7 +207,7 @@ int z3660_mpeg_process_command(uint32_t command) {
                 
                 // Copy data from FIFO to temporary buffer
                 // Invalidate cache before reading from shared memory
-                Xil_DCacheInvalidateRange((uintptr_t)fifo_buffer, fifo_size);
+//                Xil_DCacheInvalidateRange((uintptr_t)fifo_buffer, fifo_size);
                 
                 if (fifo_read_index + available_data <= fifo_size) {
                     // Direct copy without wrap-around

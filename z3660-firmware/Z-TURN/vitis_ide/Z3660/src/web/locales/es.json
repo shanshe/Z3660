@@ -1,0 +1,20 @@
+{
+  "title": "Z3660 SD Manager",
+  "subtitle": "Servidor Web - Gestión de archivos de la tarjeta SD",
+  "info_title": "Información del sistema",
+  "firmware": "Firmware",
+  "ip_address": "Dirección IP",
+  "free_space": "Espacio libre",
+  "files_title": "Archivos",
+  "upload_title": "Subir archivo",
+  "actions_title": "Acciones",
+  "btn_download": "Descargar",
+  "btn_upload": "Subir a la SD",
+  "btn_update": "Actualizar Firmware",
+  "btn_reboot": "Reiniciar",
+  "btn_reload": "Recargar Lista",
+  "name": "Nombre",
+  "size": "Tamaño",
+  "action": "Acción",
+  "footer": "Z3660 Server - lwIP + FatFs"
+}

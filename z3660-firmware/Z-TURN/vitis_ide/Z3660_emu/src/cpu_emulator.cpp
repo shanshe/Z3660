@@ -29,6 +29,8 @@ void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
 void write_scsi_register(uint16_t zaddr,uint32_t zdata,int type);
 uint32_t read_scsi_register(uint16_t zaddr,int type);
+void write_floppy_register(uint16_t zaddr,uint32_t zdata,int type);
+uint32_t read_floppy_register(uint16_t zaddr,int type);
 void reset_autoconfig(void);
 extern "C" void init_ovl_chip_ram_bank(void);
 extern "C" void init_z2_scsi_bank(unsigned int ini);
@@ -102,7 +104,7 @@ volatile uint8_t *RAM=(volatile uint8_t *)0x08000000;
 volatile uint8_t *Z3660_RTG_BASE=(volatile uint8_t *)RTG_BASE;
 volatile uint8_t *Z3660_Z3RAM_BASE=(volatile uint8_t *)0x20000000;
 int disasm_enable=0;
-int ovl=1;
+unsigned int ovl=1;
 extern SHARED *shared;
 extern LOCAL local;
 
@@ -457,6 +459,7 @@ void rtg_cache_policy_core1(uint32_t ini, uint32_t fb_policy, uint32_t soft3d_po
 }
 extern "C" void write_autoconfig_z2(uint32_t address, uint32_t data, int type)
 {
+   (void)type;
 #ifdef AUTOCONFIG_ENABLED
    static uint32_t data_hold1=0;
    static uint32_t data_hold2=0;
@@ -679,13 +682,21 @@ unsigned int read_long(unsigned int address)
             return(read_rtg_register(add));
          else
          {
-            return(read_scsi_register(add-0x2000,2));
+            add-=0x2000;
+            printf("read1 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               return(read_scsi_register(add,2));
+            else
+               return(read_floppy_register(add,2));
          }
       }
       if(add>=0x80000)
          data=swap32(*(uint32_t *)(Z3660_RTG_BASE+add));
       else
+      {
+         // TODO: here goes also the floppy rom
          data=read_scsi_register(add-0x2000,2);
+      }
       return(data);
    }
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured_z3&2))
@@ -704,13 +715,21 @@ unsigned int read_long(unsigned int address)
             return(read_rtg_register(add));
          else
          {
-            return(read_scsi_register(add-0x2000,2));
+            add-=0x2000;
+//            printf("read2 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               return(read_scsi_register(add,2));
+            else
+               return(read_floppy_register(add,2));
          }
       }
       if(add>=0x80000)
          data=swap32(*(uint32_t *)(Z3660_RTG_BASE+add));
       else
+      {
+         // TODO: here goes the floppy rom
          data=read_scsi_register(add-0x2000,2);
+      }
       return(data);
    }
    if(not_decode(address))
@@ -813,13 +832,21 @@ unsigned int read_word(unsigned int address)
             return(read_rtg_register(add));
          else
          {
-            return(read_scsi_register(add-0x2000,1));
+            add-=0x2000;
+            printf("read3 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               return(read_scsi_register(add,1));
+            else
+               return(read_floppy_register(add,1));
          }
       }
       if(add>=0x80000)
          data=swap16(*(uint16_t *)(Z3660_RTG_BASE+add));
       else
+      {
+         // TODO: here goes the floppy rom
          data=read_scsi_register(add-0x2000,1);
+      }
       return(data);
    }
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured_z3&2))
@@ -831,13 +858,21 @@ unsigned int read_word(unsigned int address)
             return(read_rtg_register(add));
          else
          {
-            return(read_scsi_register(add-0x2000,1));
+            add-=0x2000;
+            printf("read4 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               return(read_scsi_register(add,1));
+            else
+               return(read_floppy_register(add,1));
          }
       }
       if(add>=0x80000)
          data=swap16(*(uint16_t *)(Z3660_RTG_BASE+add));
       else
+      {
+         // TODO: here goes the floppy rom
          data=read_scsi_register(add-0x2000,1);
+      }
       return(data);
    }
    if(not_decode(address))
@@ -957,12 +992,22 @@ unsigned int read_byte(unsigned int address)
             }
          }
          else
-            return(read_scsi_register(add-0x2000,0));
+         {
+            add-=0x2000;
+            printf("read5 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               return(read_scsi_register(add,0));
+            else
+               return(read_floppy_register(add,0));
+         }
       }
       if(add>=0x80000)
          data=Z3660_RTG_BASE[add];
       else
+      {
+         // TODO: here goes the floppy rom
          data=read_scsi_register(add-0x2000,0);
+      }
       return(data);
    }
    if(address>=autoConfigBaseRTG && address<autoConfigBaseRTG+0x08000000 && (configured_z3&2))
@@ -986,12 +1031,22 @@ unsigned int read_byte(unsigned int address)
             }
          }
          else
-            return(read_scsi_register(add-0x2000,0));
+         {
+            add-=0x2000;
+            printf("read6 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               return(read_scsi_register(add,0));
+            else
+               return(read_floppy_register(add,0));
+         }
       }
       if(add>=0x80000)
          data=Z3660_RTG_BASE[add];
       else
+      {
+         // TODO: here goes the floppy rom
          data=read_scsi_register(add-0x2000,0);
+      }
       return(data);
    }
    if(not_decode(address))
@@ -1088,8 +1143,12 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
             write_rtg_register(add,value);
          else
          {
-//            printf("scsi write8 %08X %08X\n",add,value);
-            write_scsi_register(add-0x2000,value,0);
+            add-=0x2000;
+            printf("write1 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               write_scsi_register(add,value,0);
+            else
+               write_floppy_register(add,value,0);
          }
       }
       return;
@@ -1104,8 +1163,12 @@ void m68k_write_memory_8(unsigned int address, unsigned int value)
             write_rtg_register(add,value<<24);
          else
          {
-//            printf("scsi write8 %08X %08X\n",add,value);
-            write_scsi_register(add-0x2000,value,0);
+            add-=0x2000;
+            printf("write2 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               write_scsi_register(add,value,0);
+            else
+               write_floppy_register(add,value,0);
          }
       }
       return;
@@ -1185,8 +1248,12 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
             write_rtg_register(add,value);
          else
          {
-//            printf("scsi write16 %08X %08X\n",add,value);
-            write_scsi_register(add-0x2000,value,1);
+            add-=0x2000;
+            printf("write3 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               write_scsi_register(add,value,1);
+            else
+               write_floppy_register(add,value,1);
          }
       }
       return;
@@ -1201,8 +1268,12 @@ void m68k_write_memory_16(unsigned int address, unsigned int value)
             write_rtg_register(add,value);
          else
          {
-//            printf("scsi write16 %08X %08X\n",add,value);
-            write_scsi_register(add-0x2000,value,1);
+            add-=0x2000;
+            printf("write4 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               write_scsi_register(add,value,1);
+            else
+               write_floppy_register(add,value,1);
          }
       }
       return;
@@ -1282,8 +1353,12 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
             write_rtg_register(add,value);
          else
          {
-//            printf("scsi write32 %08X %08X\n",add,value);
-            write_scsi_register(add-0x2000,value,2);
+            add-=0x2000;
+            printf("write5 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               write_scsi_register(add,value,2);
+            else
+               write_floppy_register(add,value,2);
          }
       }
       return;
@@ -1298,8 +1373,12 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
             write_rtg_register(add,value);
          else
          {
-//            printf("scsi write32 %08X %08X\n",add,value);
-            write_scsi_register(add-0x2000,value,2);
+            add-=0x2000;
+            printf("write6 address 0x%08lX\n",add);
+            if(add<0x400 || add>=0x600)
+               write_scsi_register(add,value,2);
+            else
+               write_floppy_register(add,value,2);
          }
       }
       return;
@@ -1372,6 +1451,7 @@ long int timeout;
 #define WAIT_TIMEOUT2 2500000
 void wait_read_ack(uint32_t address, int type)
 {
+   (void)type;
 //   while(read_reg(REG5)==0x80000000);          // previous write ack
    timeout=WAIT_TIMEOUT;
    do {
@@ -1408,6 +1488,7 @@ void wait_read_ack(uint32_t address, int type)
 }
 static inline void wait_write_ack(int address)
 {
+   (void)address;
 #if 0
    while(read_reg(REG5)==0x80000000);
 #else
@@ -1843,6 +1924,17 @@ unsigned int  m68k_read_disassembler_16(unsigned int address)
 unsigned int  m68k_read_disassembler_32(unsigned int address)
 {
    return(read_long(address));
+}
+
+/*
+ * newcpu.cpp renames Xilinx sleep.h's usleep -> usleep2 (to avoid a clash with
+ * UAE's own declarations) but never provides the backing symbol, so it ends up
+ * with undefined references to usleep2. Define it here, where the real Xilinx
+ * usleep() is in scope, with C linkage to match the renamed extern "C" decl.
+ */
+void usleep2(ULONG useconds)
+{
+   usleep(useconds);
 }
 #ifdef __cplusplus
 }

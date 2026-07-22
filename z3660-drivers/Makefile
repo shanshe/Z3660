@@ -15,7 +15,7 @@ FPU = 68060
 
 PREFX = $(VBCC)/targets/m68k-amigaos
 
-SASC = /usr/local/bin/vamos sc
+SASC = /opt/homebrew/bin/vamos sc
 
 SRC_AHI  = ahi
 SRC_MHI  = mhi
@@ -28,6 +28,8 @@ SRC_SCSI = scsi
 SRC_MPG  = mpg
 SRC_USB  = usb
 SRC_KICK31_060 = kick31_060
+SRC_FLP  = floppy
+SRC_ROM  = makerom
 
 ETH_COPTS  = -Os -fomit-frame-pointer -noixemul -msmall-code -Wall -Wno-pointer-sign -Wno-strict-aliasing
 ETH_COPTS += -mcpu=68060 -DDEVICENAME="Z3660Net.device" -DHAVE_VERSION_H=1 -DNEWSTYLE
@@ -43,19 +45,14 @@ RM = @rm -rf
 CP = cp -f
 
 SYSINC_I = -I$(VBCC)/NDK_3.9/Include/include_i
-LINKLIBS+= -L/opt/amiga/m68k-amigaos/ndk/lib/libs
-#SYSINC_I = -I$(VBCC)/targets/m68k-amigaos/include -I$(VBCC)/targets/m68k-amigaos/include2
-#LINKLIBS+= -L$(VBCC)/targets/m68k-amigaos/lib
-LINKLIBS+= -lamiga
-#LINKLIBS+= -ldebug
 
 RTG_CFLAGS = -v -k -c99 -O2 -cpu=$(CPU) -fpu=$(FPU)
 
 .PHONY: all
-all: clean $(SRC_RTG)/Z3660.card $(SRC_ETH)/Z3660Net.device $(SRC_ZTP)/ZTop $(SRC_ZAC)/z3660_autoconfig $(SRC_W3D)/Wazp3D.library $(SRC_AHI)/z3660ax.audio $(SRC_MHI)/mhiz3660.library $(SRC_SCSI)/z3660_scsi.device $(SRC_KICK31_060)/kick060.rom $(SRC_MPG)/mpeg_streamer $(SRC_USB)/z3660_usb.device adf
+all: clean $(SRC_RTG)/Z3660.card $(SRC_ETH)/Z3660Net.device $(SRC_ZTP)/ZTop $(SRC_ZAC)/z3660_autoconfig $(SRC_W3D)/Wazp3D.library $(SRC_AHI)/z3660ax.audio $(SRC_MHI)/mhiz3660.library $(SRC_SCSI)/z3660_scsi.device $(SRC_KICK31_060)/kick060.rom $(SRC_MPG)/mpeg_streamer $(SRC_USB)/z3660_usb.device $(SRC_FLP)/z3660_floppy.device adf
 
 $(SRC_RTG)/Z3660.card: $(SRC_RTG)/gfx.c $(SRC_RTG)/gfx.h $(SRC_RTG)/rtg.h common/z3660_regs.h
-	$(GCC) $(SRC_RTG)/gfx.c -m68020 -mtune=68020-60 -O1 -o $(SRC_RTG)/Z3660.card -noixemul -Wall -Wextra -nostartfiles  -lamiga -DDMARTG -ldebug
+	$(GCC) $(SRC_RTG)/gfx.c -m68020 -mtune=68020-60 -O1 -o $(SRC_RTG)/Z3660.card -noixemul -Wall -Wextra -nostartfiles -lamiga -DDMARTG -ldebug
 #	$(RM) $(SRC_RTG)/gfx.asm
 	$(RM) $(SRC_RTG)/gfx.o
 	$(CP) $(SRC_RTG)/Z3660.card $(UAEPATH)
@@ -90,25 +87,26 @@ $(SRC_SCSI)/z3660_scsi.device: $(SRC_SCSI)/z3660_scsi.c $(SRC_SCSI)/z3660_scsi_e
 	$(GCC) $(SRC_SCSI)/z3660_scsi.c -m68020 -O2 -o $(SRC_SCSI)/z3660_scsi.device -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -nostartfiles -lc -lamiga -ldebug
 	/opt/amiga/bin/vasmm68k_mot -m68020 -Fhunk $(SYSINC_I) $(SRC_SCSI)/bootrom.asm -o $(SRC_SCSI)/bootrom_uncut
 	dd bs=1 skip=40 if=$(SRC_SCSI)/bootrom_uncut of=$(SRC_SCSI)/bootrom
+	$(RM) $(SRC_SCSI)/bootrom_uncut
 	gcc $(SRC_SCSI)/makerom.c -o $(SRC_SCSI)/makerom
 	cd $(SRC_SCSI) ; ./makerom
-	$(RM) $(SRC_SCSI)/bootrom
 	$(RM) $(SRC_SCSI)/makerom
-	$(RM) $(SRC_SCSI)/bootrom_uncut
+#	cp $(SRC_SCSI)/z3660_scsi.device $(SRC_ROM)
 
-#$(SRC_USB)/z3660_usb.device: $(SRC_USB)/sl811hs_sim.c $(SRC_USB)/massbulk_sim.c $(SRC_USB)/usbdevice.c $(SRC_USB)/sl811hs.c $(SRC_USB)/usbdevice.h $(SRC_USB)/sl811hs.h
-#	$(GCC) $(SRC_USB)/sl811hs_sim.c $(SRC_USB)/massbulk_sim.c $(SRC_USB)/usbdevice.c $(SRC_USB)/sl811hs.c -m68020 -O2 -DDEBUG=2 -o $(SRC_USB)/z3660_usb.device -noixemul -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -nostartfiles -lamiga -ldebug
-##	/opt/amiga/bin/vasmm68k_mot -m68020 -Fhunk $(SYSINC_I) $(SRC_USB)/bootrom.asm -o $(SRC_USB)/bootrom_uncut
-##	dd bs=1 skip=40 if=$(SRC_USB)/bootrom_uncut of=$(SRC_USB)/bootrom
-##	gcc $(SRC_USB)/makerom.c -o $(SRC_USB)/makerom
-##	cd $(SRC_USB) ; ./makerom
-##	$(RM) $(SRC_USB)/bootrom
-##	$(RM) $(SRC_USB)/makerom
-##	$(RM) $(SRC_USB)/bootrom_uncut
-#	$(CP) $(SRC_USB)/z3660_usb.device $(UAEPATH)
+$(SRC_FLP)/z3660_floppy.device: $(SRC_FLP)/z3660_floppy.c $(SRC_FLP)/z3660_floppy.h $(SRC_FLP)/z3660_floppy_enums.h $(SRC_FLP)/newstyle.h common/z3660_regs.h
+	$(GCC) $(SRC_FLP)/z3660_floppy.c -m68020 -O2 -o $(SRC_FLP)/z3660_floppy.device -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -nostartfiles -lc -lamiga -ldebug -I$(SRC_FLP)
+#	cp $(SRC_FLP)/z3660_floppy.device $(SRC_ROM)
 
-$(SRC_USB)/z3660_usb.device: $(SRC_USB)/z3660_usb_device.c $(SRC_USB)/zzusbhw.h
-	$(GCC) -I$(SRC_USB) -m68020 -mtune=68020-60 -msoft-float -s -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -nostartfiles -O2 -I. -o $(SRC_USB)/z3660_usb.device $(SRC_USB)/z3660_usb_device.c -lgcc -lc -lamiga
+#$(SRC_ROM)/z3660_scsi.rom: $(SRC_ROM)/makerom.c $(SRC_ROM)/bootrom.asm $(SRC_SCSI)/z3660_scsi.device $(SRC_FLP)/z3660_floppy.device
+#	gcc $(SRC_ROM)/makerom.c -o $(SRC_ROM)/makerom
+#	/opt/amiga/bin/vasmm68k_mot -m68020 -Fhunk $(SYSINC_I) $(SRC_ROM)/bootrom.asm -o $(SRC_ROM)/bootrom_uncut
+#	dd bs=1 skip=40 if=$(SRC_ROM)/bootrom_uncut of=$(SRC_ROM)/bootrom
+#	$(RM) $(SRC_ROM)/bootrom_uncut
+#	cd $(SRC_ROM) && ./makerom
+#	$(RM) $(SRC_ROM)/makerom
+
+$(SRC_USB)/z3660_usb.device: $(SRC_USB)/z3660_usb_device.c $(SRC_USB)/z3660_usb.h
+	$(GCC) -I$(SRC_USB) -m68020 -mtune=68020-60 -msoft-float -s -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -nostartfiles -O2 -I. -o $(SRC_USB)/z3660_usb.device $(SRC_USB)/z3660_usb_device.c -lgcc -lc
 
 $(SRC_KICK31_060)/kick060.rom: $(SRC_KICK31_060)/kick31_060.asm
 	/opt/amiga/bin/vasmm68k_mot -m68060 -Fbin $(SYSINC_I) $(SRC_KICK31_060)/kick31_060.asm -o $(SRC_KICK31_060)/kick060.rom
@@ -131,15 +129,10 @@ $(SRC_ZTP)/ZTop: $(SRC_ZTP)/ZTop.c common/z3660_regs.h
 	cd $(SRC_ZTP) ; $(SASC) ZTop.c
 #	$(CP) $(SRC_ZTP)/ZTop $(UAEPATH)
 #	$(CP) $(SRC_ZTP)/ZTop.info $(UAEPATH)
-#$(SRC_ZTP)/ZTop: $(SRC_ZTP)/ZTop.c common/z3660_regs.h
-#	cd $(SRC_ZTP) ; $(GCC) -DNO_INLINE_STDARG ZTop.c -o ZTop -L~/amiga/shared/NDK3.9/Include/linker_libs -lreaction /opt/amiga/m68k-amigaos/ndk/lib/libs/amiga.lib
-#	$(CP) $(SRC_ZTP)/ZTop $(UAEPATH)
-#	$(CP) $(SRC_ZTP)/ZTop.info $(UAEPATH)
 
 $(SRC_ZAC)/z3660_autoconfig: $(SRC_ZAC)/z3660_autoconfig.c common/z3660_regs.h
 	cd $(SRC_ZAC) ; $(SASC) z3660_autoconfig.c
-#	cd $(SRC_ZAC) ; $(GCC) z3660_autoconfig.c -o z3660_autoconfig
-#	 -o z3660_autoconfig
+#	cd $(SRC_ZAC) && $(GCC) -O2 -DNO_INLINE_STDARG -o z3660_autoconfig z3660_autoconfig.c -L/opt/amiga/m68k-amigaos/lib -lreaction /opt/amiga/m68k-amigaos/ndk/lib/libs/amiga.lib -noixemul -m68020 -m68881 -lgcc
 
 $(SRC_W3D)/Wazp3D_lib.o: $(SRC_W3D)/Wazp3D_lib.c
 	$(GCC) -c $(SRC_W3D)/Wazp3D_lib.c $(WARP3D_COPTS) -O0 -o $(SRC_W3D)/Wazp3D_lib.o
@@ -154,9 +147,15 @@ $(SRC_W3D)/Wazp3D.library: $(SRC_W3D)/Wazp3D_lib.o $(SRC_W3D)/Wazp3D56.o $(SRC_W
 	$(GCC) $(SRC_W3D)/Wazp3D56.o $(SRC_W3D)/Wazp3D_lib.o $(SRC_W3D)/soft3d/soft3D56.o -o $(SRC_W3D)/Wazp3D.library -nostartfiles -lm
 	$(CP) $(SRC_W3D)/Wazp3D.library $(UAEPATH)
 
-clean: clean_scsi clean_kickrom clean_eth clean_ztop clean_z3660_autoconfig clean_rtg clean_soft3d clean_mhi clean_ahi clean_mpg clean_usb
+clean: clean_scsi clean_floppy clean_kickrom clean_eth clean_ztop clean_z3660_autoconfig clean_rtg clean_soft3d clean_mhi clean_ahi clean_mpg clean_usb clean_rom
 	@echo cleaning...
-#	$(RM) $(SRC_SCSI)/z3660_usb.rom
+
+.PHONY: clean_rom
+clean_rom:
+	$(RM) $(SRC_ROM)/z3660_scsi.rom
+	$(RM) $(SRC_ROM)/bootrom
+	$(RM) $(SRC_ROM)/makerom
+	$(RM) $(SRC_ROM)/bootrom_uncut
 
 .PHONY: clean_usb
 clean_usb:
@@ -172,6 +171,13 @@ clean_scsi:
 	$(RM) $(SRC_SCSI)/z3660_scsi.device
 	$(RM) $(SRC_SCSI)/z3660_scsi.rom
 	$(RM) $(SRC_SCSI)/*.o
+	$(RM) $(SRC_SCSI)/bootrom
+
+.PHONY: clean_floppy
+clean_floppy:
+	$(RM) $(SRC_FLP)/z3660_floppy.device
+	$(RM) $(SRC_FLP)/*.o
+	$(RM) $(SRC_FLP)/bootrom
 
 .PHONY: clean_eth
 clean_eth:
@@ -233,7 +239,7 @@ adf: all
 	xdftool 0_Z3660.adf write $(SRC_ZTP)/ZTop.info
 	xdftool 0_Z3660.adf write $(SRC_ZTP)/Disk.info
 	xdftool 0_Z3660.adf write $(SRC_SCSI)/z3660_scsi.device Devs
-#	xdftool 0_Z3660.adf write poseidon/z3660_usb.device Devs/USBHardware
+	xdftool 0_Z3660.adf write $(SRC_FLP)/z3660_floppy.device Devs
 	xdftool 0_Z3660.adf write $(SRC_USB)/z3660_usb.device Devs/USBHardware
 	xdftool 0_Z3660.adf write $(SRC_W3D)/Wazp3D.library Libs/Warp3D.library + list
 
@@ -246,6 +252,8 @@ A4000: adf
 rtg: clean_rtg $(SRC_RTG)/Z3660.card
 
 scsi: clean_scsi $(SRC_SCSI)/z3660_scsi.device
+
+floppy: clean_floppy $(SRC_FLP)/z3660_floppy.device
 
 eth: clean_eth $(SRC_ETH)/Z3660Net.device
 
@@ -264,3 +272,5 @@ mpg: clean_mpg $(SRC_MPG)/mpeg_streamer $(SRC_MPG)/mpeg_streamer.h
 ahi: clean_ahi $(SRC_AHI)/z3660ax.audio $(SRC_AHI)/Z3660AX
 
 usb: clean_usb $(SRC_USB)/z3660_usb.device
+
+rom: clean_rom $(SRC_SCSI)/z3660_scsi.device $(SRC_FLP)/z3660_floppy.device $(SRC_ROM)/z3660_scsi.rom

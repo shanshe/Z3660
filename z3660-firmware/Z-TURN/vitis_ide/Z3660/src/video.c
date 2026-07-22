@@ -24,16 +24,20 @@
 #include "rtg/gfx.h"
 #include "xaxivdma.h"
 #include "xclk_wiz.h"
-#include <sleep.h>
 #include "memorymap.h"
 #include "render/gfx2.h"
 
 //#include "mpg/ff.h"
 #include <ff.h>
 #include "mpg/pl_mpeg_player.h"
+#include "debug_console.h"
 
 #define VDMA_VID_DEVICE_ID   XPAR_AXIVDMA_0_DEVICE_ID
 #define VDMA_OVL_DEVICE_ID   XPAR_AXIVDMA_1_DEVICE_ID
+
+#define debug_printf(...) do{if(debug_console.debug_rtg) printf(__VA_ARGS__);}while(0)
+
+extern DEBUG_CONSOLE debug_console;
 
 extern const char *bootmode_names[];
 extern int cached_videomode;
@@ -374,8 +378,8 @@ void reset_init(void)
    set_fb((uint32_t*) (((uint32_t) vs.framebuffer) + (uint32_t) vs.framebuffer_pan_offset), vs.vmode_hsize/vs.vmode_hdiv);
    init_vdma_vid(vs.vmode_hsize,vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv, (uint32_t)vs.framebuffer);
    printf("Video reset from reset_init()\n");
-   printf("vs.vmode_hsize: %ld, vs.vmode_vsize: %ld, vs.vmode_hdiv: %ld, vs.vmode_vdiv: %ld\n", vs.vmode_hsize, vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv);
-   printf("vs.colormode: %d\n", vs.colormode);
+   debug_printf("vs.vmode_hsize: %ld, vs.vmode_vsize: %ld, vs.vmode_hdiv: %ld, vs.vmode_vdiv: %ld\n", vs.vmode_hsize, vs.vmode_vsize, vs.vmode_hdiv, vs.vmode_vdiv);
+   debug_printf("vs.colormode: %d\n", vs.colormode);
    if(vs.colormode==MNTVA_COLOR_8BIT)
    {
       set_palette((0<<24)|0,OP_PALETTE);
@@ -905,7 +909,7 @@ int init_vdma_irq(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 int init_vdma_ovl(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    int status;
-   printf("Initializing VDMA for overlay\n");
+   debug_printf("Initializing VDMA for overlay\n");
    if(OVL_Config==NULL)
    {
       printf("Looking up VDMA config for overlay\n");
@@ -916,13 +920,13 @@ int init_vdma_ovl(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
          return(XST_FAILURE);
       }
    }
-   printf("Initializing VDMA for overlay with config at 0x%08lX, base address: 0x%08X\n", (uint32_t)OVL_Config, OVL_Config->BaseAddress);
+   debug_printf("Initializing VDMA for overlay with config at 0x%08lX, base address: 0x%08X\n", (uint32_t)OVL_Config, OVL_Config->BaseAddress);
    
    // Agregar delay para permitir que el hardware se estabilice
    usleep(10000); // 10ms delay
    
    status = XAxiVdma_CfgInitialize(&vdma_ovl, OVL_Config, OVL_Config->BaseAddress);
-   printf("Done initializing VDMA for overlay, status: %d\n", status);
+   debug_printf("Done initializing VDMA for overlay, status: %d\n", status);
    if (status != XST_SUCCESS) {
       printf("VDMA OVL Configuration Initialization failed, status: %d\n", status);
       printf("Halted\n");
@@ -932,7 +936,7 @@ int init_vdma_ovl(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
    //printf("VDMA MM2S DRE: %d\n", vdma.HasMm2SDRE);
    //printf("VDMA OVL_Config MM2S DRE: %d\n", OVL_Config->HasMm2SDRE);
    uint32_t stride = hsize * (OVL_Config->Mm2SStreamWidth >> 3);
-   printf("stride: %ld\n", stride);
+   debug_printf("stride: %ld\n", stride);
 //   if (vs.framebuffer_pan_width != 0 && vs.framebuffer_pan_width != (uint32_t)(hsize / hdiv)) {
 //      stride = (vs.framebuffer_pan_width * (OVL_Config->Mm2SStreamWidth >> 3)) * stride_div;
 //   }
@@ -940,7 +944,7 @@ int init_vdma_ovl(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
    // Ensure overlay buffer has same pitch as main framebuffer for consistency
    // Main framebuffer typically has pitch = width * 4 (for 32-bit pixels)
    OVL_ReadCfg.Stride = hsize * 4; // Force consistent pitch
-   printf("Overlay stride set to: %d\n", OVL_ReadCfg.Stride);
+   debug_printf("Overlay stride set to: %d\n", OVL_ReadCfg.Stride);
    //printf("VDMA HDIV: %d VDIV: %d\n", hdiv, vdiv);
 
    OVL_ReadCfg.VertSizeInput = vsize / vdiv;
@@ -954,7 +958,7 @@ int init_vdma_ovl(int hsize, int vsize, int hdiv, int vdiv, uint32_t bufpos) {
 
    OVL_ReadCfg.FrameStoreStartAddr[0] = bufpos;
 
-   printf("VDMA_OVL Framebuffer at 0x%x\n", OVL_ReadCfg.FrameStoreStartAddr[0]);
+   debug_printf("VDMA_OVL Framebuffer at 0x%x\n", OVL_ReadCfg.FrameStoreStartAddr[0]);
 
    status = XAxiVdma_DmaConfig(&vdma_ovl, XAXIVDMA_READ, &OVL_ReadCfg);
    if (status != XST_SUCCESS) {
@@ -1229,7 +1233,7 @@ void video_mode_init(int mode, int scalemode, int colormode) {
    vs.colormode = colormode;
    int hdiv = 1, vdiv = 1;
    stride_div = 1;
-   uint32_t size;
+   uint8_t size;
 
    if (scalemode & 1) {
       hdiv = 2;
@@ -1270,9 +1274,10 @@ void video_mode_init(int mode, int scalemode, int colormode) {
    vs.vmode_vsize = vmode->vres;
    vs.vmode_vdiv = vdiv;
    vs.vmode_hdiv = hdiv;
-   printf("hdiv: %d vdiv: %d\n", hdiv, vdiv);
+   debug_printf("hdiv: %d vdiv: %d\n", hdiv, vdiv);
    vs.framebuffer_size=vmode->hres*vmode->vres*size;
    vs.split_pos = 1; // force update slpit_pos from split_request_pos and write to videoformatter
+   printf("video mode: %dx%d %d bit color, %d Hz\n", vmode->hres, vmode->vres, colormode == MNTVA_COLOR_15BIT?15:size*8, vmode->vhz);
 }
 
 void update_hw_sprite(uint8_t *data, int double_sprite, int hires_sprite)

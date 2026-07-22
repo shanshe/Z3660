@@ -36,8 +36,9 @@
 #include "video.h"
 #include "rtg/zz_video_modes.h"
 
-#include "mpg/pl_mpeg_arm/pl_mpeg_handler.h"
 #include "mpg/pl_mpeg.h"
+
+int ps7_init_custom(int freq_code);
 
 // FIFO file wrapper structure
 typedef struct {
@@ -107,35 +108,6 @@ void my_plm_buffer_load_callback(plm_buffer_t *buffer, void *user) {
 
 // FIFO file wrapper implementation
 
-#include "mobotest.h"
-#include <xparameters.h>
-#include "main.h"
-#ifdef USE_RTOS
-#include "FreeRTOS.h"
-#include "task.h"
-#include "lwip/sys.h"
-#include "arch/sys_arch.h"
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include "rtg/fonts.h"
-#include "config_file.h"
-#include "xtime_l.h"
-#include "xil_mmu.h"
-#include "lwip/tftp_server.h"
-#include "lwip/web_utils.h"
-#include <stdbool.h>
-#include "sii9022_init/sii9022_init.h"
-
-#include "pt/pt.h"
-#include "ARM_ztop/tabs.h"
-#include "usb.h"
-
-#include "ARM_ztop/textedit.h"
-#include "ARM_ztop/tabs.h"
-#include "coremark/coremark_port.h"
-#include "video.h"
-#include "rtg/zz_video_modes.h"
 int init_xc3sprog(void);
 int i2c_finish(void);
 int main_xc3sprog(unsigned int cpufreq);
@@ -705,9 +677,6 @@ void NOPX_READ(void)
       NOP;
    }
 }
-#include "ff.h"
-#include "video.h"
-#include "rtg/zz_video_modes.h"
 
 #define check_bus_error(A,B)
 
@@ -930,6 +899,7 @@ void print_hdmi_ln(int xpos, char *message, int line_inc)
    {
       copy_rect_mobotest(line);
       line=LINE_MAX_FONT;
+      line--;
    }
 //   handle_cache_flush(((uint32_t)vs.framebuffer) + vs.framebuffer_pan_offset,vs.framebuffer_size);
 //   while(video_formatter_read(0)==1) //wait vblank
@@ -942,7 +912,7 @@ void print_hdmi_ln_centered(char *message, int line_inc)
    int x=(screen_width/Font->Width-strlen(message))/2;
    print_hdmi_ln(x, message, line_inc);
 }
-char kb_tbl[256]=
+char kb_tbl[257]=
    "`1234567890-=\\\x00" "0"
    "qwertyuiop[]" "\x00" "123"
    "asdfghjkl;'\x00\x00" "456"
@@ -1193,7 +1163,7 @@ void test_nops(void)
    sprintf(message,"Optimal NOPS for WRITE: %d (%6.4f MB/s)",opt_w,write_mbs[opt_w]);
    print_hdmi_ln(0,message,1);
    printf("%s\n",message);
-   shared->nops_read=opt_w;
+   shared->nops_write=opt_w;
    float total_time=(1.0 * (total_time_stop-total_time_start)) / (counts_per_second);
    sprintf(message,"Total time: %4.1f s (%3.1f MB)",total_time,(20.*TOTAL_MEM_TESTED*TESTED_TIMES)/1024./1024.);
    print_hdmi_ln(0,message,1);
@@ -1215,7 +1185,8 @@ void show_options(void)
    MSG_LINE("'D' - Download and flash the latest CPLD firmware");
    MSG_LINE("      (if not connected to the Internet, flashes the previously downloaded file)");
    MSG_LINE("'G' - Apply default timings");
-   MSG_LINE("'P' - Start a TFTP server connected to your network");
+//   MSG_LINE("'P' - Start a TFTP server connected to your network");
+   MSG_LINE("'P' - Start a HTTP server connected to your network");
    MSG_LINE("Test Options:");
    MSG_LINE("'X'  - Test read/write and determine optimal NOPS values for EMU (only for developers)");
    MSG_LINE("'Q'  - CoreMark performance test for ARM CPU");
@@ -1358,10 +1329,17 @@ void mobotest(int sw1_is_down)
       sw1_is_down=0;
       CPLD_RESET_ARM(0);
       Xil_ExceptionDisable();
+      set_cpu_freq_for_usleep(667);
+      ps7_init_custom(FREQ_667);
       int err=init_xc3sprog();
+      set_cpu_freq_for_usleep(cpufreq_values[config.arm_frequency]);
+      ps7_init_custom(config.arm_frequency);
       if(err==0)
       {
-         main_xc3sprog(config.arm_frequency);
+         ps7_init_custom(FREQ_667);
+         main_xc3sprog(667);
+         set_cpu_freq_for_usleep(cpufreq_values[config.arm_frequency]);
+         ps7_init_custom(config.arm_frequency);
       }
       else
       {
@@ -1385,10 +1363,10 @@ void mobotest(int sw1_is_down)
       print_hdmi_ln(0,message,1);
       printf("%s\n",message);
 
-      sprintf(message,"[TEST] 0xbfe201 %02lX",ps_read_byte(0xbfe201,&timeout));
+      sprintf(message,"[TEST] 0xbfe201 0x%02lX",ps_read_byte(0xbfe201,&timeout));
       print_hdmi_ln(0,message,1);
       printf("%s\n",message);
-      sprintf(message,"[TEST] 0xbfe001 %02lX",ps_read_byte(0xbfe001,&timeout));
+      sprintf(message,"[TEST] 0xbfe001 0x%02lX",ps_read_byte(0xbfe001,&timeout));
       print_hdmi_ln(0,message,1);
       printf("%s\n",message);
 
@@ -1418,10 +1396,10 @@ void mobotest(int sw1_is_down)
          printf("%s\n",message);
          Font->TextColor=0x00FFFFFF; // white
       }
-      sprintf(message,"[TEST] 0xbfe201 %0lX",ps_read_byte(0xbfe201,&timeout));
+      sprintf(message,"[TEST] 0xbfe201 0x%02lX",ps_read_byte(0xbfe201,&timeout));
       print_hdmi_ln(0,message,1);
       printf("%s\n",message);
-      sprintf(message,"[TEST] 0xbfe001 %0lX",ps_read_byte(0xbfe001,&timeout));
+      sprintf(message,"[TEST] 0xbfe001 0x%02lX",ps_read_byte(0xbfe001,&timeout));
       print_hdmi_ln(0,message,1);
       printf("%s\n",message);
 
@@ -1610,6 +1588,13 @@ void mobotest(int sw1_is_down)
                line=line_old;
                Font->TextColor=0x00FFFFFF; // white
                mem_regions[j].failed=1;
+               if(read_keyboard(&keybd_data,0))
+               {
+                  if(keybd_data=='\x1b') // ESC
+                  {
+                     goto end_test;
+                  }
+               }
             }
             if(mem_regions[j].failed==0 && (i%(mem_regions[j].len>>disp))==0)
             {
@@ -2014,7 +1999,7 @@ void look_for_ver(char *filename)
 int main_thread();
 void start_ztop(void);
 int sw1_is_down_mobotest=0;
-
+extern char firmware[300];
 void update_sd(void)
 {
    uint8_t keybd_data=0;
@@ -2059,6 +2044,7 @@ void update_sd(void)
       else
          sprintf(message,"Z3660 Firmware %d.%02d BETA %d ALFA %d (%s)",v_major,v_minor,beta,alfa,__DATE__);
    }
+   snprintf(firmware,300,"%s",message);
 
 //   Font=&Font20;
    int x=(w/Font->Width-strlen(message))/2;
@@ -2145,7 +2131,7 @@ void update_sd(void)
    print_hdmi_ln(x,message,1);
    printf("%s\n",message);
 
-   sprintf(message,"BUS Frequency %d MHz",config.cpufreq);
+   sprintf(message,"BUS Frequency %d MHz, ARM Frequency %d MHz",config.cpufreq, cpufreq_values[config.arm_frequency]);
    x=(w/Font->Width-strlen(message))/2;
    print_hdmi_ln(x,message,1);
    printf("%s\n",message);
@@ -2235,7 +2221,11 @@ int main_thread()
    // Init CPLD programming (and read firmware version)
    CPLD_RESET_ARM(0);
    Xil_ExceptionDisable();
+   set_cpu_freq_for_usleep(667);
+   ps7_init_custom(FREQ_667);
    init_xc3sprog();
+   set_cpu_freq_for_usleep(cpufreq_values[config.arm_frequency]);
+   ps7_init_custom(config.arm_frequency);
    Xil_ExceptionEnable();
    CPLD_RESET_ARM(1);
    monitor_switch(1); // 1=RTG
@@ -2426,6 +2416,8 @@ int main_thread()
             }
             if(connected)
             {
+//#define USE_TFTP
+#ifdef USE_TFTP
                char path[500]="0:";
                printAppHeader(TFTP_PORT);
 tftp_restart:
@@ -2455,6 +2447,22 @@ tftp_restart:
                      }
                   }
                }
+#else
+   void start_httpd();
+   void run_httpd();
+   start_httpd();
+   while(1)
+   {
+      run_httpd();
+      if(read_keyboard(&keybd_data,0))
+      {
+         if(keybd_data=='r' || keybd_data=='R')
+         {
+            reboot();
+         }
+      }
+   }
+#endif
             }
          }
          else if(keybd_data=='s' || keybd_data=='S')
@@ -2714,10 +2722,13 @@ tftp_restart:
             Xil_DCacheEnable();
             Xil_ExceptionDisable();
             XIicPs_SetSClk(&IicInstance, I2C_FREQ_SII9022*4); // 400 kHz
-            main_xc3sprog(cpufreq_values[config.arm_frequency]);
+            ps7_init_custom(FREQ_667);
+            main_xc3sprog(667);
             i2c_finish();
             XIicPs_SetSClk(&IicInstance, I2C_FREQ_SII9022);
             Xil_ExceptionEnable();
+            set_cpu_freq_for_usleep(cpufreq_values[config.arm_frequency]);
+            ps7_init_custom(config.arm_frequency);
 
             //Restore pins
 #ifdef DIRECT_CPLD_PROGRAMMING

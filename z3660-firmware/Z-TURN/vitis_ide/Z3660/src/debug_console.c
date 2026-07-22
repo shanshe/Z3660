@@ -9,7 +9,6 @@
 #include "config_clk.h"
 #include "config_file.h"
 #include <stdlib.h>
-#include <sleep.h>
 
 void debug_console_help(void);
 void dump_mmu(void);

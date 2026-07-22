@@ -79,5 +79,4 @@ void clear_hw_sprite();
 void video_reset(void);
 void video_mode_reset(void);
 
-
 #endif /* SRC_VIDEO_H_ */

@@ -254,6 +254,7 @@ enum {
    UAEJIT_030,
    UAE_040,
    UAEJIT_040,
+   UAE_030_MMU,        // index-aligned with the firmware BOOTMODE enums; append-only
    NUM_BOOTMODES
 };
 char bootmode_names[NUM_BOOTMODES][25]={
@@ -265,6 +266,7 @@ char bootmode_names[NUM_BOOTMODES][25]={
    "030 UAE JIT emu ",
    "040 UAE emu     ",
    "040 UAE JIT emu ",
+   "030 UAE MMU emu ",
 };
 
 #define KS_CHARS "012345678901234567890123456789"
@@ -2040,6 +2042,9 @@ VOID handleGadgetEvent(struct Window *win,int gad, UWORD code)
          break;
       }
       case GID_PRESET_BTN_APPLY_PRESET: {
+         zz_set_apply_bootmode();
+         zz_set_apply_scsi();
+         zz_set_apply_misc();
          zz_set_apply_preset();
          zz_set_reg(REG_ZZ_APPLY_PRESET, 0x55AA);
          break;
@@ -2293,13 +2298,16 @@ int main(void)
    ext_kickstarts_list = ChooserLabelsA((STRPTR *)ext_kickstarts);
    scsis_list = ChooserLabelsA((STRPTR *)scsis);
 
-   if ( !ButtonBase      ||
+   if (!ButtonBase      ||
        !CheckBoxBase    ||
        !SliderBase      ||
        !ClickTabBase    ||
+       !LabelBase       ||
        !LayoutBase      ||
        !ListBrowserBase ||
-       !StringBase        )
+       !StringBase      ||
+       !WindowBase      /*||
+       !GadToolsBase      */)
    {
       if(!ButtonBase)
          errorMessage("gadget/button.gadget not found.\n");
@@ -2309,12 +2317,18 @@ int main(void)
          errorMessage("gadget/slider.gadget not found.\n");
       if(!ClickTabBase)
          errorMessage("gadget/clicktab.gadget not found.\n");
+      if(!LabelBase)
+         errorMessage("gadget/label.gadget not found.\n");
       if(!LayoutBase)
          errorMessage("gadget/layout.gadget not found.\n");
       if(!ListBrowserBase)
          errorMessage("gadget/listbrowser.gadget not found.\n");
       if(!StringBase)
          errorMessage("gadget/string.gadget not found.\n");
+      if(!WindowBase)
+         errorMessage("window.library not found.\n");
+//      if(!GadToolsBase)
+//         errorMessage("gadtools.library not found.\n");
       return(30);
    }
    else if ( AppPort = CreateMsgPort() )
@@ -3001,24 +3015,24 @@ int main(void)
 
                         LAYOUT_AddChild, HLayoutObject,
                            LAYOUT_AddChild, VLayoutObject,
-#define PRESET_TEXT(A,B)                LAYOUT_AddChild, HLayoutObject,                                    \
+#define PRESET_TEXT(A,B)      LAYOUT_AddChild, HLayoutObject,                                   \
                                  LAYOUT_AddChild, gadgets[GID_PRESET ## A] = StringObject,      \
-                                    GA_ID, GID_INFO_FWVER,                                     \
-                                    GA_RelVerify, TRUE,                                        \
-                                    STRINGA_MaxChars, 48,                                      \
-                                    STRINGA_TextVal, "",                                       \
-                                    STRINGA_Justification, GACT_STRINGLEFT,                    \
+                                    GA_ID, GID_INFO_FWVER,                                      \
+                                    GA_RelVerify, TRUE,                                         \
+                                    STRINGA_MaxChars, 48,                                       \
+                                    STRINGA_TextVal, "",                                        \
+                                    STRINGA_Justification, GACT_STRINGLEFT,                     \
                                  StringEnd,                                                     \
                                  CHILD_Label, LabelObject, LABEL_Text, B, LabelEnd,             \
                                  CHILD_MinWidth, 280,                                           \
                                  /*SPACE,*/                                                     \
                                  LAYOUT_AddChild, gadgets[GID_PRESET_CB ## A] = CheckBoxObject, \
-                                    GA_ID, GID_PRESET_CB ## A,                                 \
-                                    GA_RelVerify, TRUE,                                        \
-                                    GA_TabCycle, TRUE,                                         \
-                                    STRINGA_MaxChars, 0,                                       \
-                                    GA_Text, "",                                               \
-                                    CHECKBOX_TextPlace, PLACETEXT_LEFT,                        \
+                                    GA_ID, GID_PRESET_CB ## A,                                  \
+                                    GA_RelVerify, TRUE,                                         \
+                                    GA_TabCycle, TRUE,                                          \
+                                    STRINGA_MaxChars, 0,                                        \
+                                    GA_Text, "",                                                \
+                                    CHECKBOX_TextPlace, PLACETEXT_LEFT,                         \
                                  CheckBoxEnd,                                                   \
                                  CHILD_WeightedWidth, 0,                                        \
                               LayoutEnd

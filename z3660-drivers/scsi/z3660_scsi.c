@@ -420,18 +420,18 @@ uint8_t piscsi_rw(struct piscsi_unit *u, struct IORequest *io) {
         }
         case TD_FORMAT:
         case CMD_WRITE: {
-    WRITELONG(PISCSI_CMD_WRITE_ADDR1, io_Offset);
-    WRITELONG(PISCSI_CMD_WRITE_ADDR2, len);
-    WRITELONG(PISCSI_CMD_WRITE_ADDR3, (uint32_t)data);
+            WRITELONG(PISCSI_CMD_WRITE_ADDR1, io_Offset);
+            WRITELONG(PISCSI_CMD_WRITE_ADDR2, len);
+            WRITELONG(PISCSI_CMD_WRITE_ADDR3, (uint32_t)data);
             if((ULONG)data<0x08000000)
                 memcpy((uint8_t *)(Z3660_REGS + 0x80000), data, len);
             WRITE_CMD(PISCSI_CMD_WRITEBYTES,unit_num,data,len);
             break;
         }
         case CMD_READ: {
-    WRITELONG(PISCSI_CMD_READ_ADDR1, io_Offset);
-    WRITELONG(PISCSI_CMD_READ_ADDR2, len);
-    WRITELONG(PISCSI_CMD_READ_ADDR3, (uint32_t)data);
+            WRITELONG(PISCSI_CMD_READ_ADDR1, io_Offset);
+            WRITELONG(PISCSI_CMD_READ_ADDR2, len);
+            WRITELONG(PISCSI_CMD_READ_ADDR3, (uint32_t)data);
             WRITE_CMD(PISCSI_CMD_READBYTES,unit_num,data,len);
             ULONG dma;
             READLONG(PISCSI_CMD_USED_DMA,dma);
@@ -763,9 +763,10 @@ uint16_t ns_support[] = {
     TD_CHANGESTATE,
     TD_PROTSTATUS,
     TD_GETDRIVETYPE,
-    TD_GETGEOMETRY,
     TD_ADDCHANGEINT,
     TD_REMCHANGEINT,
+    TD_GETGEOMETRY,
+    TD_EJECT,
     HD_SCSICMD,
     NSCMD_TD_READ64,
     NSCMD_TD_WRITE64,
@@ -849,7 +850,8 @@ uint8_t piscsi_perform_io(struct piscsi_unit *u, struct IORequest *io) {
             res->dg_TrackSectors = u->s;
             res->dg_BufMemType = MEMF_PUBLIC;
             res->dg_DeviceType = 0;
-            res->dg_Flags = 0;
+//            res->dg_Flags = 0;
+            res->dg_Flags = DGF_REMOVABLE;
 
             return 0;
             break;
@@ -870,6 +872,25 @@ uint8_t piscsi_perform_io(struct piscsi_unit *u, struct IORequest *io) {
             //err = 0;
             err = piscsi_scsi(u, io);
             break;
+
+        case CMD_START:
+        case CMD_STOP:
+        case CMD_RESET:
+        case CMD_FLUSH:
+        case TD_SEEK:
+        case TD_SEEK64:
+        case NSCMD_TD_SEEK64:
+        case TD_ADDCHANGEINT:
+        case TD_REMCHANGEINT:
+        case TD_EJECT:
+            /* HDs don't have media-change semantics, don't need seeking,
+            * and treat cache start/stop/flush as advisory — answer all
+            * of these as success-no-op so handlers that issue them (e.g.
+            * dos.library shutdown, HDToolBox) don't see spurious errors. */
+            iostd->io_Actual = 0;
+            err = 0;
+            break;
+
         default: {
             //int cmd = io->io_Command;
             debug(PISCSI_DBG_MSG, DBG_IOCMD_UNHANDLED);

@@ -3234,6 +3234,79 @@ void plm_video_process_macroblock(
 		return; // corrupt video
 	}
 
+#ifdef __ARM_NEON
+	// NEON-accelerated motion compensation
+	// block_size is 8 (chroma) or 16 (luma)
+	// Use 8-byte NEON ops; loop twice for block_size==16
+	uint8_t *src = s + si;
+	uint8_t *dst = d + di;
+	uint8_t *src_next = src + dw;
+
+	int mode = (interpolate << 2) | (odd_h << 1) | (odd_v);
+	int passes = block_size >> 3; // 1 for bs=8, 2 for bs=16
+
+	for (int y = 0; y < block_size; y++) {
+		for (int p = 0; p < passes; p++) {
+			int x = p << 3;
+			uint8x8_t v_src = vld1_u8(src + x);
+			uint8x8_t v_dst = v_src;
+			switch (mode) {
+			case 0: // copy
+				v_dst = v_src;
+				break;
+			case 1: { // vertical avg: (s + s_below + 1) >> 1
+				uint8x8_t v_src_below = vld1_u8(src_next + x);
+				v_dst = vrhadd_u8(v_src, v_src_below);
+				break;
+			}
+			case 2: { // horizontal avg: (s + s_right + 1) >> 1
+				uint8x8_t v_src_right = vld1_u8(src + x + 1);
+				v_dst = vrhadd_u8(v_src, v_src_right);
+				break;
+			}
+			case 3: { // 4-pixel avg: (s + s_r + s_b + s_br + 2) >> 2
+				uint8x8_t v_src_right = vld1_u8(src + x + 1);
+				uint8x8_t v_src_below = vld1_u8(src_next + x);
+				uint8x8_t v_src_below_r = vld1_u8(src_next + x + 1);
+				v_dst = vrhadd_u8(vrhadd_u8(v_src, v_src_right), vrhadd_u8(v_src_below, v_src_below_r));
+				break;
+			}
+			case 4: { // interpolate copy: (d + s + 1) >> 1
+				uint8x8_t v_dst_old = vld1_u8(dst + x);
+				v_dst = vrhadd_u8(v_dst_old, v_src);
+				break;
+			}
+			case 5: { // interpolate vertical avg
+				uint8x8_t v_src_below = vld1_u8(src_next + x);
+				uint8x8_t v_avg = vrhadd_u8(v_src, v_src_below);
+				uint8x8_t v_dst_old = vld1_u8(dst + x);
+				v_dst = vrhadd_u8(v_dst_old, v_avg);
+				break;
+			}
+			case 6: { // interpolate horizontal avg
+				uint8x8_t v_src_right = vld1_u8(src + x + 1);
+				uint8x8_t v_avg = vrhadd_u8(v_src, v_src_right);
+				uint8x8_t v_dst_old = vld1_u8(dst + x);
+				v_dst = vrhadd_u8(v_dst_old, v_avg);
+				break;
+			}
+			case 7: { // interpolate 4-pixel avg
+				uint8x8_t v_src_right = vld1_u8(src + x + 1);
+				uint8x8_t v_src_below = vld1_u8(src_next + x);
+				uint8x8_t v_src_below_r = vld1_u8(src_next + x + 1);
+				uint8x8_t v_avg = vrhadd_u8(vrhadd_u8(v_src, v_src_right), vrhadd_u8(v_src_below, v_src_below_r));
+				uint8x8_t v_dst_old = vld1_u8(dst + x);
+				v_dst = vrhadd_u8(v_dst_old, v_avg);
+				break;
+			}
+			}
+			vst1_u8(dst + x, v_dst);
+		}
+		src += dw;
+		src_next += dw;
+		dst += dw;
+	}
+#else
 	#define PLM_MB_CASE(INTERPOLATE, ODD_H, ODD_V, OP) \
 		case ((INTERPOLATE << 2) | (ODD_H << 1) | (ODD_V)): \
 			PLM_BLOCK_SET(d, di, dw, si, dw, block_size, OP); \
@@ -3252,6 +3325,7 @@ void plm_video_process_macroblock(
 	}
 
 	#undef PLM_MB_CASE
+#endif
 }
 
 void plm_video_decode_block(plm_video_t *self, int block) {
@@ -3409,6 +3483,104 @@ void plm_video_decode_block(plm_video_t *self, int block) {
 }
 
 void plm_video_idct(int *block) {
+#ifdef __ARM_NEON
+	// NEON-accelerated IDCT 8x8
+	// Column pass: process 4 columns at a time using NEON.
+	// Each column has 8 elements at stride 8: block[0*8+i], block[1*8+i], ...
+	// We load 4 columns worth of data into NEON vectors.
+	// Row pass: scalar (hard to vectorize across independent rows).
+
+	// Column pass - process columns 0-3 and 4-7 in two batches
+	for (int batch = 0; batch < 2; batch++) {
+		int base = batch * 4; // starting column index
+
+		// Load 8 rows × 4 columns = 32 values
+		// Each vector holds 4 columns for one row
+		int32x4_t r0 = vld1q_s32((int32_t const *)(block + 0*8 + base));
+		int32x4_t r1 = vld1q_s32((int32_t const *)(block + 1*8 + base));
+		int32x4_t r2 = vld1q_s32((int32_t const *)(block + 2*8 + base));
+		int32x4_t r3 = vld1q_s32((int32_t const *)(block + 3*8 + base));
+		int32x4_t r4 = vld1q_s32((int32_t const *)(block + 4*8 + base));
+		int32x4_t r5 = vld1q_s32((int32_t const *)(block + 5*8 + base));
+		int32x4_t r6 = vld1q_s32((int32_t const *)(block + 6*8 + base));
+		int32x4_t r7 = vld1q_s32((int32_t const *)(block + 7*8 + base));
+
+		// IDCT butterfly on columns
+		// Original scalar: b1=block[4*8+i], b3=block[2*8+i]+block[6*8+i], etc.
+		int32x4_t b1 = r4;
+		int32x4_t b3 = vaddq_s32(r2, r6);
+		int32x4_t b4 = vsubq_s32(r5, r3);
+		int32x4_t tmp1 = vaddq_s32(r1, r7);
+		int32x4_t tmp2 = vaddq_s32(r3, r5);
+		int32x4_t b6 = vsubq_s32(r1, r7);
+		int32x4_t b7 = vaddq_s32(tmp1, tmp2);
+		int32x4_t m0 = r0;
+
+		// x4 = ((b6*473 - b4*196 + 128) >> 8) - b7
+		int32x4_t x4 = vsubq_s32(
+			vrshrq_n_s32(vsubq_s32(vmlaq_n_s32(vdupq_n_s32(128), b6, 473),
+				vmlaq_n_s32(vdupq_n_s32(0), b4, 196)), 8), b7);
+		// x0 = x4 - (((tmp1-tmp2)*362 + 128) >> 8)
+		int32x4_t x0 = vsubq_s32(x4,
+			vrshrq_n_s32(vmlaq_n_s32(vdupq_n_s32(128), vsubq_s32(tmp1, tmp2), 362), 8));
+		int32x4_t x1 = vsubq_s32(m0, b1);
+		// x2 = (((r2-r6)*362 + 128) >> 8) - b3
+		int32x4_t x2 = vsubq_s32(
+			vrshrq_n_s32(vmlaq_n_s32(vdupq_n_s32(128), vsubq_s32(r2, r6), 362), 8), b3);
+		int32x4_t x3 = vaddq_s32(m0, b1);
+
+		int32x4_t y3 = vaddq_s32(x1, x2);
+		int32x4_t y4 = vaddq_s32(x3, b3);
+		int32x4_t y5 = vsubq_s32(x1, x2);
+		int32x4_t y6 = vsubq_s32(x3, b3);
+		// y7 = -x0 - ((b4*473 + b6*196 + 128) >> 8)
+		int32x4_t y7 = vsubq_s32(vnegq_s32(x0),
+			vrshrq_n_s32(vaddq_s32(vmlaq_n_s32(vdupq_n_s32(128), b4, 473),
+				vmlaq_n_s32(vdupq_n_s32(0), b6, 196)), 8));
+
+		// Store results
+		vst1q_s32((int32_t *)(block + 0*8 + base), vaddq_s32(b7, y4));
+		vst1q_s32((int32_t *)(block + 1*8 + base), vaddq_s32(x4, y3));
+		vst1q_s32((int32_t *)(block + 2*8 + base), vsubq_s32(y5, x0));
+		vst1q_s32((int32_t *)(block + 3*8 + base), vsubq_s32(y6, y7));
+		vst1q_s32((int32_t *)(block + 4*8 + base), vaddq_s32(y6, y7));
+		vst1q_s32((int32_t *)(block + 5*8 + base), vaddq_s32(x0, y5));
+		vst1q_s32((int32_t *)(block + 6*8 + base), vsubq_s32(y3, x4));
+		vst1q_s32((int32_t *)(block + 7*8 + base), vsubq_s32(y4, b7));
+	}
+
+	// Row pass - scalar (each row is independent, hard to parallelize)
+	{
+		for (int i = 0; i < 64; i += 8) {
+			int b1 = block[4 + i];
+			int b3 = block[2 + i] + block[6 + i];
+			int b4 = block[5 + i] - block[3 + i];
+			int tmp1 = block[1 + i] + block[7 + i];
+			int tmp2 = block[3 + i] + block[5 + i];
+			int b6 = block[1 + i] - block[7 + i];
+			int b7 = tmp1 + tmp2;
+			int m0 = block[0 + i];
+			int x4 = ((b6 * 473 - b4 * 196 + 128) >> 8) - b7;
+			int x0 = x4 - (((tmp1 - tmp2) * 362 + 128) >> 8);
+			int x1 = m0 - b1;
+			int x2 = (((block[2 + i] - block[6 + i]) * 362 + 128) >> 8) - b3;
+			int x3 = m0 + b1;
+			int y3 = x1 + x2;
+			int y4 = x3 + b3;
+			int y5 = x1 - x2;
+			int y6 = x3 - b3;
+			int y7 = -x0 - ((b4 * 473 + b6 * 196 + 128) >> 8);
+			block[0 + i] = (b7 + y4 + 128) >> 8;
+			block[1 + i] = (x4 + y3 + 128) >> 8;
+			block[2 + i] = (y5 - x0 + 128) >> 8;
+			block[3 + i] = (y6 - y7 + 128) >> 8;
+			block[4 + i] = (y6 + y7 + 128) >> 8;
+			block[5 + i] = (x0 + y5 + 128) >> 8;
+			block[6 + i] = (y3 - x4 + 128) >> 8;
+			block[7 + i] = (y4 - b7 + 128) >> 8;
+		}
+	}
+#else
 	int
 		b1, b3, b4, b6, b7, tmp1, tmp2, m0,
 		x0, x1, x2, x3, x4, y3, y4, y5, y6, y7;
@@ -3472,6 +3644,7 @@ void plm_video_idct(int *block) {
 		block[6 + i] = (y3 - x4 + 128) >> 8;
 		block[7 + i] = (y4 - b7 + 128) >> 8;
 	}
+#endif
 }
 
 // YCbCr conversion following the BT.601 standard:

@@ -11,7 +11,7 @@
 #include <inttypes.h>
 typedef uint8_t UBYTE;
 typedef uint16_t UWORD;
-typedef unsigned long ULONG;
+typedef uint32_t ULONG;
 typedef int8_t BYTE;
 typedef int16_t WORD;
 //typedef int32_t LONG;
@@ -21,6 +21,7 @@ typedef void * APTR;
 #include "soft3d_opengl.h"
 #include <proto/expansion.h>
 #include <proto/exec.h>
+#include <stdlib.h>
 
 /* use a local pointer on Wazp3D : having a copy here allow to separate the sof3d binary & wazp3d binary*/
 #ifdef SOFT3DLIB
@@ -29,7 +30,7 @@ struct WAZP3D_parameters *Wazp3D;            /* local pointer to the struct in W
 //#include "soft3d_mem_print.h"                /* memory and print/debug functions : usually in Warp3d.c */
 
 #endif
-#include "z3660_regs.h"
+#include "../../common/z3660_regs.h"
 
 volatile uint32_t *registers;
 #define ZZ_REGS_WRITE(b, c) do{registers[(b)>>2]=c;}while(0)
@@ -47,6 +48,41 @@ void open_soft3d56(void)
     struct ConfigDev* cd=NULL;
 	if ((cd = (struct ConfigDev*)FindConfigDev(cd,0x144B,0x1)))
 		registers = (uint32_t *)(cd->cd_BoardAddr);
+    else
+    {
+        struct ConfigDev *last_CD = NULL;
+        struct ConfigDev *new_zz_cd = NULL;
+//        errorMessage("Z3660 not found. Looking at $10000000 if it is there...\n");
+        new_zz_cd = (struct ConfigDev*)malloc(sizeof(struct ConfigDev));
+        memset(new_zz_cd, 0, sizeof(struct ConfigDev));
+        while(last_CD=FindConfigDev(last_CD,-1L,-1L)) /* search for all ConfigDevs */
+        {
+            if(last_CD->cd_NextCD==NULL)
+            {
+                break;
+            }
+        }
+        new_zz_cd->cd_Node.ln_Type = NT_DEVICE;
+        new_zz_cd->cd_Node.ln_Name = "Z3660";
+        new_zz_cd->cd_Node.ln_Pri = 0;
+        new_zz_cd->cd_Node.ln_Succ = NULL;
+        new_zz_cd->cd_Node.ln_Pred =(struct Node *) last_CD;
+        new_zz_cd->cd_Flags = 0;
+        new_zz_cd->cd_BoardAddr=(APTR)0x10000000; /* where in memory the board was placed */
+        new_zz_cd->cd_BoardSize=0x8000000;	/* 128MB size of board in bytes */
+        new_zz_cd->cd_Rom.er_Type = ERT_ZORROIII | 2; // ZorroIII and 128 MB
+        new_zz_cd->cd_Rom.er_Manufacturer = 0x144B;
+        new_zz_cd->cd_Rom.er_Product = 0x1;
+        new_zz_cd->cd_Rom.er_Flags = 0;
+        new_zz_cd->cd_Rom.er_InitDiagVec = 0;
+        //UWORD		cd_SlotAddr;	/* which slot number (PRIVATE) */
+        //UWORD		cd_SlotSize;	/* number of slots (PRIVATE) */
+        //APTR		cd_Driver;	/* pointer to node of driver */
+        //struct ConfigDev *	cd_NextCD;	/* linked list of drivers to config */
+        //ULONG		cd_Unused[4];	/* for whatever the driver wants */
+        AddConfigDev(new_zz_cd);
+        cd = new_zz_cd;
+    }
     soft3ddata = (volatile struct Soft3dData*)(((uint32_t)cd->cd_BoardAddr) + (uint32_t)Z3_SOFT3DDATA_ADDR);
     KPrintF((const char *)"Soft3dData   0x%lx\n",(uint32_t)soft3ddata);
     memset((void *)soft3ddata, 0x00, sizeof(struct Soft3dData));
@@ -55,10 +91,10 @@ void open_soft3d56(void)
 void *SOFT3D_Start(APTR PrefsWazp3D, ULONG len)
 {
     soft3ddata->offset[0]=(uint32_t)PrefsWazp3D;
-    uint32_t len2=len;
-    CachePreDMA((APTR)(PrefsWazp3D),&len2,0);
+    ULONG len2=len;
+    CachePreDMA((CONST_APTR)(PrefsWazp3D),&len2,0);
     ZZ_REGS_WRITE(REG_ZZ_SOFT3D_OP, OP_START);
-    CachePostDMA((APTR)PrefsWazp3D,&len2,0);
+    CachePostDMA((CONST_APTR)PrefsWazp3D,&len2,0);
     uint32_t *a=(uint32_t *)ZZ_REGS_READ(REG_ZZ_SOFT3D_OP);
     KPrintF((const char *)"%s  start\n",__FUNCTION__);
     return(a);
@@ -73,16 +109,16 @@ void  SOFT3D_SetBitmap(APTR sc,void  *bm,APTR bmdata,ULONG bmformat,UWORD x,UWOR
 {
     soft3ddata->offset[0]=(uint32_t)sc;
     soft3ddata->offset[1]=(uint32_t)bm;
-    soft3ddata->offset[2]=(uint32_t)bmdata;
+    soft3ddata->offset[2]=(uint32_t)(void  *)bmdata;
     soft3ddata->format[0]=bmformat;
     soft3ddata->x[0]= x;
     soft3ddata->y[0]= y;
     soft3ddata->x[1]= large;
     soft3ddata->y[1]= high;
-    uint32_t len2=sizeof(struct  BitMap);
-    CachePreDMA((APTR)(bm),&len2,0);
+    ULONG len2=sizeof(struct  BitMap);
+    CachePreDMA((CONST_APTR)(bm),&len2,0);
     ZZ_REGS_WRITE(REG_ZZ_SOFT3D_OP, OP_SETBITMAP);
-    CachePostDMA((APTR)bm,&len2,0);
+    CachePostDMA((CONST_APTR)bm,&len2,0);
 }
 void  SOFT3D_SetClipping(APTR sc,UWORD xmin,UWORD xmax,UWORD ymin,UWORD ymax)
 {
@@ -97,10 +133,10 @@ void SOFT3D_SetDrawState(APTR sc,APTR sta)
 {
     soft3ddata->offset[0]=(uint32_t)sc;
     soft3ddata->offset[1]=(uint32_t)sta;
-    uint32_t len2=15*4; //struct state3D
-    CachePreDMA((APTR)(sta),&len2,0);
+    ULONG len2=15*4; //struct state3D
+    CachePreDMA((CONST_APTR)(sta),&len2,0);
     ZZ_REGS_WRITE(REG_ZZ_SOFT3D_OP, OP_SETDRAWSTATE);
-    CachePostDMA((APTR)sta,&len2,0);
+    CachePostDMA((CONST_APTR)sta,&len2,0);
 }
 void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
 {
@@ -108,10 +144,10 @@ void SOFT3D_DrawPrimitive(APTR sc,APTR p,ULONG Pnb,ULONG primitive)
     soft3ddata->offset[1]=(uint32_t)p;
     soft3ddata->format[0]=Pnb;
     soft3ddata->format[1]=primitive;
-    uint32_t len2=7*4*MAXPRIM; // struct Point3D 6 floats + 1 long
-    CachePreDMA((APTR)(p),&len2,0);
+    ULONG len2=7*4*MAXPRIM; // struct Point3D 6 floats + 1 long
+    CachePreDMA((CONST_APTR)(p),&len2,0);
     ZZ_REGS_WRITE(REG_ZZ_SOFT3D_OP, OP_DRAWPRIMITIVE);
-    CachePostDMA((APTR)p,&len2,0);
+    CachePostDMA((CONST_APTR)p,&len2,0);
 }
 UBYTE SOFT3D_DoUpdate(APTR sc)
 {
@@ -134,10 +170,10 @@ void *SOFT3D_CreateTexture(APTR sc,APTR pt,UWORD large,UWORD high,UWORD format,U
     soft3ddata->y[0]=high;
     soft3ddata->x[1]=format;
     soft3ddata->y[1]=TexFlags;
-    uint32_t len2=256*256*4; //???
-    CachePreDMA((APTR)(pt),&len2,0);
+    ULONG len2=256*256*4; // length
+    CachePreDMA((CONST_APTR)(pt),&len2,0);
     ZZ_REGS_WRITE(REG_ZZ_SOFT3D_OP, OP_CREATETEXTURE);
-    CachePostDMA((APTR)pt,&len2,0);
+    CachePostDMA((CONST_APTR)pt,&len2,0);
     uint32_t *a=(uint32_t *)ZZ_REGS_READ(REG_ZZ_SOFT3D_OP);
     return(a);
 }

@@ -29,8 +29,8 @@
 #define ACCUMULATION_BUFFER_SIZE_IN_SAMPLES (4*1024*1024) // 4 mega samples
 
 // External RTG register functions
-extern void write_rtg_register(uint16_t zaddr, uint32_t zdata);
-extern uint32_t read_rtg_register(uint16_t zaddr);
+extern void write_rtg_register(uint32_t zaddr, uint32_t zdata);
+extern uint32_t read_rtg_register(uint32_t zaddr);
 extern volatile int audio_local_interrput;
 extern uint8_t* audio_tx_buffer;
 
@@ -68,6 +68,7 @@ void disable_overlay(void);
 int dithering_intensity = 0;
 // Grayscale mode flag (0 = color, 1 = grayscale)
 int grayscale_mode = 0;
+int show_fps = 1;
 
 // Endianness conversion macros for ARM (little-endian) to 68k (big-endian)
 #define be16_to_host(x) __builtin_bswap16(x)
@@ -99,7 +100,6 @@ int arm_freq=667;
 // Get microsecond timestamp for performance measurement
 static uint32_t plm_get_microseconds(void) {
     // Use Xilinx XTime timer for precise timing
-    #include "xtime_l.h"
     
     static XTime start_time = 0;
     XTime current_time;
@@ -166,27 +166,138 @@ static void fifo_buffer_reset(void) {
 
 // Simple font data for FPS overlay (8x8 pixel characters)
 static const uint8_t font_8x8[16][8] = {
-    // Space (ASCII 32)
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+    {0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00000000}, // Space (ASCII 32)
     // Numbers 0-9
-    {0x3E, 0x63, 0x73, 0x7B, 0x6F, 0x67, 0x3E, 0x00}, // 0
-    {0x0C, 0x0E, 0x0C, 0x0C, 0x0C, 0x0C, 0x3F, 0x00}, // 1
-    {0x1E, 0x33, 0x30, 0x1C, 0x06, 0x33, 0x3F, 0x00}, // 2
-    {0x1E, 0x33, 0x30, 0x1C, 0x30, 0x33, 0x1E, 0x00}, // 3
-    {0x38, 0x3C, 0x36, 0x33, 0x7F, 0x30, 0x78, 0x00}, // 4
-    {0x3F, 0x03, 0x1F, 0x30, 0x30, 0x33, 0x1E, 0x00}, // 5
-    {0x1C, 0x06, 0x03, 0x1F, 0x33, 0x33, 0x1E, 0x00}, // 6
-    {0x3F, 0x33, 0x30, 0x18, 0x0C, 0x0C, 0x0C, 0x00}, // 7
-    {0x1E, 0x33, 0x33, 0x1E, 0x33, 0x33, 0x1E, 0x00}, // 8
-    {0x1E, 0x33, 0x33, 0x3E, 0x30, 0x18, 0x0E, 0x00}, // 9
+    {0b01111100,
+     0b11000110,
+     0b11001110,
+     0b11010110,
+     0b11100110,
+     0b11000110,
+     0b01111100,
+     0b00000000}, // 0
+    {0b00011000,
+     0b00111000,
+     0b01011000,
+     0b00011000,
+     0b00011000,
+     0b00011000,
+     0b01111110,
+     0b00000000}, // 1
+    {0b00111100,
+     0b01100110,
+     0b00000110,
+     0b00011100,
+     0b00110000,
+     0b01100000,
+     0b01111110,
+     0b00000000}, // 2
+    {0b00111100,
+     0b01100110,
+     0b00000110,
+     0b00011100,
+     0b00000110,
+     0b01100110,
+     0b00111100,
+     0b00000000}, // 3
+    {0b00001110,
+     0b00011110,
+     0b00110110,
+     0b01100110,
+     0b01111111,
+     0b00000110,
+     0b00001111,
+     0b00000000}, // 4
+    {0b01111110,
+     0b01100000,
+     0b01111100,
+     0b00000110,
+     0b00000110,
+     0b01100110,
+     0b00111100,
+     0b00000000}, // 5
+    {0b00011100,
+     0b00110000,
+     0b01100000,
+     0b01111100,
+     0b01100110,
+     0b01100110,
+     0b00111100,
+     0b00000000}, // 6
+    {0b01111110,
+     0b01100110,
+     0b00000110,
+     0b00001100,
+     0b00011000,
+     0b00011000,
+     0b00011000,
+     0b00000000}, // 7
+    {0b00111100,
+     0b01100110,
+     0b01100110,
+     0b00111100,
+     0b01100110,
+     0b01100110,
+     0b00111100,
+     0b00000000}, // 8
+    {0b00111100,
+     0b01100110,
+     0b01100110,
+     0b00111110,
+     0b00000110,
+     0b00001100,
+     0b00111000,
+     0b00000000}, // 9
     // Dot
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x06, 0x00}, // .
+    {0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00000000,
+     0b00011000,
+     0b00011000,
+     0b00000000}, // .
     // F, P, S
-    {0x3F, 0x06, 0x06, 0x1E, 0x06, 0x06, 0x06, 0x00}, // F
-    {0x1F, 0x33, 0x33, 0x33, 0x1F, 0x03, 0x03, 0x00}, // P
-    {0x1E, 0x33, 0x07, 0x0E, 0x38, 0x33, 0x1E, 0x00}, // S
+    {0b01111110,
+     0b01100000,
+     0b01100000,
+     0b01111110,
+     0b01100000,
+     0b01100000,
+     0b01100000,
+     0b00000000}, // F
+    {0b01111100,
+     0b01100110,
+     0b01100110,
+     0b01111100,
+     0b01100000,
+     0b01100000,
+     0b01100000,
+     0b00000000}, // P
+    {0b00111100,
+     0b01100110,
+     0b01110000,
+     0b00111000,
+     0b00001110,
+     0b01100110,
+     0b00111100,
+     0b00000000}, // S
     // Colon
-    {0x00, 0x0C, 0x0C, 0x00, 0x00, 0x0C, 0x0C, 0x00}, // :
+    {0b00000000,
+     0b00011000,
+     0b00011000,
+     0b00000000,
+     0b00000000,
+     0b00011000,
+     0b00011000,
+     0b00000000}, // :
 };
 
 // Draw a single character on framebuffer
@@ -200,14 +311,15 @@ static void draw_char(uint32_t *framebuffer, int width, int height, int pitch,
     
     int char_index = found - valid_chars;
     if (char_index >= (int)(sizeof(font_8x8)/sizeof(font_8x8[0]))) return;
+    int pitch_4 = pitch / 4;
     
     for (int cy = 0; cy < 8; cy++) {
         for (int cx = 0; cx < 8; cx++) {
-            if (font_8x8[char_index][cy] & (1 << cx)) {
+            if (font_8x8[char_index][cy] & (128 >> cx)) {
                 int px = x + cx;
                 int py = y + cy;
                 if (px >= 0 && px < width && py >= 0 && py < height) {
-                    framebuffer[py * (pitch / 4) + px] = color;
+                    framebuffer[py * pitch_4 + px] = color;
                 }
             }
         }
@@ -287,46 +399,7 @@ static void pl_mpeg_audio_callback(plm_t *plm, plm_samples_t *samples, void *use
     static int audio_callback_count = 0;
     
     audio_callback_count++;
-/*    
-    // Debug: log audio callback every 100 calls
-    if (audio_callback_count % 100 == 0) {
-        printf("[PL_MPEG ARM AUDIO] Audio callback #%d, samples count: %u\n", 
-               audio_callback_count, samples ? samples->count : 0);
-    }
-*/
-/*
-    static int callback_count = 0;
-    static uint32_t last_callback_time = 0; // Track timing
-    callback_count++;
     
-    // Calculate time since last callback
-    uint32_t current_time = plm_get_microseconds();
-    uint32_t time_since_last_callback = current_time - last_callback_time;
-    last_callback_time = current_time;
-    
-    // Track timing statistics
-    static uint32_t total_callbacks = 0;
-    static uint32_t total_time = 0;
-    static uint32_t min_time = 0xFFFFFFFF;
-    static uint32_t max_time = 0;
-    
-    total_callbacks++;
-    total_time += time_since_last_callback;
-    if (time_since_last_callback < min_time) min_time = time_since_last_callback;
-    if (time_since_last_callback > max_time) max_time = time_since_last_callback;
-    
-    // Log timing statistics every 100 callbacks
-    if (total_callbacks % 100 == 0) {
-        uint32_t avg_time = total_time / total_callbacks;
-        printf("[PL_MPEG ARM AUDIO TIMING] Callbacks: %lu, Avg: %luus, Min: %luus, Max: %luus\n",
-               total_callbacks, avg_time, min_time, max_time);
-        // Reset for next measurement
-        total_callbacks = 0;
-        total_time = 0;
-        min_time = 0xFFFFFFFF;
-        max_time = 0;
-    }
-*/    
     if (!samples || samples->count == 0) {
         printf("[PL_MPEG ARM AUDIO] No samples available\n");
         return;
@@ -451,7 +524,7 @@ static void pl_mpeg_video_callback(plm_t *plm, plm_frame_t *frame, void *user) {
             // Convert PL_MPEG YUV frame to ARGB and write to framebuffer
             int width = frame->width;
             int height = frame->height;
-                
+#ifndef __ARM_NEON
             // Improved YUV to ARGB conversion for MPEG
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
@@ -552,8 +625,186 @@ static void pl_mpeg_video_callback(plm_t *plm, plm_frame_t *frame, void *user) {
                     }
                 }
             }
+#else
+            // Optimized YUV to ARGB conversion using ARM NEON SIMD intrinsics
+            // Processes 8 pixels at a time for maximum throughput
+            {
+                uint8_t *y_plane = frame->y.data;
+                uint8_t *u_plane = frame->cb.data;
+                uint8_t *v_plane = frame->cr.data;
+                int uv_width = width / 2;
+
+                // NEON vector constants for YUV->RGB conversion
+                // BT.601: R = 1.164*(Y-16) + 1.596*(V-128)
+                //         G = 1.164*(Y-16) - 0.391*(U-128) - 0.813*(V-128)
+                //         B = 1.164*(Y-16) + 2.018*(U-128)
+                const int16x8_t v_y_offset  = vdupq_n_s16(16);
+                const int16x8_t v_uv_offset = vdupq_n_s16(128);
+                const float32x4_t v_y_scale = vdupq_n_f32(1.164f);
+                const float32x4_t v_rv      = vdupq_n_f32(1.596f);
+                const float32x4_t v_gu      = vdupq_n_f32(-0.391f);
+                const float32x4_t v_gv      = vdupq_n_f32(-0.813f);
+                const float32x4_t v_bu      = vdupq_n_f32(2.018f);
+                const int32x4_t v_zero      = vdupq_n_s32(0);
+                const int32x4_t v_255       = vdupq_n_s32(255);
+
+                for (int y = 0; y < height; y++) {
+                    int uv_y = y / 2;
+                    uint8_t *y_row = y_plane + y * width;
+                    uint8_t *u_row = u_plane + uv_y * uv_width;
+                    uint8_t *v_row = v_plane + uv_y * uv_width;
+                    uint32_t *fb_row = ovl_framebuffer + (y + overlay_y) * (ovl_pitch / 4);
+                    int x = 0;
+
+                    // Process 8 pixels at a time with NEON
+                    for (; x <= width - 8; x += 8) {
+                        int uv_x = x / 2;
+
+                        // Load 8 Y values
+                        uint8x8_t y_u8 = vld1_u8(y_row + x);
+
+                        // Load only 4 U and 4 V values (4:2:0 subsampling)
+                        // Each U/V covers a 2x2 block, so for 8 Y pixels we need 4 U and 4 V
+                        // Then duplicate each to match 8 Y pixels
+                        uint8x8_t u_u8 = vld1_u8(u_row + uv_x); // loads 8 bytes but only first 4 are valid
+                        uint8x8_t v_u8 = vld1_u8(v_row + uv_x);
+
+                        // Duplicate U and V: each of the 4 UV values covers 2 Y pixels
+                        // vzip_u8 interleaves: [u0,u1,u2,u3,...] -> [u0,u0,u1,u1,u2,u2,u3,u3]
+                        uint8x8x2_t u_zipped = vzip_u8(u_u8, u_u8);
+                        uint8x8x2_t v_zipped = vzip_u8(v_u8, v_u8);
+                        u_u8 = u_zipped.val[0]; // [u0,u0,u1,u1,u2,u2,u3,u3]
+                        v_u8 = v_zipped.val[0]; // [v0,v0,v1,v1,v2,v2,v3,v3]
+
+                        // Widen Y to 16-bit and subtract offset (Y-16)
+                        int16x8_t y_s16 = vreinterpretq_s16_u16(vmovl_u8(y_u8));
+                        y_s16 = vsubq_s16(y_s16, v_y_offset);
+
+                        // Widen U and V to 16-bit and subtract offset (U-128, V-128)
+                        int16x8_t u_s16 = vreinterpretq_s16_u16(vmovl_u8(u_u8));
+                        int16x8_t v_s16 = vreinterpretq_s16_u16(vmovl_u8(v_u8));
+                        u_s16 = vsubq_s16(u_s16, v_uv_offset);
+                        v_s16 = vsubq_s16(v_s16, v_uv_offset);
+
+                        // Widen to 32-bit for float multiplication
+                        int32x4_t y_lo = vmovl_s16(vget_low_s16(y_s16));
+                        int32x4_t y_hi = vmovl_s16(vget_high_s16(y_s16));
+                        int32x4_t u_lo = vmovl_s16(vget_low_s16(u_s16));
+                        int32x4_t u_hi = vmovl_s16(vget_high_s16(u_s16));
+                        int32x4_t v_lo = vmovl_s16(vget_low_s16(v_s16));
+                        int32x4_t v_hi = vmovl_s16(vget_high_s16(v_s16));
+
+                        // Convert to float
+                        float32x4_t yf_lo = vcvtq_f32_s32(y_lo);
+                        float32x4_t yf_hi = vcvtq_f32_s32(y_hi);
+                        float32x4_t uf_lo = vcvtq_f32_s32(u_lo);
+                        float32x4_t uf_hi = vcvtq_f32_s32(u_hi);
+                        float32x4_t vf_lo = vcvtq_f32_s32(v_lo);
+                        float32x4_t vf_hi = vcvtq_f32_s32(v_hi);
+
+                        // Scale Y: Y' = 1.164 * (Y-16)
+                        yf_lo = vmulq_f32(yf_lo, v_y_scale);
+                        yf_hi = vmulq_f32(yf_hi, v_y_scale);
+
+                        // Calculate RGB components
+                        float32x4_t r_lo, r_hi, g_lo, g_hi, b_lo, b_hi;
+
+                        if(grayscale_mode)
+                        {
+                            // Grayscale: R = G = B = Y'
+                            r_lo = yf_lo; r_hi = yf_hi;
+                            g_lo = yf_lo; g_hi = yf_hi;
+                            b_lo = yf_lo; b_hi = yf_hi;
+                        }
+                        else
+                        {
+                            // R = Y' + 1.596*V
+                            r_lo = vmlaq_f32(yf_lo, vf_lo, v_rv);
+                            r_hi = vmlaq_f32(yf_hi, vf_hi, v_rv);
+
+                            // G = Y' - 0.391*U - 0.813*V
+                            g_lo = vmlaq_f32(yf_lo, uf_lo, v_gu);
+                            g_lo = vmlaq_f32(g_lo, vf_lo, v_gv);
+                            g_hi = vmlaq_f32(yf_hi, uf_hi, v_gu);
+                            g_hi = vmlaq_f32(g_hi, vf_hi, v_gv);
+
+                            // B = Y' + 2.018*U
+                            b_lo = vmlaq_f32(yf_lo, uf_lo, v_bu);
+                            b_hi = vmlaq_f32(yf_hi, uf_hi, v_bu);
+                        }
+                        // Convert back to int32
+                        int32x4_t r_i_lo = vcvtq_s32_f32(r_lo);
+                        int32x4_t r_i_hi = vcvtq_s32_f32(r_hi);
+                        int32x4_t g_i_lo = vcvtq_s32_f32(g_lo);
+                        int32x4_t g_i_hi = vcvtq_s32_f32(g_hi);
+                        int32x4_t b_i_lo = vcvtq_s32_f32(b_lo);
+                        int32x4_t b_i_hi = vcvtq_s32_f32(b_hi);
+
+                        // Clamp to 0-255
+                        r_i_lo = vmaxq_s32(vminq_s32(r_i_lo, v_255), v_zero);
+                        r_i_hi = vmaxq_s32(vminq_s32(r_i_hi, v_255), v_zero);
+                        g_i_lo = vmaxq_s32(vminq_s32(g_i_lo, v_255), v_zero);
+                        g_i_hi = vmaxq_s32(vminq_s32(g_i_hi, v_255), v_zero);
+                        b_i_lo = vmaxq_s32(vminq_s32(b_i_lo, v_255), v_zero);
+                        b_i_hi = vmaxq_s32(vminq_s32(b_i_hi, v_255), v_zero);
+
+                        // Pack: saturate int32 to unsigned uint8
+                        // vqmovun_s32: saturates signed int32 to unsigned uint16 (0-65535)
+                        // Then vmovn_u16: narrows uint16 to uint8 (values already 0-255 after clamp)
+                        uint16x4_t r_u16_lo = vqmovun_s32(r_i_lo);
+                        uint16x4_t r_u16_hi = vqmovun_s32(r_i_hi);
+                        uint16x4_t g_u16_lo = vqmovun_s32(g_i_lo);
+                        uint16x4_t g_u16_hi = vqmovun_s32(g_i_hi);
+                        uint16x4_t b_u16_lo = vqmovun_s32(b_i_lo);
+                        uint16x4_t b_u16_hi = vqmovun_s32(b_i_hi);
+
+                        uint8x8_t r_u8 = vmovn_u16(vcombine_u16(r_u16_lo, r_u16_hi));
+                        uint8x8_t g_u8 = vmovn_u16(vcombine_u16(g_u16_lo, g_u16_hi));
+                        uint8x8_t b_u8 = vmovn_u16(vcombine_u16(b_u16_lo, b_u16_hi));
+
+                        // Build ARGB pixels as uint32: 0xAARRGGBB
+                        // On ARM little-endian, uint32 0xFFRRGGBB is stored as bytes [BB,GG,RR,FF]
+                        // So we interleave as [B,G,R,A] for vst4_u8 to get correct memory layout
+                        uint8x8x4_t argb;
+                        argb.val[0] = b_u8;  // Blue  (byte 0 = least significant)
+                        argb.val[1] = g_u8;  // Green (byte 1)
+                        argb.val[2] = r_u8;  // Red   (byte 2)
+                        argb.val[3] = vdup_n_u8(0xFF); // Alpha (byte 3 = most significant)
+
+                        // Store 8 ARGB pixels directly to framebuffer
+                        vst4_u8((uint8_t*)(fb_row + x), argb);
+                    }
+
+                    // Scalar fallback for remaining pixels
+                    for (; x < width; x++) {
+                        int uv_x = x / 2;
+                        uint8_t y_val = y_row[x];
+                        uint8_t u_val = u_row[uv_x];
+                        uint8_t v_val = v_row[uv_x];
+
+                        float y_f = (y_val - 16) * 1.164f;
+                        float u_f = u_val - 128;
+                        float v_f = v_val - 128;
+
+                        int r = (int)(y_f + 1.596f * v_f);
+                        int g = (int)(y_f - 0.391f * u_f - 0.813f * v_f);
+                        int b = (int)(y_f + 2.018f * u_f);
+
+                        r = (r < 0) ? 0 : (r > 255) ? 255 : r;
+                        g = (g < 0) ? 0 : (g > 255) ? 255 : g;
+                        b = (b < 0) ? 0 : (b > 255) ? 255 : b;
+
+                        uint32_t argb = 0xFF000000 | (r << 16) | (g << 8) | b;
+                        if(overlay_x>=0 || (overlay_x<0 && x+overlay_x>=0)) {
+                            fb_row[x] = argb;
+                        }
+                    }
+                }
+            }
+#endif
             // Show FPS overlay on framebuffer for debugging
-            draw_fps_overlay(ovl_framebuffer, width, height, ovl_pitch);
+            if(show_fps)
+                draw_fps_overlay(ovl_framebuffer, width, height, ovl_pitch);
             Xil_L2CacheFlushRange((uintptr_t)ovl_framebuffer, height * ovl_pitch);
         } else {
             printf("[PL_MPEG ARM] WARNING: Invalid framebuffer address or pitch\n");

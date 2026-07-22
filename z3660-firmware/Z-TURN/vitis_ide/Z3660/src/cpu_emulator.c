@@ -10,11 +10,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "main.h"
-#include <sleep.h>
 #include "cpu_emulator.h"
 #include "config_file.h"
 #include "xscuwdt.h"
 #include "scsi/scsi.h"
+#include "floppy/floppy.h"
 
 void write_rtg_register(uint16_t zaddr,uint32_t zdata);
 uint32_t read_rtg_register(uint16_t zaddr);
@@ -330,6 +330,23 @@ int emulator_thread(struct pt *pt)
          shared->read_scsi_data=handle_piscsi_read(addr,type);
          dsb();
          shared->read_scsi=0;
+      }
+      else if(shared->write_floppy==1)
+      {
+         int type=shared->write_floppy_type;
+         uint32_t addr=shared->write_floppy_addr;
+         uint32_t data=shared->write_floppy_data;
+         handle_pifloppy_reg_write(addr,data,type);
+         dsb();
+         shared->write_floppy=0;
+      }
+      else if(shared->read_floppy==1)
+      {
+         int type=shared->read_floppy_type;
+         uint32_t addr=shared->read_floppy_addr;
+         shared->read_floppy_data=handle_pifloppy_read(addr,type);
+         dsb();
+         shared->read_floppy=0;
       }
       else if(shared->reset_emulator==1)
       {

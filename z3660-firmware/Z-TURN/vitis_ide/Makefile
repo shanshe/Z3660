@@ -1,4 +1,4 @@
-# Top-level Makefile for Z3660 project on macOS using Wine bootgen
+# Top-level Makefile for Z3660 project on macOS
 #
 # Targets:
 #   make all        -> z3660 + z3660_emu + bootbin + version (fsbl only if needed)
@@ -6,18 +6,12 @@
 #   make fsbl       -> build FSBL (only if not exists)
 #   make z3660      -> build main firmware
 #   make z3660_emu  -> build emulator firmware (core1)
-#   make bootbin    -> generate BOOT.BIN via Wine + bootgen.exe
+#   make bootbin    -> generate BOOT.BIN
 #   make version    -> run make_version_alfa.py packaging script
 #   make clean      -> clean app builds (FSBL/app dirs)
 #
-# Configure these if needed:
-WINEPREFIX    := $(HOME)/.wine64
-export WINEPREFIX
-WINE          ?= MVK_CONFIG_LOG_LEVEL=0 WINEDEBUG=-all wine
+
 # Set the path to bootgen.exe on your host system (e.g., macOS or Linux).
-# Example: BOOTGEN_EXE_HOST ?= /opt/Xilinx/Vivado/2021.2/bin/bootgen.exe
-# Example: BOOTGEN_EXE_HOST ?= $(HOME)/.wine/drive_c/Xilinx/bin/bootgen.exe
-#BOOTGEN_EXE_HOST := $(HOME)/.wine64/drive_c/Xilinx/bin/bootgen.exe
 BOOTGEN_EXE_HOST := $(HOME)/git/zynq-mkbootimage/mkbootimage
 MAKE = make
 
@@ -69,8 +63,6 @@ z3660: bsp_cortexa9_0
 z3660_emu: bsp_cortexa9_1
 	@$(MAKE) -C $(Z3660_EMU_DIR) -j 4
 
-# Generate BOOT.BIN using Wine bootgen.exe
-# Uses winepath to translate Unix paths to Windows paths for bootgen.exe
 # DDR_SPEED variable can be set to 533, 667, or 800
 DDR_SPEED ?= 533
 
@@ -97,8 +89,7 @@ bootbin_prepare: build $(FSBL_DIR)/fsbl_ddr$(DDR_SPEED).elf
 
 bootbin: bootbin_prepare
 	@mkdir -p $(dir $(BOOTBIN))
-	@echo "Generating BOOT.BIN via Wine bootgen.exe (DDR $(DDR_SPEED)MHz)"
-#	$(WINE) $(BOOTGEN_EXE_HOST) -arch zynq -image $(BIF) -o $(BOOTBIN) -w
+	@echo "Generating BOOT.BIN (DDR $(DDR_SPEED)MHz)"
 	$(BOOTGEN_EXE_HOST) $(BIF) $(BOOTBIN)
 	@echo "BOOT.BIN -> $(BOOTBIN)"
 

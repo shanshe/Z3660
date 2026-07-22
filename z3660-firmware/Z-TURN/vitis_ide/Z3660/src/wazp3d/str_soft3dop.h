@@ -18,5 +18,6 @@ char *soft3d_op_string[]={
    STRINGIZER(OP_CLEARZBUFFER      ),
    STRINGIZER(OP_READZSPAN         ),
    STRINGIZER(OP_WRITEZSPAN        ),
+   STRINGIZER(OP_DEBUG             ),
    STRINGIZER(OP_SOFT3D_NUM        ),
 };

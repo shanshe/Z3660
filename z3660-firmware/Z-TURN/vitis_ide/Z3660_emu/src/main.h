@@ -103,6 +103,14 @@ typedef struct {
    volatile uint32_t z2_enabled;          // 0xFFFF0090
    volatile uint32_t printhist_dataabort; // 0xFFFF0094
    volatile uint32_t arm_freq_code;       // 0xFFFF0098
+   volatile uint32_t write_floppy;        // 0xFFFF009C
+   volatile uint32_t write_floppy_addr;   // 0xFFFF00A0
+   volatile uint32_t write_floppy_data;   // 0xFFFF00A4
+   volatile uint32_t write_floppy_type;   // 0xFFFF00A8
+   volatile uint32_t read_floppy;         // 0xFFFF00AC
+   volatile uint32_t read_floppy_addr;    // 0xFFFF00B0
+   volatile uint32_t read_floppy_data;    // 0xFFFF00B4
+   volatile uint32_t read_floppy_type;    // 0xFFFF00B8
 } SHARED;
 
 enum BOOTMODE{

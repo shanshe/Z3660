@@ -11,7 +11,6 @@
 #include <string.h>
 #include "xil_exception.h"
 #include "config_file.h"
-#include "sleep.h"
 #include "main.h"
 #include "ARM_ztop/checkbox.h"
 CONFIG config,default_config,temp_config;
@@ -44,6 +43,26 @@ const char *config_item_names[CONFITEM_NUM] = {
       "hdf17",
       "hdf18",
       "hdf19",
+      "iso0",
+      "iso1",
+      "iso2",
+      "iso3",
+      "iso4",
+      "iso5",
+      "iso6",
+      "iso7",
+      "iso8",
+      "iso9",
+      "iso10",
+      "iso11",
+      "iso12",
+      "iso13",
+      "iso14",
+      "iso15",
+      "iso16",
+      "iso17",
+      "iso18",
+      "iso19",
       "scsi0",
       "scsi1",
       "scsi2",
@@ -51,6 +70,34 @@ const char *config_item_names[CONFITEM_NUM] = {
       "scsi4",
       "scsi5",
       "scsi6",
+      "adf_file0",
+      "adf_file1",
+      "adf_file2",
+      "adf_file3",
+      "adf_file4",
+      "adf_file5",
+      "adf_file6",
+      "adf_file7",
+      "adf_file8",
+      "adf_file9",
+      "adf_file10",
+      "adf_file11",
+      "adf_file12",
+      "adf_file13",
+      "adf_file14",
+      "adf_file15",
+      "adf_file16",
+      "adf_file17",
+      "adf_file18",
+      "adf_file19",
+      "adf0",
+      "adf1",
+      "adf2",
+      "adf3",
+      "adf4",
+      "adf5",
+      "adf6",
+      "adf7",
       "autoconfig_ram",
       "autoconfig_rtg",
       "cpu_ram",
@@ -154,8 +201,14 @@ void load_default_config(void)
    config.boot_mode=UAEJIT_040;
    for(int i=0;i<20;i++)
       config.hdf[i][0]=0;
+   for(int i=0;i<20;i++)
+      config.adf[i][0]=0;
    for(int i=0;i<7;i++)
       config.scsi_num[i]=-1;
+   for(int i=0;i<8;i++)
+      config.adf_num[i]=-1;
+   for(int i=0;i<7;i++)
+      config.cd_target[i]=0;
    config.scsiboot=0;
    config.autoconfig_ram=0;
    config.autoconfig_rtg=0;
@@ -248,6 +301,15 @@ void write_config_file(char *filename)
    print_line(&fil,"scsi0 0\n");
    print_line(&fil,"scsi1 1\n");
    print_line(&fil,"#scsi2 2\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Declare your adf files (from adf_file0 to adf_file19)\n");
+   print_line(&fil,"#adf_file0 adf/Install3.2.adf\n");
+   print_line(&fil,"#adf_file1 adf/Classes3.2.adf\n");
+   print_line(&fil,"#adf_file2 adf/Locale.adf\n");
+   print_line(&fil,"# Select the adf number (adf0 to adf7) to assign one of the above adf files\n");
+   print_line(&fil,"adf0 0\n");
+   print_line(&fil,"adf1 1\n");
+   print_line(&fil,"# adf2 2\n");
    print_line(&fil,"\n");
    print_line(&fil,"# Autoconfig RAM Enable (256 MB Zorro III RAM)\n");
    print_line(&fil,"# (YES or NO, in capitals)\n");
@@ -547,8 +609,12 @@ retry:
    strcpy(config.sound_language,"eng");
    for(int i=0;i<20;i++)
       config.hdf[i][0]=0;
+   for(int i=0;i<20;i++)
+      config.adf[i][0]=0;
    for(int i=0;i<7;i++)
       config.scsi_num[i]=-1;
+   for(int i=0;i<8;i++)
+      config.adf_num[i]=-1;
    config.bootscreen_resolution=RES_800x600;
    config.doubled_cursor=0;
    for(int i=0;i<6;i++)
@@ -650,6 +716,21 @@ retry:
             if(verbose) printf("[CFG] SCSI%d assigned to %s\n",index,config.hdf[config.scsi_num[index]]);
          break;
       }
+      case CONFITEM_ADF0:
+      case CONFITEM_ADF1:
+      case CONFITEM_ADF2:
+      case CONFITEM_ADF3:
+      case CONFITEM_ADF4:
+      case CONFITEM_ADF5:
+      case CONFITEM_ADF6:
+      case CONFITEM_ADF7: {
+         int index=item-CONFITEM_ADF0;
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.adf_num[index]=get_int_type(cur_cmd);
+         if(config.adf_num[index]>=0)
+            if(verbose) printf("[CFG] ADF%d assigned to %s\n",index,config.adf[config.adf_num[index]]);
+         break;
+      }
       case CONFITEM_HDF0:
       case CONFITEM_HDF1:
       case CONFITEM_HDF2:
@@ -674,6 +755,59 @@ retry:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          sprintf(config.hdf[index],"%s%s", DEFAULT_ROOT, cur_cmd);
          if(verbose) printf("[CFG] hdf%d file %s\n", index, config.hdf[index]);
+         break;
+      }
+      case CONFITEM_ISO0:
+      case CONFITEM_ISO1:
+      case CONFITEM_ISO2:
+      case CONFITEM_ISO3:
+      case CONFITEM_ISO4:
+      case CONFITEM_ISO5:
+      case CONFITEM_ISO6:
+      case CONFITEM_ISO7:
+      case CONFITEM_ISO8:
+      case CONFITEM_ISO9:
+      case CONFITEM_ISO10:
+      case CONFITEM_ISO11:
+      case CONFITEM_ISO12:
+      case CONFITEM_ISO13:
+      case CONFITEM_ISO14:
+      case CONFITEM_ISO15:
+      case CONFITEM_ISO16:
+      case CONFITEM_ISO17:
+      case CONFITEM_ISO18:
+      case CONFITEM_ISO19: {
+         int index=item-CONFITEM_ISO0;
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         sprintf(config.hdf[index],"%s%s", DEFAULT_ROOT, cur_cmd);
+         if(verbose) printf("[CFG] iso%d file %s\n", index, config.hdf[index]);
+         config.cd_target[index]=1;
+         break;
+      }
+      case CONFITEM_ADF_FILE0:
+      case CONFITEM_ADF_FILE1:
+      case CONFITEM_ADF_FILE2:
+      case CONFITEM_ADF_FILE3:
+      case CONFITEM_ADF_FILE4:
+      case CONFITEM_ADF_FILE5:
+      case CONFITEM_ADF_FILE6:
+      case CONFITEM_ADF_FILE7:
+      case CONFITEM_ADF_FILE8:
+      case CONFITEM_ADF_FILE9:
+      case CONFITEM_ADF_FILE10:
+      case CONFITEM_ADF_FILE11:
+      case CONFITEM_ADF_FILE12:
+      case CONFITEM_ADF_FILE13:
+      case CONFITEM_ADF_FILE14:
+      case CONFITEM_ADF_FILE15:
+      case CONFITEM_ADF_FILE16:
+      case CONFITEM_ADF_FILE17:
+      case CONFITEM_ADF_FILE18:
+      case CONFITEM_ADF_FILE19: {
+         int index=item-CONFITEM_ADF_FILE0;
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         sprintf(config.adf[index],"%s%s", DEFAULT_ROOT, cur_cmd);
+         if(verbose) printf("[CFG] adf_file%d file %s\n", index, config.adf[index]);
          break;
       }
 
@@ -912,6 +1046,8 @@ load_successful:;
       COPY_DEFAULT(cpufreq);
       for(int j=0;j<7;j++)
          COPY_DEFAULT(scsi_num[j]);
+      for(int j=0;j<8;j++)
+         COPY_DEFAULT(adf_num[j]);
       for(int j=0;j<6;j++)
          COPY_DEFAULT(mac_address[j]);
       COPY_DEFAULT(bp_ton);
@@ -995,6 +1131,7 @@ retry:
    // Try to read all files
    for(int preset=0;preset<PRESET_CB_MAX-1;preset++)
    {
+      cur_line = 1;
       sprintf(text,DEFAULT_ROOT "presets/preset%d.txt",preset);
 
       ret=f_open(&fil,text, FA_OPEN_EXISTING | FA_READ);
@@ -1020,6 +1157,7 @@ retry:
                sprintf(name,"preset%d default name",preset);
             }
             strcpy(env_file_vars_temp[preset].preset_name,name);
+            goto skip_line;
          }
          while (!f_eof(&fil))
          {
@@ -1101,6 +1239,28 @@ retry:
                   {
                      if(num>=0 && num<=19)
                         if(verbose) printf("\e[30m\e[103m[ENV] SCSI%d assigned to %s.\e[0m\n", index,config.hdf[env_file_vars_temp[preset].scsi_num[index]]);
+                  }
+                  break;
+               }
+               case CONFITEM_ADF0:
+               case CONFITEM_ADF1:
+               case CONFITEM_ADF2:
+               case CONFITEM_ADF3:
+               case CONFITEM_ADF4:
+               case CONFITEM_ADF5:
+               case CONFITEM_ADF6:
+               case CONFITEM_ADF7: {
+                  int index=item-CONFITEM_ADF0;
+                  get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+                  int num=get_int_type(cur_cmd);
+                  if(num>=-1 && num<=19)
+                     env_file_vars_temp[preset].adf_num[index]=num;
+                  else
+                     if(verbose) printf("\e[31m\e[103mERROR ADF%d assigned to %d\e[0m\n", index,num);
+                  if(preset==preset_selected)
+                  {
+                     if(num>=0 && num<=19)
+                        if(verbose) printf("\e[30m\e[103m[ENV] ADF%d assigned to %s.\e[0m\n", index,config.adf[env_file_vars_temp[preset].adf_num[index]]);
                   }
                   break;
                }
@@ -1220,6 +1380,8 @@ retry:
       config.enable_test=env_file_vars_temp[preset_selected].enable_test;
       for(int i=0;i<7;i++)
          config.scsi_num[i]=env_file_vars_temp[preset_selected].scsi_num[i];
+      for(int i=0;i<8;i++)
+         config.adf_num[i]=env_file_vars_temp[preset_selected].adf_num[i];
       config.autoconfig_ram=env_file_vars_temp[preset_selected].autoconfig_ram;
       config.autoconfig_rtg=env_file_vars_temp[preset_selected].autoconfig_rtg;
       config.cpu_ram=env_file_vars_temp[preset_selected].cpu_ram;
@@ -1317,6 +1479,12 @@ retry:
             f_printf(&fil,"scsi%d %d\n",i,env_file->scsi_num[i]);
 
          f_printf(&fil,"#############\n");
+         f_printf(&fil,"# ADF options\n");
+         f_printf(&fil,"#############\n");
+         for(int i=0;i<8;i++)
+            f_printf(&fil,"adf%d %d\n",i,env_file->adf_num[i]);
+
+         f_printf(&fil,"#############\n");
          f_printf(&fil,"#MISC options\n");
          f_printf(&fil,"#############\n");
          f_printf(&fil,"mac_address %02X:%02X:%02X:%02X:%02X:%02X\n",env_file->mac_address[0],
@@ -1362,6 +1530,8 @@ int write_env_files_boot(ENV_FILE_VARS *env_file)
    env_file->doubled_cursor=config.doubled_cursor;
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
+   for(int i=0;i<8;i++)
+      env_file->adf_num[i]=config.adf_num[i];
    for(int i=0;i<6;i++)
       env_file->mac_address[i]=config.mac_address[i];
    env_file->bp_ton=config.bp_ton;
@@ -1389,6 +1559,37 @@ int write_env_files_scsi(ENV_FILE_VARS *env_file)
    env_file->doubled_cursor=config.doubled_cursor;
 //   for(int i=0;i<7;i++)
 //      env_file->scsi_num[i]=config.scsi_num[i];
+   for(int i=0;i<8;i++)
+      env_file->adf_num[i]=config.adf_num[i];
+   for(int i=0;i<6;i++)
+      env_file->mac_address[i]=config.mac_address[i];
+   env_file->bp_ton=config.bp_ton;
+   env_file->bp_toff=config.bp_toff;
+   env_file->monitor_switch=config.monitor_switch;
+   env_file->arm_frequency=config.arm_frequency;
+
+   return(write_env_files(env_file));
+}
+int write_env_files_adf(ENV_FILE_VARS *env_file)
+{
+//   env_file->preset_name;
+   env_file->boot_mode=config.boot_mode;
+   env_file->scsiboot=config.scsiboot;
+   env_file->autoconfig_ram=config.autoconfig_ram;
+   env_file->autoconfig_rtg=config.autoconfig_rtg;
+   env_file->enable_test=config.enable_test;
+   env_file->cpu_ram=config.cpu_ram;
+   env_file->mount_sd_0x76=config.mount_sd_0x76;
+   env_file->mount_sd_root=config.mount_sd_root;
+   env_file->cpufreq=config.cpufreq;
+   env_file->kickstart=config.kickstart;
+   env_file->ext_kickstart=config.ext_kickstart;
+   env_file->bootscreen_resolution=config.bootscreen_resolution;
+   env_file->doubled_cursor=config.doubled_cursor;
+   for(int i=0;i<7;i++)
+      env_file->scsi_num[i]=config.scsi_num[i];
+//   for(int i=0;i<8;i++)
+//      env_file->adf_num[i]=config.adf_num[i];
    for(int i=0;i<6;i++)
       env_file->mac_address[i]=config.mac_address[i];
    env_file->bp_ton=config.bp_ton;
@@ -1419,6 +1620,8 @@ int write_env_files_bootscres(ENV_FILE_VARS *env_file)
 
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
+   for(int i=0;i<8;i++)
+      env_file->adf_num[i]=config.adf_num[i];
    for(int i=0;i<6;i++)
       env_file->mac_address[i]=config.mac_address[i];
    env_file->bp_ton=config.bp_ton;
@@ -1446,6 +1649,8 @@ int write_env_files_misc(ENV_FILE_VARS *env_file)
    env_file->arm_frequency=config.arm_frequency;
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
+   for(int i=0;i<8;i++)
+      env_file->adf_num[i]=config.adf_num[i];
 //   for(int i=0;i<6;i++)
 //      env_file->mac_address[i]=config.mac_address[i];
 //   env_file->bp_ton=config.bp_ton;
@@ -1471,6 +1676,8 @@ int write_env_files_preset(ENV_FILE_VARS *env_file)
    env_file->doubled_cursor=config.doubled_cursor;
    for(int i=0;i<7;i++)
       env_file->scsi_num[i]=config.scsi_num[i];
+   for(int i=0;i<8;i++)
+      env_file->adf_num[i]=config.adf_num[i];
    for(int i=0;i<6;i++)
       env_file->mac_address[i]=config.mac_address[i];
    env_file->bp_ton=config.bp_ton;

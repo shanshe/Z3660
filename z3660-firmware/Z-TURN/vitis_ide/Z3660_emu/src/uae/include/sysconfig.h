@@ -552,6 +552,7 @@ typedef unsigned char boolean;
 #define TRUE 1U
 
 typedef unsigned short USHORT;
+typedef unsigned long ULONG;   /* Z3660: Windows-ism used by imported cpummu.cpp */
 
 #define Sleep(x) usleep((x)*1000)
 

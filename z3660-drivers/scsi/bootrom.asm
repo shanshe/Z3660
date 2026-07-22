@@ -132,11 +132,12 @@ rt_Init:    dc.l     Init-RomStart      ; APTR  RT_INIT
             dc.b     '$VER '
 ******* Strings referenced in Diag Copy area  ************************
 DevName:    dc.b     'z3660_scsi.device',0                      ; Name string
-IdString    dc.b     'Z3660 SCSI v1.4',0   ; Id string
+IdString    dc.b     'Z3660 SCSI v1.5',0   ; Id string
 
 DosName:        dc.b     'dos.library',0                ; DOS library name
 ExpansionName:  dc.b     'expansion.library',0
-LibName:        dc.b     'z3660_scsi.device',0
+LibName_scsi:   dc.b     'z3660_scsi.device',0
+*LibName_floppy: dc.b     'z3660_floppy.device',0
 
 DosDevName: dc.b     'ZHD',0        ; dos device name for MakeDosNode()
                                     ;   (dos device will be ABC:)
@@ -260,7 +261,7 @@ Init:       ; After Diag patching, our romtag will point to this
 
             move.l  #11,PiSCSIDebugMe(a5)
             movea.l 4,a6
-            lea     LibName(pc),a1
+            lea     LibName_scsi(pc),a1
             jsr     FindResident(a6)
             jsr     get_boardbase
             move.l  #10,PiSCSIDebugMe(a5)

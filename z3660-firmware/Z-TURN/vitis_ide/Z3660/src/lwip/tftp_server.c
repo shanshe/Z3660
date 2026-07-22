@@ -379,7 +379,7 @@ void assignDefaultIP(ip_addr_t *ip, ip_addr_t *mask, ip_addr_t *gw)
       xil_printf("Invalid default gateway address: %d\r\n", err);
 }
 
-void startApplication()
+void startApplication_TFTP()
 {
    struct udp_pcb *pcb;
    err_t err;

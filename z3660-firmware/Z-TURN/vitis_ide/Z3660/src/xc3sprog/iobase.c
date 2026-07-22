@@ -33,6 +33,7 @@ Dmitry Teytelman [dimtey@gmail.com] 14 Jun 2006 [applied 13 Aug 2006]:
 #include "utilities.h"
 
 //#include <unistd.h>
+#include "xc3_usleep.h"
 #include <stdio.h>
 #include <string.h>
 #define false 0
@@ -103,6 +104,6 @@ void shift(IOBase *io,bool tdi, int length, bool last)
 void Usleep(IOBase *io,unsigned int usec)
 {
    flush_tms(io);
-   usleep(usec);
+   xc3_usleep(usec);
 }
 
