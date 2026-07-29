@@ -2213,6 +2213,16 @@ void DrawLine(__REGA0(struct BoardInfo *b), __REGA1(struct RenderInfo *r), __REG
    if (!b || !l || !r)
       return;
 
+   /* Line does not expose the RastPort's FRST_DOT state, so an accelerated
+    * COMPLEMENT line cannot tell a fresh Draw from a connected Draw. Processing
+    * a shared vertex twice is observable with XOR. Keep every other mode on the
+    * fast path and let Picasso96 preserve exact join ownership for COMPLEMENT. */
+   if (l->DrawMode & COMPLEMENT) {
+      if (b->DrawLineDefault)
+         b->DrawLineDefault(b, r, l, mask, format);
+      return;
+   }
+
    uint16_t colormode = mnt_colormode(format);
    if (colormode == MNTVA_COLOR_NO_USE) {
       if (b->DrawLineDefault)
