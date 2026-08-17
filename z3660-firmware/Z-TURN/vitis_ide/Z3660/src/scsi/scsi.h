@@ -87,7 +87,9 @@ typedef struct piscsi_dev_ {
     uint8_t pdt;    // SCSI peripheral device type: 0x00 = direct-access disk, 0x05 = read-only CD-ROM
     struct PartitionBlock *pb[16];
     struct RigidDiskBlock *rdb;
-    DWORD SeekTbl[64];
+    // Fast-seek link map table: [size][ncl,tcl]...[0], so N items cover
+    // (N - 2) / 2 fragments.  256 items = 127 fragments.
+    DWORD SeekTbl[256];
     uint32_t pb_addres[16];
 } PISCSI_DEV;
 typedef struct hunk_reloc_ {
