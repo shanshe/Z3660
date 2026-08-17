@@ -721,8 +721,17 @@ int piscsi_map_drive(char *filename, uint8_t index, uint64_t p0_Start, uint64_t 
          DEBUG((d->SeekTbl[0] > 4) ? "fragmented in %ld.\n" : "contiguous.\n", d->SeekTbl[0] / 2 - 1);
          DEBUG("[FASTSEEK %d] %lu items used.\n",index, d->SeekTbl[0]);
       }
-      if (res == FR_NOT_ENOUGH_CORE) {
-         printf("[FASTSEEK %d] %lu items required to create the link map table.\n",index, d->SeekTbl[0]);
+      else {
+         // The link map table was not created.  FatFs writes the terminating zero
+         // only in the success path of f_lseek(CREATE_LINKMAP), so what is left in
+         // SeekTbl is truncated and unterminated; keeping it installed would let
+         // clmt_clust() run off the end of the table.  Uninstall it so FatFs falls
+         // back to the generic cluster-chain walk.
+         d->fd->cltbl = NULL;
+         if (res == FR_NOT_ENOUGH_CORE)
+            printf("[FASTSEEK %d] %lu items required to create the link map table, fast seek disabled.\n",index, d->SeekTbl[0]);
+         else
+            printf("[FASTSEEK %d] could not create the link map table (f_lseek returned %d), fast seek disabled.\n",index, res);
       }
    }
    DEBUG("Done partitions.\n");
