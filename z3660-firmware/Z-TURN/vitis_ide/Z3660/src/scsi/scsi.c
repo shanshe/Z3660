@@ -1057,7 +1057,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
           * (xil_cache.c), preserving neighbours of odd driver buffers; the sdps
           * post-transfer invalidate then covers lines speculatively re-fetched while
           * the DMA ran. */
-         Xil_L1DCacheInvalidateRange((INTPTR)map, piscsi_u32_read[1]);
+         Xil_DCacheInvalidateRange((INTPTR)map, piscsi_u32_read[1]);
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
@@ -1165,7 +1165,7 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
           * maintenance at all -- without this clean, every direct write would put
           * STALE DRAM bytes on the disk. Clean the range through L1+L2 to DRAM
           * first so the DMA reads exactly what the guest wrote. */
-         Xil_L1DCacheFlushRange((INTPTR)map, piscsi_u32_write[1]);
+         Xil_DCacheFlushRange((INTPTR)map, piscsi_u32_write[1]);
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
