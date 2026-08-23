@@ -10,7 +10,7 @@ quit
 //#define CPU_FREQ_THRESHOLD 25
 
 #define Z3660_ZTOP_VERSION_MAJOR "Z3660 ZTop 1.03"
-#define Z3660_ZTOP_VERSION_MINOR 20 // BETA number (0 = full version, no beta)
+#define Z3660_ZTOP_VERSION_MINOR 21 // BETA number (0 = full version, no beta)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,6 +82,8 @@ quit
 
 void refresh_zz_info(struct Window *win);
 
+enum { MAC_STR_LEN = 18 };
+
 #define SPACE LAYOUT_AddChild, SpaceObject, End
 
 IMPORT struct Library *ButtonBase,
@@ -108,6 +110,48 @@ volatile UBYTE* zz_regs;
 
 char txt_buf[64];
 char window_title[64]="";
+
+static BPTR ztop_log_fh = (BPTR)0;
+//#define DEBUG_ZTOP_LOG
+#ifdef DEBUG_ZTOP_LOG
+static void ztop_log_open(void)
+{
+   ztop_log_fh = Open((STRPTR)"Almacen:ZTop-gcc.log", MODE_NEWFILE);
+}
+
+static void ztop_log(const char *msg)
+{
+   if (!ztop_log_fh || !msg)
+      return;
+   FPuts(ztop_log_fh, (STRPTR)msg);
+   FPuts(ztop_log_fh, (STRPTR)"\n");
+   Flush(ztop_log_fh);
+}
+
+static void ztop_log_close(void)
+{
+   if (ztop_log_fh)
+   {
+      Close(ztop_log_fh);
+      ztop_log_fh = (BPTR)0;
+   }
+}
+
+static void ztop_log_ptr(const char *name, const void *ptr)
+{
+   char line[96];
+
+   if (!name)
+      return;
+   snprintf(line, sizeof(line), "%s=%08lx", name, (ULONG)ptr);
+   ztop_log(line);
+}
+#else
+static void ztop_log_open(void) {}
+static void ztop_log(const char *msg) {}
+static void ztop_log_close(void) {}
+static void ztop_log_ptr(const char *name, const void *ptr) {}
+#endif
 
 #define INFO_STR_WIDTH 60
 #define PRESET_STR_WIDTH 50
@@ -351,15 +395,46 @@ struct Library *openclass (STRPTR name, ULONG version)
 
     if ((retval = OpenLibrary (name, version)) == NULL)
     {
-      sprintf (buffer, ":classes/%s", name);
+      snprintf(buffer, sizeof(buffer), ":classes/%s", name);
       if ((retval = OpenLibrary (buffer, version)) == NULL)
       {
-          sprintf (buffer, "classes/%s", name);
+          snprintf(buffer, sizeof(buffer), "classes/%s", name);
           retval = OpenLibrary (buffer, version);
       }
     }
     return retval;
 }
+
+static int ensure_reaction_bases(void)
+{
+   if (!ButtonBase)
+      ButtonBase = openclass((STRPTR)"gadgets/button.gadget", 0);
+   if (!CheckBoxBase)
+      CheckBoxBase = openclass((STRPTR)"gadgets/checkbox.gadget", 0);
+   if (!ChooserBase)
+      ChooserBase = openclass((STRPTR)"gadgets/chooser.gadget", 0);
+   if (!SliderBase)
+      SliderBase = openclass((STRPTR)"gadgets/slider.gadget", 0);
+   if (!ClickTabBase)
+      ClickTabBase = openclass((STRPTR)"gadgets/clicktab.gadget", 0);
+   if (!LabelBase)
+      LabelBase = openclass((STRPTR)"images/label.image", 0);
+   if (!LayoutBase)
+      LayoutBase = openclass((STRPTR)"gadgets/layout.gadget", 0);
+   if (!ListBrowserBase)
+      ListBrowserBase = openclass((STRPTR)"gadgets/listbrowser.gadget", 0);
+   if (!StringBase)
+      StringBase = openclass((STRPTR)"gadgets/string.gadget", 0);
+   if (!SpaceBase)
+      SpaceBase = openclass((STRPTR)"gadgets/space.gadget", 0);
+   if (!WindowBase)
+      WindowBase = openclass((STRPTR)"window.class", 0);
+
+   return ButtonBase && CheckBoxBase && ChooserBase && SliderBase &&
+          ClickTabBase && LabelBase && LayoutBase && ListBrowserBase &&
+          StringBase && SpaceBase && WindowBase;
+}
+
 void errorMessage(char* error)
 {
    if (error) printf("Error: %s\n", error);
@@ -552,7 +627,7 @@ void zz_get_mac(char *mac)
 {
    uint32_t data_hi=zz_get_reg(REG_ZZ_ETH_MAC_HI);
    uint32_t data_lo=zz_get_reg(REG_ZZ_ETH_MAC_LO);
-   sprintf(mac,"%02X:%02X:%02X:%02X:%02X:%02X",(data_hi>>8)&0xFF,(data_hi)&0xFF,(data_lo>>24)&0xFF,(data_lo>>16)&0xFF,(data_lo>>8)&0xFF,(data_lo)&0xFF);
+   snprintf(mac, MAC_STR_LEN, "%02X:%02X:%02X:%02X:%02X:%02X", (data_hi>>8)&0xFF, (data_hi)&0xFF, (data_lo>>24)&0xFF, (data_lo>>16)&0xFF, (data_lo>>8)&0xFF, (data_lo)&0xFF);
 }
 /*
 uint32_t zz_get_usb_status(void)
@@ -744,7 +819,7 @@ uint8_t hex2int(char c1, char c2)
 void zz_set_apply_misc(void)
 {
    int bpton,bptoff;
-   char mac[18];
+   char mac[MAC_STR_LEN];
    uint32_t data;
    GetAttrs((Object *)gadgets[GID_MISC_MAC], SLIDER_Level, mac, TAG_END);
    data =((uint32_t)hex2int(mac[ 0],mac[ 1]))<<8;
@@ -865,7 +940,7 @@ void refresh_zz_info(struct Window *win)
    uint32_t beta,alfa;
    int bpton;
    int bptoff;
-   char mac[18];
+   char mac[MAC_STR_LEN];
    int selected_preset;
 
    uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
@@ -881,11 +956,11 @@ void refresh_zz_info(struct Window *win)
       alfa = zz_get_reg(REG_ZZ_FW_ALFA);
       if(alfa)
       {
-         sprintf(window_title,Z3660_ZTOP_VERSION_MAJOR " (BETA %d ALFA %d)", beta, alfa);
+         snprintf(window_title, sizeof(window_title), Z3660_ZTOP_VERSION_MAJOR " (BETA %d ALFA %d)", beta, alfa);
       }
       else
       {
-         sprintf(window_title,Z3660_ZTOP_VERSION_MAJOR " (BETA %d FIRMWARE DETECTED)", beta);
+         snprintf(window_title, sizeof(window_title), Z3660_ZTOP_VERSION_MAJOR " (BETA %d FIRMWARE DETECTED)", beta);
       }
       SetWindowTitles(win,window_title,(CONST_STRPTR)-1);
       if(beta>Z3660_ZTOP_VERSION_MINOR)
@@ -1254,32 +1329,32 @@ void refresh_zz_info(struct Window *win)
    filter(&ltc_v2);
    filter(&ltc_060_temp);
 
-   sprintf(txt_buf, "%d", (int)cpu_freq);
+   snprintf(txt_buf, sizeof(txt_buf), "%d", (int)cpu_freq);
    SetAttrs(gadgets[GID_INFO_CPU_FREQ], STRINGA_TextVal, txt_buf, TAG_END);
    SetAttrs(gadgets[GID_BOOT_CPU_FREQ], SLIDER_Level, cpu_freq, TAG_END);
 
-   sprintf(txt_buf, "%d.%02d", fwrev_major, fwrev_minor);
+   snprintf(txt_buf, sizeof(txt_buf), "%d.%02d", fwrev_major, fwrev_minor);
    SetAttrs(gadgets[GID_INFO_FWVER], STRINGA_TextVal, txt_buf, TAG_END);
 
-   sprintf(txt_buf, "%.1f", t.m_filt);
+   snprintf(txt_buf, sizeof(txt_buf), "%.1f", t.m_filt);
    SetAttrs(gadgets[GID_INFO_TEMP], STRINGA_TextVal, txt_buf, TAG_END);
 
-   sprintf(txt_buf, "%.2f", vaux.m_filt);
+   snprintf(txt_buf, sizeof(txt_buf), "%.2f", vaux.m_filt);
    SetAttrs(gadgets[GID_INFO_VAUX], STRINGA_TextVal, txt_buf, TAG_END);
 
-   sprintf(txt_buf, "%.2f", vint.m_filt);
+   snprintf(txt_buf, sizeof(txt_buf), "%.2f", vint.m_filt);
    SetAttrs(gadgets[GID_INFO_VINT], STRINGA_TextVal, txt_buf, TAG_END);
 
-   sprintf(txt_buf, "%.1f", ltc_temp.m_filt);
+   snprintf(txt_buf, sizeof(txt_buf), "%.1f", ltc_temp.m_filt);
    SetAttrs(gadgets[GID_INFO_LTC_TEMP], STRINGA_TextVal, txt_buf, TAG_END);
 
-   sprintf(txt_buf, "%.2f", ltc_v1.m_filt);
+   snprintf(txt_buf, sizeof(txt_buf), "%.2f", ltc_v1.m_filt);
    SetAttrs(gadgets[GID_INFO_LTC_V1], STRINGA_TextVal, txt_buf, TAG_END);
 
-   sprintf(txt_buf, "%.2f", ltc_v2.m_filt);
+   snprintf(txt_buf, sizeof(txt_buf), "%.2f", ltc_v2.m_filt);
    SetAttrs(gadgets[GID_INFO_LTC_V2], STRINGA_TextVal, txt_buf, TAG_END);
 
-   sprintf(txt_buf, "%.1f", ltc_060_temp.m_filt);
+   snprintf(txt_buf, sizeof(txt_buf), "%.1f", ltc_060_temp.m_filt);
    SetAttrs(gadgets[GID_INFO_LTC_060_TEMP], STRINGA_TextVal, txt_buf, TAG_END);
 
    if (emulation_used) {
@@ -2181,7 +2256,7 @@ BOOL processMenus(UWORD menuNumber)
       {
          char message[100];
          if(Z3660_ZTOP_VERSION_MINOR>0)
-            sprintf(message,Z3660_ZTOP_VERSION_MAJOR " BETA %d", Z3660_ZTOP_VERSION_MINOR );
+            snprintf(message, sizeof(message), Z3660_ZTOP_VERSION_MAJOR " BETA %d", Z3660_ZTOP_VERSION_MINOR);
          else
             strcpy(message,Z3660_ZTOP_VERSION_MAJOR);
          Pop(message);
@@ -2207,12 +2282,20 @@ int main(void)
    struct Screen *new_screen;
 #endif
    Object *objects[OID_LAST];
+
+   ztop_log_open();
+   ztop_log("main: start");
+
    if (!(ExpansionBase = (struct Library*)OpenLibrary((CONST_STRPTR)"expansion.library",0L))) {
+      ztop_log("main: OpenLibrary expansion.library failed");
       errorMessage("Requires expansion.library");
+      ztop_log_close();
       return 0;
    }
+   ztop_log("main: expansion.library opened");
 
    zz_cd = (struct ConfigDev*)FindConfigDev(zz_cd,0x144B,0x1);
+   ztop_log(zz_cd ? "main: FindConfigDev found board" : "main: FindConfigDev miss");
    if (!zz_cd) {
 //      CloseLibrary(ExpansionBase);
 #ifndef UAETEST
@@ -2249,11 +2332,13 @@ int main(void)
          //ULONG		cd_Unused[4];	/* for whatever the driver wants */
          AddConfigDev(new_zz_cd);
          zz_cd = new_zz_cd;
+         ztop_log("main: synthetic ConfigDev created");
       }
 #endif
    }
 
    zz_regs = (UBYTE*)zz_cd->cd_BoardAddr;
+   ztop_log("main: zz_regs assigned");
 
    {
       uint32_t fwrev = zz_get_reg(REG_ZZ_FW_VERSION);
@@ -2261,14 +2346,19 @@ int main(void)
       int fwrev_major = fwrev>>8;
       if(fwrev_major!=1)
       {
+         ztop_log("main: firmware major mismatch");
          errorMessage("Z3660 not found.\n");
          CloseLibrary(ExpansionBase);
+         ztop_log_close();
          exit(0);
       }
    } 
+   ztop_log("main: firmware check ok");
    CloseLibrary(ExpansionBase);
+   ztop_log("main: expansion.library closed");
    my_screen = ((struct IntuitionBase *)IntuitionBase)->FirstScreen;
    drinfo = GetScreenDrawInfo(my_screen);
+   ztop_log(drinfo ? "main: GetScreenDrawInfo ok" : "main: GetScreenDrawInfo failed");
 
    font_height=drinfo->dri_Font->tf_YSize;
    font_width=drinfo->dri_Font->tf_XSize;
@@ -2293,49 +2383,62 @@ int main(void)
  #endif
 
    NewList(&dlist);
+   ztop_log("main: NewList done");
 
-   kickstarts_list = ChooserLabelsA((STRPTR *)kickstarts);
-   ext_kickstarts_list = ChooserLabelsA((STRPTR *)ext_kickstarts);
-   scsis_list = ChooserLabelsA((STRPTR *)scsis);
-
-   if (!ButtonBase      ||
-       !CheckBoxBase    ||
-       !SliderBase      ||
-       !ClickTabBase    ||
-       !LabelBase       ||
-       !LayoutBase      ||
-       !ListBrowserBase ||
-       !StringBase      ||
-       !WindowBase      /*||
-       !GadToolsBase      */)
+   ztop_log("main: ensure_reaction_bases start");
+   if (!ensure_reaction_bases())
    {
       if(!ButtonBase)
          errorMessage("gadget/button.gadget not found.\n");
       if(!CheckBoxBase)
          errorMessage("gadget/checkbox.gadget not found.\n");
+      if(!ChooserBase)
+         errorMessage("gadget/chooser.gadget not found.\n");
       if(!SliderBase)
          errorMessage("gadget/slider.gadget not found.\n");
       if(!ClickTabBase)
          errorMessage("gadget/clicktab.gadget not found.\n");
       if(!LabelBase)
-         errorMessage("gadget/label.gadget not found.\n");
+         errorMessage("images/label.image not found.\n");
       if(!LayoutBase)
          errorMessage("gadget/layout.gadget not found.\n");
       if(!ListBrowserBase)
          errorMessage("gadget/listbrowser.gadget not found.\n");
       if(!StringBase)
          errorMessage("gadget/string.gadget not found.\n");
+      if(!SpaceBase)
+         errorMessage("gadget/space.gadget not found.\n");
       if(!WindowBase)
-         errorMessage("window.library not found.\n");
-//      if(!GadToolsBase)
-//         errorMessage("gadtools.library not found.\n");
+         errorMessage("window.class not found.\n");
+      ztop_log("main: ensure_reaction_bases failed");
+      ztop_log_close();
       return(30);
    }
-   else if ( AppPort = CreateMsgPort() )
+   ztop_log("main: ensure_reaction_bases ok");
+
+   ztop_log_ptr("main: ChooserBase", ChooserBase);
+
+   ztop_log("main: before ChooserLabelsA kickstarts");
+
+   kickstarts_list = ChooserLabelsA((STRPTR *)kickstarts);
+   ztop_log_ptr("main: kickstarts_list", kickstarts_list);
+
+   ztop_log("main: before ChooserLabelsA ext_kickstarts");
+   ext_kickstarts_list = ChooserLabelsA((STRPTR *)ext_kickstarts);
+   ztop_log_ptr("main: ext_kickstarts_list", ext_kickstarts_list);
+
+   ztop_log("main: before ChooserLabelsA scsis");
+   scsis_list = ChooserLabelsA((STRPTR *)scsis);
+   ztop_log_ptr("main: scsis_list", scsis_list);
+   ztop_log("main: chooser labels created");
+
+   if ( AppPort = CreateMsgPort() )
    {
+      ztop_log("main: AppPort created");
       struct List *tablabels = ClickTabs("Info","Boot","SCSI","Misc","Preset", NULL);
       if (tablabels)
       {
+         ztop_log("main: tab labels created");
          /* Create the window object.
           */
          objects[OID_MAIN] = WindowObject,
@@ -2929,7 +3032,7 @@ int main(void)
                               LAYOUT_AddChild, gadgets[GID_MISC_MAC] = StringObject,
                                  GA_ID, GID_INFO_FWVER,
                                  GA_RelVerify, TRUE,
-                                 STRINGA_MaxChars, 18,
+                                 STRINGA_MaxChars, MAC_STR_LEN,
                                  STRINGA_TextVal, "00:00:00:00:00:00",
                                  STRINGA_Justification, GACT_STRINGCENTER,
                               StringEnd,
@@ -3110,6 +3213,7 @@ int main(void)
             */
          if (objects[OID_MAIN])
          {
+            ztop_log("main: window object created");
             /* Set up inter-group label pagement.
              */
             SetAttrs( gadgets[GID_ALIGN2_1], LAYOUT_AlignLabels, gadgets[GID_ALIGN2_2], TAG_DONE);
@@ -3136,6 +3240,7 @@ int main(void)
              */
             if (windows[WID_MAIN] = (struct Window *) RA_OpenWindow(objects[OID_MAIN]))
             {
+               ztop_log("main: RA_OpenWindow ok");
                ULONG wait, signal, app = (1L << AppPort->mp_SigBit);
                ULONG done = FALSE;
                ULONG result;
@@ -3210,6 +3315,10 @@ int main(void)
                   }
                }
             }
+            else
+            {
+               ztop_log("main: RA_OpenWindow failed");
+            }
 
             /* Disposing of the window object will also close the window if it is
              * already opened, and it will dispose of the layout object attached to it.
@@ -3228,8 +3337,11 @@ int main(void)
       /* close/free the application port.
        */
       DeleteMsgPort(AppPort);
+      ztop_log("main: AppPort deleted");
    }
    free_listview_list(&dlist);
+   ztop_log("main: cleanup complete");
+   ztop_log_close();
 
 #ifdef NEWSCREEN__
    if(new_screen!=NULL)

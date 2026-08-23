@@ -168,7 +168,15 @@ enum zz_reg_offsets {
    REG_ZZ_PRESET_SEL_TXT = 0x298,
    REG_ZZ_DELETE_PRESET  = 0x29C,
 
-   // 0x2A0, 0x2BC  // Reserved for future use
+   REG_ZZ_ADF_SEL_0      = 0x2A0,
+   REG_ZZ_ADF_SEL_1      = 0x2A4,
+   REG_ZZ_ADF_SEL_2      = 0x2A8,
+   REG_ZZ_ADF_SEL_3      = 0x2AC,
+
+   REG_ZZ_ADF_SEL_4      = 0x2B0,
+   REG_ZZ_ADF_SEL_5      = 0x2B4,
+   REG_ZZ_ADF_SEL_6      = 0x2B8,
+   REG_ZZ_ADF_SEL_7      = 0x2BC,
 
    // MPEG acceleration registers
    REG_ZZ_MPEG_CMD_OP    = 0x2C0,  // MPEG operation command
@@ -185,7 +193,9 @@ enum zz_reg_offsets {
 //   REG_ZZ_MPEG_FIFO_SIZE = 0x2EC,  // MPEG FIFO size in bytes
 //   REG_ZZ_MPEG_FIFO_ADDR = 0x2F0,  // MPEG FIFO buffer base address
 
-   //NOT USED 0x2F4 - 0x2FC
+   //NOT USED 0x2F4 - 0x2F4
+   REG_ZZ_ADF_SEL_TXT    = 0x2F8,
+   REG_ZZ_APPLY_ADF      = 0x2FC,
 
    REG_ZZ_OP_DATA        = 0x300,
    REG_ZZ_OP             = 0x304,
@@ -212,11 +222,16 @@ enum zz_reg_offsets {
 
    REG_ZZ_USB_PROXY_CMD    = 0x350,
 
-   //NOT USED 0x354 - 0x4FC
+   // W3D (Warp3D) high-level layer registers
+   REG_ZZ_W3D_OP           = 0x354,  // W3D_* opcode (handle_w3d_op)
+   REG_ZZ_W3D_STATUS       = 0x358,  // W3D_* result (read back)
+
+   //NOT USED 0x35C - 0x4FC
 
    REG_ZZ_SEL_KS_TXT     = 0x500,
    REG_ZZ_SEL_SCSI_TXT   = 0x600,
    REG_ZZ_SEL_PRESET_TXT = 0x700,
+   REG_ZZ_SEL_ADF_TXT    = 0x800,
 
 //   REG_ZZ_RX_BUFF        = 0x2000,
 //   REG_ZZ_TX_BUFF        = 0x8000
