@@ -802,8 +802,8 @@ void zz_set_apply_scsi(void)
 uint8_t hex2int(char c1, char c2)
 {
    uint8_t data=0;
-   if(c1>='a' && c1<'f') c1=c1-'a'+'A';
-   if(c2>='a' && c2<'f') c2=c2-'a'+'A';
+   if(c1>='a' && c1<='f') c1=c1-'a'+'A';
+   if(c2>='a' && c2<='f') c2=c2-'a'+'A';
 
    if(c1>='0' && c1<='9')
       data|=(c1-'0')<<4;
