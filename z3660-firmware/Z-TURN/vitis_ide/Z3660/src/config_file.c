@@ -486,7 +486,14 @@ int get_arm_frequency_type(char *cmd) {
    }
    return FREQ_667;
 }
+static int hex_nibble(char c) {
+   if(c>='0' && c<='9') return(c-'0');
+   if(c>='a' && c<='f') return(c-'a'+10);
+   if(c>='A' && c<='F') return(c-'A'+10);
+   return(-1);
+}
 int get_mac_address_type(char *cmd) {
+   uint8_t mac[6];
    if(cmd[2]!=':')
       return(0);
    if(cmd[5]!=':')
@@ -498,16 +505,14 @@ int get_mac_address_type(char *cmd) {
    if(cmd[14]!=':')
       return(0);
    for (int i = 0; i < 6; i++) {
-      uint8_t hi=cmd[0+i*3];
-      if(hi>='0' && hi<='9') hi-='0';
-      if(hi>='a' && hi<='f') hi=-'a'+10;
-      if(hi>='F' && hi<='F') hi=-'A'+10;
-      uint8_t lo=cmd[1+i*3];
-      if(lo>='0' && lo<='9') lo-='0';
-      if(lo>='a' && lo<='f') lo=-'a'+10;
-      if(lo>='F' && lo<='F') lo=-'A'+10;
-      config.mac_address[i]=hi*16+lo;
+      int hi=hex_nibble(cmd[0+i*3]);
+      int lo=hex_nibble(cmd[1+i*3]);
+      if(hi<0 || lo<0)
+         return(0);
+      mac[i]=hi*16+lo;
    }
+   for (int i = 0; i < 6; i++)
+      config.mac_address[i]=mac[i];
    return(1);
 }
 float get_float_type(char *cmd) {
