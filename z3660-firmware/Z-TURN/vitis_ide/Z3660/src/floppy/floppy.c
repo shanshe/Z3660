@@ -193,13 +193,30 @@ int pifloppy_init(void)
         }
     }
 
+    /* Check the open and the seek: with z3660_scsi.rom missing or shorter than
+     * 0x2600, process_hunks() parsed an uninitialised stack FIL and printed
+     * "Unknown hunk type 00000000". NOTE: 0x2600 is not PISCSI_DRIVER_OFFSET
+     * (0x1000); in the 16 KB v1.5 image that offset holds zeros, so this parse
+     * prints the same line even when the file is present. */
     FIL in;
-    f_open(&in,DEFAULT_ROOT "z3660_scsi.rom", FA_READ | FA_OPEN_EXISTING);
-
-    f_lseek(&in, 0x2600);
-    int debug=1;
-    process_hunks(&in, &pifloppy_hinfo, pifloppy_hreloc, 0x2600, debug);
-    f_close(&in);
+    FRESULT fr=f_open(&in,DEFAULT_ROOT "z3660_scsi.rom", FA_READ | FA_OPEN_EXISTING);
+    if(fr!=FR_OK)
+    {
+        printf("[PIFLOPPY] Could not open %sz3660_scsi.rom (%d) -- no hunk relocs\n",
+               DEFAULT_ROOT,(int)fr);
+    }
+    else
+    {
+        fr=f_lseek(&in, 0x2600);
+        if(fr!=FR_OK || f_tell(&in)!=0x2600)
+            printf("[PIFLOPPY] z3660_scsi.rom shorter than 0x2600 -- no hunk relocs\n");
+        else
+        {
+            int debug=1;
+            process_hunks(&in, &pifloppy_hinfo, pifloppy_hreloc, 0x2600, debug);
+        }
+        f_close(&in);
+    }
 
     Xil_L1DCacheFlush();
     Xil_L2CacheFlush();
