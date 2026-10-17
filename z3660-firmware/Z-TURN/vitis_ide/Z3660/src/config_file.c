@@ -207,8 +207,8 @@ void load_default_config(void)
       config.scsi_num[i]=-1;
    for(int i=0;i<8;i++)
       config.adf_num[i]=-1;
-   for(int i=0;i<7;i++)
-      config.cd_target[i]=0;
+   for(int i=0;i<20;i++)
+      config.is_iso[i]=0;
    config.scsiboot=0;
    config.autoconfig_ram=0;
    config.autoconfig_rtg=0;
@@ -615,6 +615,8 @@ retry:
    for(int i=0;i<20;i++)
       config.hdf[i][0]=0;
    for(int i=0;i<20;i++)
+      config.is_iso[i]=0;
+   for(int i=0;i<20;i++)
       config.adf[i][0]=0;
    for(int i=0;i<7;i++)
       config.scsi_num[i]=-1;
@@ -760,6 +762,7 @@ retry:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          sprintf(config.hdf[index],"%s%s", DEFAULT_ROOT, cur_cmd);
          if(verbose) printf("[CFG] hdf%d file %s\n", index, config.hdf[index]);
+         config.is_iso[index]=0; // a later hdfN replaces an earlier isoN in the same slot
          break;
       }
       case CONFITEM_ISO0:
@@ -786,7 +789,7 @@ retry:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          sprintf(config.hdf[index],"%s%s", DEFAULT_ROOT, cur_cmd);
          if(verbose) printf("[CFG] iso%d file %s\n", index, config.hdf[index]);
-         config.cd_target[index]=1;
+         config.is_iso[index]=1; // the CD flag belongs to the image slot, not to a SCSI target
          break;
       }
       case CONFITEM_ADF_FILE0:

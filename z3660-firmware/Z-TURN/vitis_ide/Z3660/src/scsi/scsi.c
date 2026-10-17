@@ -171,7 +171,7 @@ int piscsi_init() {
    {
       if(config.scsi_num[i]>=0 && config.scsi_num[i]<=19)
          if(config.hdf[config.scsi_num[i]][0]!=0)
-            piscsi_map_drive(config.hdf[config.scsi_num[i]], i, 0, 0, config.cd_target[i]);
+            piscsi_map_drive(config.hdf[config.scsi_num[i]], i, 0, 0, config.is_iso[config.scsi_num[i]]);
    }
    uint32_t root_partition_length=-1L;
    // and now the SD partitions

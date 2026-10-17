@@ -38,6 +38,12 @@ scsiboot YES
 #scsiboot NO
 
 # Select your hdf files (from hdf0 to hdf19). Use isoX instead of hdfX to use ISO CD ROM files.
+#
+# hdfN and isoN both fill IMAGE SLOT N (0..19); isoN also marks that slot as a
+# CD image. A scsiM line then puts slot N on SCSI target M, and an iso slot is
+# presented there as a read-only 2048-byte CD-ROM (device type 0x05), whatever
+# M is. e.g. iso6 below is a CD on target 4 through "scsi4 6".
+# If the same slot is given twice (hdfN and isoN), the later line wins.
 hdf0 hdf/a4000.hdf
 hdf1 hdf/Daten5_PFS3.hdf
 hdf2 hdf/Work.hdf
