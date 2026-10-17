@@ -78,8 +78,11 @@ int measures_thread(struct pt *pt);
 int emulator_thread(struct pt *pt);
 int emulator_reset_thread(struct pt *pt);
 int interrupt_thread(struct pt *pt);
-uint32_t arm_read_amiga_byte(uint32_t address);
-void arm_write_amiga_byte(uint32_t address, uint32_t data);
+// Core0's Amiga-bus byte accessors live in mobotest.c and take a timeout counter, which they set
+// and count down. The core1 emulator has its own two-argument versions in a separate ELF; declaring
+// those here made every core0 call pass a garbage pointer as `timeout`.
+uint32_t arm_read_amiga_byte(uint32_t address, int *timeout);
+void arm_write_amiga_byte(uint32_t address, uint32_t data, int *timeout);
 int read_timings(void);
 
 static struct pt pt_rtg;
@@ -818,7 +821,18 @@ void monitor_switch(int RTG)
 #define CIAB_PRA  0xbfd000
 #define CIAB_DDRA 0xbfd200
    // monitor switch
-   uint32_t ciab_ddra=arm_read_amiga_byte(CIAB_DDRA);
+   // Every CIA-B access is bounded. The first call runs while the FPGA is held in reset, and on
+   // the A4000T the bus may not answer yet; then the switch is skipped and a later call
+   // (main.c after mobotest(), mobotest.c) makes it once the bus is live.
+   int timeout;
+   if((config.monitor_switch&3)==0)
+      return;
+   uint32_t ciab_ddra=arm_read_amiga_byte(CIAB_DDRA,&timeout);
+   if(timeout==0)
+   {
+      printf("[MONSW] CIA-B DDRA read got no bus ack, monitor switch skipped\n");
+      return;
+   }
 //   printf("ciab_ddra read 0x%08lX\n",ciab_ddra);
    int write=0;
    uint32_t mask=0;
@@ -838,14 +852,24 @@ void monitor_switch(int RTG)
    if(write==1)
    {
 //      do{
-         arm_write_amiga_byte(CIAB_DDRA,ciab_ddra);
+         arm_write_amiga_byte(CIAB_DDRA,ciab_ddra,&timeout);
 //      }while((arm_read_amiga_byte(CIAB_DDRA)&mask)!=(ciab_ddra&mask));
+      if(timeout==0)
+      {
+         printf("[MONSW] CIA-B DDRA write got no bus ack, monitor switch skipped\n");
+         return;
+      }
 
 //      ciab_ddra=arm_read_amiga_byte(CIAB_DDRA);
 //      printf("ciab_ddra read 0x%08lX\n",ciab_ddra);
 
 
-      uint32_t ciab=arm_read_amiga_byte(CIAB_PRA);
+      uint32_t ciab=arm_read_amiga_byte(CIAB_PRA,&timeout);
+      if(timeout==0)
+      {
+         printf("[MONSW] CIA-B PRA read got no bus ack, monitor switch skipped\n");
+         return;
+      }
       mask=0;
 //      printf("ciab read 0x%08lX\n",ciab);
       if(RTG)
@@ -911,7 +935,11 @@ void monitor_switch(int RTG)
          }
       }
 //      do{
-         arm_write_amiga_byte(CIAB_PRA,ciab);
+         arm_write_amiga_byte(CIAB_PRA,ciab,&timeout);
+      if(timeout==0)
+         printf("[MONSW] CIA-B PRA write got no bus ack, monitor switch not confirmed\n");
+      else
+         printf("[MONSW] monitor switched to %s (monitor_switch 0x%02X)\n",RTG?"RTG":"native",config.monitor_switch);
 //      }while((arm_read_amiga_byte(CIAB_PRA)&mask)!=(ciab&mask));
 //      ciab=arm_read_amiga_byte(CIAB_PRA);
 //      printf("ciab read 0x%08lX\n",ciab);
