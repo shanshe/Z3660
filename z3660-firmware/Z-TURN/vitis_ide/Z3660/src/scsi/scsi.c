@@ -993,6 +993,25 @@ void write_disk(PISCSI_DEV *d,uint8_t *map,uint32_t blocks_to_write)
    }
 
 }
+/* A failed f_lseek leaves fp->fptr where the previous request ended (or part way
+ * through a walk), so the f_read / f_write that used to follow transferred the
+ * wrong sectors and reported success. The mailbox has no per-request status, so a
+ * failed request is refused: nothing is transferred, used_dma is 0 so the guest
+ * copies nothing out of the bounce window, and the failure is printed. Rate
+ * limited (first eight, then every 1024th) because this runs while the guest
+ * waits on the bus cycle. */
+static uint32_t piscsi_fail_count = 0;
+
+static void piscsi_request_failed(const char *what, uint32_t unit, int res, uint32_t lba)
+{
+   used_dma = 0;
+   piscsi_fail_count++;
+   if(piscsi_fail_count <= 8 || (piscsi_fail_count & 0x3FF) == 0)
+      printf("SCSI ERROR!!! %s res=%d unit=%lu lba=%lu -- request refused (failure #%lu)\n",
+         what, res, (unsigned long)unit, (unsigned long)lba,
+         (unsigned long)piscsi_fail_count);
+}
+
 void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
    ACTIVITY_LED_ON; // ON
    uint32_t map;
@@ -1018,14 +1037,28 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          uint32_t src = piscsi_u32_read[0];
          d->lba = (src / d->block_size);
          if(d->fd>(FIL *)1)
-            f_lseek(d->fd, src);
+         {
+            FRESULT sres=f_lseek(d->fd, src);
+            if(sres!=FR_OK)
+            {
+               piscsi_request_failed("READBYTES f_lseek", val, sres, d->lba);
+               break;
+            }
+         }
       }
       else if (cmd == PISCSI_CMD_READ) {
          DEBUG("[PISCSI-%ld] %ld byte READ from block %ld to address %.8lX\n", val, piscsi_u32_read[1], piscsi_u32_read[0], piscsi_u32_read[2]);
          uint32_t src = piscsi_u32_read[0];
          d->lba = src;
          if(d->fd>(FIL *)1)
-            f_lseek(d->fd, (((FSIZE_t)src) * d->block_size));
+         {
+            FRESULT sres=f_lseek(d->fd, (((FSIZE_t)src) * d->block_size));
+            if(sres!=FR_OK)
+            {
+               piscsi_request_failed("READ f_lseek", val, sres, d->lba);
+               break;
+            }
+         }
       }
       else {
          FSIZE_t src = piscsi_u32_read[3];
@@ -1033,7 +1066,14 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          DEBUG("[PISCSI-%ld] %ld byte READ64 from block %lld to address %.8lX\n", val, piscsi_u32_read[1], (src / d->block_size), piscsi_u32_read[2]);
          d->lba = (src / d->block_size);
          if(d->fd>(FIL *)1)
-            f_lseek(d->fd, src);
+         {
+            FRESULT sres=f_lseek(d->fd, src);
+            if(sres!=FR_OK)
+            {
+               piscsi_request_failed("READ64 f_lseek", val, sres, d->lba);
+               break;
+            }
+         }
       }
 
       map = piscsi_u32_read[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32_read[2]);
@@ -1126,7 +1166,14 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          uint32_t src = piscsi_u32_write[0];
          d->lba = (src / d->block_size);
          if(d->fd>(FIL *)1)
-            f_lseek(d->fd, src);
+         {
+            FRESULT sres=f_lseek(d->fd, src);
+            if(sres!=FR_OK)
+            {
+               piscsi_request_failed("WRITEBYTES f_lseek", val, sres, d->lba);
+               break;
+            }
+         }
       }
       else if (cmd == PISCSI_CMD_WRITE) {
          DEBUG("[PISCSI-%ld] %ld byte WRITE to block %ld from address %.8lX\n", val, piscsi_u32_write[1], piscsi_u32_write[0], piscsi_u32_write[2]);
@@ -1138,7 +1185,12 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
             {
                printf("Error on File Offset: %016llX (File size %016llX)\n",fpos,d->fd->obj.objsize);
             }
-            f_lseek(d->fd, fpos);
+            FRESULT sres=f_lseek(d->fd, fpos);
+            if(sres!=FR_OK)
+            {
+               piscsi_request_failed("WRITE f_lseek", val, sres, d->lba);
+               break;
+            }
          }
       }
       else {
@@ -1147,7 +1199,14 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          DEBUG("[PISCSI-%ld] %ld byte WRITE64 to block %lld from address %.8lX\n", val, piscsi_u32_write[1], (src / d->block_size), piscsi_u32_write[2]);
          d->lba = (src / d->block_size);
          if(d->fd>(FIL *)1)
-            f_lseek(d->fd, src);
+         {
+            FRESULT sres=f_lseek(d->fd, src);
+            if(sres!=FR_OK)
+            {
+               piscsi_request_failed("WRITE64 f_lseek", val, sres, d->lba);
+               break;
+            }
+         }
       }
 
       map = piscsi_u32_write[2];//get_mapped_data_pointer_by_address(cfg, piscsi_u32_write[2]);
@@ -1169,9 +1228,11 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
-            f_write(d->fd, (uint8_t *)map, piscsi_u32_write[1],&n_bytes);
+            FRESULT wres=f_write(d->fd, (uint8_t *)map, piscsi_u32_write[1],&n_bytes);
             DEBUG("             Bytes written %d\n",n_bytes);
-            if(n_bytes!=piscsi_u32_write[1])
+            if(wres!=FR_OK)
+               piscsi_request_failed("WRITE f_write", val, wres, d->lba);
+            else if(n_bytes!=piscsi_u32_write[1])
             {
                printf("SCSI ERROR!!! bytes_to_write=%ld, bytes_written=%d\n",piscsi_u32_write[1],n_bytes);
             }
@@ -1192,9 +1253,11 @@ void handle_piscsi_reg_write(uint32_t addr, uint32_t val, uint8_t type) {
          if(d->fd>(FIL *)1)
          {
             unsigned int n_bytes;
-            f_write(d->fd, buffer, piscsi_u32_write[1], &n_bytes);
+            FRESULT wres=f_write(d->fd, buffer, piscsi_u32_write[1], &n_bytes);
             DEBUG("             Bytes written %d\n",n_bytes);
-            if(n_bytes!=piscsi_u32_write[1])
+            if(wres!=FR_OK)
+               piscsi_request_failed("WRITE f_write (bounce)", val, wres, d->lba);
+            else if(n_bytes!=piscsi_u32_write[1])
             {
                printf("SCSI ERROR!!! bytes_to_write=%ld, bytes_written=%d dma=0x%08lX\n",piscsi_u32_write[1],n_bytes,used_dma);
             }
