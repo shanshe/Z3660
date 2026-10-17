@@ -68,7 +68,8 @@ typedef struct {
    int kickstart;
    int ext_kickstart;
    int scsi_num[7];
-   int cd_target[7];   // per-SCSI-target CD-ROM flag: cd_target[id]!=0 => target id is a read-only 2048-byte CD-ROM (pdt 0x05). Parsed from "cdrom_units".
+   int is_iso[20];     // per IMAGE SLOT, parallel to hdf[]: is_iso[n]!=0 => slot n was set by "isoN" and is
+                       // presented as a read-only 2048-byte CD-ROM (pdt 0x05) on whichever target "scsiM n" assigns it to.
    int adf_num[8];
    char hdf[20][150];
    char adf[20][150];
