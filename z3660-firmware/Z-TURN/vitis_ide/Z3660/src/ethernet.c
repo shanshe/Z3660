@@ -60,6 +60,27 @@ void DEBUG_ETHERNET(const char *format, ...)
 /* ETH_RXRING N (build flag, default 16; 0 = a single descriptor as before): N RX descriptors instead of one. A 1514 B
    frame lasts 121 us on the wire at 100 Mbit and the ISR + copy takes about 26 us, so one descriptor only loses frames
    when the ISR is held off; N of them bridge N frame times of IRQ latency. N buffers of FRAME_SIZE must fit RX_FRAME_ADDRESS..USB_DATA (64 KiB). */
+/* Ethernet keys, read from z3660cfg.txt at boot (config_file.c; defaults in config_file.h, documented in the shipped
+   z3660cfg.txt).
+   eth_reraise  - when the Amiga releases a frame (ETH_RX) and more remain in the backlog, raise the ethernet interrupt
+                  again at once. Otherwise the next one waits for the nag (ethernet_thread: 1500 main-loop passes,
+                  ~1 ms on the real 060), and a driver that takes one frame per interrupt drains one frame per nag.
+   eth_rxkick   - when a frame lands in an empty backlog, the RX ISR pushes the nag counter past its limit so
+                  ethernet_thread raises the interrupt on the next main-loop pass instead of after ~1 ms. The ISR does
+                  not call amiga_interrupt_set itself: that read-modify-write is not safe against the main loop it
+                  interrupts. A kick lost to other_tasks' unlocked increment falls back to the normal nag.
+   eth_taildrop - a frame that finds the backlog full is dropped alone; the frames already queued stay for the Amiga.
+                  Otherwise the whole backlog resets, losing every frame not yet fetched.
+   eth_tx_poll  - ethernet_send_frame polls the send handler's count against the global timer instead of sleeping in
+                  usleep(100) steps (one step held the 060's bus cycle ~70 us after the GEM had finished in ~10 us).
+                  The bound is the old 11 x 100 us, so the worst case is unchanged.
+   eth_adv1000  - the OS-time PHY setup advertises 1000BASE-T as well as 10/100 (the boot menu's lwIP path links at 1000
+                  on the same RGMII); step2 then sets the GEM speed and clocks from the resolved link. */
+#include "config_file.h"
+#include "xtime_l.h"
+extern uint32_t counts_per_second;   /* the live ARM clock / 2 (main.c) */
+extern uint32_t eth_backlog_nag_counter, eth_backlog_nag_counter_max;   /* rtg.c */
+#define ETH_KEY(k)   (config.eth_##k)
 #ifndef ETH_RXRING
 #define ETH_RXRING 16
 #endif
@@ -591,13 +612,17 @@ static void xEmacPsRecvHandler(void *Callback)
             *(frame_bl_ptr+3) = (frame_serial&0xff);
 
             frames_backlog++;
+            if (ETH_KEY(rxkick) && frames_backlog == 1 && interrupt_enabled_ethernet)
+               eth_backlog_nag_counter = eth_backlog_nag_counter_max + 1;
 
             DEBUG_ETHERNET("bd %ld [%d] copied from %p to %p\n", bd_idx, rx_bytes, frame_ptr, frame_bl_ptr);
          } else {
             if(interrupt_enabled_ethernet)
                DEBUG_ETHERNET("EMAC: frames_backlog full\n");
-            frames_backlog = 0;
-            frames_received_from_backlog = 0;
+            if (!ETH_KEY(taildrop)) {   // tail drop keeps the queued frames and loses only this one
+               frames_backlog = 0;
+               frames_received_from_backlog = 0;
+            }
 
          }
 
@@ -667,6 +692,11 @@ int ethernet_receive_frame() {
          frm[3]=old_serial_1;
 
          DEBUG_ETHERNET("EMAC: caught up with backlog\n");
+      }
+      // frames remain: interrupt again at once instead of after the next nag period (a driver that takes one frame
+      // per interrupt otherwise drains about one frame per nag, ~1 ms on the real 060)
+      else if (ETH_KEY(reraise) && interrupt_enabled_ethernet) {
+         amiga_interrupt_set(AMIGA_INTERRUPT_ETH);
       }
    } else {
       // this is NOT an error, Amiga wants data and there is no data on RX buffers
@@ -923,7 +953,10 @@ void micrel_auto_negotiate(XEmacPs *xemacpsp, uint32_t phy_addr, int eth_phy_typ
 
       // register 9, disable 1000base-t
       XEmacPs_PhyRead(xemacpsp, phy_addr, IEEE_1000BASET_CONTROL_REG, &control);
-      control &= ~(1<<9 | 1<<8);
+      if (ETH_KEY(adv1000))
+         control |= ADVERTISE_1000;   // advertise 1000 as well: 10/100 stay advertised and autonegotiation picks
+      else
+         control &= ~(1<<9 | 1<<8);
       XEmacPs_PhyWrite(xemacpsp, phy_addr, IEEE_1000BASET_CONTROL_REG,control);
    } else if (link_speed == 1000) {
       // register 0: 1000 mbit
@@ -1129,14 +1162,26 @@ uint16_t ethernet_send_frame(uint16_t frame_size) {
    DEBUG_ETHERNET("FramesTx:%ld\n",FramesTx);
    DEBUG_ETHERNET("BdTxPtr:0x%08lx\n",(uint32_t)BdTxPtr);
    uint32_t counter = 0;
-   while (old_frames_tx == FramesTx) {
-      usleep(100);
-      counter++;
-      // 1ms
-      if (counter>10) {
-         printf("ERROR: timeout in ethernet_send_frame waiting for tx!\n");
-         //init_ethernet_buffers();
-         return(4);
+   if (ETH_KEY(tx_poll)) {
+      XTime tx_t0, tx_now;
+      XTime_GetTime(&tx_t0);
+      while (old_frames_tx == FramesTx) {
+         XTime_GetTime(&tx_now);
+         if (tx_now - tx_t0 > (XTime)counts_per_second * 11 / 10000) {
+            printf("ERROR: timeout in ethernet_send_frame waiting for tx!\n");
+            return(4);
+         }
+      }
+   } else {
+      while (old_frames_tx == FramesTx) {
+         usleep(100);
+         counter++;
+         // 1ms
+         if (counter>10) {
+            printf("ERROR: timeout in ethernet_send_frame waiting for tx!\n");
+            //init_ethernet_buffers();
+            return(4);
+         }
       }
    }
    DEBUG_ETHERNET("frame %ld transmitted!\n",FramesTx);

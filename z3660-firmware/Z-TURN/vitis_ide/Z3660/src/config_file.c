@@ -145,6 +145,11 @@ const char *config_item_names[CONFITEM_NUM] = {
       "test_range6",
       "test_range7",
       "arm_frequency",
+      "eth_reraise",
+      "eth_rxkick",
+      "eth_taildrop",
+      "eth_tx_poll",
+      "eth_adv1000",
 };
 const char *bootmode_names[BOOTMODE_NUM] = {
       "MOBOCPU",
@@ -253,6 +258,11 @@ void load_default_config(void)
    memcpy(&default_config,&config,sizeof(CONFIG));
    config.monitor_switch=0;
    config.arm_frequency=FREQ_667;
+   config.eth_reraise=CFG_ETH_DEFAULT_reraise;
+   config.eth_rxkick=CFG_ETH_DEFAULT_rxkick;
+   config.eth_taildrop=CFG_ETH_DEFAULT_taildrop;
+   config.eth_tx_poll=CFG_ETH_DEFAULT_tx_poll;
+   config.eth_adv1000=CFG_ETH_DEFAULT_adv1000;
 }
 void write_config_file(char *filename)
 {
@@ -377,6 +387,18 @@ void write_config_file(char *filename)
    print_line(&fil,"\n");
    print_line(&fil,"# Select a frequency in MHz for the ARM system (667, 767, 867, 900, 933, 967, 1000, 1033, 1067, 1100, 1133, 1167, 1200, 1233, 1267, 1300)\n");
    print_line(&fil,"arm_frequency 667\n");
+   print_line(&fil,"\n");
+   print_line(&fil,"# Ethernet (YES or NO; a missing line keeps the default shown)\n");
+   print_line(&fil,"# re-raise the Amiga interrupt while received frames remain\n");
+   print_line(&fil,"eth_reraise YES\n");
+   print_line(&fil,"# interrupt the Amiga at once when a frame arrives to an empty queue\n");
+   print_line(&fil,"eth_rxkick YES\n");
+   print_line(&fil,"# when the receive queue is full, drop only the arriving frame\n");
+   print_line(&fil,"eth_taildrop YES\n");
+   print_line(&fil,"# wait for a transmit by polling (bounded 1.1 ms) instead of 100 us sleeps\n");
+   print_line(&fil,"eth_tx_poll YES\n");
+   print_line(&fil,"# advertise 1000BASE-T at OS time\n");
+   print_line(&fil,"eth_adv1000 NO\n");
    print_line(&fil,"\n");
    f_close(&fil);
 
@@ -648,6 +670,11 @@ retry:
    config.sd_clock=50;
    config.monitor_switch=0;
    config.arm_frequency=FREQ_667;
+   config.eth_reraise=CFG_ETH_DEFAULT_reraise;
+   config.eth_rxkick=CFG_ETH_DEFAULT_rxkick;
+   config.eth_taildrop=CFG_ETH_DEFAULT_taildrop;
+   config.eth_tx_poll=CFG_ETH_DEFAULT_tx_poll;
+   config.eth_adv1000=CFG_ETH_DEFAULT_adv1000;
 
    while (!f_eof(&fil))
    {
@@ -1012,6 +1039,36 @@ retry:
          get_next_string(parse_line, cur_cmd, &str_pos, ' ');
          config.arm_frequency=get_arm_frequency_type(cur_cmd);
          if(verbose) printf("[CFG] ARM Frequency %s Mhz\n", arm_frequency_names[config.arm_frequency]);
+         break;
+
+      case CONFITEM_ETH_RERAISE:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.eth_reraise=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] eth_reraise %s.\n", yesno_names[config.eth_reraise]);
+         break;
+
+      case CONFITEM_ETH_RXKICK:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.eth_rxkick=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] eth_rxkick %s.\n", yesno_names[config.eth_rxkick]);
+         break;
+
+      case CONFITEM_ETH_TAILDROP:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.eth_taildrop=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] eth_taildrop %s.\n", yesno_names[config.eth_taildrop]);
+         break;
+
+      case CONFITEM_ETH_TX_POLL:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.eth_tx_poll=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] eth_tx_poll %s.\n", yesno_names[config.eth_tx_poll]);
+         break;
+
+      case CONFITEM_ETH_ADV1000:
+         get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+         config.eth_adv1000=get_yesno_type(cur_cmd);
+         if(verbose) printf("[CFG] eth_adv1000 %s.\n", yesno_names[config.eth_adv1000]);
          break;
 
       case CONFITEM_NONE:
