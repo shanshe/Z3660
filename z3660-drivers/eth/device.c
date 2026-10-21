@@ -793,6 +793,10 @@ SAVEDS void frame_proc()
 			D(("Z3660Net: process end\n"));
 			break;
 		}
+		// take every frame the firmware has queued, then wait: the firmware raises the interrupt once per batch, so a
+		// single frame per wake left the rest for the next one (one frame per ~1 ms nag on the real 060)
+		int drained = 0;
+		while (drained++ < 256) {
 		// read first the address of frame_received_from_backlog
 		uint32_t address_of_rx_buff =
 		    *((volatile ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_RX_ADDRESS));
@@ -803,7 +807,8 @@ SAVEDS void frame_proc()
 		ULONG serial = get_frame_serial(frm);
 
 		//D(("FTI %ld\n", serial));
-		if (serial != old_serial)
+		if (serial == old_serial)
+			break;	// caught up: the firmware keeps the last serial at the read pointer
 		{
 			int processed = 0;
 			USHORT packet_type = ((USHORT) frm[16] << 8) | ((USHORT) frm[17]);
@@ -837,6 +842,7 @@ SAVEDS void frame_proc()
 			// mark this frame as accepted
 			volatile ULONG *reg = (volatile ULONG *)(ZZ3660_REGS + REG_ZZ_ETH_RX);
 			*reg = 1L;
+		}
 		}
 //		else
 		{
