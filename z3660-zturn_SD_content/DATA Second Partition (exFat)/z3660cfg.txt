@@ -136,3 +136,15 @@ sd_clock 50
 
 # Set the selected monitor switch config (as a sum of values): 1 CTS, 2 SEL, 16 CTS level, 32 SEL level
 monitor_switch 17
+
+# Ethernet (YES or NO; a missing line keeps the default shown)
+# re-raise the Amiga interrupt while received frames remain
+eth_reraise YES
+# interrupt the Amiga at once when a frame arrives to an empty queue
+eth_rxkick YES
+# when the receive queue is full, drop only the arriving frame
+eth_taildrop YES
+# wait for a transmit by polling (bounded 1.1 ms) instead of 100 us sleeps
+eth_tx_poll YES
+# advertise 1000BASE-T at OS time
+eth_adv1000 NO
