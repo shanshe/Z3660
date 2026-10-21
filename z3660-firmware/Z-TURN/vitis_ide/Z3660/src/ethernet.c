@@ -57,7 +57,27 @@ void DEBUG_ETHERNET(const char *format, ...)
 
 #define FRAME_MAX_BACKLOG 64
 
+/* ETH_RXRING N (build flag, default 16; 0 = a single descriptor as before): N RX descriptors instead of one. A 1514 B
+   frame lasts 121 us on the wire at 100 Mbit and the ISR + copy takes about 26 us, so one descriptor only loses frames
+   when the ISR is held off; N of them bridge N frame times of IRQ latency. N buffers of FRAME_SIZE must fit RX_FRAME_ADDRESS..USB_DATA (64 KiB). */
+#ifndef ETH_RXRING
+#define ETH_RXRING 16
+#endif
+#if ETH_RXRING
+#define RXBD_CNT       ETH_RXRING
+#if RXBD_CNT * FRAME_SIZE > 0x10000
+#error "ETH_RXRING: the RX buffers overrun RX_FRAME_ADDRESS's 64 KiB"
+#endif
+// The backlog region ends where TX_FRAME_ADDRESS begins (32 slots). 64 slots overran it into the TX frame (slots
+// 32-47) and the RX buffers (48-63); one RxBD hid that, the ring fills it under AmigaOS. Full -> reset, as before.
+#undef FRAME_MAX_BACKLOG
+#define FRAME_MAX_BACKLOG 32
+#if FRAME_MAX_BACKLOG * FRAME_SIZE > TX_FRAME_ADDRESS - RX_BACKLOG_ADDRESS
+#error "ETH_RXRING: FRAME_MAX_BACKLOG overruns the RX backlog region"
+#endif
+#else
 #define RXBD_CNT       1   /* Number of RxBDs to use */
+#endif
 #define TXBD_CNT       4   /* Number of TxBDs to use */
 
 // could also be 55, 77 (eth1), see interrupts.pdf last page
@@ -500,6 +520,9 @@ void ethernet_alloc_rx_frames() {
       }
    }
 
+#if ETH_RXRING
+   __asm__ volatile ("dsb sy" ::: "memory");   // the cleared RxNew bits are out before the GEM looks again
+#endif
    if (!free_bds) {
       printf("EMAC: no BDs free for allocation\n");
    }
@@ -516,7 +539,15 @@ static void xEmacPsRecvHandler(void *Callback)
    XEmacPs_BdRing* rxring = &(XEmacPs_GetRxRing(EmacPsInstancePtr));
    XEmacPs_Bd* rxbdset, *cur_bd_ptr;
 
+#if ETH_RXRING
+   // While the ring is full the BSP returns one BD per call (HwTail == HwHead), so drain until it returns none;
+   // each pass frees and re-arms what it took, as lwIP's xemacpsif does.
+   int isr_frames = 0;
+   while ((num_rx_bufs = XEmacPs_BdRingFromHwRx(rxring, RXBD_CNT, &rxbdset)) > 0) {
+   isr_frames += num_rx_bufs;
+#else
    num_rx_bufs = XEmacPs_BdRingFromHwRx(rxring, RXBD_CNT, &rxbdset);
+#endif
 
    // we immediately process the incoming frame.
    // main task will then signal the Amiga via interrupt
@@ -570,7 +601,11 @@ static void xEmacPsRecvHandler(void *Callback)
 
          }
 
+#if !ETH_RXRING
          XEmacPs_BdClearRxNew(cur_bd_ptr);
+#endif
+         // (ring: the BD goes back to the GEM only in ethernet_alloc_rx_frames, after BdRingFree; clearing RxNew
+         // here would let the GEM refill it before the re-arm clears RxNew again and drops that frame)
          cur_bd_ptr = XEmacPs_BdRingNext(rxring, cur_bd_ptr);
 
          frames_received++;
@@ -587,6 +622,10 @@ static void xEmacPsRecvHandler(void *Callback)
 
       DEBUG_ETHERNET("EMAC: backlog %d fetched %d\n", frames_backlog, frames_received_from_backlog);
    }
+#if ETH_RXRING
+   }
+   (void)isr_frames;
+#endif
 
    status = XEmacPs_ReadReg(EmacPsInstancePtr->Config.BaseAddress, XEMACPS_RXSR_OFFSET);
    XEmacPs_WriteReg(EmacPsInstancePtr->Config.BaseAddress, XEMACPS_RXSR_OFFSET, status);
@@ -1209,5 +1248,3 @@ void FixEthernetPLLDivisors_z3660()
    
 //   printf("=== End of correction ===\n");
 }
-
-
