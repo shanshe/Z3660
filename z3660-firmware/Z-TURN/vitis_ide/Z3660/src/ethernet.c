@@ -696,6 +696,18 @@ void ethernet_update_mac_address() {
    printf("Ethernet: New MAC address %02x:%02x:%02x:%02x:%02x:%02x\n",
          EmacPsMAC[0],EmacPsMAC[1],EmacPsMAC[2],EmacPsMAC[3],EmacPsMAC[4],EmacPsMAC[5]);
 
+#if ETH_RXRING
+   // XEmacPs_Start rewrites RXQBASE/TXQBASE to the rings' first descriptors while the software rings keep their heads.
+   // With N RX descriptors the GEM then fills descriptors the handler reaches only after wrapping: frames come up
+   // seconds late in bunches, and the GEM laps into used descriptors (resource errors). Write the specific-address
+   // registers in place instead (low, then high: the low write disables the match until the high one lands).
+   {
+      uint32_t b = EmacPsInstancePtr->Config.BaseAddress;
+      XEmacPs_WriteReg(b, XEMACPS_LADDR1L_OFFSET, (uint32_t)EmacPsMAC[0] | ((uint32_t)EmacPsMAC[1] << 8) |
+                       ((uint32_t)EmacPsMAC[2] << 16) | ((uint32_t)EmacPsMAC[3] << 24));
+      XEmacPs_WriteReg(b, XEMACPS_LADDR1H_OFFSET, (uint32_t)EmacPsMAC[4] | ((uint32_t)EmacPsMAC[5] << 8));
+   }
+#else
    XEmacPs_Stop(EmacPsInstancePtr);
 
    int Status = XEmacPs_SetMacAddress(EmacPsInstancePtr, EmacPsMAC, 1);
@@ -704,6 +716,7 @@ void ethernet_update_mac_address() {
    }
 
    XEmacPs_Start(EmacPsInstancePtr);
+#endif
 }
 
 static void xEmacPsErrorHandler(void *Callback, uint8_t Direction, uint32_t ErrorWord)
